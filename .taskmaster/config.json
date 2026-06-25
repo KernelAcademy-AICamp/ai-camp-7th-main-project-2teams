@@ -1,0 +1,32 @@
+{
+  "models": {
+    "main": {
+      "provider": "anthropic",
+      "modelId": "claude-sonnet-4-6",
+      "maxTokens": 64000
+    },
+    "research": {
+      "provider": "anthropic",
+      "modelId": "claude-sonnet-4-6",
+      "maxTokens": 64000
+    },
+    "fallback": {
+      "provider": "anthropic",
+      "modelId": "claude-haiku-4-5-20251001",
+      "maxTokens": 16000
+    }
+  },
+  "global": {
+    "logLevel": "info",
+    "debug": false,
+    "defaultSubtasks": 3,
+    "defaultPriority": "medium",
+    "projectName": "북마크 AI 관리 서비스",
+    "tasksFilePath": "tasks/tasks.json",
+    "areas": {
+      "extension": "extension/tasks.json",
+      "front": "front/tasks.json",
+      "server": "server/tasks.json"
+    }
+  }
+}
