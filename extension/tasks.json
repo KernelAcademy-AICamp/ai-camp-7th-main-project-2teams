@@ -1,0 +1,101 @@
+{
+  "meta": {
+    "projectName": "북마크 AI — Chrome Extension",
+    "area": "extension",
+    "sourceFile": "scripts/prd.md",
+    "version": "v1.0 MVP",
+    "note": "ID A17~A25. front/tasks.json A1~A16과 연속 체계."
+  },
+  "tasks": [
+    {
+      "id": "A17",
+      "title": "Manifest V3 기본 구조 셋업",
+      "description": "Chrome Extension Manifest V3 프로젝트 초기화. background service worker, popup, content script 구조 생성.",
+      "details": "manifest.json에 activeTab, storage, scripting 권한 최소 설정. popup.html/js, background/index.js, content/index.js 파일 구조 생성.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": [],
+      "testStrategy": "chrome://extensions에서 로드 확인. 팝업 열기 테스트."
+    },
+    {
+      "id": "A18",
+      "title": "Supabase Auth 연동 (chrome.storage 기반)",
+      "description": "chrome.storage.local을 Supabase 커스텀 스토리지로 사용. Background SW에서 세션 단일 관리.",
+      "details": "createClient에 chromeStorage 어댑터 주입 (getItem/setItem/removeItem → chrome.storage.local). autoRefreshToken: true. Popup ↔ Background 메시지 통신으로 GET_SESSION, SIGN_OUT 구현.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": ["A17"],
+      "testStrategy": "로그인 후 팝업 닫고 재열기 시 세션 유지 확인."
+    },
+    {
+      "id": "A19",
+      "title": "로그인 UI — 웹앱 탭 연동",
+      "description": "팝업에서 미인증 감지 시 웹앱 로그인 탭 열기. 로그인 완료 후 extension에 토큰 전달.",
+      "details": "chrome.tabs.create({ url: WEB_APP_URL/login?from=extension }). 웹앱(A4)에서 로그인 완료 → chrome.runtime.sendMessage({ type: 'SESSION_UPDATED', session }). 팝업이 메시지 수신 후 인증 상태로 전환.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": ["A18", "A4"],
+      "testStrategy": "미인증 팝업 열기 → 웹앱 탭 열림 → 로그인 → 팝업 세션 갱신 확인."
+    },
+    {
+      "id": "A20",
+      "title": "현재 탭 정보 수집",
+      "description": "activeTab에서 title, URL, 본문 앞 2000자 추출.",
+      "details": "chrome.tabs.query({ active: true, currentWindow: true })로 URL/title 수집. content script에서 document.body.innerText.slice(0, 2000) 추출 후 background로 전달.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": ["A17"],
+      "testStrategy": "다양한 페이지에서 2000자 수집 확인. SPA에서도 동작 확인."
+    },
+    {
+      "id": "A21",
+      "title": "북마크 저장 — POST /api/bookmarks",
+      "description": "팝업 버튼 클릭 또는 Cmd+Shift+S 단축키로 저장 요청 전송.",
+      "details": "background에서 fetch(API_URL/api/bookmarks, { method: POST, body: { title, url, content }, headers: { Authorization: Bearer token } }). 단축키는 manifest.json commands 설정. API_URL은 환경변수로 관리 (개발/프로덕션 분리).",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": ["A18", "A20", "A5"],
+      "testStrategy": "저장 요청 후 Network 탭 201 응답 확인. DB에 북마크 행 생성 확인."
+    },
+    {
+      "id": "A22",
+      "title": "저장 완료 토스트 표시",
+      "description": "서버 응답 수신 후 팝업에 AI 생성 태그 포함 토스트 표시. 목표 1.5초 이내.",
+      "details": "pending 상태: 로딩 스피너. 성공: 태그 3~5개 + 카테고리 표시. 실패: 에러 메시지. 자동 닫힘 3초.",
+      "priority": "medium",
+      "status": "pending",
+      "dependencies": ["A21"],
+      "testStrategy": "저장 후 1.5초 내 태그 표시 확인. 느린 네트워크에서 로딩 상태 확인."
+    },
+    {
+      "id": "A23",
+      "title": "최소 권한 원칙 검증 (manifest.json)",
+      "description": "불필요한 권한 제거. Chrome 웹스토어 심사 대응 + 개보법 안전조치 의무.",
+      "details": "허용 권한: activeTab, storage, scripting만. 제거 대상: tabs(전체 탭 목록 — activeTab으로 대체), history, bookmarks. host_permissions: 저장 API URL만 명시. content_security_policy: script-src 'self'만 허용.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": ["A17"],
+      "testStrategy": "manifest.json permissions에 3개(activeTab·storage·scripting)만 존재 확인. chrome://extensions 경고 없음 확인."
+    },
+    {
+      "id": "A24",
+      "title": "로그아웃·탈퇴 시 로컬 데이터 파기",
+      "description": "chrome.storage.local 세션 토큰 및 캐시 완전 삭제. 개보법 21조 대응.",
+      "details": "SIGN_OUT 메시지 수신 시: supabase.auth.signOut() 후 chrome.storage.local.clear(). 탈퇴(A14 DELETE /api/account) 완료 응답 수신 시도 동일 처리. 팝업 재열기 시 미인증 상태 확인.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": ["A18", "A14"],
+      "testStrategy": "로그아웃 후 chrome.storage.local 전체 키 0개 확인. 팝업 재열기 시 로그인 화면 표시 확인."
+    },
+    {
+      "id": "A25",
+      "title": "Chrome 웹스토어 Privacy Practices 작성",
+      "description": "웹스토어 심사 필수 항목. 미작성 시 심사 반려.",
+      "details": "Developer Dashboard → Privacy practices 탭. 수집 항목: 현재 탭 URL·제목·본문(처리 후 파기). 사용 목적: AI 자동 태깅 및 검색. 제3자 공유: OpenAI(태깅·임베딩), Supabase(저장). 본문 미저장 명시. 인증 토큰: chrome.storage.local 저장, 제3자 미전달. 영문 작성.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": ["A17"],
+      "testStrategy": "웹스토어 대시보드 Privacy practices 저장 확인. 심사 제출 전 체크리스트 통과."
+    }
+  ]
+}
