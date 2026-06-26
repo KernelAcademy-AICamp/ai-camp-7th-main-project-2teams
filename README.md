@@ -14,7 +14,7 @@ AI Camp 7기 메인 프로젝트 (2팀).
 | ---------- | -------------------------------------- |
 | 웹앱 + API | Next.js 16 App Router (Route Handlers) |
 | 익스텐션   | Chrome Extension Manifest V3           |
-| 인증       | Supabase Auth + `@supabase/ssr`        |
+| 인증       | Supabase Auth + Google OAuth 전용      |
 | DB         | PostgreSQL + pgvector 0.7+ (Supabase)  |
 | AI 태깅    | OpenAI `gpt-4o-mini`                   |
 | AI 임베딩  | OpenAI `text-embedding-3-small`        |
@@ -32,8 +32,8 @@ front/              # Next.js 웹앱 + API Route Handlers
       search/
       account/
     (dashboard)/    # 인증 필요 페이지
-    login/
-    signup/
+    login/          # Google OAuth 버튼
+    auth/callback/  # OAuth 콜백 핸들러
     privacy/
     terms/
   tasks.json        # 웹앱 태스크 A1~A16

@@ -32,6 +32,7 @@ tasks/       # 태스크 인덱스
 
 - **별도 서버 없음**: API는 `front/app/api/` Route Handler로 처리. Vercel 서버리스 배포.
 - **태스크 ID 체계**: A1~A16 (front), A17~A25 (extension). `tasks/README.md` 참조.
+- **인증**: Google OAuth 전용 (Supabase Auth). 이메일/비밀번호 로그인 없음.
 - **환경변수**: `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`는 `NEXT_PUBLIC_` 접두어 금지 — 서버사이드 전용.
 - **embedding 컬럼**: API 응답에 절대 포함하지 않음.
 - **본문(content)**: DB 저장 금지. OpenAI 처리 후 즉시 파기. 로그 마스킹 필수.
