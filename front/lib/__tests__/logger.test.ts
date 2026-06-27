@@ -26,4 +26,14 @@ describe('maskSensitive', () => {
     maskSensitive(obj)
     expect(obj).toHaveProperty('content')
   })
+
+  it('embedding 키 제거', () => {
+    const result = maskSensitive({ title: 'test', embedding: [0.1, 0.2, 0.3] })
+    expect(result).not.toHaveProperty('embedding')
+  })
+
+  it('falsy content 값도 제거', () => {
+    expect(maskSensitive({ content: null, title: 'a' } as Record<string, unknown>)).not.toHaveProperty('content')
+    expect(maskSensitive({ content: 0, title: 'a' } as Record<string, unknown>)).not.toHaveProperty('content')
+  })
 })
