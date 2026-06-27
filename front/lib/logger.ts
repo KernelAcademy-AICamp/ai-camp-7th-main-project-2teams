@@ -10,7 +10,8 @@
  *   API 기본값: 학습 미사용(Zero Data Retention).
  */
 
-const SENSITIVE_KEYS = ['content'] as const
+// embedding도 API 응답 노출 금지 대상 — select 명시 컬럼으로 막지만 로그 경유 시도 이중 방어
+const SENSITIVE_KEYS = ['content', 'embedding'] as const
 
 type SensitiveKey = (typeof SENSITIVE_KEYS)[number]
 
