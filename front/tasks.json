@@ -23,7 +23,7 @@
       "description": "Next.js 16, Supabase SSR, TailwindCSS 초기 설정. 환경변수 구조 확립.",
       "details": "npx create-next-app@latest. @supabase/ssr 설치. middleware.ts로 인증 보호 라우트 설정. 환경변수: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY (공개), SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY (서버사이드 전용, NEXT_PUBLIC_ 금지). app/api/ 디렉토리 구조 생성.",
       "priority": "high",
-      "status": "pending",
+      "status": "in-progress",
       "dependencies": [],
       "testStrategy": "localhost:3000 접근 확인. /login redirect 동작 확인. process.env.OPENAI_API_KEY 클라이언트 번들 미포함 확인."
     },
