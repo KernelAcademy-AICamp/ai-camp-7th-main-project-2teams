@@ -88,6 +88,7 @@ CLAUDE.md 보안 제약을 코드 레벨로 검증:
 | `/review` | 신규 | 현재 diff에 code-reviewer + security-auditor 실행 |
 | `/api-route` | 신규 | Route Handler 스캐폴드(withAuth+Zod+supabase) |
 | `/spec-sync` | 신규 | spec-guardian 래핑, 문서↔코드 정합 검사 |
+| `/e2e` | 신규 | Playwright MCP로 `docs/specs/e2e/*.md` 시나리오 구동 |
 
 ---
 
@@ -108,6 +109,7 @@ CLAUDE.md 보안 제약을 코드 레벨로 검증:
 |----------|--------|------|
 | `.github/workflows/claude-review.yml` | `pull_request` | Claude Code Action이 code-reviewer + security-auditor 기준 리뷰 코멘트. `ANTHROPIC_API_KEY` secret 필요 |
 | `.github/workflows/ci.yml` | `pull_request` | lint + typecheck + `vitest run --coverage` + build 게이트(비-Claude) |
+| E2E (`/e2e` 스킬) | PR preview 배포 후 | Playwright MCP로 핵심 플로우 시나리오 구동. preview URL 대상 |
 
 ### 보안 3종 × 3계층 매핑
 
@@ -137,7 +139,7 @@ CLAUDE.md 보안 제약을 코드 레벨로 검증:
 - **secret-scanning hook**: 키 유출 사전 차단 (§5 Edit/Write hook)
 - **PR/이슈 템플릿**: `.github/PULL_REQUEST_TEMPLATE.md`(git.md PR 형식), `.github/ISSUE_TEMPLATE/`
 - **브랜치 보호**: main은 PR필수+잠금(직접 push 시 bypass 경고). develop 규칙 명문화
-- **테스트 (Vitest + MSW)**: 유닛(순수 로직) + Route Handler 통합. 4지점 게이트(빌더→commit hook→오케스트레이터→CI). 상세 `docs/specs/testing.md`
+- **테스트 (Vitest + MSW + Playwright MCP)**: 유닛/통합(`*.test.ts`) + E2E(시나리오 MD). 5지점 게이트(빌더→commit hook→오케스트레이터→CI→E2E). 상세 `docs/specs/testing.md`
 
 ---
 
