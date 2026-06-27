@@ -211,6 +211,8 @@ docs/specs/e2e/
 
 ①~④ Vitest 자동, ⑤ E2E는 preview 배포 의존 → PR 단계에서만.
 
+> **가드**: ②commit hook·④CI는 `package.json` 없으면 자동 skip(no-op). front 스캐폴드(A2) 후 자동 활성. 실제 hook: `.claude/hooks/lint-test-guard.sh`.
+
 ---
 
 ## 6. 커버리지 기준
