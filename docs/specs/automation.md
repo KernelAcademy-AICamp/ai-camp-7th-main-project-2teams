@@ -98,17 +98,18 @@ CLAUDE.md 보안 제약을 코드 레벨로 검증:
 
 | 이벤트 | matcher | 동작 |
 |--------|---------|------|
-| PreToolUse | `Bash(git commit:*)` | `npm run lint` + `vitest related --run`(변경 파일 관련만, 수초), 실패 시 차단 — git-rules 준수 |
-| PreToolUse | `Edit\|Write` | secret-scan: `NEXT_PUBLIC_`+(`SERVICE_ROLE`\|`OPENAI_API_KEY`) 또는 content 로깅 패턴 차단 |
-| PreToolUse | `Bash(git push:*)` | security-auditor 퀵체크 + lint, 위반 차단 |
-| Stop | — | 기존 Discord 알림 유지 |
+| PreToolUse | `Bash` (git commit 자체 필터) | `lint-test-guard.sh` — front/·extension/ 변경 감지 후 **해당 package.json 있을 때만** lint + `vitest related --run`. 미스캐폴드면 skip(exit 0). 실패 시 차단 |
+| PreToolUse | `Edit\|Write\|MultiEdit` | `secret-scan.sh`: `NEXT_PUBLIC_`+(`SERVICE_ROLE`\|`OPENAI_API_KEY`) 또는 content 로깅 패턴 차단(exit 2) |
+| Stop | — | 기존 Discord 알림 유지 (상위 워크스페이스 개인 설정) |
+
+> **가드 no-op**: front/ 미스캐폴드 상태에서도 안전. lint/vitest는 package.json 없으면 skip → 빈 레포에서 커밋 안 막힘. secret-scan은 텍스트 grep이라 항상 동작. 실제 파일: `.claude/settings.json` + `.claude/hooks/{lint-test-guard,secret-scan}.sh`.
 
 ### CI — GitHub Actions
 
 | 워크플로 | 트리거 | 동작 |
 |----------|--------|------|
-| `.github/workflows/claude-review.yml` | `pull_request` | Claude Code Action이 code-reviewer + security-auditor 기준 리뷰 코멘트. `ANTHROPIC_API_KEY` secret 필요 |
-| `.github/workflows/ci.yml` | `pull_request` | lint + typecheck + `vitest run --coverage` + build 게이트(비-Claude) |
+| `.github/workflows/claude-review.yml` | `pull_request` | Claude Code Action이 code-reviewer + security-auditor 기준 리뷰. `CLAUDE_REVIEW_ENABLED=true` var + `ANTHROPIC_API_KEY` secret + GitHub App 필요 |
+| `.github/workflows/ci.yml` | `pull_request` (paths: front/extension) | package.json 가드 → 있으면 lint + typecheck + `vitest run --coverage` + build, 없으면 job skip |
 | E2E (`/e2e` 스킬) | PR preview 배포 후 | Playwright MCP로 핵심 플로우 시나리오 구동. preview URL 대상 |
 
 ### 보안 3종 × 3계층 매핑
@@ -143,15 +144,17 @@ CLAUDE.md 보안 제약을 코드 레벨로 검증:
 
 ---
 
-## 8. 구현 우선순위
+## 8. 구현 상태
 
-```
-1순위 (안전망): security-auditor 에이전트 + lint hook + secret-scan hook
-                → 이후 모든 작업이 게이트 통과
-2순위 (가속):   Vitest 셋업 + /dev-task 오케스트레이터 + feature-builder
-                → 태스크 자동 처리 루프(테스트 게이트 포함) 가동
-3순위 (협업):   CI(ci.yml + claude-review.yml) + PR/이슈 템플릿
-                → 팀 PR 흐름 표준화
-4순위 (정합):   spec-guardian + /spec-sync
-                → 문서↔코드 드리프트 방지
-```
+프레임워크 .md(선언적)는 **전부 구축 완료**. 런타임 게이트(lint/vitest/CI)는 가드로 front 스캐폴드(A2) 전까지 자동 skip.
+
+| 계층 | 산출물 | 상태 |
+|------|--------|------|
+| 에이전트 | `.claude/agents/{code-reviewer,security-auditor,feature-builder,spec-guardian}.md` | ✅ |
+| 룰 | `.claude/rules/{security,api-patterns}.md` | ✅ |
+| 스킬 | `.claude/commands/{dev-task,new-feature,review,api-route,spec-sync,e2e}.md` | ✅ |
+| hooks | `.claude/settings.json` + `.claude/hooks/{lint-test-guard,secret-scan}.sh` | ✅ (가드 동작) |
+| CI/템플릿 | `.github/workflows/{ci,claude-review}.yml` + PR/이슈 템플릿 | ✅ (CI 가드 skip) |
+| E2E | `docs/specs/e2e/*.md` | ✅ (구동은 preview 후) |
+
+**전제(activation)**: front 스캐폴드(A2 — Next.js + vitest + lint 셋업) 시 lint/vitest 게이트·CI 자동 활성. claude-review.yml은 저장소 var `CLAUDE_REVIEW_ENABLED=true` + `ANTHROPIC_API_KEY` secret + GitHub App 설치 필요.
