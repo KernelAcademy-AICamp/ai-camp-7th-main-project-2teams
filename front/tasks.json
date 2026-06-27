@@ -83,7 +83,7 @@
       "description": "본문이 DB·로그 어디에도 저장되지 않음을 보장. OpenAI 학습 미사용 확인.",
       "details": "1) DB: bookmarks 테이블에 content 컬럼 없음 확인. 2) 로그 마스킹: Route Handler에서 content 필드 로그 출력 금지. 3) platform.openai.com Settings > Data Controls: API 데이터 학습 사용 여부 확인 (API 기본값: 학습 미사용). 4) 처리방침(A12)에 문구 추가: 'OpenAI API를 통해 처리되며 학습 데이터로 사용되지 않습니다. 본문은 AI 처리 완료 즉시 파기.'",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A5"],
       "testStrategy": "bookmarks 스키마 content 컬럼 없음 확인. Vercel 로그에 본문 미노출 확인. OpenAI Data Controls 설정 스크린샷 보관."
     },
