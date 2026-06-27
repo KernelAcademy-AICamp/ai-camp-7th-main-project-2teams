@@ -8,6 +8,13 @@ export const bookmarkSchema = z.object({
   url: z.url(),
 })
 
+// A5 전용 transient — content는 OpenAI 처리 후 파기, DB 저장·로그 금지(보안 규칙).
+// bookmarkSchema(공개)와 분리: content를 영속 스키마에 포함하지 않기 위함.
+export const bookmarkCreateSchema = bookmarkSchema.extend({
+  content: z.string().max(2000).optional().default(''),
+  folder_hint: z.array(z.string()).optional(),
+})
+
 export const searchSchema = z.object({
   query: z.string().min(1).max(50),
 })
@@ -17,5 +24,6 @@ export const favoriteSchema = z.object({
 })
 
 export type BookmarkInput = z.infer<typeof bookmarkSchema>
+export type BookmarkCreateInput = z.infer<typeof bookmarkCreateSchema>
 export type SearchInput = z.infer<typeof searchSchema>
 export type FavoriteInput = z.infer<typeof favoriteSchema>
