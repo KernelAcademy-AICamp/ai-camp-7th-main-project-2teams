@@ -11,6 +11,8 @@ import { Sidebar } from '@/components/Sidebar'
 import { useBookmarks } from '@/hooks/useBookmarks'
 import { useSearch } from '@/hooks/useSearch'
 import { useFilterStore } from '@/store/filterStore'
+import { createClient } from '@/lib/supabase/client'
+import { getOnboardingKey, isOnboardingDone } from '@/lib/onboarding'
 
 function DashboardContent() {
   const router = useRouter()
@@ -25,6 +27,19 @@ function DashboardContent() {
       setTag: s.setTag,
     }))
   )
+
+  // 신규 유저 온보딩 리다이렉트 — localStorage 기반 최소 체크 (A26)
+  // isOnboardingDone이 손상된 값도 안전 처리(크래시 방지)
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      const stored = localStorage.getItem(getOnboardingKey(user.id))
+      if (!isOnboardingDone(stored)) {
+        router.push('/onboarding')
+      }
+    })
+  }, [router])
 
   // URL 파라미터로 초기 필터 상태 복원 (마운트 1회)
   useEffect(() => {
