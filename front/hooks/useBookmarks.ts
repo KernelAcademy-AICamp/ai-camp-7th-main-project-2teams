@@ -31,6 +31,8 @@ export function useBookmarks(filters: BookmarksFilters) {
       if (!res.ok) throw new Error('Failed to fetch')
       return res.json()
     },
+    staleTime: 1000 * 60,
+    gcTime: 1000 * 60 * 5,
     placeholderData: keepPreviousData,
   })
 }

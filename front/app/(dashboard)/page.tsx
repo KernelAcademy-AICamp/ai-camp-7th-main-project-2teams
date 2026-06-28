@@ -5,7 +5,7 @@ import { BookmarkSkeleton } from '@/components/BookmarkSkeleton'
 import { useBookmarks } from '@/hooks/useBookmarks'
 
 export default function DashboardPage() {
-  const { data, isPending, isError } = useBookmarks({})
+  const { data, isPending, isError, refetch } = useBookmarks({})
 
   if (isPending) {
     return (
@@ -23,9 +23,12 @@ export default function DashboardPage() {
         <p className="text-gray-500 dark:text-gray-400">
           북마크를 불러오는 중 오류가 발생했습니다.
         </p>
-        <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">
-          잠시 후 다시 시도해 주세요.
-        </p>
+        <button
+          onClick={() => refetch()}
+          className="mt-3 rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
+        >
+          다시 시도
+        </button>
       </div>
     )
   }
