@@ -5,6 +5,7 @@ on:
     paths:
       - 'front/**'
       - 'extension/**'
+      - '.github/workflows/ci.yml'
 
 jobs:
   front:
