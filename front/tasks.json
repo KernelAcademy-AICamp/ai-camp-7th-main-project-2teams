@@ -123,7 +123,7 @@
       "description": "개보법 30조·정통망법 27조의2 의무. 공개 라우트.",
       "details": "app/privacy/page.tsx. 포함 항목: 수집 항목(이메일·URL·제목·벡터), 수집 목적, 보유 기간(탈퇴 즉시 파기), 국외이전 수탁자(OpenAI/Supabase/Vercel — 미국·목적·거부 방법), OpenAI 학습 미사용 명시, 열람·수정·삭제 요청 방법, 시행일. 인증 불필요.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A2"],
       "testStrategy": "비로그인 /privacy 접근 확인. 국외이전 수탁자 3개(OpenAI·Supabase·Vercel) 명시 확인."
     },
