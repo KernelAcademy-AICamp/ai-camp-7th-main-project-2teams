@@ -35,7 +35,7 @@
       "description": "팝업에서 미인증 감지 시 웹앱 로그인 탭 열기. 로그인 완료 후 extension에 토큰 전달.",
       "details": "chrome.tabs.create({ url: WEB_APP_URL/login?from=extension }). 웹앱(A4)에서 로그인 완료 → chrome.runtime.sendMessage({ type: 'SESSION_UPDATED', session }). 팝업이 메시지 수신 후 인증 상태로 전환.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A18",
         "A4"
@@ -48,7 +48,7 @@
       "description": "activeTab에서 title, URL, 본문 앞 2000자 추출.",
       "details": "chrome.tabs.query({ active: true, currentWindow: true })로 URL/title 수집. content script에서 document.body.innerText.slice(0, 2000) 추출 후 background로 전달.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A17"
       ],
