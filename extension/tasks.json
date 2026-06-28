@@ -60,7 +60,7 @@
       "description": "팝업 버튼 클릭 또는 Cmd+Shift+S 단축키로 저장 요청 전송.",
       "details": "background에서 fetch(API_URL/api/bookmarks, { method: POST, body: { title, url, content }, headers: { Authorization: Bearer token } }). 단축키는 manifest.json commands 설정. API_URL은 환경변수로 관리 (개발/프로덕션 분리).",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A18",
         "A20",
