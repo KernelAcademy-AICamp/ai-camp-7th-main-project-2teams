@@ -143,7 +143,7 @@
       "description": "탈퇴 요청 시 북마크 전체 삭제 후 Auth 유저 삭제. 개보법 21조 잊힐 권리 대응.",
       "details": "app/api/account/route.ts (DELETE). service_role_key 필요 — 서버사이드 전용, NEXT_PUBLIC_ 금지. 순서: 1) DELETE FROM bookmarks WHERE user_id = $1. 2) supabase.auth.admin.deleteUser(userId). 3) 파기 완료 로그 (user_id 해시만, 식별 정보 미포함).",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A1", "A3"],
       "testStrategy": "탈퇴 후 bookmarks user_id 행 0개 확인. Auth 유저 조회 시 404 확인."
     },
