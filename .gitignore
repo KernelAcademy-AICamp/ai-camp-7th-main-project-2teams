@@ -1,7 +1,6 @@
-# 환경변수
-.env
-.env.local
-.env*.local
+# 환경변수 (.env.example만 추적)
+.env*
+!.env.example
 
 # 의존성
 node_modules/
