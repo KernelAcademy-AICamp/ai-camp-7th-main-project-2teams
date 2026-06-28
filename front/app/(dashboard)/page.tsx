@@ -11,27 +11,50 @@ import { Sidebar } from '@/components/Sidebar'
 import { useBookmarks } from '@/hooks/useBookmarks'
 import { useSearch } from '@/hooks/useSearch'
 import { useFilterStore } from '@/store/filterStore'
+import { createClient } from '@/lib/supabase/client'
+import { getOnboardingKey, isOnboardingDone } from '@/lib/onboarding'
 
 function DashboardContent() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const { category, tag, setCategory, setTag } = useFilterStore(
+  const { category, folder, tag, tab, setCategory, setFolder, setTag, setTab } = useFilterStore(
     useShallow((s) => ({
       category: s.category,
+      folder: s.folder,
       tag: s.tag,
+      tab: s.tab,
       setCategory: s.setCategory,
+      setFolder: s.setFolder,
       setTag: s.setTag,
+      setTab: s.setTab,
     }))
   )
+
+  // 신규 유저 온보딩 리다이렉트 — localStorage 기반 최소 체크 (A26)
+  // isOnboardingDone이 손상된 값도 안전 처리(크래시 방지)
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      const stored = localStorage.getItem(getOnboardingKey(user.id))
+      if (!isOnboardingDone(stored)) {
+        router.push('/onboarding')
+      }
+    })
+  }, [router])
 
   // URL 파라미터로 초기 필터 상태 복원 (마운트 1회)
   useEffect(() => {
     const urlCategory = searchParams.get('category')
+    const urlFolder = searchParams.get('folder')
     const urlTag = searchParams.get('tag')
+    const urlTab = searchParams.get('tab')
     if (urlCategory) setCategory(urlCategory)
+    if (urlFolder) setFolder(urlFolder)
     if (urlTag) setTag(urlTag)
+    if (urlTab === 'favorites') setTab('favorites')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -44,10 +67,13 @@ function DashboardContent() {
     }
     const params = new URLSearchParams()
     if (category) params.set('category', category)
+    if (folder) params.set('folder', folder)
     if (tag) params.set('tag', tag)
+    // favorites 탭만 URL에 반영 — 다른 SidebarTab 값이 새지 않도록 명시
+    if (tab === 'favorites') params.set('tab', 'favorites')
     const qs = params.toString()
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
-  }, [category, tag, router, pathname])
+  }, [category, folder, tag, tab, router, pathname])
 
   const [searchQuery, setSearchQuery] = useState('')
   const isSearching = searchQuery.trim().length > 0
@@ -57,7 +83,13 @@ function DashboardContent() {
     isPending: isBookmarkPending,
     isError: isBookmarkError,
     refetch,
-  } = useBookmarks({ category: category ?? undefined, tag: tag ?? undefined })
+  } = useBookmarks({
+    category: category ?? undefined,
+    folder: folder ?? undefined,
+    tag: tag ?? undefined,
+    // favorites만 명시 전달 — 다른 SidebarTab 값 누출 방지 (L-3)
+    tab: tab === 'favorites' ? 'favorites' : undefined,
+  })
 
   const {
     mutate: search,

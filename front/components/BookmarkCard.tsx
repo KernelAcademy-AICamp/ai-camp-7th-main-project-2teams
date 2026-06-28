@@ -1,13 +1,16 @@
-import { ExternalLink, Tag, Calendar } from 'lucide-react'
+'use client'
+
+import { Star, ExternalLink, Tag, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Bookmark } from '@/hooks/useBookmarks'
+import { useToggleFavorite } from '@/hooks/useToggleFavorite'
 
 interface BookmarkCardProps {
   bookmark: Bookmark
 }
 
-// javascript: URL XSS 방어 — http/https만 허용
-function safeUrl(url: string): string {
+/** javascript: URL XSS 방어 — http/https만 허용 */
+export function safeUrl(url: string): string {
   try {
     const { protocol } = new URL(url)
     if (protocol === 'https:' || protocol === 'http:') return url
@@ -31,7 +34,25 @@ function formatDate(iso: string): string {
   })
 }
 
+/** 즐겨찾기 상태별 접근성 레이블 — 테스트 가능하도록 export */
+export function getFavoriteAriaLabel(isFavorite: boolean): string {
+  return isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'
+}
+
+/** 즐겨찾기 상태별 Star 아이콘 CSS 클래스 — 테스트 가능하도록 export */
+export function getFavoriteIconClass(isFavorite: boolean): string {
+  return isFavorite
+    ? 'fill-yellow-400 text-yellow-400'
+    : 'text-gray-300 dark:text-gray-600'
+}
+
 export function BookmarkCard({ bookmark }: BookmarkCardProps) {
+  const { mutate: toggleFavorite, isPending } = useToggleFavorite()
+
+  const handleToggleFavorite = () => {
+    toggleFavorite({ id: bookmark.id, is_favorite: !bookmark.is_favorite })
+  }
+
   return (
     <article
       className={cn(
@@ -39,7 +60,7 @@ export function BookmarkCard({ bookmark }: BookmarkCardProps) {
         'transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-900'
       )}
     >
-      {/* 제목 + 외부 링크 */}
+      {/* 제목 + 즐겨찾기 버튼 + 외부 링크 */}
       <div className="flex items-start justify-between gap-2">
         <a
           href={safeUrl(bookmark.url)}
@@ -49,15 +70,27 @@ export function BookmarkCard({ bookmark }: BookmarkCardProps) {
         >
           {bookmark.title}
         </a>
-        <a
-          href={safeUrl(bookmark.url)}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="새 탭에서 열기"
-          className="shrink-0 text-gray-400 hover:text-brand"
-        >
-          <ExternalLink size={16} />
-        </a>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            onClick={handleToggleFavorite}
+            aria-label={getFavoriteAriaLabel(bookmark.is_favorite)}
+            aria-pressed={bookmark.is_favorite}
+            aria-busy={isPending}
+            disabled={isPending}
+            className="rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800"
+          >
+            <Star size={16} className={getFavoriteIconClass(bookmark.is_favorite)} />
+          </button>
+          <a
+            href={safeUrl(bookmark.url)}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="새 탭에서 열기"
+            className="shrink-0 text-gray-400 hover:text-brand"
+          >
+            <ExternalLink size={16} />
+          </a>
+        </div>
       </div>
 
       {/* 도메인 URL */}
