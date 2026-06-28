@@ -236,7 +236,7 @@
       "description": "북마크 카드 즐겨찾기 버튼 + 사이드바 즐겨찾기 탭 필터.",
       "details": "카드 내 즐겨찾기 토글 버튼 → PATCH /api/bookmarks/:id(A27) 호출, 낙관적 업데이트. 사이드바 '즐겨찾기' 탭 클릭 시 GET /api/bookmarks?tab=favorites(A6) 재요청. is_favorite 상태 아이콘 반영.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A9",
         "A27"
