@@ -166,6 +166,66 @@
       "status": "done",
       "dependencies": ["A4", "A14"],
       "testStrategy": "탈퇴 후 재로그인 불가 확인. DB 북마크 0개 확인."
+    },
+    {
+      "id": "A26",
+      "title": "온보딩 페이지 (/onboarding)",
+      "description": "신규 가입자에게 익스텐션 설치·저장 방법을 안내하는 온보딩 화면.",
+      "details": "app/onboarding/page.tsx. PRD 온보딩 흐름: 로그인(A4) 직후 신규 유저는 온보딩 화면 진입. Chrome 익스텐션 설치 안내, 첫 북마크 저장 방법, 자연어 검색 소개. 완료 후 홈(A9)으로 이동. 신규 여부 판단 후 1회 노출.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": ["A4"],
+      "testStrategy": "신규 로그인 시 /onboarding 진입 확인. 완료 후 홈 이동 및 재진입 시 미노출 확인."
+    },
+    {
+      "id": "A27",
+      "title": "PATCH /api/bookmarks/:id — 즐겨찾기 토글 API",
+      "description": "북마크 is_favorite 토글 + 삭제(DELETE) Route Handler.",
+      "details": "app/api/bookmarks/[id]/route.ts. withAuth() 적용. PATCH 입력: { is_favorite }(favoriteSchema, lib/schemas.ts 정의됨). update({ is_favorite }).eq('id', id) — RLS update 정책(A1)으로 본인 데이터만. select 명시 컬럼(embedding 제외). DELETE: 본인 북마크 단건 삭제. 현재 둘 다 501 스텁.",
+      "priority": "medium",
+      "status": "pending",
+      "dependencies": ["A1", "A3"],
+      "testStrategy": "PATCH로 is_favorite true/false 토글 확인. 타인 북마크 id PATCH 시 0행(RLS). DELETE 후 미조회 확인."
+    },
+    {
+      "id": "A28",
+      "title": "즐겨찾기 UI (카드 버튼 + 사이드바 탭 연동)",
+      "description": "북마크 카드 즐겨찾기 버튼 + 사이드바 즐겨찾기 탭 필터.",
+      "details": "카드 내 즐겨찾기 토글 버튼 → PATCH /api/bookmarks/:id(A27) 호출, 낙관적 업데이트. 사이드바 '즐겨찾기' 탭 클릭 시 GET /api/bookmarks?tab=favorites(A6) 재요청. is_favorite 상태 아이콘 반영.",
+      "priority": "medium",
+      "status": "pending",
+      "dependencies": ["A9", "A27"],
+      "testStrategy": "카드 버튼 클릭 시 즐겨찾기 토글 + 아이콘 변경 확인. 즐겨찾기 탭에서 해당 북마크만 표시."
+    },
+    {
+      "id": "A29",
+      "title": "POST /api/bookmarks/import — 파일 임포트 API",
+      "description": "브라우저 HTML 북마크 파일 파싱 + 배치 AI 태깅 저장. folder_hint 원본 보존.",
+      "details": "app/api/bookmarks/import/route.ts. withAuth() 적용. 입력: 브라우저 export HTML(netscape-bookmark) 파싱 → { title, url, folder_hint }[] 추출. 각 항목 배치 태깅(generateTags) + 임베딩(createEmbedding) 후 일괄 insert. folder_hint는 원본 폴더 경로 보존(A31용). content 없음(제목·URL만) → 본문 미저장. 처리량 제한·부분 실패 처리. 현재 501 스텁.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": ["A1", "A3", "A5"],
+      "testStrategy": "Chrome export HTML 업로드 시 북마크 일괄 저장 확인. folder_hint 원본 경로 보존 확인. 대량(100+) 처리 확인."
+    },
+    {
+      "id": "A30",
+      "title": "파일 임포트 UI",
+      "description": "헤더 파일 업로드 버튼 → 임포트 페이지. HTML 파일 선택 후 진행 상태 표시.",
+      "details": "헤더 우측 '파일 업로드' 버튼 → 임포트 페이지 이동(PRD WEB-14). HTML 파일 선택 → POST /api/bookmarks/import(A29) 업로드. 진행률·결과(성공/실패 건수) 표시. 완료 후 목록(A9) 이동.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": ["A4", "A29"],
+      "testStrategy": "HTML 파일 업로드 후 진행 상태·결과 표시 확인. 완료 후 목록 반영 확인."
+    },
+    {
+      "id": "A31",
+      "title": "사이드바 내 폴더 탭 (folder_hint 기반)",
+      "description": "임포트된 folder_hint를 사이드바 폴더 트리로 표시·필터.",
+      "details": "app/api/bookmarks/folders/route.ts (GET) — folder_hint distinct 목록 조회(현재 501 스텁). 사이드바 '내 폴더' 탭에서 폴더 목록 렌더. 클릭 시 GET /api/bookmarks?folder=<경로>(A6) 필터. A11 사이드바 구조 확장.",
+      "priority": "medium",
+      "status": "pending",
+      "dependencies": ["A11", "A30"],
+      "testStrategy": "임포트 후 폴더 목록 표시 확인. 폴더 클릭 시 해당 folder_hint 북마크만 필터."
     }
   ]
 }
