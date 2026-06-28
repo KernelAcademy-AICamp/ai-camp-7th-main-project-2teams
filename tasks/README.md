@@ -7,14 +7,59 @@ MVP v1.0 태스크 — PRD `scripts/prd.md` 기반 (v0.5, IA 정리본 반영)
 ```
 front/tasks.json       # Next.js 웹앱 + API Routes (A1~A16, A26~A31)
 extension/tasks.json   # Chrome Extension (A17~A25)
-tasks/README.md        # 이 파일
+tasks/README.md        # 이 파일 (진행 현황 포함)
 ```
 
 > `server/` 디렉토리 없음. API Route Handler는 `front/app/api/` 안에 통합.
 
 ---
 
-## 태스크 목록
+## 진행 현황
+
+> 태스크 완료 시 체크박스 업데이트 필수 (`[x]`로 변경 + `tasks.json` status: done).
+
+### Web App + API Routes — front/ (A1~A16, A26~A31)
+
+- [x] A1: Supabase DB 스키마 + pgvector 설정
+- [x] A2: Next.js 16 App Router 프로젝트 셋업
+- [x] A3: 인증 미들웨어 withAuth()
+- [x] A4: Google OAuth 로그인 페이지
+- [x] A5: POST /api/bookmarks — 저장 + AI 태깅 + 임베딩
+- [x] A6: GET /api/bookmarks — 목록 조회 + 필터 (즐겨찾기 포함)
+- [x] A7: POST /api/search — 자연어 벡터 검색
+- [x] A8: OpenAI ZDR + 본문 미저장 보장
+- [x] A9: 북마크 목록 페이지 (홈)
+- [x] A10: 자연어 검색 UI
+- [x] A11: 사이드바 태그/카테고리 필터
+- [x] A12: 개인정보처리방침 페이지 (/privacy)
+- [x] A13: 이용약관 페이지 (/terms)
+- [x] A14: DELETE /api/account — 회원 탈퇴 + 데이터 파기
+- [x] A15: GET /api/account/data — 개인정보 열람 API
+- [x] A16: 회원 탈퇴 UI + 데이터 파기 플로우
+- [ ] A26: 온보딩 페이지 (/onboarding)
+- [ ] A27: PATCH /api/bookmarks/:id — 즐겨찾기 토글 API
+- [ ] A28: 즐겨찾기 UI
+- [ ] A29: POST /api/bookmarks/import — 파일 임포트 API
+- [ ] A30: 파일 임포트 UI
+- [ ] A31: 사이드바 내 폴더 탭
+
+### Chrome Extension — extension/ (A17~A25)
+
+- [x] A17: Manifest V3 기본 구조 셋업
+- [x] A18: Supabase Auth 연동 (chrome.storage 기반)
+- [x] A19: 로그인 UI — 웹앱 탭 연동
+- [ ] A20: 현재 탭 정보 수집
+- [ ] A21: 북마크 저장 — POST /api/bookmarks
+- [ ] A22: 저장 완료 토스트 (태그 미리보기 포함)
+- [ ] A23: 최소 권한 원칙 검증 (manifest.json)
+- [ ] A24: 로그아웃·탈퇴 시 로컬 데이터 파기
+- [ ] A25: Chrome 웹스토어 Privacy Practices 작성
+
+**진행률: 19 / 25 완료 (MVP 범위 A1~A25 기준)**
+
+---
+
+## 태스크 상세
 
 ### Web App + API Routes — front/ (A1~A16, A26~A31)
 
@@ -30,20 +75,18 @@ tasks/README.md        # 이 파일
 | A8  | OpenAI ZDR + 본문 미저장 보장                             | high     | 법적   |      |
 | A9  | 북마크 목록 페이지 (홈 — 리스트/그리드 뷰 + 정렬)        | high     | 기능   | 수정 |
 | A10 | 자연어 검색 UI (최대 50자 + 최근 검색 MVP)               | high     | 기능   | 수정 |
-| A11 | 사이드바 (전체/즐겨찾기/카테고리 드롭다운/내 폴더 드롭다운 + 필터) | medium | 기능 | 수정 |
+| A11 | 사이드바 (전체/즐겨찾기/카테고리 + 필터)                 | medium   | 기능   | 수정 |
 | A12 | 개인정보처리방침 페이지 (/privacy)                        | high     | 법적   |      |
 | A13 | 이용약관 페이지 (/terms)                                  | high     | 법적   |      |
 | A14 | DELETE /api/account — 회원 탈퇴 + 데이터 파기             | high     | 법적   |      |
 | A15 | GET /api/account/data — 개인정보 열람 API                 | medium   | 법적   |      |
 | A16 | 회원 탈퇴 UI + 데이터 파기 플로우                         | medium   | 법적   |      |
-| A26 | 온보딩 페이지 (`/onboarding` — 별도 화면, 익스텐션 설치 안내 + 첫 저장 유도 + 데모 GIF) | high | 기능 | 수정 |
+| A26 | 온보딩 페이지 (/onboarding)                               | high     | 기능   | 수정 |
 | A27 | PATCH /api/bookmarks/:id — 즐겨찾기 토글 API             | medium   | 기능   | 신규 |
 | A28 | 즐겨찾기 UI (카드 버튼 + 사이드바 탭 연동)               | medium   | 기능   | 신규 |
-| A29 | POST /api/bookmarks/import — 파일 임포트 API (HTML 파싱 + 배치 태깅) | high | 기능 | 신규 |
-| A30 | 파일 임포트 UI (WEB-14 — 드래그앤드롭 + 선택 파일 정보 + 진행 상황 + 상태 분기) | high | 기능 | 신규 |
-| A31 | 사이드바 내 폴더 탭 (folder_hint 기반 드롭다운, 파일 임포트 시만 노출) | medium | 기능 | 신규 |
-
-> A30 헤더 버튼("파일 업로드")과 URL 직접 추가 모달("북마크 추가")은 A9 작업 시 헤더 컴포넌트에 함께 포함.
+| A29 | POST /api/bookmarks/import — 파일 임포트 API              | high     | 기능   | 신규 |
+| A30 | 파일 임포트 UI                                            | high     | 기능   | 신규 |
+| A31 | 사이드바 내 폴더 탭 (folder_hint 기반)                   | medium   | 기능   | 신규 |
 
 ### Chrome Extension — extension/ (A17~A25)
 
