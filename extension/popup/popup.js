@@ -1,5 +1,43 @@
 const statusEl = document.getElementById('status')
 const actionEl = document.getElementById('action')
+const toastEl = document.getElementById('toast')
+
+let toastTimer = null
+
+function showToast(state) {
+  clearTimeout(toastTimer)
+  toastEl.hidden = false
+  toastEl.className = state.type
+  toastEl.replaceChildren()
+
+  if (state.type === 'loading') {
+    const spinner = document.createElement('span')
+    spinner.className = 'spinner'
+    const text = document.createTextNode('저장 중...')
+    toastEl.append(spinner, text)
+    return
+  }
+
+  if (state.type === 'success') {
+    const line1 = document.createElement('div')
+    line1.textContent = '✓ 저장 완료'
+
+    const line2 = document.createElement('div')
+    line2.className = 'toast-tags'
+    const category = state.bookmark?.category_id ? `[${state.bookmark.category_id}] ` : ''
+    const tags = state.bookmark?.tags?.length ? state.bookmark.tags.join(' · ') : '태그 없음'
+    line2.textContent = `${category}${tags}`
+
+    toastEl.append(line1, line2)
+    toastTimer = setTimeout(() => { toastEl.hidden = true }, 3000)
+    return
+  }
+
+  if (state.type === 'error') {
+    toastEl.textContent = `오류: ${state.message}`
+    toastTimer = setTimeout(() => { toastEl.hidden = true }, 3000)
+  }
+}
 
 function makeButton(text, id, className) {
   const btn = document.createElement('button')
@@ -16,13 +54,18 @@ function renderAuth(session) {
     const saveBtn = makeButton('현재 페이지 저장', 'save', '')
     const logoutBtn = makeButton('로그아웃', 'logout', 'danger')
     actionEl.replaceChildren(saveBtn, logoutBtn)
+    toastEl.hidden = true
 
     document.getElementById('save').addEventListener('click', () => {
       saveBtn.disabled = true
-      saveBtn.textContent = '저장 중...'
+      showToast({ type: 'loading' })
       chrome.runtime.sendMessage({ type: 'SAVE_BOOKMARK' }, (result) => {
-        // A22에서 토스트로 교체 예정 — 현재는 버튼 텍스트로 임시 피드백
-        saveBtn.textContent = result?.error ? `오류: ${result.error}` : '저장됨 ✓'
+        saveBtn.disabled = false
+        if (result?.error) {
+          showToast({ type: 'error', message: result.error })
+        } else {
+          showToast({ type: 'success', bookmark: result?.bookmark })
+        }
       })
     })
 
@@ -35,6 +78,7 @@ function renderAuth(session) {
 }
 
 function renderUnauth() {
+  toastEl.hidden = true
   statusEl.textContent = '로그인이 필요합니다'
   actionEl.replaceChildren(makeButton('Google로 로그인', 'login', ''))
   document.getElementById('login').addEventListener('click', () => {
@@ -43,10 +87,8 @@ function renderUnauth() {
   })
 }
 
-// background로부터 SESSION_UPDATED 수신 (팝업 열려있는 경우)
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type === 'SESSION_UPDATED') renderAuth(msg.session)
 })
 
-// 초기 세션 확인
 chrome.runtime.sendMessage({ type: 'GET_SESSION' }, (session) => renderAuth(session))
