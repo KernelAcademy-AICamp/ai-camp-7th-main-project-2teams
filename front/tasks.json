@@ -93,7 +93,7 @@
       "description": "로그인 유저 북마크 최신순 목록 표시.",
       "details": "app/(dashboard)/page.tsx. GET /api/bookmarks 호출. 카드 UI: 제목, URL, 태그 뱃지, 카테고리, 저장일. 원본 URL 클릭 시 새 탭. 초기 로딩 스켈레톤 UI. 빈 상태 UI (북마크 없을 때).",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A4", "A6"],
       "testStrategy": "북마크 10개 이상 저장 후 목록 표시 확인. 빈 상태 UI 확인."
     },
