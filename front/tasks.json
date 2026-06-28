@@ -249,7 +249,7 @@
       "description": "브라우저 HTML 북마크 파일 파싱 + 배치 AI 태깅 저장. folder_hint 원본 보존.",
       "details": "app/api/bookmarks/import/route.ts. withAuth() 적용. 입력: 브라우저 export HTML(netscape-bookmark) 파싱 → { title, url, folder_hint }[] 추출. 각 항목 배치 태깅(generateTags) + 임베딩(createEmbedding) 후 일괄 insert. folder_hint는 원본 폴더 경로 보존(A31용). content 없음(제목·URL만) → 본문 미저장. 처리량 제한·부분 실패 처리. 현재 501 스텁.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A1",
         "A3",
