@@ -3,7 +3,7 @@
   "name": "Bookmarker",
   "version": "0.1.0",
   "description": "AI 북마크 관리 — 자동 태깅 및 자연어 검색",
-  "permissions": ["activeTab", "storage", "scripting", "tabs"],
+  "permissions": ["activeTab", "storage", "scripting"],
   "host_permissions": [
     "http://localhost:3000/*",
     "https://*.vercel.app/*"
