@@ -161,7 +161,7 @@ A17 (Extension 셋업)
 
 ### 배포 차단급
 
-- [ ] **WEB_APP_URL 하드코딩** (`extension/lib/config.js` = `localhost:3000`). prod 익스텐션 빌드 시 vercel 주소로 치환 필요 — 안 하면 배포 익스텐션 저장 전부 실패.
+- [x] **WEB_APP_URL 하드코딩** — esbuild define으로 빌드 타임 치환 처리. `WEB_APP_URL`/`SUPABASE_URL`/`SUPABASE_ANON_KEY` 환경변수 주입, 미설정 시 localhost fallback.
 
 ### 데이터/정합성
 
