@@ -23,12 +23,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ bookmarks }: SidebarProps) {
-  const { category, tag, setCategory, setTag } = useFilterStore(
+  const { category, tag, tab, setCategory, setTag, setTab } = useFilterStore(
     useShallow((s) => ({
       category: s.category,
       tag: s.tag,
+      tab: s.tab,
       setCategory: s.setCategory,
       setTag: s.setTag,
+      setTab: s.setTab,
     }))
   )
 
@@ -46,6 +48,32 @@ export function Sidebar({ bookmarks }: SidebarProps) {
 
   return (
     <nav aria-label="북마크 필터" className="flex w-48 shrink-0 flex-col gap-6">
+      {/* 전체 / 즐겨찾기 탭 — 카테고리 버튼과 동일하게 aria-pressed 사용 */}
+      <section>
+        <div className="flex gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+          {(['all', 'favorites'] as const).map((t) => (
+            <button
+              key={t}
+              aria-pressed={tab === t}
+              onClick={() => {
+                setTab(t)
+                // 탭 전환 시 category/tag 리셋 (handleCategory/handleTag와 동일 패턴)
+                setCategory(null)
+                setTag(null)
+              }}
+              className={[
+                'flex-1 rounded-md px-2 py-1 text-sm font-medium transition-colors',
+                tab === t
+                  ? 'bg-white text-gray-900 shadow dark:bg-gray-700 dark:text-gray-100'
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200',
+              ].join(' ')}
+            >
+              {t === 'all' ? '전체' : '즐겨찾기'}
+            </button>
+          ))}
+        </div>
+      </section>
+
       {/* 카테고리 */}
       <section>
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">

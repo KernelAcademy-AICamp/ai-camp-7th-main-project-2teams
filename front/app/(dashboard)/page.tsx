@@ -19,12 +19,14 @@ function DashboardContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const { category, tag, setCategory, setTag } = useFilterStore(
+  const { category, tag, tab, setCategory, setTag, setTab } = useFilterStore(
     useShallow((s) => ({
       category: s.category,
       tag: s.tag,
+      tab: s.tab,
       setCategory: s.setCategory,
       setTag: s.setTag,
+      setTab: s.setTab,
     }))
   )
 
@@ -45,8 +47,10 @@ function DashboardContent() {
   useEffect(() => {
     const urlCategory = searchParams.get('category')
     const urlTag = searchParams.get('tag')
+    const urlTab = searchParams.get('tab')
     if (urlCategory) setCategory(urlCategory)
     if (urlTag) setTag(urlTag)
+    if (urlTab === 'favorites') setTab('favorites')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -60,9 +64,11 @@ function DashboardContent() {
     const params = new URLSearchParams()
     if (category) params.set('category', category)
     if (tag) params.set('tag', tag)
+    // favorites 탭만 URL에 반영 — 다른 SidebarTab 값이 새지 않도록 명시
+    if (tab === 'favorites') params.set('tab', 'favorites')
     const qs = params.toString()
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
-  }, [category, tag, router, pathname])
+  }, [category, tag, tab, router, pathname])
 
   const [searchQuery, setSearchQuery] = useState('')
   const isSearching = searchQuery.trim().length > 0
@@ -72,7 +78,12 @@ function DashboardContent() {
     isPending: isBookmarkPending,
     isError: isBookmarkError,
     refetch,
-  } = useBookmarks({ category: category ?? undefined, tag: tag ?? undefined })
+  } = useBookmarks({
+    category: category ?? undefined,
+    tag: tag ?? undefined,
+    // favorites만 명시 전달 — 다른 SidebarTab 값 누출 방지 (L-3)
+    tab: tab === 'favorites' ? 'favorites' : undefined,
+  })
 
   const {
     mutate: search,

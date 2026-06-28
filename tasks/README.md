@@ -38,7 +38,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A16: 회원 탈퇴 UI + 데이터 파기 플로우
 - [x] A26: 온보딩 페이지 (/onboarding)
 - [x] A27: PATCH /api/bookmarks/:id — 즐겨찾기 토글 API
-- [ ] A28: 즐겨찾기 UI
+- [x] A28: 즐겨찾기 UI
 - [ ] A29: POST /api/bookmarks/import — 파일 임포트 API
 - [ ] A30: 파일 임포트 UI
 - [ ] A31: 사이드바 내 폴더 탭
