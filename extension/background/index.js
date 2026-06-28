@@ -27,6 +27,20 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true
   }
 
+  if (msg.type === 'GET_TAB_INFO') {
+    chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+      if (!tab?.id) return sendResponse({ error: 'no active tab' })
+      chrome.tabs.sendMessage(tab.id, { type: 'GET_CONTENT' }, (res) => {
+        sendResponse({
+          url: tab.url ?? '',
+          title: tab.title ?? '',
+          content: res?.content ?? '',
+        })
+      })
+    })
+    return true
+  }
+
   if (msg.type === 'OPEN_LOGIN_TAB') {
     chrome.tabs
       .create({ url: `${WEB_APP_URL}/login?from=extension` })
