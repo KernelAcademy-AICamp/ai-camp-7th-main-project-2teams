@@ -23,7 +23,7 @@
       "description": "chrome.storage.local을 Supabase 커스텀 스토리지로 사용. Background SW에서 세션 단일 관리.",
       "details": "createClient에 chromeStorage 어댑터 주입 (getItem/setItem/removeItem → chrome.storage.local). autoRefreshToken: true. Popup ↔ Background 메시지 통신으로 GET_SESSION, SIGN_OUT 구현.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A17"
       ],

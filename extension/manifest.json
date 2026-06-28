@@ -6,7 +6,7 @@
   "permissions": ["activeTab", "storage", "scripting"],
   "host_permissions": [],
   "background": {
-    "service_worker": "background/index.js",
+    "service_worker": "dist/background.js",
     "type": "module"
   },
   "action": {
