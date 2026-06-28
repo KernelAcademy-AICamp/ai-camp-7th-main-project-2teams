@@ -1,3 +1,4 @@
+import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 
 // Service Role 클라이언트 — Route Handler 서버사이드에서만 호출

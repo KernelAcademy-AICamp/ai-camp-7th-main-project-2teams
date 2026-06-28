@@ -93,7 +93,7 @@
       "description": "로그인 유저 북마크 최신순 목록 표시.",
       "details": "app/(dashboard)/page.tsx. GET /api/bookmarks 호출. 카드 UI: 제목, URL, 태그 뱃지, 카테고리, 저장일. 원본 URL 클릭 시 새 탭. 초기 로딩 스켈레톤 UI. 빈 상태 UI (북마크 없을 때).",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A4", "A6"],
       "testStrategy": "북마크 10개 이상 저장 후 목록 표시 확인. 빈 상태 UI 확인."
     },
@@ -103,7 +103,7 @@
       "description": "검색창 자연어 입력 시 유사도 기반 결과 표시.",
       "details": "검색창 컴포넌트 debounce 300ms. POST /api/search 호출. 유사도 0.5 미만 결과 숨김. 검색어 없을 때 기본 목록 복귀.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A9", "A7"],
       "testStrategy": "'리액트 훅' 검색 시 관련 북마크 상위 노출 확인."
     },
@@ -113,7 +113,7 @@
       "description": "좌측 사이드바 태그·카테고리 클릭 시 목록 필터링.",
       "details": "사용자 북마크에서 카테고리/태그 집계. 클릭 시 URL 파라미터 업데이트 (?category=개발&tag=React). GET /api/bookmarks?category=개발 재요청.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A9", "A6"],
       "testStrategy": "카테고리 클릭 시 해당 북마크만 표시 확인."
     },
@@ -123,7 +123,7 @@
       "description": "개보법 30조·정통망법 27조의2 의무. 공개 라우트.",
       "details": "app/privacy/page.tsx. 포함 항목: 수집 항목(이메일·URL·제목·벡터), 수집 목적, 보유 기간(탈퇴 즉시 파기), 국외이전 수탁자(OpenAI/Supabase/Vercel — 미국·목적·거부 방법), OpenAI 학습 미사용 명시, 열람·수정·삭제 요청 방법, 시행일. 인증 불필요.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A2"],
       "testStrategy": "비로그인 /privacy 접근 확인. 국외이전 수탁자 3개(OpenAI·Supabase·Vercel) 명시 확인."
     },
@@ -133,7 +133,7 @@
       "description": "저작권 면책·서비스 범위 명시. 공개 라우트.",
       "details": "app/terms/page.tsx. 포함 항목: 서비스 범위, 사용자 콘텐츠 저작권 책임, 본문 미저장·즉시 파기 명시, robots.txt 미준수 사이트 수집 면책, 서비스 변경·중단 조항. 인증 불필요.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A2"],
       "testStrategy": "비로그인 /terms 접근 확인. 저작권 면책 조항 포함 확인."
     },
@@ -143,7 +143,7 @@
       "description": "탈퇴 요청 시 북마크 전체 삭제 후 Auth 유저 삭제. 개보법 21조 잊힐 권리 대응.",
       "details": "app/api/account/route.ts (DELETE). service_role_key 필요 — 서버사이드 전용, NEXT_PUBLIC_ 금지. 순서: 1) DELETE FROM bookmarks WHERE user_id = $1. 2) supabase.auth.admin.deleteUser(userId). 3) 파기 완료 로그 (user_id 해시만, 식별 정보 미포함).",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A1", "A3"],
       "testStrategy": "탈퇴 후 bookmarks user_id 행 0개 확인. Auth 유저 조회 시 404 확인."
     },
@@ -153,7 +153,7 @@
       "description": "사용자 본인 저장 데이터 전체 반환. 개보법 35조 열람권 대응.",
       "details": "app/api/account/route.ts (GET). SELECT id, title, url, tags, category, created_at FROM bookmarks WHERE user_id = $1. embedding 제외. 페이지네이션 없이 전체 반환 (다운로드 용도).",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A1", "A3"],
       "testStrategy": "북마크 5개 저장 후 열람 API 5개 반환 확인. 타인 데이터 미포함 확인."
     },
@@ -163,7 +163,7 @@
       "description": "설정 페이지에서 탈퇴 요청. DELETE /api/account 호출 후 로그아웃.",
       "details": "app/(dashboard)/settings/page.tsx. 탈퇴 버튼 → 확인 모달('북마크 전체 삭제 후 탈퇴됩니다'). 확인 시 DELETE /api/account → 성공 시 로그아웃 → /goodbye 페이지. 실패 시 에러 토스트.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A4", "A14"],
       "testStrategy": "탈퇴 후 재로그인 불가 확인. DB 북마크 0개 확인."
     }
