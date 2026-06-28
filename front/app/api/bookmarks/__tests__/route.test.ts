@@ -113,4 +113,20 @@ describe('POST /api/bookmarks', () => {
     const res = await POST(req({ title: 'T', url: 'https://a.com' }))
     expect(res.status).toBe(401)
   })
+
+  it('임베딩 실패 → 502, insert 안 함', async () => {
+    createEmbedding.mockRejectedValue(new Error('rate limit'))
+    const res = await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
+    expect(res.status).toBe(502)
+    expect(insertSpy).not.toHaveBeenCalled()
+  })
+
+  it('태깅 실패 → 빈 태그로 저장(degrade)', async () => {
+    generateTags.mockRejectedValue(new Error('parse fail'))
+    const res = await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
+    expect(res.status).toBe(201)
+    const payload = insertSpy.mock.calls[0][0]
+    expect(payload.tags).toEqual([])
+    expect(payload.category_id).toBeNull()
+  })
 })
