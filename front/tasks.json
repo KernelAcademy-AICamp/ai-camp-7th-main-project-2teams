@@ -276,7 +276,7 @@
       "description": "임포트된 folder_hint를 사이드바 폴더 트리로 표시·필터.",
       "details": "app/api/bookmarks/folders/route.ts (GET) — folder_hint distinct 목록 조회(현재 501 스텁). 사이드바 '내 폴더' 탭에서 폴더 목록 렌더. 클릭 시 GET /api/bookmarks?folder=<경로>(A6) 필터. A11 사이드바 구조 확장.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A11",
         "A30"

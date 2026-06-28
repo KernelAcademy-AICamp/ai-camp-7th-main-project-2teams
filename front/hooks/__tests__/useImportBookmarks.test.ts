@@ -152,4 +152,16 @@ describe('useImportBookmarks onSuccess — invalidateQueries 검증', () => {
     const [firstCall] = spy.mock.calls
     expect(firstCall[0]).toEqual({ queryKey: ['bookmarks'] })
   })
+
+  it('성공 시 ["folders"] queryKey도 invalidateQueries 호출 — 폴더 섹션 즉시 반영', () => {
+    const queryClient = new QueryClient()
+    const spy = vi.spyOn(queryClient, 'invalidateQueries')
+
+    // onSuccess: bookmarks + folders 두 쿼리 모두 무효화
+    queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+    queryClient.invalidateQueries({ queryKey: ['folders'] })
+
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['folders'] })
+    expect(spy).toHaveBeenCalledTimes(2)
+  })
 })

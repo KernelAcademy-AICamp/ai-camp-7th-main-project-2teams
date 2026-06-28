@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useFilterStore } from '@/store/filterStore'
+import { useFolders } from '@/hooks/useFolders'
 import type { Bookmark } from '@/hooks/useBookmarks'
 
 const FIXED_CATEGORIES = ['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑'] as const
@@ -23,27 +24,40 @@ interface SidebarProps {
 }
 
 export function Sidebar({ bookmarks }: SidebarProps) {
-  const { category, tag, tab, setCategory, setTag, setTab } = useFilterStore(
+  const { category, folder, tag, tab, setCategory, setFolder, setTag, setTab } = useFilterStore(
     useShallow((s) => ({
       category: s.category,
+      folder: s.folder,
       tag: s.tag,
       tab: s.tab,
       setCategory: s.setCategory,
+      setFolder: s.setFolder,
       setTag: s.setTag,
       setTab: s.setTab,
     }))
   )
+
+  const { data: folders = [] } = useFolders()
 
   const tags = useMemo(() => aggregateTags(bookmarks), [bookmarks])
 
   const handleCategory = (name: string) => {
     setCategory(category === name ? null : name)
     setTag(null)
+    setFolder(null)
   }
 
   const handleTag = (name: string) => {
     setTag(tag === name ? null : name)
     setCategory(null)
+    setFolder(null)
+  }
+
+  // 폴더 클릭: 해당 폴더 토글 + 카테고리/태그 리셋 (양방향 상호 리셋)
+  const handleFolder = (name: string) => {
+    setFolder(folder === name ? null : name)
+    setCategory(null)
+    setTag(null)
   }
 
   return (
@@ -57,9 +71,10 @@ export function Sidebar({ bookmarks }: SidebarProps) {
               aria-pressed={tab === t}
               onClick={() => {
                 setTab(t)
-                // 탭 전환 시 category/tag 리셋 (handleCategory/handleTag와 동일 패턴)
+                // 탭 전환 시 category/tag/folder 리셋 (양방향 상호 리셋)
                 setCategory(null)
                 setTag(null)
+                setFolder(null)
               }}
               className={[
                 'flex-1 rounded-md px-2 py-1 text-sm font-medium transition-colors',
@@ -116,6 +131,33 @@ export function Sidebar({ bookmarks }: SidebarProps) {
                     tag === name
                       ? 'bg-indigo-600 text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700',
+                  ].join(' ')}
+                >
+                  {name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* 내 폴더 — folder_hint[0] 기반. 폴더 0건이면 섹션 미노출 */}
+      {folders.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            내 폴더
+          </h2>
+          <ul className="flex flex-col gap-0.5">
+            {folders.map((name) => (
+              <li key={name}>
+                <button
+                  onClick={() => handleFolder(name)}
+                  aria-pressed={folder === name}
+                  className={[
+                    'w-full rounded-md px-3 py-1.5 text-left text-sm transition-colors',
+                    folder === name
+                      ? 'bg-indigo-100 font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
+                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800',
                   ].join(' ')}
                 >
                   {name}
