@@ -2,7 +2,15 @@
 
 ## 브랜치 전략
 
-- `main` 직접 push 금지 → PR 필수
+- **보호 브랜치**: `main`, `develop` — 직접 push·삭제 금지 (Claude Code 포함)
+- **feature 브랜치 기준**: 반드시 `develop`에서 분기
+  ```
+  git checkout develop && git pull
+  git checkout -b feature/<이슈번호>-<기능명>
+  ```
+- **PR 흐름**: `feature/*` → `develop` → `main`
+  - `main`에 PR 가능한 브랜치: `develop` 전용 (다른 브랜치 직접 PR 금지)
+  - `develop`에 PR 가능한 브랜치: `feature/*`, `fix/*`, `chore/*`, `docs/*`
 - 브랜치명: `<타입>/<이슈번호>-<기능명>` (이슈 없으면 번호 생략)
   - `feature/42-bookmark-tagging`
   - `fix/57-token-expiry`
@@ -42,7 +50,7 @@ docs: README 실행 방법 작성
 
 - 제목: Conventional Commits 형식 (`feat: 설명`)
 - 최소 1명 리뷰 승인 필수
-- 머지 전 브랜치 최신화 (`git rebase main`)
+- 머지 전 브랜치 최신화 (`git rebase develop`)
 - 머지 전략: **Squash and merge** (히스토리 정리)
 - 이슈 연결 필수: PR 본문에 `Closes #이슈번호`
 
