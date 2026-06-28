@@ -223,7 +223,7 @@
       "description": "북마크 is_favorite 토글 + 삭제(DELETE) Route Handler.",
       "details": "app/api/bookmarks/[id]/route.ts. withAuth() 적용. PATCH 입력: { is_favorite }(favoriteSchema, lib/schemas.ts 정의됨). update({ is_favorite }).eq('id', id) — RLS update 정책(A1)으로 본인 데이터만. select 명시 컬럼(embedding 제외). DELETE: 본인 북마크 단건 삭제. 현재 둘 다 501 스텁.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A1",
         "A3"
