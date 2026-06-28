@@ -1,14 +1,22 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams()
+  const fromExtension = searchParams.get('from') === 'extension'
+
   // Google OAuth 전용 (CLAUDE.md). 이메일/비밀번호 로그인 없음.
   const signInWithGoogle = async () => {
     const supabase = createClient()
+    const callbackUrl = fromExtension
+      ? `${location.origin}/auth/callback?from=extension`
+      : `${location.origin}/auth/callback`
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${location.origin}/auth/callback` },
+      options: { redirectTo: callbackUrl },
     })
   }
 
@@ -23,5 +31,13 @@ export default function LoginPage() {
         Google로 계속하기
       </button>
     </main>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   )
 }
