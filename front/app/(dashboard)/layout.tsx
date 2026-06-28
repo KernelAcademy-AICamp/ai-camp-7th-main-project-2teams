@@ -10,7 +10,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </span>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      <div className="mx-auto flex max-w-6xl gap-8 px-4 py-8">
+        {children}
+      </div>
     </div>
   )
 }

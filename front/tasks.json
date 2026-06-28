@@ -113,7 +113,7 @@
       "description": "좌측 사이드바 태그·카테고리 클릭 시 목록 필터링.",
       "details": "사용자 북마크에서 카테고리/태그 집계. 클릭 시 URL 파라미터 업데이트 (?category=개발&tag=React). GET /api/bookmarks?category=개발 재요청.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A9", "A6"],
       "testStrategy": "카테고리 클릭 시 해당 북마크만 표시 확인."
     },
