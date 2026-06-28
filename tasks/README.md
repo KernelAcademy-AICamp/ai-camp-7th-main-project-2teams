@@ -155,6 +155,32 @@ A17 (Extension 셋업)
 
 ---
 
+## 알려진 이슈 / 백로그
+
+> 파이프라인 재검토(2026-06-28)에서 식별. MVP 범위 외 또는 후속 처리.
+
+### 배포 차단급
+
+- [ ] **WEB_APP_URL 하드코딩** (`extension/lib/config.js` = `localhost:3000`). prod 익스텐션 빌드 시 vercel 주소로 치환 필요 — 안 하면 배포 익스텐션 저장 전부 실패.
+
+### 데이터/정합성
+
+- [ ] **account DELETE 비원자성** (`app/api/account/route.ts`): bookmarks 삭제 후 `deleteUser` 실패 시 계정 남고 데이터만 소실. 트랜잭션/복구 처리 검토.
+- [ ] **A15 경로 드리프트**: 문서상 `GET /api/account/data`, 실제 구현·UI는 `GET /api/account`. 문서 또는 경로 일치화.
+- [ ] **maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
+- [ ] **URL 중복 저장 무방비**: 같은 페이지 N회 저장 시 중복 행. unique 제약/upsert 검토.
+
+### 검색 품질 (튜닝)
+
+- [ ] **비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 저장 doc=title+content(김) vs 쿼리=짧은 자연어 → cosine 낮아 recall 누락 가능. 운영 데이터로 threshold 튜닝.
+- [ ] **빈 content 약한 벡터**: PDF·`chrome://` 등 content script 차단 시 embedding=title만. 허용 degradation, 모니터링.
+
+### Minor
+
+- [ ] **중복 normalize** (`app/api/bookmarks/route.ts`): `normalizeTags` + `resolveTopCategory`가 rawTags 2회 정규화. 결과 동일, 정리 가능.
+
+---
+
 ## 법적 대응 매핑
 
 | 법령 조항                 | 대응 태스크      |
