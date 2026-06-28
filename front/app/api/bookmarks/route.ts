@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 import { withAuth } from '@/lib/auth'
 import { bookmarkCreateSchema } from '@/lib/schemas'
 import { generateTags, createEmbedding } from '@/lib/ai'
 import { normalizeTags, resolveTopCategory } from '@/lib/tag-alias'
 
-// 저장 + AI 태깅 + 임베딩. content는 DB 저장·로그 금지 (A8), 응답에 embedding 미포함.
+const getQuerySchema = z.object({
+  tab: z.string().optional(),
+  category: z.string().optional(),
+  tag: z.string().optional(),
+  folder: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+})
+
+// 저장 + AI 태깅 + 임베딩. content는 DB 저장·로그 금지. maskSensitive() 경유 필수 (lib/logger.ts), 응답에 embedding 미포함.
 export const POST = withAuth(async (req, { user, supabase }) => {
   const parsed = bookmarkCreateSchema.safeParse(await req.json())
   if (!parsed.success) {
@@ -60,13 +70,13 @@ const LIST_COLUMNS =
   'id, url, title, tags, category_id, folder_hint, is_favorite, created_at'
 
 export const GET = withAuth(async (req, { supabase }) => {
-  const { searchParams } = new URL(req.url)
-  const tab = searchParams.get('tab')
-  const category = searchParams.get('category')
-  const tag = searchParams.get('tag')
-  const folder = searchParams.get('folder')
-  const page = Math.max(1, Number(searchParams.get('page') ?? 1))
-  const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit') ?? 20)))
+  const parsed = getQuerySchema.safeParse(
+    Object.fromEntries(new URL(req.url).searchParams),
+  )
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  }
+  const { tab, category, tag, folder, page, limit } = parsed.data
   const from = (page - 1) * limit
   const to = from + limit - 1
 
