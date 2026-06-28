@@ -14,6 +14,13 @@ async function handleSessionUpdated(session) {
   chrome.runtime.sendMessage({ type: 'SESSION_UPDATED', session }).catch(() => {})
 }
 
+// 로그아웃·탈퇴 시 로컬 세션·캐시 완전 파기 (A24, 개보법 21조)
+// signOut으로 세션 정리 후 storage.local.clear()로 잔여 키까지 제거(이중 방어).
+async function signOutAndPurge() {
+  await supabase.auth.signOut().catch(() => {})
+  await chrome.storage.local.clear()
+}
+
 // 현재 탭 정보(url/title/content) + 세션 토큰으로 POST /api/bookmarks
 async function saveCurrentTab() {
   const { data: sessionData } = await supabase.auth.getSession()
@@ -88,7 +95,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 
   if (msg.type === 'SIGN_OUT') {
-    supabase.auth.signOut().then(() => sendResponse({ ok: true }))
+    signOutAndPurge().then(() => sendResponse({ ok: true }))
     return true
   }
 
