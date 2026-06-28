@@ -12,7 +12,20 @@ function makeButton(text, id, className) {
 function renderAuth(session) {
   if (session?.user) {
     statusEl.textContent = session.user.email ?? '로그인됨'
-    actionEl.replaceChildren(makeButton('로그아웃', 'logout', 'danger'))
+
+    const saveBtn = makeButton('현재 페이지 저장', 'save', '')
+    const logoutBtn = makeButton('로그아웃', 'logout', 'danger')
+    actionEl.replaceChildren(saveBtn, logoutBtn)
+
+    document.getElementById('save').addEventListener('click', () => {
+      saveBtn.disabled = true
+      saveBtn.textContent = '저장 중...'
+      chrome.runtime.sendMessage({ type: 'SAVE_BOOKMARK' }, (result) => {
+        // A22에서 토스트로 교체 예정 — 현재는 버튼 텍스트로 임시 피드백
+        saveBtn.textContent = result?.error ? `오류: ${result.error}` : '저장됨 ✓'
+      })
+    })
+
     document.getElementById('logout').addEventListener('click', () => {
       chrome.runtime.sendMessage({ type: 'SIGN_OUT' }, () => renderUnauth())
     })
