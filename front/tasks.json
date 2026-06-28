@@ -163,7 +163,7 @@
       "description": "설정 페이지에서 탈퇴 요청. DELETE /api/account 호출 후 로그아웃.",
       "details": "app/(dashboard)/settings/page.tsx. 탈퇴 버튼 → 확인 모달('북마크 전체 삭제 후 탈퇴됩니다'). 확인 시 DELETE /api/account → 성공 시 로그아웃 → /goodbye 페이지. 실패 시 에러 토스트.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A4", "A14"],
       "testStrategy": "탈퇴 후 재로그인 불가 확인. DB 북마크 0개 확인."
     }
