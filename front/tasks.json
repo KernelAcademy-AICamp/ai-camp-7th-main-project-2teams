@@ -133,7 +133,7 @@
       "description": "저작권 면책·서비스 범위 명시. 공개 라우트.",
       "details": "app/terms/page.tsx. 포함 항목: 서비스 범위, 사용자 콘텐츠 저작권 책임, 본문 미저장·즉시 파기 명시, robots.txt 미준수 사이트 수집 면책, 서비스 변경·중단 조항. 인증 불필요.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A2"],
       "testStrategy": "비로그인 /terms 접근 확인. 저작권 면책 조항 포함 확인."
     },
