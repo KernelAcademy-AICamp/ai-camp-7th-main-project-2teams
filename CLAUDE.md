@@ -28,6 +28,15 @@ tasks/       # 태스크 인덱스
 - `usehooks-ts` 라이브러리 우선 사용 (`useLocalStorage`, `useDebounce`, `useMediaQuery` 등)
 - 라이브러리에 없는 경우에만 `front/hooks/` 에 커스텀 훅 작성
 
+## 태스크 완료 절차
+
+태스크(A-id) 하나가 develop에 머지될 때마다 **반드시** 두 곳 동시 업데이트:
+
+1. `tasks/README.md` — 해당 항목 `[ ]` → `[x]` + 진행률 숫자 갱신
+2. `front/tasks.json` 또는 `extension/tasks.json` — `status: "pending"` → `"done"`
+
+누락 시 다음 태스크 시작 전에 먼저 수정.
+
 ## 핵심 결정 사항
 
 - **별도 서버 없음**: API는 `front/app/api/` Route Handler로 처리. Vercel 서버리스 배포.

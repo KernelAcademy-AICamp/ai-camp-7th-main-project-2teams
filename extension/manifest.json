@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Bookmarker",
+  "version": "0.1.0",
+  "description": "AI 북마크 관리 — 자동 태깅 및 자연어 검색",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "https://*.vercel.app/*"
+  ],
+  "background": {
+    "service_worker": "dist/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Bookmarker"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:3000/*", "https://*.vercel.app/*"],
+      "js": ["dist/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "save-bookmark": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "현재 페이지 북마크 저장"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
