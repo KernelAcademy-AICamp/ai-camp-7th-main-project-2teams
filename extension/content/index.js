@@ -10,3 +10,10 @@ window.addEventListener('message', (event) => {
     })
   }
 })
+
+// background → content: 페이지 본문 앞 2000자 반환 (AI 태깅용, DB 저장 금지)
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg.type === 'GET_CONTENT') {
+    sendResponse({ content: document.body.innerText.slice(0, 2000) })
+  }
+})

@@ -11,11 +11,12 @@ describe('manifest.json', () => {
     expect(manifest.manifest_version).toBe(3)
   })
 
-  it('permissions 3개만 (activeTab·storage·scripting)', () => {
+  it('permissions: activeTab·storage·scripting·tabs 포함', () => {
+    // tabs: 로그인 탭 ID 추적(A19), 탭 URL/title 수집(A20) 용도
     expect(manifest.permissions).toEqual(
-      expect.arrayContaining(['activeTab', 'storage', 'scripting'])
+      expect.arrayContaining(['activeTab', 'storage', 'scripting', 'tabs'])
     )
-    expect(manifest.permissions.length).toBe(3)
+    expect(manifest.permissions.length).toBe(4)
   })
 
   it('background service_worker 설정됨', () => {
