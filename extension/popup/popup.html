@@ -5,12 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bookmarker</title>
     <style>
-      body { width: 320px; min-height: 120px; margin: 0; font-family: sans-serif; padding: 16px; }
-      #status { font-size: 14px; color: #6b7280; }
+      body { width: 320px; min-height: 140px; margin: 0; font-family: sans-serif; padding: 16px; }
+      #status { font-size: 14px; color: #6b7280; margin-bottom: 12px; }
+      #action button {
+        width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;
+        background: #fff; font-size: 14px; cursor: pointer;
+      }
+      #action button:hover { background: #f9fafb; }
+      #action button.danger { border-color: #fca5a5; color: #dc2626; }
+      #action button.danger:hover { background: #fef2f2; }
     </style>
   </head>
   <body>
     <div id="status">로딩 중...</div>
+    <div id="action"></div>
     <script src="../dist/popup.js" type="module"></script>
   </body>
 </html>

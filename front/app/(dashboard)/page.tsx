@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useShallow } from 'zustand/react/shallow'
 import { BookmarkCard } from '@/components/BookmarkCard'
 import { BookmarkSkeleton } from '@/components/BookmarkSkeleton'
+import { ExtensionSync } from '@/components/ExtensionSync'
 import { SearchBar } from '@/components/SearchBar'
 import { Sidebar } from '@/components/Sidebar'
 import { useBookmarks } from '@/hooks/useBookmarks'
@@ -79,8 +80,11 @@ function DashboardContent() {
   const items = isSearching ? (searchData?.results ?? []) : (bookmarkData?.bookmarks ?? [])
   const allBookmarks = bookmarkData?.bookmarks ?? []
 
+  const fromExtension = searchParams.get('from') === 'extension'
+
   return (
     <>
+      {fromExtension && <ExtensionSync />}
       <Sidebar bookmarks={allBookmarks} />
 
       <main className="flex min-w-0 flex-1 flex-col gap-4">
