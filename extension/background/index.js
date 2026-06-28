@@ -7,14 +7,46 @@ let loginTabId = null
 async function handleSessionUpdated(session) {
   if (!session) return
   await supabase.auth.setSession(session)
-  // 로그인 탭 닫기
   if (loginTabId != null) {
     chrome.tabs.remove(loginTabId).catch(() => {})
     loginTabId = null
   }
-  // 팝업이 열려있으면 알림
   chrome.runtime.sendMessage({ type: 'SESSION_UPDATED', session }).catch(() => {})
 }
+
+// 현재 탭 정보(url/title/content) + 세션 토큰으로 POST /api/bookmarks
+async function saveCurrentTab() {
+  const { data: sessionData } = await supabase.auth.getSession()
+  if (!sessionData.session) return { error: 'not authenticated' }
+
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+  if (!tab?.id) return { error: 'no active tab' }
+
+  const contentRes = await new Promise((resolve) => {
+    chrome.tabs.sendMessage(tab.id, { type: 'GET_CONTENT' }, (res) => resolve(res))
+  })
+
+  const res = await fetch(`${WEB_APP_URL}/api/bookmarks`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${sessionData.session.access_token}`,
+    },
+    body: JSON.stringify({
+      url: tab.url ?? '',
+      title: tab.title ?? '',
+      content: contentRes?.content ?? '',
+    }),
+  })
+
+  if (!res.ok) return { error: `HTTP ${res.status}` }
+  return res.json()
+}
+
+// 단축키 (Cmd+Shift+S / Ctrl+Shift+S) → 저장
+chrome.commands.onCommand.addListener((command) => {
+  if (command === 'save-bookmark') saveCurrentTab()
+})
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === 'GET_SESSION') {
@@ -38,6 +70,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         })
       })
     })
+    return true
+  }
+
+  if (msg.type === 'SAVE_BOOKMARK') {
+    saveCurrentTab().then(sendResponse)
     return true
   }
 
