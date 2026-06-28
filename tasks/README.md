@@ -51,11 +51,11 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A20: 현재 탭 정보 수집
 - [x] A21: 북마크 저장 — POST /api/bookmarks
 - [x] A22: 저장 완료 토스트 (태그 미리보기 포함)
-- [ ] A23: 최소 권한 원칙 검증 (manifest.json)
+- [x] A23: 최소 권한 원칙 검증 (manifest.json)
 - [ ] A24: 로그아웃·탈퇴 시 로컬 데이터 파기
 - [ ] A25: Chrome 웹스토어 Privacy Practices 작성
 
-**진행률: 22 / 25 완료 (MVP 범위 A1~A25 기준)**
+**진행률: 23 / 25 완료 (MVP 범위 A1~A25 기준)**
 
 ---
 

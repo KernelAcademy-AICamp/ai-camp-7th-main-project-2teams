@@ -86,7 +86,7 @@
       "description": "불필요한 권한 제거. Chrome 웹스토어 심사 대응 + 개보법 안전조치 의무.",
       "details": "허용 권한: activeTab, storage, scripting만. 제거 대상: tabs(전체 탭 목록 — activeTab으로 대체), history, bookmarks. host_permissions: 저장 API URL만 명시. content_security_policy: script-src 'self'만 허용.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A17"
       ],

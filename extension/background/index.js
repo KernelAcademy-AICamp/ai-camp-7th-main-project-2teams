@@ -19,8 +19,10 @@ async function saveCurrentTab() {
   const { data: sessionData } = await supabase.auth.getSession()
   if (!sessionData.session) return { error: 'not authenticated' }
 
+  // activeTab 권한으로 커버: 팝업/단축키(사용자 액션) 시에만 url/title 접근 가능
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
   if (!tab?.id) return { error: 'no active tab' }
+  if (!tab.url) return { error: 'tab url unavailable' }
 
   const contentRes = await new Promise((resolve) => {
     chrome.tabs.sendMessage(tab.id, { type: 'GET_CONTENT' }, (res) => resolve(res))
