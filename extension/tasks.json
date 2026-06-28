@@ -98,7 +98,7 @@
       "description": "chrome.storage.local 세션 토큰 및 캐시 완전 삭제. 개보법 21조 대응.",
       "details": "SIGN_OUT 메시지 수신 시: supabase.auth.signOut() 후 chrome.storage.local.clear(). 탈퇴(A14 DELETE /api/account) 완료 응답 수신 시도 동일 처리. 팝업 재열기 시 미인증 상태 확인.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A18",
         "A14"
@@ -111,7 +111,7 @@
       "description": "웹스토어 심사 필수 항목. 미작성 시 심사 반려.",
       "details": "Developer Dashboard → Privacy practices 탭. 수집 항목: 현재 탭 URL·제목·본문(처리 후 파기). 사용 목적: AI 자동 태깅 및 검색. 제3자 공유: OpenAI(태깅·임베딩), Supabase(저장). 본문 미저장 명시. 인증 토큰: chrome.storage.local 저장, 제3자 미전달. 영문 작성.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A17"
       ],
