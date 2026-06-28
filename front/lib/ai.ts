@@ -53,8 +53,12 @@ export async function generateTags({
     temperature: 0.2,
   })
 
-  const result = JSON.parse(completion.choices[0].message.content ?? '{}') as {
-    tags?: string[]
+  // max_tokens 제한으로 응답 truncation 시 JSON.parse 실패 가능 → 빈 태그로 degrade.
+  let result: { tags?: string[] } = {}
+  try {
+    result = JSON.parse(completion.choices[0].message.content ?? '{}')
+  } catch {
+    return []
   }
 
   return result.tags?.slice(0, 3) ?? []

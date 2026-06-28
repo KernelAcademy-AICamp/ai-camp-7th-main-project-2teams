@@ -10,5 +10,8 @@ node_modules/
 dist/
 out/
 
+# 테스트 커버리지
+coverage/
+
 # 기타
 .DS_Store
