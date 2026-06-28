@@ -1,6 +1,11 @@
 export function BookmarkSkeleton() {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+    <div
+      role="status"
+      aria-label="북마크 로딩 중"
+      className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
+    >
+      <span className="sr-only">로딩 중...</span>
       {/* 제목 */}
       <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
       {/* URL */}

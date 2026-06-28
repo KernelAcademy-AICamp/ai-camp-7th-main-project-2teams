@@ -103,7 +103,7 @@
       "description": "검색창 자연어 입력 시 유사도 기반 결과 표시.",
       "details": "검색창 컴포넌트 debounce 300ms. POST /api/search 호출. 유사도 0.5 미만 결과 숨김. 검색어 없을 때 기본 목록 복귀.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A9", "A7"],
       "testStrategy": "'리액트 훅' 검색 시 관련 북마크 상위 노출 확인."
     },

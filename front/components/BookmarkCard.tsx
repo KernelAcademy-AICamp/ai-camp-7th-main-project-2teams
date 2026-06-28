@@ -1,5 +1,3 @@
-'use client'
-
 import { ExternalLink, Tag, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Bookmark } from '@/hooks/useBookmarks'
