@@ -41,7 +41,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A28: 즐겨찾기 UI
 - [x] A29: POST /api/bookmarks/import — 파일 임포트 API
 - [x] A30: 파일 임포트 UI
-- [ ] A31: 사이드바 내 폴더 탭
+- [x] A31: 사이드바 내 폴더 탭
 
 ### Chrome Extension — extension/ (A17~A25)
 

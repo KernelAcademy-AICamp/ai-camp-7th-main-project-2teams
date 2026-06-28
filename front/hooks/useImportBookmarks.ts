@@ -54,6 +54,8 @@ export function useImportBookmarks() {
     onSuccess: () => {
       // 임포트 완료 후 북마크 목록 캐시 무효화 → 홈 목록에 즉시 반영
       queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+      // 임포트로 folder_hint가 생길 수 있으므로 폴더 목록도 무효화 → 사이드바 즉시 반영
+      queryClient.invalidateQueries({ queryKey: ['folders'] })
     },
   })
 }
