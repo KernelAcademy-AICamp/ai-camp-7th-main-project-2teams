@@ -40,7 +40,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A27: PATCH /api/bookmarks/:id — 즐겨찾기 토글 API
 - [x] A28: 즐겨찾기 UI
 - [x] A29: POST /api/bookmarks/import — 파일 임포트 API
-- [ ] A30: 파일 임포트 UI
+- [x] A30: 파일 임포트 UI
 - [ ] A31: 사이드바 내 폴더 탭
 
 ### Chrome Extension — extension/ (A17~A25)

@@ -263,7 +263,7 @@
       "description": "헤더 파일 업로드 버튼 → 임포트 페이지. HTML 파일 선택 후 진행 상태 표시.",
       "details": "헤더 우측 '파일 업로드' 버튼 → 임포트 페이지 이동(PRD WEB-14). HTML 파일 선택 → POST /api/bookmarks/import(A29) 업로드. 진행률·결과(성공/실패 건수) 표시. 완료 후 목록(A9) 이동.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A4",
         "A29"

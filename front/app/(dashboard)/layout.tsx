@@ -9,12 +9,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <Link href="/" className="text-lg font-bold tracking-tight text-brand">
             Bookmarker
           </Link>
-          <Link
-            href="/settings"
-            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            설정
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/import"
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              파일 업로드
+            </Link>
+            <Link
+              href="/settings"
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              설정
+            </Link>
+          </div>
         </div>
       </header>
       <div className="mx-auto flex max-w-6xl gap-8 px-4 py-8">
