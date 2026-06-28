@@ -153,7 +153,7 @@
       "description": "사용자 본인 저장 데이터 전체 반환. 개보법 35조 열람권 대응.",
       "details": "app/api/account/route.ts (GET). SELECT id, title, url, tags, category, created_at FROM bookmarks WHERE user_id = $1. embedding 제외. 페이지네이션 없이 전체 반환 (다운로드 용도).",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": ["A1", "A3"],
       "testStrategy": "북마크 5개 저장 후 열람 API 5개 반환 확인. 타인 데이터 미포함 확인."
     },
