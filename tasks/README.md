@@ -165,19 +165,19 @@ A17 (Extension 셋업)
 
 ### 데이터/정합성
 
-- [ ] **account DELETE 비원자성** (`app/api/account/route.ts`): bookmarks 삭제 후 `deleteUser` 실패 시 계정 남고 데이터만 소실. 트랜잭션/복구 처리 검토.
-- [ ] **A15 경로 드리프트**: 문서상 `GET /api/account/data`, 실제 구현·UI는 `GET /api/account`. 문서 또는 경로 일치화.
-- [ ] **maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
-- [ ] **URL 중복 저장 무방비**: 같은 페이지 N회 저장 시 중복 행. unique 제약/upsert 검토.
+- [ ] **A32 account DELETE 비원자성** (`app/api/account/route.ts`): bookmarks 삭제 후 `deleteUser` 실패 시 계정 남고 데이터만 소실. 트랜잭션/복구 처리 검토.
+- [ ] **A33 경로 드리프트**: 문서상 `GET /api/account/data`, 실제 구현·UI는 `GET /api/account`. 문서 또는 경로 일치화.
+- [ ] **A34 maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
+- [ ] **A35 URL 중복 저장 무방비**: 같은 페이지 N회 저장 시 중복 행. unique 제약/upsert 검토.
 
 ### 검색 품질 (튜닝)
 
-- [ ] **비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 저장 doc=title+content(김) vs 쿼리=짧은 자연어 → cosine 낮아 recall 누락 가능. 운영 데이터로 threshold 튜닝.
-- [ ] **빈 content 약한 벡터**: PDF·`chrome://` 등 content script 차단 시 embedding=title만. 허용 degradation, 모니터링.
+- [ ] **A36 비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 저장 doc=title+content(김) vs 쿼리=짧은 자연어 → cosine 낮아 recall 누락 가능. 운영 데이터로 threshold 튜닝.
+- [ ] **A37 빈 content 약한 벡터**: PDF·`chrome://` 등 content script 차단 시 embedding=title만. 허용 degradation, 모니터링.
 
 ### Minor
 
-- [ ] **중복 normalize** (`app/api/bookmarks/route.ts`): `normalizeTags` + `resolveTopCategory`가 rawTags 2회 정규화. 결과 동일, 정리 가능.
+- [ ] **A38 중복 normalize** (`app/api/bookmarks/route.ts`): `normalizeTags` + `resolveTopCategory`가 rawTags 2회 정규화. 결과 동일, 정리 가능.
 
 ---
 
