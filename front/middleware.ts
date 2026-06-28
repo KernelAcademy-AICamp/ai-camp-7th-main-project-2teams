@@ -47,5 +47,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // api 제외: API 라우트는 withAuth가 401 JSON 응답. 미들웨어 302 redirect 시
+  // 익스텐션 등 fetch 클라이언트가 HTML 로그인 페이지를 받게 됨.
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }

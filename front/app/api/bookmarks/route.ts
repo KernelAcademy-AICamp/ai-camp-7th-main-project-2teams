@@ -24,10 +24,19 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   const { title, url, content, folder_hint } = parsed.data
 
   // 태깅 + 임베딩 병렬 실행 → 응답시간 단축. content는 이 스코프 안에서만 사용 후 파기.
-  const [rawTags, embedding] = await Promise.all([
-    generateTags({ title, url }),
+  // description에 content 전달 → 태깅 품질 확보(익스텐션이 수집한 본문 활용).
+  const [tagsResult, embeddingResult] = await Promise.allSettled([
+    generateTags({ title, url, description: content }),
     createEmbedding(`${title}\n${content}`),
   ])
+
+  // 임베딩 실패 = 검색 불가 → 검색 못 하는 북마크 저장 안 함(502).
+  if (embeddingResult.status === 'rejected') {
+    return NextResponse.json({ error: '임베딩 생성 실패' }, { status: 502 })
+  }
+  const embedding = embeddingResult.value
+  // 태깅 실패는 빈 태그로 degrade — 저장 자체는 진행.
+  const rawTags = tagsResult.status === 'fulfilled' ? tagsResult.value : []
 
   const tags = normalizeTags(rawTags)
 
