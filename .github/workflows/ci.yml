@@ -5,6 +5,7 @@ on:
     paths:
       - 'front/**'
       - 'extension/**'
+      - '.github/workflows/ci.yml'
 
 jobs:
   front:
@@ -19,7 +20,7 @@ jobs:
       - if: steps.guard.outputs.ready == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: front/package-lock.json
       - if: steps.guard.outputs.ready == 'true'
@@ -49,7 +50,7 @@ jobs:
       - if: steps.guard.outputs.ready == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: extension/package-lock.json
       - if: steps.guard.outputs.ready == 'true'
@@ -60,4 +61,4 @@ jobs:
         run: npm run lint
       - if: steps.guard.outputs.ready == 'true'
         working-directory: extension
-        run: npx vitest run --if-present
+        run: npm run test --if-present
