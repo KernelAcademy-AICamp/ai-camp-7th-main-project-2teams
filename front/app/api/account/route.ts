@@ -29,7 +29,15 @@ export const DELETE = withAuth(async (_req, { user, supabase }) => {
   return Response.json({ success: true })
 })
 
-// A15: 개인정보 열람 (미구현)
-export const GET = withAuth(async () => {
-  return Response.json({ error: 'Not implemented' }, { status: 501 })
+// A15: 개인정보 열람 — 개보법 35조 열람권 대응
+export const GET = withAuth(async (_req, { supabase }) => {
+  // embedding 제외, 전체 반환 (다운로드 용도 — 페이지네이션 없음)
+  const { data, error } = await supabase
+    .from('bookmarks')
+    .select('id, title, url, tags, category_id, folder_hint, is_favorite, created_at')
+    .order('created_at', { ascending: false })
+
+  if (error) return Response.json({ error: error.message }, { status: 500 })
+
+  return Response.json({ bookmarks: data })
 })
