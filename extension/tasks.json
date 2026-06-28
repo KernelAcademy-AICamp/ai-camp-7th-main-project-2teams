@@ -74,7 +74,7 @@
       "description": "서버 응답 수신 후 팝업에 AI 생성 태그 포함 토스트 표시. 목표 1.5초 이내.",
       "details": "pending 상태: 로딩 스피너. 성공: 태그 3~5개 + 카테고리 표시. 실패: 에러 메시지. 자동 닫힘 3초.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A21"
       ],
