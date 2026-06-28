@@ -34,7 +34,10 @@
       "details": "lib/auth.ts: createServerClient로 Supabase 서버 클라이언트 생성. getUser()로 토큰 검증. 미인증 시 401 반환. Route Handler에서 withAuth(handler) 형태로 감싸기. Next.js Route Handler 시그니처: export const POST = withAuth(async (req, { user }) => { ... }).",
       "priority": "high",
       "status": "done",
-      "dependencies": ["A1", "A2"],
+      "dependencies": [
+        "A1",
+        "A2"
+      ],
       "testStrategy": "Authorization 헤더 없이 POST /api/bookmarks 호출 시 401. 유효 토큰으로 200 확인."
     },
     {
@@ -44,7 +47,9 @@
       "details": "app/login/page.tsx: supabase.auth.signInWithOAuth({ provider: 'google', redirectTo: /auth/callback }). app/auth/callback/route.ts: exchangeCodeForSession(code) 후 next로 리다이렉트, 실패 시 /login?error=auth. extension 세션 전달(?from=extension)은 A19 소관.",
       "priority": "high",
       "status": "done",
-      "dependencies": ["A2"],
+      "dependencies": [
+        "A2"
+      ],
       "testStrategy": "/login에서 Google 버튼 클릭 시 OAuth 리다이렉트. 콜백 code 교환 후 홈 진입. 미인증 시 /login 리다이렉트(미들웨어)."
     },
     {
@@ -54,7 +59,10 @@
       "details": "app/api/bookmarks/route.ts. withAuth() 적용. 입력: { title, url, content?, folder_hint? } (bookmarkCreateSchema). 처리: Promise.all([generateTags, createEmbedding]) 병렬. 태깅 프롬프트는 tag-taxonomy.md(대/중/소 0~3개), 응답 { tags }. alias.md 정규화 후 tags[0] 고정 6종(개발·AI/ML·디자인·비즈니스·학습·쇼핑)이면 categories 조회해 category_id, 아니면 null. content는 DB 저장·로그 금지(A8), 처리 후 파기. select 명시 컬럼(embedding 제외). OpenAI 클라이언트 지연 초기화.",
       "priority": "high",
       "status": "done",
-      "dependencies": ["A1", "A3"],
+      "dependencies": [
+        "A1",
+        "A3"
+      ],
       "testStrategy": "저장 후 DB tags, category, embedding 값 확인. 응답시간 1.5초 이내. Vercel 로그에 content 미노출 확인."
     },
     {
@@ -64,7 +72,10 @@
       "details": "app/api/bookmarks/route.ts (GET 핸들러). withAuth() 적용. 쿼리: tab(favorites→is_favorite), category(이름→category_id, 미존재 시 빈 결과), tag(tags contains), folder(folder_hint contains), page, limit(기본 20·최대 100). created_at desc. select 명시 컬럼(id,url,title,tags,category_id,folder_hint,is_favorite,created_at) — embedding 제외, count:exact로 total. RLS로 본인 데이터만.",
       "priority": "high",
       "status": "done",
-      "dependencies": ["A1", "A3"],
+      "dependencies": [
+        "A1",
+        "A3"
+      ],
       "testStrategy": "category=개발 필터 시 해당 북마크만 반환. 타인 user_id 데이터 0건 확인."
     },
     {
@@ -74,7 +85,10 @@
       "details": "app/api/search/route.ts. withAuth() 적용. 입력: { query }(최대 50자). 쿼리 임베딩 text-embedding-3-small. Supabase RPC match_bookmarks(query_embedding, match_threshold:0.5, match_count:20, p_user_id). RPC는 supabase/migrations/0002_match_bookmarks.sql — category_id 반환, embedding 미반환, SET search_path=public. 응답 { results }.",
       "priority": "high",
       "status": "done",
-      "dependencies": ["A1", "A3"],
+      "dependencies": [
+        "A1",
+        "A3"
+      ],
       "testStrategy": "'머신러닝 입문' 검색 시 유사도 0.5 이상 북마크만 반환. 응답에 embedding 필드 없음 확인."
     },
     {
@@ -84,7 +98,9 @@
       "details": "1) DB: bookmarks 테이블에 content 컬럼 없음 확인. 2) 로그 마스킹: Route Handler에서 content 필드 로그 출력 금지. 3) platform.openai.com Settings > Data Controls: API 데이터 학습 사용 여부 확인 (API 기본값: 학습 미사용). 4) 처리방침(A12)에 문구 추가: 'OpenAI API를 통해 처리되며 학습 데이터로 사용되지 않습니다. 본문은 AI 처리 완료 즉시 파기.'",
       "priority": "high",
       "status": "done",
-      "dependencies": ["A5"],
+      "dependencies": [
+        "A5"
+      ],
       "testStrategy": "bookmarks 스키마 content 컬럼 없음 확인. Vercel 로그에 본문 미노출 확인. OpenAI Data Controls 설정 스크린샷 보관."
     },
     {
@@ -94,7 +110,10 @@
       "details": "app/(dashboard)/page.tsx. GET /api/bookmarks 호출. 카드 UI: 제목, URL, 태그 뱃지, 카테고리, 저장일. 원본 URL 클릭 시 새 탭. 초기 로딩 스켈레톤 UI. 빈 상태 UI (북마크 없을 때).",
       "priority": "high",
       "status": "done",
-      "dependencies": ["A4", "A6"],
+      "dependencies": [
+        "A4",
+        "A6"
+      ],
       "testStrategy": "북마크 10개 이상 저장 후 목록 표시 확인. 빈 상태 UI 확인."
     },
     {
@@ -104,7 +123,10 @@
       "details": "검색창 컴포넌트 debounce 300ms. POST /api/search 호출. 유사도 0.5 미만 결과 숨김. 검색어 없을 때 기본 목록 복귀.",
       "priority": "high",
       "status": "done",
-      "dependencies": ["A9", "A7"],
+      "dependencies": [
+        "A9",
+        "A7"
+      ],
       "testStrategy": "'리액트 훅' 검색 시 관련 북마크 상위 노출 확인."
     },
     {
@@ -114,7 +136,10 @@
       "details": "사용자 북마크에서 카테고리/태그 집계. 클릭 시 URL 파라미터 업데이트 (?category=개발&tag=React). GET /api/bookmarks?category=개발 재요청.",
       "priority": "medium",
       "status": "done",
-      "dependencies": ["A9", "A6"],
+      "dependencies": [
+        "A9",
+        "A6"
+      ],
       "testStrategy": "카테고리 클릭 시 해당 북마크만 표시 확인."
     },
     {
@@ -124,7 +149,9 @@
       "details": "app/privacy/page.tsx. 포함 항목: 수집 항목(이메일·URL·제목·벡터), 수집 목적, 보유 기간(탈퇴 즉시 파기), 국외이전 수탁자(OpenAI/Supabase/Vercel — 미국·목적·거부 방법), OpenAI 학습 미사용 명시, 열람·수정·삭제 요청 방법, 시행일. 인증 불필요.",
       "priority": "high",
       "status": "done",
-      "dependencies": ["A2"],
+      "dependencies": [
+        "A2"
+      ],
       "testStrategy": "비로그인 /privacy 접근 확인. 국외이전 수탁자 3개(OpenAI·Supabase·Vercel) 명시 확인."
     },
     {
@@ -134,7 +161,9 @@
       "details": "app/terms/page.tsx. 포함 항목: 서비스 범위, 사용자 콘텐츠 저작권 책임, 본문 미저장·즉시 파기 명시, robots.txt 미준수 사이트 수집 면책, 서비스 변경·중단 조항. 인증 불필요.",
       "priority": "high",
       "status": "done",
-      "dependencies": ["A2"],
+      "dependencies": [
+        "A2"
+      ],
       "testStrategy": "비로그인 /terms 접근 확인. 저작권 면책 조항 포함 확인."
     },
     {
@@ -144,7 +173,10 @@
       "details": "app/api/account/route.ts (DELETE). service_role_key 필요 — 서버사이드 전용, NEXT_PUBLIC_ 금지. 순서: 1) DELETE FROM bookmarks WHERE user_id = $1. 2) supabase.auth.admin.deleteUser(userId). 3) 파기 완료 로그 (user_id 해시만, 식별 정보 미포함).",
       "priority": "high",
       "status": "done",
-      "dependencies": ["A1", "A3"],
+      "dependencies": [
+        "A1",
+        "A3"
+      ],
       "testStrategy": "탈퇴 후 bookmarks user_id 행 0개 확인. Auth 유저 조회 시 404 확인."
     },
     {
@@ -154,7 +186,10 @@
       "details": "app/api/account/route.ts (GET). SELECT id, title, url, tags, category, created_at FROM bookmarks WHERE user_id = $1. embedding 제외. 페이지네이션 없이 전체 반환 (다운로드 용도).",
       "priority": "medium",
       "status": "done",
-      "dependencies": ["A1", "A3"],
+      "dependencies": [
+        "A1",
+        "A3"
+      ],
       "testStrategy": "북마크 5개 저장 후 열람 API 5개 반환 확인. 타인 데이터 미포함 확인."
     },
     {
@@ -164,7 +199,10 @@
       "details": "app/(dashboard)/settings/page.tsx. 탈퇴 버튼 → 확인 모달('북마크 전체 삭제 후 탈퇴됩니다'). 확인 시 DELETE /api/account → 성공 시 로그아웃 → /goodbye 페이지. 실패 시 에러 토스트.",
       "priority": "medium",
       "status": "done",
-      "dependencies": ["A4", "A14"],
+      "dependencies": [
+        "A4",
+        "A14"
+      ],
       "testStrategy": "탈퇴 후 재로그인 불가 확인. DB 북마크 0개 확인."
     },
     {
@@ -173,8 +211,10 @@
       "description": "신규 가입자에게 익스텐션 설치·저장 방법을 안내하는 온보딩 화면.",
       "details": "app/onboarding/page.tsx. PRD 온보딩 흐름: 로그인(A4) 직후 신규 유저는 온보딩 화면 진입. Chrome 익스텐션 설치 안내, 첫 북마크 저장 방법, 자연어 검색 소개. 완료 후 홈(A9)으로 이동. 신규 여부 판단 후 1회 노출.",
       "priority": "high",
-      "status": "pending",
-      "dependencies": ["A4"],
+      "status": "done",
+      "dependencies": [
+        "A4"
+      ],
       "testStrategy": "신규 로그인 시 /onboarding 진입 확인. 완료 후 홈 이동 및 재진입 시 미노출 확인."
     },
     {
@@ -184,7 +224,10 @@
       "details": "app/api/bookmarks/[id]/route.ts. withAuth() 적용. PATCH 입력: { is_favorite }(favoriteSchema, lib/schemas.ts 정의됨). update({ is_favorite }).eq('id', id) — RLS update 정책(A1)으로 본인 데이터만. select 명시 컬럼(embedding 제외). DELETE: 본인 북마크 단건 삭제. 현재 둘 다 501 스텁.",
       "priority": "medium",
       "status": "pending",
-      "dependencies": ["A1", "A3"],
+      "dependencies": [
+        "A1",
+        "A3"
+      ],
       "testStrategy": "PATCH로 is_favorite true/false 토글 확인. 타인 북마크 id PATCH 시 0행(RLS). DELETE 후 미조회 확인."
     },
     {
@@ -194,7 +237,10 @@
       "details": "카드 내 즐겨찾기 토글 버튼 → PATCH /api/bookmarks/:id(A27) 호출, 낙관적 업데이트. 사이드바 '즐겨찾기' 탭 클릭 시 GET /api/bookmarks?tab=favorites(A6) 재요청. is_favorite 상태 아이콘 반영.",
       "priority": "medium",
       "status": "pending",
-      "dependencies": ["A9", "A27"],
+      "dependencies": [
+        "A9",
+        "A27"
+      ],
       "testStrategy": "카드 버튼 클릭 시 즐겨찾기 토글 + 아이콘 변경 확인. 즐겨찾기 탭에서 해당 북마크만 표시."
     },
     {
@@ -204,7 +250,11 @@
       "details": "app/api/bookmarks/import/route.ts. withAuth() 적용. 입력: 브라우저 export HTML(netscape-bookmark) 파싱 → { title, url, folder_hint }[] 추출. 각 항목 배치 태깅(generateTags) + 임베딩(createEmbedding) 후 일괄 insert. folder_hint는 원본 폴더 경로 보존(A31용). content 없음(제목·URL만) → 본문 미저장. 처리량 제한·부분 실패 처리. 현재 501 스텁.",
       "priority": "high",
       "status": "pending",
-      "dependencies": ["A1", "A3", "A5"],
+      "dependencies": [
+        "A1",
+        "A3",
+        "A5"
+      ],
       "testStrategy": "Chrome export HTML 업로드 시 북마크 일괄 저장 확인. folder_hint 원본 경로 보존 확인. 대량(100+) 처리 확인."
     },
     {
@@ -214,7 +264,10 @@
       "details": "헤더 우측 '파일 업로드' 버튼 → 임포트 페이지 이동(PRD WEB-14). HTML 파일 선택 → POST /api/bookmarks/import(A29) 업로드. 진행률·결과(성공/실패 건수) 표시. 완료 후 목록(A9) 이동.",
       "priority": "high",
       "status": "pending",
-      "dependencies": ["A4", "A29"],
+      "dependencies": [
+        "A4",
+        "A29"
+      ],
       "testStrategy": "HTML 파일 업로드 후 진행 상태·결과 표시 확인. 완료 후 목록 반영 확인."
     },
     {
@@ -224,7 +277,10 @@
       "details": "app/api/bookmarks/folders/route.ts (GET) — folder_hint distinct 목록 조회(현재 501 스텁). 사이드바 '내 폴더' 탭에서 폴더 목록 렌더. 클릭 시 GET /api/bookmarks?folder=<경로>(A6) 필터. A11 사이드바 구조 확장.",
       "priority": "medium",
       "status": "pending",
-      "dependencies": ["A11", "A30"],
+      "dependencies": [
+        "A11",
+        "A30"
+      ],
       "testStrategy": "임포트 후 폴더 목록 표시 확인. 폴더 클릭 시 해당 folder_hint 북마크만 필터."
     },
     {
@@ -234,7 +290,9 @@
       "details": "app/api/account/route.ts. 현재 bookmarks DELETE 성공 후 admin.auth.admin.deleteUser 실패 시 계정은 남고 데이터만 소실. 보강: deleteUser 우선 + bookmarks는 FK ON DELETE CASCADE 의존, 또는 실패 시 롤백/재시도. Postgres 함수(SECURITY DEFINER)로 단일 트랜잭션 처리 검토.",
       "priority": "low",
       "status": "pending",
-      "dependencies": ["A14"],
+      "dependencies": [
+        "A14"
+      ],
       "testStrategy": "deleteUser 실패 주입 시 데이터 소실 없이 일관 상태 유지 확인."
     },
     {
@@ -244,7 +302,9 @@
       "details": "tasks/README·PRD는 `GET /api/account/data`, 실제 구현·UI(settings)는 `GET /api/account`. 한쪽으로 통일 — 코드 유지 시 문서 수정, 또는 라우트를 /api/account/data로 분리. UI fetch 경로도 함께 정합.",
       "priority": "low",
       "status": "pending",
-      "dependencies": ["A15"],
+      "dependencies": [
+        "A15"
+      ],
       "testStrategy": "문서·코드·UI 경로 일치 확인. 열람 API 정상 동작 확인."
     },
     {
@@ -254,7 +314,9 @@
       "details": "lib/logger.ts의 maskSensitive(content·embedding 제거)가 route 어디서도 호출 안 됨. Route Handler 에러 로깅 시 maskSensitive 경유 강제. 현재는 로깅 자체가 없어 누출은 없으나, 향후 디버그 로그 추가 시 가드 부재. 공통 에러 핸들러에 통합 검토.",
       "priority": "low",
       "status": "pending",
-      "dependencies": ["A8"],
+      "dependencies": [
+        "A8"
+      ],
       "testStrategy": "content 포함 객체 로깅 시 content·embedding 마스킹 확인."
     },
     {
@@ -264,7 +326,9 @@
       "details": "app/api/bookmarks/route.ts(POST). 현재 동일 URL N회 저장 시 중복 행 누적. (user_id, url) unique 제약 + upsert(onConflict) 또는 저장 전 존재 확인. 중복 시 갱신/무시 정책 결정 필요.",
       "priority": "medium",
       "status": "pending",
-      "dependencies": ["A5"],
+      "dependencies": [
+        "A5"
+      ],
       "testStrategy": "동일 URL 2회 저장 시 1행 유지(또는 갱신) 확인."
     },
     {
@@ -274,7 +338,9 @@
       "details": "app/api/search/route.ts. 저장 doc=title+content(김) vs 쿼리=짧은 자연어 비대칭으로 cosine 낮아 match_threshold 0.5에서 recall 누락 가능. 운영 데이터로 threshold 튜닝, 필요 시 쿼리 확장·재랭킹 검토.",
       "priority": "low",
       "status": "pending",
-      "dependencies": ["A7"],
+      "dependencies": [
+        "A7"
+      ],
       "testStrategy": "샘플 쿼리셋 recall@k 측정 후 threshold 조정 전후 비교."
     },
     {
@@ -284,7 +350,9 @@
       "details": "PDF·chrome:// 등 content script 차단 시 content='' → embedding=title만(약한 벡터). 허용 degradation이나 비율·검색 영향 모니터링. 필요 시 메타데이터(description 등) 폴백 수집 검토.",
       "priority": "low",
       "status": "pending",
-      "dependencies": ["A5"],
+      "dependencies": [
+        "A5"
+      ],
       "testStrategy": "빈 content 저장 비율 로깅·집계 확인."
     },
     {
@@ -294,7 +362,9 @@
       "details": "app/api/bookmarks/route.ts. normalizeTags(rawTags) + resolveTopCategory(rawTags)가 내부에서 rawTags를 2회 정규화. 결과 동일, 한 번만 정규화 후 재사용하도록 정리.",
       "priority": "low",
       "status": "pending",
-      "dependencies": ["A5"],
+      "dependencies": [
+        "A5"
+      ],
       "testStrategy": "정리 후 tags·category_id 결과 기존과 동일 확인(기존 테스트 통과)."
     }
   ]
