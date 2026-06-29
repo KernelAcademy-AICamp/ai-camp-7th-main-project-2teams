@@ -30,21 +30,21 @@
     "gold": ["개발", "인프라", "Vercel"]
   },
   {
-    "url": "https://arxiv.org/abs/2005.11401",
-    "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
-    "description": "We introduce RAG models combining parametric and non-parametric memory for generation.",
+    "url": "https://arxiv.org/abs/2004.04906",
+    "title": "Dense Passage Retrieval for Open-Domain Question Answering",
+    "description": "We show that retrieval can be practically implemented using dense representations alone for open-domain QA.",
     "gold": ["AI/ML", "RAG", "논문"]
   },
   {
-    "url": "https://platform.openai.com/docs/api-reference/chat",
-    "title": "OpenAI API Reference - Chat",
-    "description": "Create chat completions with OpenAI models.",
+    "url": "https://docs.anthropic.com/en/api/messages",
+    "title": "Messages - Anthropic API",
+    "description": "Create a message with Claude models via the Anthropic API.",
     "gold": ["AI/ML", "LLM", "공식문서"]
   },
   {
-    "url": "https://huggingface.co/meta-llama/Llama-3-8B",
-    "title": "meta-llama/Llama-3-8B · Hugging Face",
-    "description": "Llama 3 8B large language model model card and weights.",
+    "url": "https://huggingface.co/mistralai/Mistral-7B-v0.1",
+    "title": "mistralai/Mistral-7B-v0.1 · Hugging Face",
+    "description": "Mistral 7B large language model model card and weights.",
     "gold": ["AI/ML", "LLM"]
   },
   {
@@ -54,9 +54,9 @@
     "gold": ["디자인", "UI/UX", "Figma"]
   },
   {
-    "url": "https://www.apple.com/shop/buy-mac/macbook-pro",
-    "title": "Buy MacBook Pro - Apple",
-    "description": "M4 칩 탑재 MacBook Pro 구매",
+    "url": "https://electronics.sony.com/headphones/wh-1000xm5",
+    "title": "Sony WH-1000XM5 무선 노이즈 캔슬링 헤드폰",
+    "description": "업계 최고 수준 노이즈 캔슬링 무선 헤드폰 구매",
     "gold": ["쇼핑", "전자기기"]
   },
   {
