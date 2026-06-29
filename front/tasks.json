@@ -366,6 +366,19 @@
         "A5"
       ],
       "testStrategy": "정리 후 tags·category_id 결과 기존과 동일 확인(기존 테스트 통과)."
+    },
+    {
+      "id": "A39",
+      "title": "랜딩 페이지 (/welcome) + 온보딩 가이드 헤더 버튼",
+      "description": "전체 유저 접근 가능한 공개 랜딩 페이지 + 대시보드 헤더에서 사용법 재확인 모달.",
+      "details": "app/welcome/page.tsx — 공개 랜딩(PUBLIC_PATHS 추가). 서버에서 인증 상태 확인 후 CTA 분기(비로그인→로그인, 로그인→대시보드). 3섹션 안내는 components/ServiceFeatures.tsx 공용 컴포넌트로 추출(랜딩/온보딩/모달 공유). components/OnboardingGuideButton.tsx — 대시보드 헤더 '사용법' 버튼 + 네이티브 dialog 모달(A26 v1.1 '다시 보기' 트리거). /login에 서비스 소개 링크 추가.",
+      "priority": "medium",
+      "status": "done",
+      "dependencies": [
+        "A4",
+        "A26"
+      ],
+      "testStrategy": "/welcome 비로그인 접근 시 로그인 CTA, 로그인 시 대시보드 CTA 분기 확인. 헤더 '사용법' 클릭 시 모달 오픈·ESC/배경/✕ 닫힘. middleware /welcome public 케이스 통과."
     }
   ]
 }
