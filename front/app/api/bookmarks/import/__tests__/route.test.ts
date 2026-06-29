@@ -7,8 +7,8 @@ const { generateTags, createEmbedding } = vi.hoisted(() => ({
 }))
 vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
 
-// Supabase 모킹: auth + categories 조회 + bookmarks insert
-const insertSpy = vi.fn()
+// Supabase 모킹: auth + categories 조회 + bookmarks upsert
+const insertSpy = vi.fn() // ponytail: alias kept for backward-compat test assertions
 
 function makeSupabase(user: unknown) {
   return {
@@ -23,9 +23,9 @@ function makeSupabase(user: unknown) {
           }),
         }
       }
-      // bookmarks insert — select 체이닝 없음 (배치 임포트는 개수만 집계)
+      // bookmarks upsert — select 체이닝 없음 (배치 임포트는 개수만 집계)
       return {
-        insert(payload: unknown) {
+        upsert(payload: unknown, _opts: unknown) {
           insertSpy(payload)
           return { error: null }
         },
