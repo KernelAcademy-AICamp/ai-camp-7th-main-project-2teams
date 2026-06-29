@@ -49,9 +49,9 @@ describe('aggregate', () => {
 // 실 OpenAI 골든셋 평가 — 비용·flaky 때문에 RUN_TAG_EVAL=1에서만.
 // 실행: RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts
 // 회귀 게이트: macro-F1 baseline 미만이면 실패.
-// held-out 실측(n=30): alias 보강 후 F1 0.82 (2026-06). 레버리지 1/30≈0.033 → 마진 두고 0.75.
-// 남은 개선: Stripe 대분류 오류·강의/컴퓨터비전 under-tagging(B버킷) → 교정 후 추가 상향.
-const F1_BASELINE = 0.75
+// held-out 실측(n=30): B버킷 규칙 보강 후 F1 0.85 (2026-06). 레버리지 1/30≈0.033 → 마진 두고 0.78.
+// 남은: Stripe 중분류·LangChain/OpenCV 소분류 등 라벨 모호 케이스(팀 검수 후 상향).
+const F1_BASELINE = 0.78
 
 describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)', () => {
   it(
