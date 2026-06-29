@@ -97,7 +97,7 @@ export async function generateTags({
     ],
     response_format: { type: 'json_object' },
     max_tokens: 200, // confidence 필드 추가로 응답 길이 증가 — truncation 방지
-    temperature: 0.2,
+    temperature: 0, // 분류 작업 — 같은 URL은 같은 태그(결정성). eval 변동성도 축소.
   })
 
   // truncation 등으로 JSON.parse 실패 시 빈 태그로 degrade.
