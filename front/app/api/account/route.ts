@@ -1,6 +1,7 @@
 import { createHash } from 'crypto'
 import { withAuth } from '@/lib/auth'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
 
 // A14: 회원 탈퇴 — Auth 유저 삭제 (bookmarks는 ON DELETE CASCADE로 자동 파기)
 // bookmarks 먼저 삭제 시 deleteUser 실패하면 계정만 남는 비원자성 문제 방지
@@ -10,11 +11,11 @@ export const DELETE = withAuth(async (_req, { user }) => {
   const { error: authError } = await admin.auth.admin.deleteUser(user.id)
 
   if (authError) {
-    console.error(`[account] deleteUser 실패: hash=${userHash}`, authError.message)
+    logger.error(`[account] deleteUser 실패: hash=${userHash}`, authError.message)
     return Response.json({ error: '회원 탈퇴 처리 중 오류가 발생했습니다.' }, { status: 500 })
   }
 
-  console.log(`[account] user deleted: hash=${userHash}`)
+  logger.log(`[account] user deleted: hash=${userHash}`)
   return Response.json({ success: true })
 })
 
@@ -26,7 +27,10 @@ export const GET = withAuth(async (_req, { supabase }) => {
     .select('id, title, url, tags, category_id, folder_hint, is_favorite, created_at')
     .order('created_at', { ascending: false })
 
-  if (error) return Response.json({ error: error.message }, { status: 500 })
+  if (error) {
+    logger.error('[account] GET bookmarks 실패:', error.message)
+    return Response.json({ error: '데이터 조회 중 오류가 발생했습니다.' }, { status: 500 })
+  }
 
   return Response.json({ bookmarks: data })
 })

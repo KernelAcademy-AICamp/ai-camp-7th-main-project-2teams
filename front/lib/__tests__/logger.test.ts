@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { maskSensitive } from '@/lib/logger'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { maskSensitive, logger } from '@/lib/logger'
 
 describe('maskSensitive', () => {
   it('content 키 제거', () => {
@@ -35,5 +35,41 @@ describe('maskSensitive', () => {
   it('falsy content 값도 제거', () => {
     expect(maskSensitive({ content: null, title: 'a' } as Record<string, unknown>)).not.toHaveProperty('content')
     expect(maskSensitive({ content: 0, title: 'a' } as Record<string, unknown>)).not.toHaveProperty('content')
+  })
+})
+
+describe('logger', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('객체 인자에서 content 자동 제거', () => {
+    logger.log({ title: 'test', content: '본문', url: 'https://a.com' })
+    const arg = (console.log as ReturnType<typeof vi.spyOn>).mock.calls[0][0]
+    expect(arg).not.toHaveProperty('content')
+    expect(arg).toMatchObject({ title: 'test', url: 'https://a.com' })
+  })
+
+  it('객체 인자에서 embedding 자동 제거', () => {
+    logger.error({ title: 'x', embedding: [0.1, 0.2] })
+    const arg = (console.error as ReturnType<typeof vi.spyOn>).mock.calls[0][0]
+    expect(arg).not.toHaveProperty('embedding')
+  })
+
+  it('문자열 인자 그대로 통과', () => {
+    logger.log('hello', 'world')
+    expect(console.log).toHaveBeenCalledWith('hello', 'world')
+  })
+
+  it('배열 인자 그대로 통과', () => {
+    const arr = [1, 2, 3]
+    logger.warn(arr)
+    expect(console.warn).toHaveBeenCalledWith(arr)
   })
 })
