@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { OnboardingGuideButton } from '@/components/OnboardingGuideButton'
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
@@ -10,6 +11,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             Bookmarker
           </Link>
           <div className="flex items-center gap-4">
+            <OnboardingGuideButton />
             <Link
               href="/import"
               className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"

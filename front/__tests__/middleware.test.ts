@@ -22,6 +22,10 @@ describe('isPublicPath — 공개 경로 판별', () => {
     expect(isPublicPath('/goodbye')).toBe(true)
   })
 
+  it('/welcome는 공개 경로다 — 랜딩 페이지, 전체 유저 접근', () => {
+    expect(isPublicPath('/welcome')).toBe(true)
+  })
+
   it('루트 경로(/)는 보호 경로다 — 미인증 시 /login redirect 대상', () => {
     expect(isPublicPath('/')).toBe(false)
   })

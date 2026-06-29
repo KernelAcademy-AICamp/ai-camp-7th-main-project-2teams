@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // 인증 없이 접근 가능한 공개 경로 목록
-const PUBLIC_PATHS = ['/login', '/auth', '/privacy', '/terms', '/goodbye']
+const PUBLIC_PATHS = ['/login', '/auth', '/privacy', '/terms', '/goodbye', '/welcome']
 
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(p => pathname.startsWith(p))
