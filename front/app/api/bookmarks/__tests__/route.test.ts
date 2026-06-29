@@ -30,8 +30,9 @@ function makeSupabase(user: unknown) {
       }
       // bookmarks
       return {
-        insert(payload: Record<string, unknown>) {
-          insertSpy(payload)
+        upsert(payload: Record<string, unknown>, opts: unknown) {
+          upsertSpy(payload)
+          upsertOptsSpy(opts)
           return {
             select(cols: string) {
               selectArgSpy(cols)
@@ -71,7 +72,8 @@ function req(body: unknown) {
 describe('POST /api/bookmarks', () => {
   beforeEach(() => {
     currentUser = { id: 'u1' }
-    insertSpy.mockReset()
+    upsertSpy.mockReset()
+    upsertOptsSpy.mockReset()
     selectArgSpy.mockReset()
     warnSpy.mockReset()
     generateTags.mockReset()
@@ -80,15 +82,15 @@ describe('POST /api/bookmarks', () => {
     createEmbedding.mockResolvedValue([0.1, 0.2, 0.3])
   })
 
-  it('content는 insert payload에 없음 (본문 미저장)', async () => {
+  it('content는 upsert payload에 없음 (본문 미저장)', async () => {
     await POST(req({ title: 'T', url: 'https://a.com', content: '비밀 본문' }))
-    const payload = insertSpy.mock.calls[0][0]
+    const payload = upsertSpy.mock.calls[0][0]
     expect(payload).not.toHaveProperty('content')
   })
 
-  it('insert에 embedding 포함, tags 정규화, category_id 조회', async () => {
+  it('upsert에 embedding 포함, tags 정규화, category_id 조회', async () => {
     await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
-    const payload = insertSpy.mock.calls[0][0]
+    const payload = upsertSpy.mock.calls[0][0]
     expect(payload.embedding).toEqual([0.1, 0.2, 0.3])
     expect(payload.tags).toEqual(['개발', '프론트엔드', 'Next.js'])
     expect(payload.category_id).toBe('cat-개발')
@@ -119,18 +121,18 @@ describe('POST /api/bookmarks', () => {
     expect(res.status).toBe(401)
   })
 
-  it('임베딩 실패 → 502, insert 안 함', async () => {
+  it('임베딩 실패 → 502, upsert 안 함', async () => {
     createEmbedding.mockRejectedValue(new Error('rate limit'))
     const res = await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
     expect(res.status).toBe(502)
-    expect(insertSpy).not.toHaveBeenCalled()
+    expect(upsertSpy).not.toHaveBeenCalled()
   })
 
   it('태깅 실패 → 빈 태그로 저장(degrade)', async () => {
     generateTags.mockRejectedValue(new Error('parse fail'))
     const res = await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
     expect(res.status).toBe(201)
-    const payload = insertSpy.mock.calls[0][0]
+    const payload = upsertSpy.mock.calls[0][0]
     expect(payload.tags).toEqual([])
     expect(payload.category_id).toBeNull()
   })

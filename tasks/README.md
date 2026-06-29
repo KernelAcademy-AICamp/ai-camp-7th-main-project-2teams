@@ -168,11 +168,11 @@ A17 (Extension 셋업)
 - [x] **A32 account DELETE 비원자성** (`app/api/account/route.ts`): `deleteUser` 단일 호출 + `ON DELETE CASCADE` 위임으로 원자적 처리. PR #48.
 - [x] **A33 경로 드리프트**: `tasks/README.md`, `front/tasks.json` A15 title을 실제 구현 경로(`GET /api/account`)로 수정. `docs/specs/nextjs-supabase.md`는 이미 정합.
 - [x] **A34 maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
-- [ ] **A35 URL 중복 저장 무방비**: 같은 페이지 N회 저장 시 중복 행. unique 제약/upsert 검토.
+- [x] **A35 URL 중복 저장 무방비**: `(user_id, url)` UNIQUE 제약 + upsert 전환. PR #52.
 
 ### 검색 품질 (튜닝)
 
-- [ ] **A36 비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 저장 doc=title+content(김) vs 쿼리=짧은 자연어 → cosine 낮아 recall 누락 가능. 운영 데이터로 threshold 튜닝.
+- [x] **A36 비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 저장 doc=title+content(김) vs 쿼리=짧은 자연어 → cosine 낮아 recall 누락 가능. 운영 데이터로 threshold 튜닝.
 - [x] **A37 빈 content 약한 벡터**: `logger.warn('[weak-vector]')` 로 모니터링 추가. content 없으면 title 단독 임베딩. PR #54.
 
 ### Minor

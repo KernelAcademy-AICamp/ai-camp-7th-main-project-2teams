@@ -111,17 +111,20 @@ export const POST = withAuth(async (req, { user, supabase }) => {
             }
           }
 
-          // select 체이닝 없음 — 배치 임포트는 개수 집계만, bookmark 객체 반환 불필요
-          const { error } = await supabase.from('bookmarks').insert({
-            user_id: user.id,
-            title,
-            url,
-            tags,
-            category_id,
-            // 루트 항목(빈 배열)은 null 저장 — A5 패턴과 통일
-            folder_hint: folder_hint.length > 0 ? folder_hint : null,
-            embedding,
-          })
+          // upsert — (user_id, url) unique 제약(A35), 재임포트 시 AI 태깅·임베딩 갱신
+          const { error } = await supabase.from('bookmarks').upsert(
+            {
+              user_id: user.id,
+              title,
+              url,
+              tags,
+              category_id,
+              // 루트 항목(빈 배열)은 null 저장 — A5 패턴과 통일
+              folder_hint: folder_hint.length > 0 ? folder_hint : null,
+              embedding,
+            },
+            { onConflict: 'user_id, url', ignoreDuplicates: false },
+          )
 
           if (error) {
             failed++

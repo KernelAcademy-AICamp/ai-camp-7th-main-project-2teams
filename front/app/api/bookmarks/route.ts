@@ -57,17 +57,21 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     category_id = category?.id ?? null
   }
 
+  // onConflict: (user_id, url) unique 제약 — 같은 URL 재저장 시 갱신(AI 태깅·임베딩 최신화)
   const { data, error } = await supabase
     .from('bookmarks')
-    .insert({
-      user_id: user.id,
-      title,
-      url,
-      tags,
-      category_id,
-      folder_hint: folder_hint ?? null,
-      embedding,
-    })
+    .upsert(
+      {
+        user_id: user.id,
+        title,
+        url,
+        tags,
+        category_id,
+        folder_hint: folder_hint ?? null,
+        embedding,
+      },
+      { onConflict: 'user_id, url', ignoreDuplicates: false },
+    )
     // 명시 컬럼 — embedding 누출 방지
     .select('id, url, title, tags, category_id, folder_hint, is_favorite, created_at')
     .single()

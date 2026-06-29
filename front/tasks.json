@@ -325,7 +325,7 @@
       "description": "같은 페이지 반복 저장 시 중복 행 방지. 백로그(파이프라인 재검토).",
       "details": "app/api/bookmarks/route.ts(POST). 현재 동일 URL N회 저장 시 중복 행 누적. (user_id, url) unique 제약 + upsert(onConflict) 또는 저장 전 존재 확인. 중복 시 갱신/무시 정책 결정 필요.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A5"
       ],
@@ -337,7 +337,7 @@
       "description": "벡터 검색 recall 개선. 운영 데이터 기반 임계값 조정. 백로그(파이프라인 재검토).",
       "details": "app/api/search/route.ts. 저장 doc=title+content(김) vs 쿼리=짧은 자연어 비대칭으로 cosine 낮아 match_threshold 0.5에서 recall 누락 가능. 운영 데이터로 threshold 튜닝, 필요 시 쿼리 확장·재랭킹 검토.",
       "priority": "low",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A7"
       ],
