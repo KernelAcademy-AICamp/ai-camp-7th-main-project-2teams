@@ -16,6 +16,11 @@ function makeSupabase(user: unknown) {
     from(table: string) {
       if (table === 'categories') {
         return {
+          upsert: () => ({
+            select: () => ({
+              single: async () => ({ data: { id: 'cat-개발' }, error: null }),
+            }),
+          }),
           select: () => ({
             eq: () => ({
               single: async () => ({ data: { id: 'cat-개발' }, error: null }),
@@ -25,7 +30,7 @@ function makeSupabase(user: unknown) {
       }
       // bookmarks upsert — select 체이닝 없음 (배치 임포트는 개수만 집계)
       return {
-        upsert(payload: unknown, _opts: unknown) {
+        upsert(payload: unknown) {
           insertSpy(payload)
           return { error: null }
         },

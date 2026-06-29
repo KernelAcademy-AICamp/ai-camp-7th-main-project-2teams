@@ -11,8 +11,7 @@ vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
 const { warnSpy } = vi.hoisted(() => ({ warnSpy: vi.fn() }))
 vi.mock('@/lib/logger', () => ({ logger: { warn: warnSpy, log: vi.fn(), error: vi.fn() } }))
 
-// supabase 서버 클라이언트 모킹: auth + categories 조회 + bookmarks insert
-const insertSpy = vi.fn()
+// supabase 서버 클라이언트 모킹: auth + categories upsert + bookmarks upsert
 const upsertSpy = vi.fn()
 const upsertOptsSpy = vi.fn()
 const selectArgSpy = vi.fn()
@@ -23,6 +22,11 @@ function makeSupabase(user: unknown) {
     from(table: string) {
       if (table === 'categories') {
         return {
+          upsert: () => ({
+            select: () => ({
+              single: async () => ({ data: { id: 'cat-개발' }, error: null }),
+            }),
+          }),
           select: () => ({
             eq: () => ({
               single: async () => ({ data: { id: 'cat-개발' }, error: null }),
