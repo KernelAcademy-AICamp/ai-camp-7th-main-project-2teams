@@ -106,7 +106,7 @@ export const TAG_ALIAS: Record<string, string> = {
 ## 적용 함수
 
 ```typescript
-const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드'])
+const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드', '게임'])
 
 export function normalizeTags(tags: string[]): string[] {
   return tags.map(t => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)

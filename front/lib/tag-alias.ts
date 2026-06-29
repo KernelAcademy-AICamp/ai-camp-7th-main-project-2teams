@@ -1,6 +1,6 @@
 // AI 태깅 출력 정규화 (docs/specs/alias.md). 운영 중 누락 발견 시 추가.
 
-// 대분류 alias — categories 테이블 name 매핑. 고정 8개 외 값은 null(미분류).
+// 대분류 alias — categories 테이블 name 매핑. 고정 9개 외 값은 null(미분류).
 export const CATEGORY_ALIAS: Record<string, string> = {
   // 개발
   dev: '개발', development: '개발', programming: '개발',
@@ -30,6 +30,9 @@ export const CATEGORY_ALIAS: Record<string, string> = {
 
   // 브랜드
   brand: '브랜드', 브랜드: '브랜드',
+
+  // 게임
+  game: '게임', gaming: '게임', 게임: '게임', 비디오게임: '게임',
 }
 
 // 중분류 alias — tags 배열 정규화용. 소분류는 자유 텍스트 — alias 없음.
@@ -76,11 +79,14 @@ export const TAG_ALIAS: Record<string, string> = {
   sns: '소셜미디어', 'social media': '소셜미디어', 소셜미디어: '소셜미디어',
   // 마케팅·기업 (브랜드)
   marketing: '마케팅', 광고: '마케팅', company: '기업', corporate: '기업', 기업소개: '기업',
+  // 게임 중분류
+  게임공략: '공략', walkthrough: '공략', 가이드: '공략', esports: 'e스포츠', 'e-sports': 'e스포츠',
+  게임뉴스: '게임뉴스', 게임리뷰: '게임리뷰',
   // 소분류 표기 통일
   파이썬: 'Python',
 }
 
-const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드'])
+const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드', '게임'])
 
 export function normalizeTags(tags: string[]): string[] {
   return tags.map((t) => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)
