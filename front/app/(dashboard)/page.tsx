@@ -45,6 +45,8 @@ function DashboardContent() {
     })
   }, [router])
 
+  const fromExtension = searchParams.get('from') === 'extension'
+
   // URL 쿼리 ↔ 필터 동기화. 싱글톤 스토어라 파라미터 없으면 null로 리셋해야
   // 이전 필터 잔류(active 표시 불일치)를 막는다. searchParams 변경마다 재조정.
   useEffect(() => {
@@ -67,9 +69,11 @@ function DashboardContent() {
     if (tag) params.set('tag', tag)
     // favorites 탭만 URL에 반영 — 다른 SidebarTab 값이 새지 않도록 명시
     if (tab === 'favorites') params.set('tab', 'favorites')
+    // 익스텐션 동기화 플래그는 필터 변경 시에도 보존
+    if (fromExtension) params.set('from', 'extension')
     const qs = params.toString()
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
-  }, [category, folder, tag, tab, router, pathname])
+  }, [category, folder, tag, tab, router, pathname, fromExtension])
 
   const [searchQuery, setSearchQuery] = useState('')
   const isSearching = searchQuery.trim().length > 0
@@ -107,8 +111,6 @@ function DashboardContent() {
   const isPending = isSearching ? isSearchPending : isBookmarkPending
   const items = isSearching ? (searchData?.results ?? []) : (bookmarkData?.bookmarks ?? [])
   const allBookmarks = bookmarkData?.bookmarks ?? []
-
-  const fromExtension = searchParams.get('from') === 'extension'
 
   return (
     <>
