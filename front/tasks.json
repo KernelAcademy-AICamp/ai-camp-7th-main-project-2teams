@@ -386,7 +386,7 @@
       "description": "대시보드 헤더 '북마크 추가' 버튼 → URL 입력 팝업으로 단건 북마크 저장.",
       "details": "app/(dashboard)/layout.tsx 헤더에 '북마크 추가' 버튼 추가. components/AddBookmarkPopover.tsx — URL 입력 필드 + URL 형식 validation(z.string().url()) + 추가/취소. 추가 시 POST /api/bookmarks(A5) 호출, 성공 시 목록 갱신. 팝업 외부 클릭 시 닫힘. IA 뎁스5-6.",
       "priority": "high",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A5",
         "A9"
@@ -412,7 +412,7 @@
       "description": "사이드바 하단 회원정보 버튼 → 프로필 팝업(아바타/이메일/설정/로그아웃).",
       "details": "components/Sidebar.tsx 하단에 회원정보 버튼(아바타+이메일+클릭 아이콘) 추가. components/ProfilePopover.tsx — 프로필 정보·설정(이동)·로그아웃 항목. 로그아웃 시 supabase.auth.signOut() 후 /welcome 또는 /login 이동. 외부 클릭 닫힘. 아바타 default image 처리. IA 회원정보>프로필 팝업(MVP).",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A4",
         "A11"
