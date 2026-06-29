@@ -10,6 +10,7 @@ export default function SettingsPage() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [exportDone, setExportDone] = useState(false)
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
@@ -28,6 +29,7 @@ export default function SettingsPage() {
     a.download = 'bookmarks.json'
     a.click()
     URL.revokeObjectURL(url)
+    setExportDone(true)
   }
 
   const handleDelete = async () => {
@@ -93,9 +95,27 @@ export default function SettingsPage() {
             <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
               정말 탈퇴하시겠습니까?
             </h3>
-            <p className="mb-6 text-sm text-gray-500">
-              북마크 전체 삭제 후 탈퇴됩니다. 이 작업은 되돌릴 수 없습니다.
+            <p className="mb-4 text-sm text-gray-500">
+              북마크 전체가 영구 삭제되며 복구할 수 없습니다.
             </p>
+
+            {/* 데이터 내보내기 유도 */}
+            <div className={`mb-5 rounded-md p-3 text-sm ${exportDone ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'}`}>
+              {exportDone ? (
+                '✓ 데이터를 내보냈습니다.'
+              ) : (
+                <>
+                  <p className="mb-2 font-medium">탈퇴 전 데이터를 내보내세요.</p>
+                  <button
+                    onClick={handleDownload}
+                    className="rounded border border-amber-400 px-3 py-1 text-xs font-medium hover:bg-amber-100 dark:border-amber-600 dark:hover:bg-amber-900/40"
+                  >
+                    데이터 내보내기 (JSON)
+                  </button>
+                </>
+              )}
+            </div>
+
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirm(false)}
