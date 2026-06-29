@@ -16,3 +16,4 @@ coverage/
 
 # 기타
 .DS_Store
+.vercel
