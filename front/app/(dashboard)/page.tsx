@@ -45,16 +45,20 @@ function DashboardContent() {
     })
   }, [router])
 
+  // searchParams 객체는 네비게이션에서 참조가 유지될 수 있어 의존성으로 부적합.
+  // 쿼리 문자열로 의존해야 내용 변경마다 effect가 재실행된다.
+  const queryString = searchParams.toString()
   const fromExtension = searchParams.get('from') === 'extension'
 
   // URL 쿼리 ↔ 필터 동기화. 싱글톤 스토어라 파라미터 없으면 null로 리셋해야
-  // 이전 필터 잔류(active 표시 불일치)를 막는다. searchParams 변경마다 재조정.
+  // 이전 필터 잔류(active 표시 불일치)를 막는다. 쿼리 변경마다 재조정.
   useEffect(() => {
-    setCategory(searchParams.get('category'))
-    setFolder(searchParams.get('folder'))
-    setTag(searchParams.get('tag'))
-    setTab(searchParams.get('tab') === 'favorites' ? 'favorites' : 'all')
-  }, [searchParams, setCategory, setFolder, setTag, setTab])
+    const params = new URLSearchParams(queryString)
+    setCategory(params.get('category'))
+    setFolder(params.get('folder'))
+    setTag(params.get('tag'))
+    setTab(params.get('tab') === 'favorites' ? 'favorites' : 'all')
+  }, [queryString, setCategory, setFolder, setTag, setTab])
 
   // 마운트 첫 실행은 건너뛰어 초기화 Effect와 레이스 방지
   const syncInitRef = useRef(false)
