@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeTags, resolveTopCategory } from '../tag-alias'
+import { normalizeTags, resolveTopCategory, CATEGORY_ALIAS, TAG_ALIAS } from '../tag-alias'
+
+// normalizeTags는 TAG_ALIAS를 먼저 조회 → 같은 키가 양쪽에 있으면 CATEGORY_ALIAS가 영구 무효화됨.
+describe('alias 키 충돌 방지', () => {
+  it('TAG_ALIAS ∩ CATEGORY_ALIAS = ∅', () => {
+    const overlap = Object.keys(TAG_ALIAS).filter((k) => k in CATEGORY_ALIAS)
+    expect(overlap).toEqual([])
+  })
+})
 
 describe('normalizeTags', () => {
   it('영문/약어 → 한국어 정규화', () => {

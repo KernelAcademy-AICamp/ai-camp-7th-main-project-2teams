@@ -186,10 +186,10 @@
     "gold": ["커뮤니티", "소셜미디어", "Discord"]
   },
   {
-    "url": "https://www.tesla.com/",
-    "title": "Tesla | 전기차·태양광·에너지",
-    "description": "Tesla 브랜드 홈페이지·제품 라인업.",
-    "gold": ["브랜드", "마케팅", "Tesla"]
+    "url": "https://www.adidas.com/us/impossible-is-nothing",
+    "title": "Impossible Is Nothing - adidas 캠페인",
+    "description": "아디다스 브랜드 캠페인·브랜드스토리.",
+    "gold": ["브랜드", "마케팅", "Adidas"]
   },
   {
     "url": "https://www.coca-cola.com/us/en",
@@ -225,7 +225,7 @@
     "url": "https://www.inven.co.kr/",
     "title": "인벤 - 게임 그 이상을 추구하다",
     "description": "게임 뉴스·공략·커뮤니티 포털",
-    "gold": ["게임", "커뮤니티"]
+    "gold": ["게임"]
   },
   {
     "url": "https://devkim.tistory.com/123",

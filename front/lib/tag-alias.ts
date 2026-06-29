@@ -25,14 +25,14 @@ export const CATEGORY_ALIAS: Record<string, string> = {
   // 쇼핑
   shopping: '쇼핑', 구매: '쇼핑', buy: '쇼핑',
 
-  // 커뮤니티
-  community: '커뮤니티', 커뮤니티: '커뮤니티', 소셜: '커뮤니티', social: '커뮤니티',
+  // 커뮤니티 (자기참조 제외 — normalizeTags fallthrough로 동일)
+  community: '커뮤니티', 소셜: '커뮤니티', social: '커뮤니티',
 
   // 브랜드
-  brand: '브랜드', 브랜드: '브랜드',
+  brand: '브랜드',
 
   // 게임
-  game: '게임', gaming: '게임', 게임: '게임', 비디오게임: '게임',
+  game: '게임', gaming: '게임', 비디오게임: '게임',
 }
 
 // 중분류 alias — tags 배열 정규화용. 소분류는 자유 텍스트 — alias 없음.
@@ -77,11 +77,10 @@ export const TAG_ALIAS: Record<string, string> = {
   forum: '포럼', 게시판: '포럼', 'q&a': 'Q&A', qna: 'Q&A', 질문답변: 'Q&A',
   // 소셜미디어 (커뮤니티)
   sns: '소셜미디어', 'social media': '소셜미디어', 소셜미디어: '소셜미디어',
-  // 마케팅·기업 (브랜드)
-  marketing: '마케팅', 광고: '마케팅', company: '기업', corporate: '기업', 기업소개: '기업',
-  // 게임 중분류
-  게임공략: '공략', walkthrough: '공략', 가이드: '공략', esports: 'e스포츠', 'e-sports': 'e스포츠',
-  게임뉴스: '게임뉴스', 게임리뷰: '게임리뷰',
+  // 마케팅·기업 (브랜드) — company/corporate는 범용어라 제외(개발 org 등 오분류 방지)
+  marketing: '마케팅', 광고: '마케팅', 기업소개: '기업', 뉴스룸: '기업',
+  // 게임 중분류 — 가이드/walkthrough는 범용어라 제외(개발 문서 오분류 방지). 게임 공략은 모델이 직접 반환.
+  게임공략: '공략', esports: 'e스포츠', 'e-sports': 'e스포츠',
   // 소분류 표기 통일
   파이썬: 'Python',
 }
