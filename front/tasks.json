@@ -337,7 +337,7 @@
       "description": "벡터 검색 recall 개선. 운영 데이터 기반 임계값 조정. 백로그(파이프라인 재검토).",
       "details": "app/api/search/route.ts. 저장 doc=title+content(김) vs 쿼리=짧은 자연어 비대칭으로 cosine 낮아 match_threshold 0.5에서 recall 누락 가능. 운영 데이터로 threshold 튜닝, 필요 시 쿼리 확장·재랭킹 검토.",
       "priority": "low",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A7"
       ],
