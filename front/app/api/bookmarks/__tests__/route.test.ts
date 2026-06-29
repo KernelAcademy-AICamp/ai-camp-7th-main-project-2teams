@@ -13,6 +13,8 @@ vi.mock('@/lib/logger', () => ({ logger: { warn: warnSpy, log: vi.fn(), error: v
 
 // supabase 서버 클라이언트 모킹: auth + categories 조회 + bookmarks insert
 const insertSpy = vi.fn()
+const upsertSpy = vi.fn()
+const upsertOptsSpy = vi.fn()
 const selectArgSpy = vi.fn()
 
 function makeSupabase(user: unknown) {
