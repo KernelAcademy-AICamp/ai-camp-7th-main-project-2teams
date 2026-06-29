@@ -5,6 +5,7 @@ import { bookmarkCreateSchema } from '@/lib/schemas'
 import { generateTags, createEmbedding } from '@/lib/ai'
 import { normalizeTags, resolveTopCategory } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
+import { fetchMeta } from '@/lib/fetchMeta'
 
 const getQuerySchema = z.object({
   tab: z.string().optional(),
@@ -22,7 +23,15 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { title, url, content, folder_hint } = parsed.data
+  let { title, content } = parsed.data
+  const { url, folder_hint } = parsed.data
+
+  // content 없으면 URL fetch → 실제 title·description 추출 (단일 북마크 추가 경로)
+  if (!content.trim()) {
+    const meta = await fetchMeta(url)
+    if (meta.title) title = meta.title
+    if (meta.description) content = meta.description
+  }
 
   // A37: PDF·chrome:// 등 content script 차단 시 content 없음 → embedding=title만(약한 벡터). 허용 degradation.
   const hasContent = content.trim() !== ''
