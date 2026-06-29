@@ -15,14 +15,14 @@ CREATE EXTENSION IF NOT EXISTS vector;
 ## 테이블 DDL
 
 ```sql
--- 고정 대분류 목록 (AI 태깅 tags[0] 기준)
+-- 유저별 개인 카테고리 (시드 없음, 북마크 저장/임포트 시 AI tags[0] 기반 자동 생성)
+-- 마이그레이션 0004_user_categories.sql 에서 전역 고정값 → 유저별로 전환
 CREATE TABLE categories (
-  id    UUID  PRIMARY KEY DEFAULT gen_random_uuid(),
-  name  TEXT  NOT NULL UNIQUE
+  id      UUID  PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID  NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name    TEXT  NOT NULL,
+  UNIQUE (user_id, name)
 );
-
-INSERT INTO categories (name) VALUES
-  ('개발'), ('AI/ML'), ('디자인'), ('비즈니스'), ('학습'), ('쇼핑');
 
 CREATE TABLE bookmarks (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -87,6 +87,21 @@ CREATE POLICY "bookmarks_update"
 CREATE POLICY "bookmarks_delete"
   ON bookmarks FOR DELETE
   USING (user_id = auth.uid());
+
+-- categories: 유저별 개인 카테고리 (마이그레이션 0004)
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "categories_select"
+  ON categories FOR SELECT
+  USING (user_id = auth.uid());
+
+CREATE POLICY "categories_insert"
+  ON categories FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "categories_delete"
+  ON categories FOR DELETE
+  USING (user_id = auth.uid());
 ```
 
 ---
@@ -136,18 +151,13 @@ $$;
 
 ## 카테고리 구조
 
-`categories` 테이블에 고정 대분류 저장. AI `tags[0]` → `categories.name` 조회 → `category_id` 매핑.
+`categories`는 **유저별 개인 카테고리** (전역 고정 목록 아님). 신규 유저는 카테고리 0개로 시작.
 
-| name | 설명 |
-|------|------|
-| 개발 | 프론트엔드·백엔드·인프라 등 |
-| AI/ML | LLM·RAG·MLOps 등 |
-| 디자인 | UI/UX·그래픽·브랜딩 |
-| 비즈니스 | 스타트업·마케팅·커리어 |
-| 학습 | 강의·논문·공식문서 |
-| 쇼핑 | 전자기기·소프트웨어 등 |
+북마크 저장(`POST /api/bookmarks`)·임포트(`/api/bookmarks/import`) 시 AI `tags[0]` 이름으로 `categories`를 `(user_id, name)` upsert → 자동 생성 후 `category_id` 매핑.
 
-`tags[0]`이 위 목록 외이거나 `tags = []`이면 `category_id: null` (미분류).
+사이드바 카테고리 목록은 별도 시드가 아니라 보유 북마크의 `tags[0]` 기반으로 동적 구성 (PR #79).
+
+`tags = []` 이면 카테고리 미생성, `category_id: null` (미분류).
 
 ## folder_hint 구조
 
