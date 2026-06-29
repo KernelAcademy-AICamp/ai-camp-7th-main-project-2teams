@@ -39,13 +39,13 @@ test.describe('공개 페이지', () => {
 })
 
 test.describe('비로그인 접근 제어', () => {
-  test('보호 경로(/) 접근 시 /login으로 리다이렉트', async ({ page }) => {
+  test('보호 경로(/) 접근 시 /welcome으로 리다이렉트', async ({ page }) => {
     await page.goto('/')
-    await expect(page).toHaveURL(/\/login$/)
+    await expect(page).toHaveURL(/\/welcome$/)
   })
 
-  test('보호 경로(/settings) 접근 시 /login으로 리다이렉트', async ({ page }) => {
+  test('보호 경로(/settings) 접근 시 /welcome으로 리다이렉트', async ({ page }) => {
     await page.goto('/settings')
-    await expect(page).toHaveURL(/\/login$/)
+    await expect(page).toHaveURL(/\/welcome$/)
   })
 })
