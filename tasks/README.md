@@ -43,6 +43,9 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A30: 파일 임포트 UI
 - [x] A31: 사이드바 내 폴더 탭
 - [x] A39: 랜딩 페이지 (/welcome) + 온보딩 가이드 헤더 버튼
+- [ ] A40: 헤더 단건 URL 북마크 추가 팝업
+- [ ] A41: 북마크 카드 메뉴 → 단건 삭제 UI
+- [ ] A42: 프로필 팝업 + 로그아웃
 
 ### Chrome Extension — extension/ (A17~A25)
 
@@ -56,7 +59,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A24: 로그아웃·탈퇴 시 로컬 데이터 파기
 - [x] A25: Chrome 웹스토어 Privacy Practices 작성
 
-**진행률: 25 / 25 완료 (MVP 범위 A1~A25 기준)**
+**진행률: 25 / 25 완료 (MVP 범위 A1~A25 기준) · IA 갭 추가 A40~A42 미착수 (0/3)**
 
 ---
 
@@ -89,6 +92,9 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 | A30 | 파일 임포트 UI                                            | high     | 기능   | 신규 |
 | A31 | 사이드바 내 폴더 탭 (folder_hint 기반)                   | medium   | 기능   | 신규 |
 | A39 | 랜딩 페이지 (/welcome) + 온보딩 가이드 헤더 버튼         | medium   | 기능   | 신규 |
+| A40 | 헤더 단건 URL 북마크 추가 팝업                            | high     | 기능   | 신규 |
+| A41 | 북마크 카드 메뉴 → 단건 삭제 UI                          | medium   | 기능   | 신규 |
+| A42 | 프로필 팝업 + 로그아웃                                    | medium   | 기능   | 신규 |
 
 ### Chrome Extension — extension/ (A17~A25)
 
