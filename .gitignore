@@ -9,6 +9,7 @@ node_modules/
 .next/
 dist/
 out/
+*.tsbuildinfo
 
 # 테스트 커버리지
 coverage/
