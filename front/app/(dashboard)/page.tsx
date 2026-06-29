@@ -45,18 +45,14 @@ function DashboardContent() {
     })
   }, [router])
 
-  // URL 파라미터로 초기 필터 상태 복원 (마운트 1회)
+  // URL 쿼리 ↔ 필터 동기화. 싱글톤 스토어라 파라미터 없으면 null로 리셋해야
+  // 이전 필터 잔류(active 표시 불일치)를 막는다. searchParams 변경마다 재조정.
   useEffect(() => {
-    const urlCategory = searchParams.get('category')
-    const urlFolder = searchParams.get('folder')
-    const urlTag = searchParams.get('tag')
-    const urlTab = searchParams.get('tab')
-    if (urlCategory) setCategory(urlCategory)
-    if (urlFolder) setFolder(urlFolder)
-    if (urlTag) setTag(urlTag)
-    if (urlTab === 'favorites') setTab('favorites')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    setCategory(searchParams.get('category'))
+    setFolder(searchParams.get('folder'))
+    setTag(searchParams.get('tag'))
+    setTab(searchParams.get('tab') === 'favorites' ? 'favorites' : 'all')
+  }, [searchParams, setCategory, setFolder, setTag, setTab])
 
   // 마운트 첫 실행은 건너뛰어 초기화 Effect와 레이스 방지
   const syncInitRef = useRef(false)
