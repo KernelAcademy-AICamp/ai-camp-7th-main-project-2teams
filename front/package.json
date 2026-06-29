@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test --project=public",
+    "test:e2e:authed": "playwright test --project=authed"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
