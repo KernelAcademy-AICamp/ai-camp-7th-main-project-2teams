@@ -418,6 +418,18 @@
         "A11"
       ],
       "testStrategy": "회원정보 버튼 클릭 시 팝업 오픈·아바타/이메일 표시, 설정 클릭 이동, 로그아웃 시 signOut 호출·리다이렉트, 외부클릭 닫힘."
+    },
+    {
+      "id": "A43",
+      "title": "태그 confidence 필터 + 골든셋 평가",
+      "description": "태그 정확도·신뢰도 개선. confidence 임계값 필터 + 회귀 측정 하네스.",
+      "details": "lib/ai.ts: generateTags가 태그별 confidence 반환(selectConfidentTags), threshold 0.6 미만 자동 제외(반환 타입 string[] 유지로 호출부·스키마 무변경). SYSTEM_PROMPT에 중분류 혼동 방지 규칙 + Few-shot 반례 추가로 RAG 과태깅 교정. tag-alias.ts: Tailwind CSS·Retrieval-Augmented Generation 풀네임 매핑 보강. lib/tag-eval.ts: 골든셋(eval/tag-golden.json, 13개 held-out) 대비 precision/recall/F1 측정, RUN_TAG_EVAL=1 게이트. held-out F1 0.94.",
+      "priority": "medium",
+      "status": "done",
+      "dependencies": [
+        "A5"
+      ],
+      "testStrategy": "selectConfidentTags 단위테스트(임계값·빈태그·degrade), tag-eval 지표테스트, RUN_TAG_EVAL=1 골든셋 macro-F1 >= 0.85 회귀 게이트."
     }
   ]
 }
