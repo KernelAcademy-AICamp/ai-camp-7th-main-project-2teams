@@ -165,7 +165,7 @@ A17 (Extension 셋업)
 
 ### 데이터/정합성
 
-- [ ] **A32 account DELETE 비원자성** (`app/api/account/route.ts`): bookmarks 삭제 후 `deleteUser` 실패 시 계정 남고 데이터만 소실. 트랜잭션/복구 처리 검토.
+- [x] **A32 account DELETE 비원자성** (`app/api/account/route.ts`): `deleteUser` 단일 호출 + `ON DELETE CASCADE` 위임으로 원자적 처리. PR #48.
 - [ ] **A33 경로 드리프트**: 문서상 `GET /api/account/data`, 실제 구현·UI는 `GET /api/account`. 문서 또는 경로 일치화.
 - [ ] **A34 maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
 - [ ] **A35 URL 중복 저장 무방비**: 같은 페이지 N회 저장 시 중복 행. unique 제약/upsert 검토.
