@@ -1,16 +1,17 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useDebounceValue } from 'usehooks-ts'
 import { Search, X } from 'lucide-react'
 
 interface SearchBarProps {
   onSearch: (query: string) => void
   onClear: () => void
+  value: string
+  onChange: (value: string) => void
 }
 
-export function SearchBar({ onSearch, onClear }: SearchBarProps) {
-  const [value, setValue] = useState('')
+export function SearchBar({ onSearch, onClear, value, onChange }: SearchBarProps) {
   const [debounced] = useDebounceValue(value, 300)
   const isMounted = useRef(false)
 
@@ -28,7 +29,7 @@ export function SearchBar({ onSearch, onClear }: SearchBarProps) {
   }, [debounced, onSearch, onClear])
 
   const handleClear = () => {
-    setValue('')
+    onChange('')
     onClear()
   }
 
@@ -46,7 +47,7 @@ export function SearchBar({ onSearch, onClear }: SearchBarProps) {
         id="bookmark-search"
         type="search"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         placeholder="북마크 검색..."
         className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-9 text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
       />
