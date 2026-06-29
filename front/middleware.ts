@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (!user && !isPublicPath(pathname)) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    return NextResponse.redirect(new URL('/welcome', request.url))
   }
 
   return supabaseResponse
