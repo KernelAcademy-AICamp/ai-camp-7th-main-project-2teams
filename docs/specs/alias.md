@@ -6,107 +6,37 @@ AI 태깅 출력 정규화용. 운영 중 누락 발견 시 이 파일에 추가
 
 ---
 
-## 대분류 alias
+> **단일 출처**: 실제 alias 매핑 전체는 `front/lib/tag-alias.ts`. 이 문서는 개념·정책만 기술하고 키-값 목록은 중복 보관하지 않는다(드리프트 방지). 운영 중 누락 발견 시 코드에 추가.
 
-`categories` 테이블 name 매핑. 고정 6개 외 값은 `null` (미분류).
+## 대분류 (categories 매핑)
 
-```typescript
-// lib/tag-alias.ts
-export const CATEGORY_ALIAS: Record<string, string> = {
-  // 개발
-  'dev': '개발', 'development': '개발', 'programming': '개발',
-  '프로그래밍': '개발', '코딩': '개발', 'coding': '개발', 'software': '개발',
+`CATEGORY_ALIAS` — `tags[0]`을 `categories` 테이블 name으로 정규화. 고정 9개 외 값은 `null` (미분류).
 
-  // AI/ML
-  'AI': 'AI/ML', 'ML': 'AI/ML', '인공지능': 'AI/ML',
-  '머신러닝': 'AI/ML', '딥러닝': 'AI/ML',
-  'machine learning': 'AI/ML', 'deep learning': 'AI/ML',
+| 대분류 | 비고 |
+|--------|------|
+| 개발 · AI/ML · 디자인 · 비즈니스 · 학습 · 쇼핑 | MVP 6종 |
+| 커뮤니티 | 포럼·SNS·Q&A — 토론·소통 목적 사이트 |
+| 브랜드 | 마케팅·기업 — 브랜드 소개·캠페인 |
+| 게임 | 공략·e스포츠·게임뉴스·게임리뷰 |
 
-  // 디자인
-  'design': '디자인', 'UI': '디자인', 'UX': '디자인',
-  'graphic': '디자인', '그래픽': '디자인',
-
-  // 비즈니스
-  'business': '비즈니스', '경영': '비즈니스', 'management': '비즈니스',
-
-  // 학습
-  'learning': '학습', 'education': '학습', '교육': '학습',
-  '공부': '학습', 'study': '학습',
-
-  // 쇼핑
-  'shopping': '쇼핑', '구매': '쇼핑', 'buy': '쇼핑',
-}
-```
+영문·약어·동의어(dev→개발, community→커뮤니티 등)를 한국어 대분류로 매핑. 전체 키는 코드 참조.
 
 ---
 
 ## 중분류 alias
 
-`tags` 배열 정규화용. 소분류는 자유 텍스트 — alias 없음.
+`TAG_ALIAS` — `tags` 배열 정규화용. 소분류는 자유 텍스트 — alias 없음. 중분류 목록은 `docs/specs/tag-taxonomy.md` 분류 트리, 매핑 키는 `front/lib/tag-alias.ts` 참조.
 
-```typescript
-export const TAG_ALIAS: Record<string, string> = {
-  // 프론트엔드
-  'frontend': '프론트엔드', 'front-end': '프론트엔드',
-  'FE': '프론트엔드', '프론트': '프론트엔드',
-
-  // 백엔드
-  'backend': '백엔드', 'back-end': '백엔드',
-  'BE': '백엔드', '서버': '백엔드', 'server': '백엔드',
-
-  // 인프라
-  'infra': '인프라', 'infrastructure': '인프라',
-  'DevOps': '인프라', 'devops': '인프라', 'CI/CD': '인프라',
-
-  // 데이터베이스
-  'DB': '데이터베이스', 'database': '데이터베이스', 'db': '데이터베이스',
-
-  // LLM
-  'llm': 'LLM', 'large language model': 'LLM',
-
-  // RAG
-  'rag': 'RAG', '검색증강생성': 'RAG',
-
-  // 컴퓨터비전
-  'CV': '컴퓨터비전', 'computer vision': '컴퓨터비전', '비전': '컴퓨터비전',
-
-  // MLOps
-  'mlops': 'MLOps', 'ml ops': 'MLOps',
-
-  // UI/UX
-  'ui/ux': 'UI/UX', 'ui': 'UI/UX', 'ux': 'UI/UX',
-
-  // 스타트업
-  'startup': '스타트업', 'start-up': '스타트업', '창업': '스타트업',
-
-  // 커리어
-  'career': '커리어', '취업': '커리어', '이직': '커리어', 'job': '커리어',
-
-  // 강의
-  'lecture': '강의', 'course': '강의',
-  'tutorial': '강의', '튜토리얼': '강의', '코스': '강의',
-
-  // 논문
-  'paper': '논문', 'research': '논문', '리서치': '논문',
-
-  // 공식문서
-  'docs': '공식문서', 'documentation': '공식문서',
-  'reference': '공식문서', '레퍼런스': '공식문서',
-
-  // 전자기기
-  'electronics': '전자기기', '전자제품': '전자기기', 'gadget': '전자기기',
-
-  // 소프트웨어
-  'SaaS': '소프트웨어', 'saas': '소프트웨어',
-}
-```
+설계 규칙:
+- 범용어(`가이드`·`walkthrough`·`company` 등)는 alias 금지 — 컨텍스트 무시 일대일 치환이라 타 영역 오분류 유발.
+- `TAG_ALIAS` ∩ `CATEGORY_ALIAS` 키는 공집합이어야 함(`normalizeTags`가 TAG_ALIAS 우선 조회 → 충돌 시 CATEGORY_ALIAS 무효화). 단위 테스트로 가드.
 
 ---
 
 ## 적용 함수
 
 ```typescript
-const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑'])
+const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드', '게임'])
 
 export function normalizeTags(tags: string[]): string[] {
   return tags.map(t => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)

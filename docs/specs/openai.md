@@ -41,62 +41,31 @@ interface TaggingInput {
   description?: string
 }
 
-const SYSTEM_PROMPT = `당신은 북마크 분류기입니다. 웹페이지를 대/중/소 계층으로 분류해 태그 0~3개를 생성합니다.
+// SYSTEM_PROMPT 전문·Few-shot 예제·경계 규칙은 lib/ai.ts 단일 출처. 분류 체계는 tag-taxonomy.md.
+const completion = await openai.chat.completions.create({
+  model: 'gpt-4o-mini',
+  messages: [
+    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'user', content: userContent }, // 제목·URL·설명
+  ],
+  response_format: { type: 'json_object' },
+  max_tokens: 200, // confidence 필드 포함 — truncation 방지
+  temperature: 0, // 분류 결정성(같은 URL→같은 태그)
+})
 
-## 분류 체계
-대분류: 개발 · AI/ML · 디자인 · 비즈니스 · 학습 · 쇼핑
-중분류: 대분류 하위 분야 (예: 개발→프론트엔드, AI/ML→RAG)
-소분류: 구체적 기술명·고유명사 (예: Next.js, pgvector, 프롬프트엔지니어링)
-
-## 태그 수 규칙
-- 0개: 내용 파악 불가 (로그인·오류·광고 페이지)
-- 1개: 대분류만 명확
-- 2개: 대+중 식별 (소가 중과 동일하거나 자명할 때)
-- 3개: 대+중+소 모두 명확히 다른 정보일 때
-
-## 출력 규칙
-- 순서: 항상 대→중→소
-- URL로 자명한 정보는 소분류 생략
-- 중분류와 소분류가 같으면 소분류 생략
-
-## 출력
-JSON만 반환. 설명 없음.
-{"tags": ["대분류", "중분류", "소분류"]}`
-
-async function generateTags({ title, url, description }: TaggingInput) {
-  const userContent = [
-    `제목: ${title}`,
-    `URL: ${url}`,
-    description ? `설명: ${description}` : null,
-  ]
-    .filter(Boolean)
-    .join('\n')
-
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: userContent },
-    ],
-    response_format: { type: 'json_object' },
-    max_tokens: 100,
-    temperature: 0.2,
-  })
-
-  const result = JSON.parse(completion.choices[0].message.content ?? '{}') as {
-    tags: string[]
-  }
-
-  return result.tags?.slice(0, 3) ?? []
-}
+// 태그별 confidence 부여 → threshold(0.6) 미만 제외(selectConfidentTags). normalizeTags 후 저장.
+return selectConfidentTags(JSON.parse(completion.choices[0].message.content ?? '{}'))
 ```
 
-**프롬프트 응답 예시:**
+**출력 형식 (현행):** 각 태그에 0~1 confidence. `selectConfidentTags`가 0.6 이상만 통과.
 ```json
-{ "tags": ["개발", "프론트엔드", "Next.js"] }
-{ "tags": ["AI/ML", "RAG", "논문"] }
-{ "tags": [] }
+{ "tags": [
+  { "tag": "개발", "confidence": 0.95 },
+  { "tag": "프론트엔드", "confidence": 0.85 },
+  { "tag": "Next.js", "confidence": 0.8 }
+] }
 ```
+대분류 9종·중분류·경계 규칙·Few-shot 예제는 `lib/ai.ts` SYSTEM_PROMPT 참조.
 
 ---
 

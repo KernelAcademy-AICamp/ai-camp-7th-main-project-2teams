@@ -49,9 +49,9 @@ describe('aggregate', () => {
 // 실 OpenAI 골든셋 평가 — 비용·flaky 때문에 RUN_TAG_EVAL=1에서만.
 // 실행: RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts
 // 회귀 게이트: macro-F1 baseline 미만이면 실패.
-// held-out 실측 0.94 (2026-06, n=13). n=13은 항목당 레버리지 ~0.077 → 마진 확보 위해 0.80.
-// 골든셋 30+ 확대 시 상향 가능.
-const F1_BASELINE = 0.8
+// held-out 실측(n=41, 커뮤니티·브랜드·게임): 리뷰 반영 후 F1 0.82 (2026-06). 레버리지 1/41≈0.024 → 0.78.
+// 남은 모호: inven 포털 과태깅, 게임 게임리뷰/리뷰 → 팀 검수 후 상향.
+const F1_BASELINE = 0.78
 
 describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)', () => {
   it(

@@ -1,6 +1,6 @@
 // AI 태깅 출력 정규화 (docs/specs/alias.md). 운영 중 누락 발견 시 추가.
 
-// 대분류 alias — categories 테이블 name 매핑. 고정 6개 외 값은 null(미분류).
+// 대분류 alias — categories 테이블 name 매핑. 고정 9개 외 값은 null(미분류).
 export const CATEGORY_ALIAS: Record<string, string> = {
   // 개발
   dev: '개발', development: '개발', programming: '개발',
@@ -24,6 +24,15 @@ export const CATEGORY_ALIAS: Record<string, string> = {
 
   // 쇼핑
   shopping: '쇼핑', 구매: '쇼핑', buy: '쇼핑',
+
+  // 커뮤니티 (자기참조 제외 — normalizeTags fallthrough로 동일)
+  community: '커뮤니티', 소셜: '커뮤니티', social: '커뮤니티',
+
+  // 브랜드
+  brand: '브랜드',
+
+  // 게임
+  game: '게임', gaming: '게임', 비디오게임: '게임',
 }
 
 // 중분류 alias — tags 배열 정규화용. 소분류는 자유 텍스트 — alias 없음.
@@ -34,6 +43,7 @@ export const TAG_ALIAS: Record<string, string> = {
   backend: '백엔드', 'back-end': '백엔드', BE: '백엔드', 서버: '백엔드', server: '백엔드',
   // 인프라
   infra: '인프라', infrastructure: '인프라', DevOps: '인프라', devops: '인프라', 'CI/CD': '인프라',
+  컨테이너: '인프라', container: '인프라', 클라우드네이티브: '인프라', 'cloud native': '인프라',
   // 데이터베이스
   DB: '데이터베이스', database: '데이터베이스', db: '데이터베이스',
   // LLM
@@ -48,11 +58,11 @@ export const TAG_ALIAS: Record<string, string> = {
   // MLOps
   mlops: 'MLOps', 'ml ops': 'MLOps',
   // UI/UX
-  'ui/ux': 'UI/UX', ui: 'UI/UX', ux: 'UI/UX',
+  'ui/ux': 'UI/UX', ui: 'UI/UX', ux: 'UI/UX', 'UI 디자인': 'UI/UX', UI디자인: 'UI/UX',
   // 스타트업
   startup: '스타트업', 'start-up': '스타트업', 창업: '스타트업',
   // 커리어
-  career: '커리어', 취업: '커리어', 이직: '커리어', job: '커리어',
+  career: '커리어', 취업: '커리어', 이직: '커리어', job: '커리어', 채용: '커리어',
   // 강의
   lecture: '강의', course: '강의', tutorial: '강의', 튜토리얼: '강의', 코스: '강의',
   // 논문
@@ -62,10 +72,20 @@ export const TAG_ALIAS: Record<string, string> = {
   // 전자기기
   electronics: '전자기기', 전자제품: '전자기기', gadget: '전자기기',
   // 소프트웨어
-  SaaS: '소프트웨어', saas: '소프트웨어',
+  SaaS: '소프트웨어', saas: '소프트웨어', 협업툴: '소프트웨어', 협업도구: '소프트웨어',
+  // 포럼 (커뮤니티)
+  forum: '포럼', 게시판: '포럼', 'q&a': 'Q&A', qna: 'Q&A', 질문답변: 'Q&A',
+  // 소셜미디어 (커뮤니티)
+  sns: '소셜미디어', 'social media': '소셜미디어', 소셜미디어: '소셜미디어',
+  // 마케팅·기업 (브랜드) — company/corporate는 범용어라 제외(개발 org 등 오분류 방지)
+  marketing: '마케팅', 광고: '마케팅', 기업소개: '기업', 뉴스룸: '기업',
+  // 게임 중분류 — 가이드/walkthrough는 범용어라 제외(개발 문서 오분류 방지). 게임 공략은 모델이 직접 반환.
+  게임공략: '공략', esports: 'e스포츠', 'e-sports': 'e스포츠',
+  // 소분류 표기 통일
+  파이썬: 'Python',
 }
 
-const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑'])
+const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드', '게임'])
 
 export function normalizeTags(tags: string[]): string[] {
   return tags.map((t) => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)
