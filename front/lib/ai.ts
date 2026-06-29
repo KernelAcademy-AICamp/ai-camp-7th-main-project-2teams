@@ -48,6 +48,7 @@ export function selectConfidentTags(raw: unknown): string[] {
       (i): i is ScoredTag =>
         i != null &&
         typeof i.tag === 'string' &&
+        i.tag.trim().length > 0 && // 빈 문자열·공백 태그 차단 (DB 오염 방지)
         typeof i.confidence === 'number' &&
         i.confidence >= CONFIDENCE_THRESHOLD,
     )

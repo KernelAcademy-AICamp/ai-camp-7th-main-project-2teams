@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { scoreTags, aggregate } from '../tag-eval'
+import { scoreTags, aggregate, type TagScore } from '../tag-eval'
 import { generateTags } from '../ai'
 
 // 지표 함수 단위 테스트 — 항상 실행 (OpenAI 미호출).
@@ -41,6 +41,8 @@ describe('aggregate', () => {
     expect(a.n).toBe(2)
     expect(a.exactMatchRate).toBe(0.5)
     expect(a.precision).toBe(0.5)
+    expect(a.recall).toBe(0.5)
+    expect(a.f1).toBe(0.5)
   })
 })
 
@@ -53,10 +55,13 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
   it(
     `macro-F1 >= ${F1_BASELINE}`,
     async () => {
+      // 목 모드면 generateTags가 고정값 반환 → 평가 무의미. 동시 설정 실수 차단.
+      expect(process.env.E2E_MOCK_OPENAI, 'RUN_TAG_EVAL과 E2E_MOCK_OPENAI 동시 설정 불가').not.toBe('1')
+
       const golden: { url: string; title: string; description: string; gold: string[] }[] =
         JSON.parse(readFileSync(join(__dirname, '../../eval/tag-golden.json'), 'utf-8'))
 
-      const scores = []
+      const scores: TagScore[] = []
       for (const item of golden) {
         const predicted = await generateTags({
           title: item.title,

@@ -12,7 +12,7 @@ export interface TagScore {
 // 예측·정답을 집합으로 비교. 둘 다 빈 태그(로그인·오류 페이지 정답)면 완벽 처리.
 export function scoreTags(predicted: string[], gold: string[]): TagScore {
   const P = new Set(normalizeTags(predicted)) // 프로덕션과 동일 정규화 적용
-  const G = new Set(gold)
+  const G = new Set(normalizeTags(gold)) // gold가 alias 형태여도 일치 처리
   const inter = [...P].filter((t) => G.has(t)).length
 
   const precision = P.size === 0 ? (G.size === 0 ? 1 : 0) : inter / P.size
