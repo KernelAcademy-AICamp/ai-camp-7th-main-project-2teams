@@ -172,8 +172,8 @@ A17 (Extension 셋업)
 
 ### 검색 품질 (튜닝)
 
-- [x] **A36 비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 기본값 0.3으로 완화 + `SEARCH_MATCH_THRESHOLD` 환경변수 튜닝 지원. PR #53.
-- [ ] **A37 빈 content 약한 벡터**: PDF·`chrome://` 등 content script 차단 시 embedding=title만. 허용 degradation, 모니터링.
+- [x] **A36 비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 저장 doc=title+content(김) vs 쿼리=짧은 자연어 → cosine 낮아 recall 누락 가능. 운영 데이터로 threshold 튜닝.
+- [x] **A37 빈 content 약한 벡터**: `logger.warn('[weak-vector]')` 로 모니터링 추가. content 없으면 title 단독 임베딩. PR #54.
 
 ### Minor
 

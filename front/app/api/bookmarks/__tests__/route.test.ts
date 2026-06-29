@@ -7,9 +7,12 @@ const { generateTags, createEmbedding } = vi.hoisted(() => ({
 }))
 vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
 
-// supabase 서버 클라이언트 모킹: auth + categories 조회 + bookmarks upsert
-const upsertSpy = vi.fn()
-const upsertOptsSpy = vi.fn()
+// logger 모킹 — weak-vector 경고 로그 검증용 (content 평문 노출 없음 확인)
+const { warnSpy } = vi.hoisted(() => ({ warnSpy: vi.fn() }))
+vi.mock('@/lib/logger', () => ({ logger: { warn: warnSpy, log: vi.fn(), error: vi.fn() } }))
+
+// supabase 서버 클라이언트 모킹: auth + categories 조회 + bookmarks insert
+const insertSpy = vi.fn()
 const selectArgSpy = vi.fn()
 
 function makeSupabase(user: unknown) {
@@ -72,6 +75,7 @@ describe('POST /api/bookmarks', () => {
     upsertSpy.mockReset()
     upsertOptsSpy.mockReset()
     selectArgSpy.mockReset()
+    warnSpy.mockReset()
     generateTags.mockReset()
     createEmbedding.mockReset()
     generateTags.mockResolvedValue(['dev', 'frontend', 'Next.js'])
@@ -133,11 +137,29 @@ describe('POST /api/bookmarks', () => {
     expect(payload.category_id).toBeNull()
   })
 
-  it('upsert onConflict 옵션: user_id,url 충돌 시 갱신 (ignoreDuplicates: false)', async () => {
+  it('content 없음 → [weak-vector] 경고 로그 (url·title·user_id 포함, content 값 미노출)', async () => {
     await POST(req({ title: 'T', url: 'https://a.com' }))
-    expect(upsertOptsSpy.mock.calls[0][0]).toEqual({
-      onConflict: 'user_id, url',
-      ignoreDuplicates: false,
-    })
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[weak-vector]',
+      expect.objectContaining({
+        url: 'https://a.com',
+        title: 'T',
+        user_id: 'u1',
+        reason: expect.stringContaining('content 없음'),
+      }),
+    )
+    // 경고 로그 인자에 content 키 없음 (값 노출 방지)
+    const logObj = warnSpy.mock.calls[0][1] as Record<string, unknown>
+    expect(logObj).not.toHaveProperty('content')
+  })
+
+  it('content 공백만 → [weak-vector] 경고 발생 (약한 벡터)', async () => {
+    await POST(req({ title: 'T', url: 'https://a.com', content: '   ' }))
+    expect(warnSpy).toHaveBeenCalledWith('[weak-vector]', expect.anything())
+  })
+
+  it('content 있으면 [weak-vector] 경고 없음', async () => {
+    await POST(req({ title: 'T', url: 'https://a.com', content: '본문 있음' }))
+    expect(warnSpy).not.toHaveBeenCalledWith('[weak-vector]', expect.anything())
   })
 })

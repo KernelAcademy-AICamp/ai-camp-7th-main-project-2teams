@@ -4,6 +4,7 @@ import { withAuth } from '@/lib/auth'
 import { bookmarkCreateSchema } from '@/lib/schemas'
 import { generateTags, createEmbedding } from '@/lib/ai'
 import { normalizeTags, resolveTopCategory } from '@/lib/tag-alias'
+import { logger } from '@/lib/logger'
 
 const getQuerySchema = z.object({
   tab: z.string().optional(),
@@ -23,11 +24,15 @@ export const POST = withAuth(async (req, { user, supabase }) => {
 
   const { title, url, content, folder_hint } = parsed.data
 
+  // A37: PDF·chrome:// 등 content script 차단 시 content 없음 → embedding=title만(약한 벡터). 허용 degradation.
+  const hasContent = content.trim() !== ''
+  if (!hasContent) logger.warn('[weak-vector]', { url, title, user_id: user.id, reason: 'content 없음 — title 전용 임베딩' })
+
   // 태깅 + 임베딩 병렬 실행 → 응답시간 단축. content는 이 스코프 안에서만 사용 후 파기.
   // description에 content 전달 → 태깅 품질 확보(익스텐션이 수집한 본문 활용).
   const [tagsResult, embeddingResult] = await Promise.allSettled([
     generateTags({ title, url, description: content }),
-    createEmbedding(`${title}\n${content}`),
+    createEmbedding(hasContent ? `${title}\n${content}` : title),
   ])
 
   // 임베딩 실패 = 검색 불가 → 검색 못 하는 북마크 저장 안 함(502).
