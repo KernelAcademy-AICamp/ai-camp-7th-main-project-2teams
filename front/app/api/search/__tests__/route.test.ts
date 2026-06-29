@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 const { createEmbedding } = vi.hoisted(() => ({ createEmbedding: vi.fn() }))
 vi.mock('@/lib/ai', () => ({ createEmbedding }))
@@ -28,17 +28,40 @@ describe('POST /api/search', () => {
     rpc.mockReset()
     createEmbedding.mockResolvedValue([0.1, 0.2])
     rpc.mockResolvedValue({ data: [{ id: 'bm1', similarity: 0.8 }], error: null })
+    delete process.env.SEARCH_MATCH_THRESHOLD
   })
 
-  it('쿼리 임베딩 후 match_bookmarks RPC 호출', async () => {
+  afterEach(() => {
+    delete process.env.SEARCH_MATCH_THRESHOLD
+  })
+
+  it('기본 threshold 0.3으로 match_bookmarks RPC 호출', async () => {
     await POST(req({ query: '머신러닝 입문' }))
     expect(createEmbedding).toHaveBeenCalledWith('머신러닝 입문')
     expect(rpc).toHaveBeenCalledWith('match_bookmarks', {
       query_embedding: [0.1, 0.2],
-      match_threshold: 0.5,
+      match_threshold: 0.3,
       match_count: 20,
       p_user_id: 'u1',
     })
+  })
+
+  it('SEARCH_MATCH_THRESHOLD 환경변수로 threshold 조정', async () => {
+    process.env.SEARCH_MATCH_THRESHOLD = '0.45'
+    await POST(req({ query: 'x' }))
+    const callArgs = rpc.mock.calls[0][1]
+    expect(callArgs.match_threshold).toBe(0.45)
+  })
+
+  it.each([
+    ['invalid', 'NaN'],
+    ['-0.5', '음수'],
+    ['0', '0 (임계값 없어 전체 반환 위험)'],
+    ['1.5', '1 초과'],
+  ])('SEARCH_MATCH_THRESHOLD=%s (%s) → 기본값 0.3 폴백', async (val) => {
+    process.env.SEARCH_MATCH_THRESHOLD = val
+    await POST(req({ query: 'x' }))
+    expect(rpc.mock.calls[0][1].match_threshold).toBe(0.3)
   })
 
   it('{ results } 반환', async () => {
