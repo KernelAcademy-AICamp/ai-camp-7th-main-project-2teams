@@ -167,7 +167,7 @@ A17 (Extension 셋업)
 
 - [x] **A32 account DELETE 비원자성** (`app/api/account/route.ts`): `deleteUser` 단일 호출 + `ON DELETE CASCADE` 위임으로 원자적 처리. PR #48.
 - [x] **A33 경로 드리프트**: `tasks/README.md`, `front/tasks.json` A15 title을 실제 구현 경로(`GET /api/account`)로 수정. `docs/specs/nextjs-supabase.md`는 이미 정합.
-- [ ] **A34 maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
+- [x] **A34 maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
 - [ ] **A35 URL 중복 저장 무방비**: 같은 페이지 N회 저장 시 중복 행. unique 제약/upsert 검토.
 
 ### 검색 품질 (튜닝)

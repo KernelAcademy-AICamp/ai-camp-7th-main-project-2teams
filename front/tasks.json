@@ -311,9 +311,9 @@
       "id": "A34",
       "title": "maskSensitive 로깅 가드 연결",
       "description": "정의만 되고 미사용인 마스킹 유틸을 실제 에러 로깅 경로에 연결. 백로그(파이프라인 재검토).",
-      "details": "lib/logger.ts의 maskSensitive(content·embedding 제거)가 route 어디서도 호출 안 됨. Route Handler 에러 로깅 시 maskSensitive 경유 강제. 현재는 로깅 자체가 없어 누출은 없으나, 향후 디버그 로그 추가 시 가드 부재. 공통 에러 핸들러에 통합 검토.",
+      "details": "lib/logger.ts에 sanitize()+logger 래퍼 추가. logger.log/warn/error는 객체 인자를 maskSensitive 경유해 content·embedding 자동 제거. app/api/account/route.ts의 console 호출을 logger로 교체. GET 핸들러 에러 로그 추가 및 내부 메시지 일반화.",
       "priority": "low",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A8"
       ],

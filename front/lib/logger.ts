@@ -28,3 +28,19 @@ export function maskSensitive<T extends Record<string, unknown>>(
   }
   return result as Omit<T, SensitiveKey>
 }
+
+// 서버사이드 전용 (Route Handler, Server Action) — 클라이언트 컴포넌트에서 사용 금지
+
+// 최상위 키만 마스킹 — 중첩 객체/배열 내부는 처리하지 않음
+function sanitize(arg: unknown): unknown {
+  if (arg !== null && typeof arg === 'object' && !Array.isArray(arg))
+    return maskSensitive(arg as Record<string, unknown>)
+  return arg
+}
+
+// Route Handler 에러 로깅은 반드시 이 logger 경유 — content/embedding 자동 제거
+export const logger = {
+  log: (...args: unknown[]) => console.log(...args.map(sanitize)),
+  warn: (...args: unknown[]) => console.warn(...args.map(sanitize)),
+  error: (...args: unknown[]) => console.error(...args.map(sanitize)),
+}
