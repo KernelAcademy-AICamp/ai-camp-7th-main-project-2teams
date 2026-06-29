@@ -5,7 +5,7 @@ export interface ParsedFilter {
   category: string | null
   folder: string | null
   tag: string | null
-  tab: 'all' | 'favorites'
+  tab: 'all' | 'favorites' | 'folders'
 }
 
 // 쿼리 문자열 → 필터 상태. 파라미터가 없으면 null/'all'로 리셋되어야
@@ -16,12 +16,12 @@ export function parseFilterQuery(queryString: string): ParsedFilter {
     category: p.get('category'),
     folder: p.get('folder'),
     tag: p.get('tag'),
-    tab: p.get('tab') === 'favorites' ? 'favorites' : 'all',
+    tab: p.get('tab') === 'favorites' ? 'favorites' : p.get('tab') === 'folders' ? 'folders' : 'all',
   }
 }
 
 // 필터 상태 → 쿼리 문자열. 빈 값은 생략해 stale 파라미터를 남기지 않는다.
-// favorites 탭만 URL에 반영, 익스텐션 진입 플래그(from)는 보존.
+// favorites·folders 탭만 URL에 반영, 익스텐션 진입 플래그(from)는 보존.
 export function buildFilterQuery(state: {
   category: string | null
   folder: string | null
@@ -33,7 +33,7 @@ export function buildFilterQuery(state: {
   if (state.category) params.set('category', state.category)
   if (state.folder) params.set('folder', state.folder)
   if (state.tag) params.set('tag', state.tag)
-  if (state.tab === 'favorites') params.set('tab', 'favorites')
+  if (state.tab === 'favorites' || state.tab === 'folders') params.set('tab', state.tab)
   if (state.fromExtension) params.set('from', 'extension')
   return params.toString()
 }

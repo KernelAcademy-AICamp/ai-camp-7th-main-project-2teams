@@ -31,16 +31,16 @@ export function Sidebar({ bookmarks }: SidebarProps) {
   const popupRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
-  const { category, folder, tag, tab, setCategory, setFolder, setTag, setTab } = useFilterStore(
+  const { category, folder, tab, setCategory, setFolder, setTag, setTab, setSearchQuery } = useFilterStore(
     useShallow((s) => ({
       category: s.category,
       folder: s.folder,
-      tag: s.tag,
       tab: s.tab,
       setCategory: s.setCategory,
       setFolder: s.setFolder,
       setTag: s.setTag,
       setTab: s.setTab,
+      setSearchQuery: s.setSearchQuery,
     }))
   )
 
@@ -97,7 +97,8 @@ export function Sidebar({ bookmarks }: SidebarProps) {
     setTab(t)
     setCategory(null)
     setTag(null)
-    setFolder(null)
+    setFolder(t === 'folders' ? (folders[0] ?? null) : null)
+    setSearchQuery('')
   }
 
   const handleAll = () => {
@@ -108,19 +109,23 @@ export function Sidebar({ bookmarks }: SidebarProps) {
   }
 
   const handleCategory = (name: string) => {
-    setCategory(category === name ? null : name)
+    if (category === name) return
+    setCategory(name)
     setTag(null)
     setFolder(null)
   }
 
-  // 폴더 클릭: 해당 폴더 토글 + 카테고리/태그 리셋 (양방향 상호 리셋)
   const handleFolder = (name: string) => {
-    setFolder(folder === name ? null : name)
+    if (folder === name) return
+    setFolder(name)
     setCategory(null)
     setTag(null)
   }
 
   const isAllActive = category === null && folder === null
+
+  // 탭별 축 분리: 내 폴더 탭은 폴더만, 그 외(홈·즐겨찾기)는 카테고리만 노출
+  const showFolders = tab === 'folders'
 
   return (
     <nav aria-label="북마크 필터" className="flex w-48 shrink-0 flex-col gap-6 self-stretch">
@@ -153,7 +158,7 @@ export function Sidebar({ bookmarks }: SidebarProps) {
           aria-expanded={categoryOpen}
         >
           <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            카테고리
+            {showFolders ? '폴더' : '카테고리'}
           </h2>
           <span
             className={[
@@ -167,24 +172,26 @@ export function Sidebar({ bookmarks }: SidebarProps) {
 
         {categoryOpen && (
           <ul className="flex flex-col gap-0.5">
-            {/* 전체 — 카테고리/폴더 필터 없음 */}
-            <li>
-              <button
-                onClick={handleAll}
-                aria-pressed={isAllActive}
-                className={[
-                  'w-full rounded-md px-3 py-1.5 text-left text-sm font-medium transition-colors',
-                  isAllActive
-                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800',
-                ].join(' ')}
-              >
-                전체
-              </button>
-            </li>
+            {/* 전체 — 카테고리 필터 없음. 내 폴더 탭에서는 숨김 */}
+            {!showFolders && (
+              <li>
+                <button
+                  onClick={handleAll}
+                  aria-pressed={isAllActive}
+                  className={[
+                    'w-full rounded-md px-3 py-1.5 text-left text-sm font-medium transition-colors',
+                    isAllActive
+                      ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
+                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800',
+                  ].join(' ')}
+                >
+                  전체
+                </button>
+              </li>
+            )}
 
-            {/* 유저 카테고리 */}
-            {categories.map((name) => (
+            {/* 유저 카테고리 — 홈·즐겨찾기 탭 */}
+            {!showFolders && categories.map((name) => (
               <li key={`cat-${name}`}>
                 <button
                   onClick={() => handleCategory(name)}
@@ -202,13 +209,8 @@ export function Sidebar({ bookmarks }: SidebarProps) {
               </li>
             ))}
 
-            {/* 구분선 — 카테고리·폴더 모두 있을 때만 */}
-            {categories.length > 0 && folders.length > 0 && (
-              <li role="separator" className="my-1 border-t border-gray-200 dark:border-gray-700" />
-            )}
-
-            {/* 폴더 목록 */}
-            {folders.map((name) => (
+            {/* 폴더 목록 — 내 폴더 탭 */}
+            {showFolders && folders.map((name) => (
               <li key={`folder-${name}`}>
                 <button
                   onClick={() => handleFolder(name)}

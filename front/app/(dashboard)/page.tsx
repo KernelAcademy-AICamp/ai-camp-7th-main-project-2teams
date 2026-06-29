@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef, Suspense } from 'react'
+import { useCallback, useEffect, useMemo, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useShallow } from 'zustand/react/shallow'
@@ -10,6 +10,7 @@ import { BookmarkSkeleton } from '@/components/BookmarkSkeleton'
 import { ExtensionSync } from '@/components/ExtensionSync'
 import { SearchBar } from '@/components/SearchBar'
 import { Sidebar } from '@/components/Sidebar'
+import { BookmarkToolbar } from '@/components/BookmarkToolbar'
 import { useBookmarks } from '@/hooks/useBookmarks'
 import { useSearch } from '@/hooks/useSearch'
 import { useFilterStore } from '@/store/filterStore'
@@ -22,18 +23,23 @@ function DashboardContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const { category, folder, tag, tab, setCategory, setFolder, setTag, setTab } = useFilterStore(
-    useShallow((s) => ({
-      category: s.category,
-      folder: s.folder,
-      tag: s.tag,
-      tab: s.tab,
-      setCategory: s.setCategory,
-      setFolder: s.setFolder,
-      setTag: s.setTag,
-      setTab: s.setTab,
-    }))
-  )
+  const { category, folder, tag, tab, sortOrder, viewMode, searchQuery, setCategory, setFolder, setTag, setTab, setSearchQuery } =
+    useFilterStore(
+      useShallow((s) => ({
+        category: s.category,
+        folder: s.folder,
+        tag: s.tag,
+        tab: s.tab,
+        sortOrder: s.sortOrder,
+        viewMode: s.viewMode,
+        searchQuery: s.searchQuery,
+        setCategory: s.setCategory,
+        setFolder: s.setFolder,
+        setTag: s.setTag,
+        setTab: s.setTab,
+        setSearchQuery: s.setSearchQuery,
+      }))
+    )
 
   // 신규 유저 온보딩 리다이렉트 — localStorage 기반 최소 체크 (A26)
   // isOnboardingDone이 손상된 값도 안전 처리(크래시 방지)
@@ -74,7 +80,6 @@ function DashboardContent() {
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
   }, [category, folder, tag, tab, router, pathname, fromExtension])
 
-  const [searchQuery, setSearchQuery] = useState('')
   const isSearching = searchQuery.trim().length > 0
 
   const {
@@ -102,24 +107,41 @@ function DashboardContent() {
       setSearchQuery(query)
       search(query)
     },
-    [search]
+    [search, setSearchQuery]
   )
 
-  const handleClear = useCallback(() => setSearchQuery(''), [])
+  const handleClear = useCallback(() => setSearchQuery(''), [setSearchQuery])
+
+  // 사이드바 카테고리/폴더는 필터 무관 전체 목록 기준 — path·필터 변동에도 고정.
+  // 필터된 bookmarkData를 쓰면 카테고리 선택 시 목록이 해당 카테고리 하나로 축소됨.
+  const { data: sidebarData } = useBookmarks({})
+  const sidebarBookmarks = sidebarData?.bookmarks ?? []
 
   const isPending = isSearching ? isSearchPending : isBookmarkPending
-  const items = isSearching ? (searchData?.results ?? []) : (bookmarkData?.bookmarks ?? [])
+  const items = useMemo(
+    () => (isSearching ? (searchData?.results ?? []) : (bookmarkData?.bookmarks ?? [])),
+    [isSearching, searchData, bookmarkData]
+  )
   const allBookmarks = bookmarkData?.bookmarks ?? []
+
+  // 정렬: created_at 기준 최신/오래된. ponytail: 현재 페이지 한정 클라 정렬, 페이지네이션 도입 시 서버 order로
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) =>
+      sortOrder === 'latest'
+        ? b.created_at.localeCompare(a.created_at)
+        : a.created_at.localeCompare(b.created_at)
+    )
+  }, [items, sortOrder])
 
   return (
     <>
       {fromExtension && <ExtensionSync />}
-      <Sidebar bookmarks={allBookmarks} />
+      <Sidebar bookmarks={sidebarBookmarks} />
 
       <main className="flex min-w-0 flex-1 flex-col gap-4">
         {/* 북마크가 하나도 없으면 검색 의미 없음 → 검색바 숨김 (검색 중에는 유지) */}
         {(allBookmarks.length > 0 || isSearching) && (
-          <SearchBar onSearch={handleSearch} onClear={handleClear} />
+          <SearchBar onSearch={handleSearch} onClear={handleClear} value={searchQuery} onChange={setSearchQuery} />
         )}
 
         {isPending && (
@@ -183,11 +205,20 @@ function DashboardContent() {
         )}
 
         {!isPending && items.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((item) => (
-              <BookmarkCard key={item.id} bookmark={item} />
-            ))}
-          </div>
+          <>
+            <BookmarkToolbar />
+            <div
+              className={
+                viewMode === 'grid'
+                  ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+                  : 'flex flex-col gap-3'
+              }
+            >
+              {sortedItems.map((item) => (
+                <BookmarkCard key={item.id} bookmark={item} />
+              ))}
+            </div>
+          </>
         )}
       </main>
     </>

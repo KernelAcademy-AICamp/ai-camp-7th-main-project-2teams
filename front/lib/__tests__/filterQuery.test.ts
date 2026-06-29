@@ -21,6 +21,10 @@ describe('parseFilterQuery', () => {
     expect(parseFilterQuery('tab=favorites').tab).toBe('favorites')
   })
 
+  it('tab=folders 인식', () => {
+    expect(parseFilterQuery('tab=folders').tab).toBe('folders')
+  })
+
   it('알 수 없는 tab 값은 all로 정규화', () => {
     expect(parseFilterQuery('tab=categories').tab).toBe('all')
   })
@@ -46,6 +50,10 @@ describe('buildFilterQuery', () => {
     expect(buildFilterQuery({ ...empty, tab: 'favorites' })).toBe('tab=favorites')
   })
 
+  it('folders 탭 반영', () => {
+    expect(buildFilterQuery({ ...empty, tab: 'folders' })).toBe('tab=folders')
+  })
+
   it('from=extension 보존', () => {
     expect(buildFilterQuery({ ...empty, fromExtension: true })).toBe('from=extension')
   })
@@ -60,6 +68,11 @@ describe('parse ↔ build 왕복', () => {
   it('favorites 라운드트립 유지', () => {
     const built = buildFilterQuery({ category: null, folder: null, tag: null, tab: 'favorites' })
     expect(parseFilterQuery(built).tab).toBe('favorites')
+  })
+
+  it('folders 라운드트립 유지', () => {
+    const built = buildFilterQuery({ category: null, folder: null, tag: null, tab: 'folders' })
+    expect(parseFilterQuery(built).tab).toBe('folders')
   })
 
   it('카테고리 라운드트립 유지', () => {
