@@ -49,10 +49,9 @@ describe('aggregate', () => {
 // 실 OpenAI 골든셋 평가 — 비용·flaky 때문에 RUN_TAG_EVAL=1에서만.
 // 실행: RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts
 // 회귀 게이트: macro-F1 baseline 미만이면 실패.
-// held-out 실측: n=30 F1 0.75 (2026-06). n=13의 0.94는 쉬운 셋 낙관 점추정이었고,
-// 확대 시 진짜 정확도 노출. 레버리지 1/30≈0.033 → 노이즈 마진 두고 0.70.
-// alias 갭/under-tagging 교정(후속) 후 상향.
-const F1_BASELINE = 0.7
+// held-out 실측(n=30): alias 보강 후 F1 0.82 (2026-06). 레버리지 1/30≈0.033 → 마진 두고 0.75.
+// 남은 개선: Stripe 대분류 오류·강의/컴퓨터비전 under-tagging(B버킷) → 교정 후 추가 상향.
+const F1_BASELINE = 0.75
 
 describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)', () => {
   it(
