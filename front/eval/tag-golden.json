@@ -1,0 +1,80 @@
+[
+  {
+    "url": "https://react.dev/reference/react/useEffect",
+    "title": "useEffect – React",
+    "description": "useEffect is a React Hook that lets you synchronize a component with an external system.",
+    "gold": ["개발", "프론트엔드", "React"]
+  },
+  {
+    "url": "https://nextjs.org/blog/next-15-caching",
+    "title": "Next.js 캐싱 전략",
+    "description": "Next.js의 캐싱 메커니즘과 최적화 가이드",
+    "gold": ["개발", "프론트엔드", "Next.js"]
+  },
+  {
+    "url": "https://www.postgresql.org/docs/current/index.html",
+    "title": "PostgreSQL Documentation",
+    "description": "The official PostgreSQL manual covering SQL, administration and internals.",
+    "gold": ["개발", "데이터베이스", "PostgreSQL"]
+  },
+  {
+    "url": "https://tailwindcss.com/docs/installation",
+    "title": "Installation - Tailwind CSS",
+    "description": "Get started with Tailwind CSS utility-first framework.",
+    "gold": ["개발", "프론트엔드", "Tailwind"]
+  },
+  {
+    "url": "https://vercel.com/docs/deployments",
+    "title": "Deployments - Vercel",
+    "description": "How to deploy and configure applications on Vercel.",
+    "gold": ["개발", "인프라", "Vercel"]
+  },
+  {
+    "url": "https://arxiv.org/abs/2005.11401",
+    "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+    "description": "We introduce RAG models combining parametric and non-parametric memory for generation.",
+    "gold": ["AI/ML", "RAG", "논문"]
+  },
+  {
+    "url": "https://platform.openai.com/docs/api-reference/chat",
+    "title": "OpenAI API Reference - Chat",
+    "description": "Create chat completions with OpenAI models.",
+    "gold": ["AI/ML", "LLM", "공식문서"]
+  },
+  {
+    "url": "https://huggingface.co/meta-llama/Llama-3-8B",
+    "title": "meta-llama/Llama-3-8B · Hugging Face",
+    "description": "Llama 3 8B large language model model card and weights.",
+    "gold": ["AI/ML", "LLM"]
+  },
+  {
+    "url": "https://www.figma.com/community/file/components",
+    "title": "Figma 컴포넌트 라이브러리",
+    "description": "재사용 가능한 UI 컴포넌트 시스템 구축 가이드",
+    "gold": ["디자인", "UI/UX", "Figma"]
+  },
+  {
+    "url": "https://www.apple.com/shop/buy-mac/macbook-pro",
+    "title": "Buy MacBook Pro - Apple",
+    "description": "M4 칩 탑재 MacBook Pro 구매",
+    "gold": ["쇼핑", "전자기기"]
+  },
+  {
+    "url": "https://www.coursera.org/learn/machine-learning",
+    "title": "Machine Learning | Coursera",
+    "description": "Andrew Ng의 머신러닝 입문 강의.",
+    "gold": ["학습", "강의"]
+  },
+  {
+    "url": "https://github.com/login",
+    "title": "Sign in to GitHub",
+    "description": "",
+    "gold": []
+  },
+  {
+    "url": "https://example.com/404",
+    "title": "404 Not Found",
+    "description": "",
+    "gold": []
+  }
+]

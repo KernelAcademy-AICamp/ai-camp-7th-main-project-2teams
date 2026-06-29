@@ -1,5 +1,32 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { generateTags, createEmbedding } from '../ai'
+import { generateTags, createEmbedding, selectConfidentTags } from '../ai'
+
+describe('selectConfidentTags — confidence 임계값 필터', () => {
+  it('0.6 미만 태그 제거', () => {
+    const raw = {
+      tags: [
+        { tag: '개발', confidence: 0.95 },
+        { tag: '프론트엔드', confidence: 0.6 },
+        { tag: '추측', confidence: 0.4 },
+      ],
+    }
+    expect(selectConfidentTags(raw)).toEqual(['개발', '프론트엔드'])
+  })
+
+  it('최대 3개로 절단', () => {
+    const raw = {
+      tags: Array.from({ length: 5 }, (_, i) => ({ tag: `t${i}`, confidence: 0.9 })),
+    }
+    expect(selectConfidentTags(raw)).toEqual(['t0', 't1', 't2'])
+  })
+
+  it('형식 깨지면 빈 배열', () => {
+    expect(selectConfidentTags({})).toEqual([])
+    expect(selectConfidentTags({ tags: 'nope' })).toEqual([])
+    expect(selectConfidentTags(null)).toEqual([])
+    expect(selectConfidentTags({ tags: [{ tag: '개발' }] })).toEqual([]) // confidence 누락
+  })
+})
 
 // E2E_MOCK_OPENAI=1 시 실제 OpenAI 호출 없이 결정적 값 반환 검증.
 describe('OpenAI 목 seam (E2E_MOCK_OPENAI)', () => {
