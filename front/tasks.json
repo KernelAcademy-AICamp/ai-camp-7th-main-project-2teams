@@ -349,7 +349,7 @@
       "description": "본문 수집 실패 케이스의 임베딩 품질 추적. 백로그(파이프라인 재검토).",
       "details": "PDF·chrome:// 등 content script 차단 시 content='' → embedding=title만(약한 벡터). 허용 degradation이나 비율·검색 영향 모니터링. 필요 시 메타데이터(description 등) 폴백 수집 검토.",
       "priority": "low",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A5"
       ],
