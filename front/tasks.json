@@ -181,7 +181,7 @@
     },
     {
       "id": "A15",
-      "title": "GET /api/account/data — 개인정보 열람 API",
+      "title": "GET /api/account — 개인정보 열람 API",
       "description": "사용자 본인 저장 데이터 전체 반환. 개보법 35조 열람권 대응.",
       "details": "app/api/account/route.ts (GET). SELECT id, title, url, tags, category, created_at FROM bookmarks WHERE user_id = $1. embedding 제외. 페이지네이션 없이 전체 반환 (다운로드 용도).",
       "priority": "medium",
@@ -299,9 +299,9 @@
       "id": "A33",
       "title": "A15 경로 드리프트 정합",
       "description": "개인정보 열람 API 경로 문서↔구현 불일치 해소. 백로그(파이프라인 재검토).",
-      "details": "tasks/README·PRD는 `GET /api/account/data`, 실제 구현·UI(settings)는 `GET /api/account`. 한쪽으로 통일 — 코드 유지 시 문서 수정, 또는 라우트를 /api/account/data로 분리. UI fetch 경로도 함께 정합.",
+      "details": "tasks/README.md 3곳(체크박스 목록·상세 테이블·의존성 그래프)과 front/tasks.json A15 title을 실제 구현 경로 `GET /api/account`로 수정. docs/specs/nextjs-supabase.md는 이미 정합 상태였음.",
       "priority": "low",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A15"
       ],
