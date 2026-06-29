@@ -78,7 +78,8 @@ export default function ImportPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-xl">
+    <main className="flex w-full flex-1 flex-col items-center justify-center">
+      <div className="w-full max-w-xl">
       <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">
         파일 업로드
       </h1>
@@ -232,6 +233,7 @@ export default function ImportPage() {
           </button>
         </div>
       )}
+      </div>
     </main>
   )
 }

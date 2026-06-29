@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow' // v5 import 경로
 
 type SidebarTab = 'all' | 'favorites' | 'categories' | 'folders'
-type SortOrder = 'created_at' | 'similarity'
+type SortOrder = 'latest' | 'oldest'
 type ViewMode = 'list' | 'grid'
 
 interface FilterState {
@@ -29,8 +29,8 @@ const initialState = {
   folder: null,
   tag: null,
   searchQuery: '',
-  sortOrder: 'created_at' as SortOrder,
-  viewMode: 'list' as ViewMode,
+  sortOrder: 'latest' as SortOrder,
+  viewMode: 'grid' as ViewMode, // 기본 그리드 (기존 화면 유지)
 }
 
 export const useFilterStore = create<FilterState>((set) => ({
