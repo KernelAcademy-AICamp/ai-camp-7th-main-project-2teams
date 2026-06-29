@@ -49,8 +49,8 @@ describe('aggregate', () => {
 // 실 OpenAI 골든셋 평가 — 비용·flaky 때문에 RUN_TAG_EVAL=1에서만.
 // 실행: RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts
 // 회귀 게이트: macro-F1 baseline 미만이면 실패.
-// held-out 실측(n=41, 커뮤니티·브랜드·게임 대분류 추가): F1 0.79 (2026-06). 레버리지 1/41≈0.024 → 0.75.
-// 새 분기 라벨 미정착(브랜드 기업/마케팅, 게임 게임리뷰/리뷰 등) → 팀 검수 후 상향.
+// held-out 실측(n=41, 커뮤니티·브랜드·게임): 브랜드 경계 규칙 후 F1 0.82 (2026-06). 레버리지 1/41≈0.024 → 0.75.
+// 남은 모호: Tesla 베어도메인(기업/마케팅), 게임 게임리뷰/리뷰 → 팀 검수 후 상향.
 const F1_BASELINE = 0.75
 
 describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)', () => {
