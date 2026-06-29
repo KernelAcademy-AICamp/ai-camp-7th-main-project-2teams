@@ -101,10 +101,11 @@ export const POST = withAuth(async (req, { user, supabase }) => {
             if (categoryCache.has(top)) {
               category_id = categoryCache.get(top)!
             } else {
+              // 유저 카테고리 upsert (없으면 생성, 있으면 id만 반환)
               const { data: category } = await supabase
                 .from('categories')
+                .upsert({ name: top, user_id: user.id }, { onConflict: 'user_id,name' })
                 .select('id')
-                .eq('name', top)
                 .single()
               category_id = category?.id ?? null
               categoryCache.set(top, category_id)
