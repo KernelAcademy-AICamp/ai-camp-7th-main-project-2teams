@@ -2,7 +2,9 @@
 
 import { useState, useCallback, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { useShallow } from 'zustand/react/shallow'
+import { AddBookmarkModal } from '@/components/AddBookmarkModal'
 import { BookmarkCard } from '@/components/BookmarkCard'
 import { BookmarkSkeleton } from '@/components/BookmarkSkeleton'
 import { ExtensionSync } from '@/components/ExtensionSync'
@@ -115,7 +117,10 @@ function DashboardContent() {
       <Sidebar bookmarks={allBookmarks} />
 
       <main className="flex min-w-0 flex-1 flex-col gap-4">
-        <SearchBar onSearch={handleSearch} onClear={handleClear} />
+        {/* 북마크가 하나도 없으면 검색 의미 없음 → 검색바 숨김 (검색 중에는 유지) */}
+        {(allBookmarks.length > 0 || isSearching) && (
+          <SearchBar onSearch={handleSearch} onClear={handleClear} />
+        )}
 
         {isPending && (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -140,7 +145,7 @@ function DashboardContent() {
         )}
 
         {!isPending && items.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
             {isSearching && isSearchError && !isSearchPending && (
               <p className="mb-3 text-sm text-red-500">
                 검색 중 오류가 발생했습니다. 다시 시도해 주세요.
@@ -161,8 +166,17 @@ function DashboardContent() {
                   저장된 북마크가 없습니다
                 </p>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                  Chrome Extension으로 페이지를 저장하면 여기에 표시됩니다.
+                  북마크를 추가하거나 파일을 업로드해 시작하세요.
                 </p>
+                <div className="mt-6 flex items-center gap-3">
+                  <AddBookmarkModal />
+                  <Link
+                    href="/import"
+                    className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                  >
+                    파일 업로드
+                  </Link>
+                </div>
               </>
             )}
           </div>
