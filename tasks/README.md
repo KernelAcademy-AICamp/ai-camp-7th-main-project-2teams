@@ -59,7 +59,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A24: 로그아웃·탈퇴 시 로컬 데이터 파기
 - [x] A25: Chrome 웹스토어 Privacy Practices 작성
 
-**진행률: 25 / 25 완료 (MVP 범위 A1~A25 기준) · IA 갭 추가 A40~A42 (2/3, A41 미착수)**
+**진행률: 25 / 25 완료 (MVP 범위 A1~A25 기준) · IA 갭 추가 A39~A42 (3/4, A41 미착수)**
 
 ---
 
@@ -182,6 +182,10 @@ A17 (Extension 셋업)
 
 - [x] **A36 비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 저장 doc=title+content(김) vs 쿼리=짧은 자연어 → cosine 낮아 recall 누락 가능. 운영 데이터로 threshold 튜닝.
 - [x] **A37 빈 content 약한 벡터**: `logger.warn('[weak-vector]')` 로 모니터링 추가. content 없으면 title 단독 임베딩. PR #54.
+
+### 태깅 품질 (튜닝)
+
+- [x] **A43 confidence 필터 + 골든셋 평가** (`lib/ai.ts`, `lib/tag-eval.ts`): generateTags가 태그별 confidence 반환, threshold 0.6 미만 자동 제외. alias 보강·Few-shot 반례로 RAG 과태깅 교정. 골든셋(`eval/tag-golden.json`) held-out F1 0.94, 회귀 게이트 ≥0.85(`RUN_TAG_EVAL=1`). PR #87.
 
 ### Minor
 

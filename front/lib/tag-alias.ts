@@ -40,6 +40,9 @@ export const TAG_ALIAS: Record<string, string> = {
   llm: 'LLM', 'large language model': 'LLM',
   // RAG
   rag: 'RAG', 검색증강생성: 'RAG',
+  'Retrieval-Augmented Generation': 'RAG', 'retrieval-augmented generation': 'RAG',
+  // 프레임워크 소분류 표기 통일 (모델이 'Tailwind CSS' 등 풀네임 반환)
+  'Tailwind CSS': 'Tailwind', tailwind: 'Tailwind',
   // 컴퓨터비전
   CV: '컴퓨터비전', 'computer vision': '컴퓨터비전', 비전: '컴퓨터비전',
   // MLOps
