@@ -45,14 +45,14 @@ export const POST = withAuth(async (req, { user, supabase }) => {
 
   const tags = normalizeTags(rawTags)
 
-  // tags[0]이 고정 6종 대분류면 category_id 조회, 아니면 미분류(null)
+  // 대분류 추출 → 유저 카테고리 upsert (없으면 생성)
   const top = resolveTopCategory(rawTags)
   let category_id: string | null = null
   if (top) {
     const { data: category } = await supabase
       .from('categories')
+      .upsert({ name: top, user_id: user.id }, { onConflict: 'user_id,name' })
       .select('id')
-      .eq('name', top)
       .single()
     category_id = category?.id ?? null
   }
