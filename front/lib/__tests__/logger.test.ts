@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { maskSensitive, logger } from '@/lib/logger'
 
 describe('maskSensitive', () => {
@@ -51,14 +51,14 @@ describe('logger', () => {
 
   it('객체 인자에서 content 자동 제거', () => {
     logger.log({ title: 'test', content: '본문', url: 'https://a.com' })
-    const arg = (console.log as ReturnType<typeof vi.spyOn>).mock.calls[0][0]
+    const arg = vi.mocked(console.log).mock.calls[0][0]
     expect(arg).not.toHaveProperty('content')
     expect(arg).toMatchObject({ title: 'test', url: 'https://a.com' })
   })
 
   it('객체 인자에서 embedding 자동 제거', () => {
     logger.error({ title: 'x', embedding: [0.1, 0.2] })
-    const arg = (console.error as ReturnType<typeof vi.spyOn>).mock.calls[0][0]
+    const arg = vi.mocked(console.error).mock.calls[0][0]
     expect(arg).not.toHaveProperty('embedding')
   })
 
