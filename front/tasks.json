@@ -325,7 +325,7 @@
       "description": "같은 페이지 반복 저장 시 중복 행 방지. 백로그(파이프라인 재검토).",
       "details": "app/api/bookmarks/route.ts(POST). 현재 동일 URL N회 저장 시 중복 행 누적. (user_id, url) unique 제약 + upsert(onConflict) 또는 저장 전 존재 확인. 중복 시 갱신/무시 정책 결정 필요.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A5"
       ],
