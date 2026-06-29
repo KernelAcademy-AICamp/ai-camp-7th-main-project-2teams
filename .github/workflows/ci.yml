@@ -1,11 +1,9 @@
 name: CI
 
+# 모든 PR에서 실행 — required status check 데드락 방지(paths 필터 시 docs 전용 PR은 체크 미보고).
+# 각 잡의 guard 스텝이 미스캐폴드 디렉토리는 skip 처리.
 on:
   pull_request:
-    paths:
-      - 'front/**'
-      - 'extension/**'
-      - '.github/workflows/ci.yml'
 
 jobs:
   front:
