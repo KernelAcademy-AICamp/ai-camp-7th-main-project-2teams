@@ -34,6 +34,7 @@ export const TAG_ALIAS: Record<string, string> = {
   backend: '백엔드', 'back-end': '백엔드', BE: '백엔드', 서버: '백엔드', server: '백엔드',
   // 인프라
   infra: '인프라', infrastructure: '인프라', DevOps: '인프라', devops: '인프라', 'CI/CD': '인프라',
+  컨테이너: '인프라', container: '인프라', 클라우드네이티브: '인프라', 'cloud native': '인프라',
   // 데이터베이스
   DB: '데이터베이스', database: '데이터베이스', db: '데이터베이스',
   // LLM
@@ -48,11 +49,11 @@ export const TAG_ALIAS: Record<string, string> = {
   // MLOps
   mlops: 'MLOps', 'ml ops': 'MLOps',
   // UI/UX
-  'ui/ux': 'UI/UX', ui: 'UI/UX', ux: 'UI/UX',
+  'ui/ux': 'UI/UX', ui: 'UI/UX', ux: 'UI/UX', 'UI 디자인': 'UI/UX', UI디자인: 'UI/UX',
   // 스타트업
   startup: '스타트업', 'start-up': '스타트업', 창업: '스타트업',
   // 커리어
-  career: '커리어', 취업: '커리어', 이직: '커리어', job: '커리어',
+  career: '커리어', 취업: '커리어', 이직: '커리어', job: '커리어', 채용: '커리어',
   // 강의
   lecture: '강의', course: '강의', tutorial: '강의', 튜토리얼: '강의', 코스: '강의',
   // 논문
@@ -62,7 +63,9 @@ export const TAG_ALIAS: Record<string, string> = {
   // 전자기기
   electronics: '전자기기', 전자제품: '전자기기', gadget: '전자기기',
   // 소프트웨어
-  SaaS: '소프트웨어', saas: '소프트웨어',
+  SaaS: '소프트웨어', saas: '소프트웨어', 협업툴: '소프트웨어', 협업도구: '소프트웨어',
+  // 소분류 표기 통일
+  파이썬: 'Python',
 }
 
 const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑'])
