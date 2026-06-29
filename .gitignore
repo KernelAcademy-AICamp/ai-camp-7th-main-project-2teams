@@ -10,6 +10,7 @@ node_modules/
 dist/
 out/
 *.tsbuildinfo
+.playwright-mcp
 
 # 테스트 커버리지
 coverage/
