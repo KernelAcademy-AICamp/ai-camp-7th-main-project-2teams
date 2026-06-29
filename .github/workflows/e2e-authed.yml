@@ -1,0 +1,40 @@
+name: E2E Authed (nightly)
+
+# 인증 플로우 e2e — PR 게이트 아님(flaky·외부 의존이 PR 머지를 막지 않도록 분리).
+# 매일 야간 + 수동 trigger. 실제 테스트 Supabase 세션 주입, OpenAI는 목.
+on:
+  schedule:
+    - cron: '0 18 * * *' # 매일 03:00 KST (UTC 18:00)
+  workflow_dispatch:
+
+jobs:
+  authed:
+    runs-on: ubuntu-latest
+    # 시크릿 미설정 환경(포크 등)에선 스킵 — Supabase URL 비어있으면 실행 안 함
+    if: ${{ vars.E2E_AUTHED_ENABLED == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+      - working-directory: front
+        run: npm ci
+      - working-directory: front
+        run: npx playwright install --with-deps chromium
+      - working-directory: front
+        run: npm run test:e2e:authed
+        env:
+          E2E_MOCK_OPENAI: '1'
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-authed
+          path: front/playwright-report/
+          retention-days: 7
