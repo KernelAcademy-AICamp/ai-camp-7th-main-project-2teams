@@ -186,6 +186,7 @@ A17 (Extension 셋업)
 ### 태깅 품질 (튜닝)
 
 - [x] **A43 confidence 필터 + 골든셋 평가** (`lib/ai.ts`, `lib/tag-eval.ts`): generateTags가 태그별 confidence 반환, threshold 0.6 미만 자동 제외. alias 보강·Few-shot 반례로 RAG 과태깅 교정. 골든셋(`eval/tag-golden.json`) held-out F1 0.94, 회귀 게이트 ≥0.85(`RUN_TAG_EVAL=1`). PR #87.
+- [x] **A44 골든셋 확장 스킬** (`.claude/skills/golden-set-expand/`): tag-golden.json 안전 확장 스킬. few-shot leak·대분류 정책 위반·중분류 vocab 드리프트·URL 중복을 `validate_golden.py`로 차단. 대분류 6→9 확장 과정에서 반복된 오류를 코드화.
 
 ### Minor
 

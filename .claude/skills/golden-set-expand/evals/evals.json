@@ -1,0 +1,17 @@
+{
+  "skill_name": "golden-set-expand",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "태그 분류 골든셋이 직장인/개발 쪽에 치우친 것 같아. 쇼핑·디자인 대분류 케이스를 4개 정도 더 추가해줘. front/eval/tag-golden.json 이야.",
+      "expected_output": "쇼핑·디자인 항목 추가, few-shot 고유명사(Storybook·Figma 등) 미재사용, 단일 대분류, validate_golden.py 통과",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "골든셋 평가 표본을 좀 키우고 싶어. 9개 대분류에 골고루 6개 정도 held-out 케이스 추가하고 leak 없는지 확인해줘.",
+      "expected_output": "균형 잡힌 6개 추가, leak/중복/대분류 정책 검증 통과, eval F1 보고",
+      "files": []
+    }
+  ]
+}
