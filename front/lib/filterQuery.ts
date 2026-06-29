@@ -1,0 +1,39 @@
+// URL 쿼리 ↔ 필터 상태 매핑 (단일 출처).
+// 대시보드의 양방향 동기화 effect가 이 순수 함수를 사용한다.
+
+export interface ParsedFilter {
+  category: string | null
+  folder: string | null
+  tag: string | null
+  tab: 'all' | 'favorites'
+}
+
+// 쿼리 문자열 → 필터 상태. 파라미터가 없으면 null/'all'로 리셋되어야
+// 이전 필터 잔류(active 표시 불일치)를 막는다.
+export function parseFilterQuery(queryString: string): ParsedFilter {
+  const p = new URLSearchParams(queryString)
+  return {
+    category: p.get('category'),
+    folder: p.get('folder'),
+    tag: p.get('tag'),
+    tab: p.get('tab') === 'favorites' ? 'favorites' : 'all',
+  }
+}
+
+// 필터 상태 → 쿼리 문자열. 빈 값은 생략해 stale 파라미터를 남기지 않는다.
+// favorites 탭만 URL에 반영, 익스텐션 진입 플래그(from)는 보존.
+export function buildFilterQuery(state: {
+  category: string | null
+  folder: string | null
+  tag: string | null
+  tab: string
+  fromExtension?: boolean
+}): string {
+  const params = new URLSearchParams()
+  if (state.category) params.set('category', state.category)
+  if (state.folder) params.set('folder', state.folder)
+  if (state.tag) params.set('tag', state.tag)
+  if (state.tab === 'favorites') params.set('tab', 'favorites')
+  if (state.fromExtension) params.set('from', 'extension')
+  return params.toString()
+}

@@ -13,6 +13,7 @@ import { useSearch } from '@/hooks/useSearch'
 import { useFilterStore } from '@/store/filterStore'
 import { createClient } from '@/lib/supabase/client'
 import { getOnboardingKey, isOnboardingDone } from '@/lib/onboarding'
+import { parseFilterQuery, buildFilterQuery } from '@/lib/filterQuery'
 
 function DashboardContent() {
   const router = useRouter()
@@ -45,18 +46,20 @@ function DashboardContent() {
     })
   }, [router])
 
-  // URL 파라미터로 초기 필터 상태 복원 (마운트 1회)
+  // searchParams 객체는 네비게이션에서 참조가 유지될 수 있어 의존성으로 부적합.
+  // 쿼리 문자열로 의존해야 내용 변경마다 effect가 재실행된다.
+  const queryString = searchParams.toString()
+  const fromExtension = searchParams.get('from') === 'extension'
+
+  // URL 쿼리 ↔ 필터 동기화. 싱글톤 스토어라 파라미터 없으면 null로 리셋해야
+  // 이전 필터 잔류(active 표시 불일치)를 막는다. 쿼리 변경마다 재조정.
   useEffect(() => {
-    const urlCategory = searchParams.get('category')
-    const urlFolder = searchParams.get('folder')
-    const urlTag = searchParams.get('tag')
-    const urlTab = searchParams.get('tab')
-    if (urlCategory) setCategory(urlCategory)
-    if (urlFolder) setFolder(urlFolder)
-    if (urlTag) setTag(urlTag)
-    if (urlTab === 'favorites') setTab('favorites')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    const f = parseFilterQuery(queryString)
+    setCategory(f.category)
+    setFolder(f.folder)
+    setTag(f.tag)
+    setTab(f.tab)
+  }, [queryString, setCategory, setFolder, setTag, setTab])
 
   // 마운트 첫 실행은 건너뛰어 초기화 Effect와 레이스 방지
   const syncInitRef = useRef(false)
@@ -65,15 +68,9 @@ function DashboardContent() {
       syncInitRef.current = true
       return
     }
-    const params = new URLSearchParams()
-    if (category) params.set('category', category)
-    if (folder) params.set('folder', folder)
-    if (tag) params.set('tag', tag)
-    // favorites 탭만 URL에 반영 — 다른 SidebarTab 값이 새지 않도록 명시
-    if (tab === 'favorites') params.set('tab', 'favorites')
-    const qs = params.toString()
+    const qs = buildFilterQuery({ category, folder, tag, tab, fromExtension })
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
-  }, [category, folder, tag, tab, router, pathname])
+  }, [category, folder, tag, tab, router, pathname, fromExtension])
 
   const [searchQuery, setSearchQuery] = useState('')
   const isSearching = searchQuery.trim().length > 0
@@ -111,8 +108,6 @@ function DashboardContent() {
   const isPending = isSearching ? isSearchPending : isBookmarkPending
   const items = isSearching ? (searchData?.results ?? []) : (bookmarkData?.bookmarks ?? [])
   const allBookmarks = bookmarkData?.bookmarks ?? []
-
-  const fromExtension = searchParams.get('from') === 'extension'
 
   return (
     <>
