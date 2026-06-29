@@ -167,7 +167,7 @@ A17 (Extension 셋업)
 
 - [x] **A32 account DELETE 비원자성** (`app/api/account/route.ts`): `deleteUser` 단일 호출 + `ON DELETE CASCADE` 위임으로 원자적 처리. PR #48.
 - [ ] **A33 경로 드리프트**: 문서상 `GET /api/account/data`, 실제 구현·UI는 `GET /api/account`. 문서 또는 경로 일치화.
-- [ ] **A34 maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
+- [x] **A34 maskSensitive 로깅 가드 연결**: `lib/logger.ts`에 `logger` 래퍼 추가(객체 인자 자동 마스킹). `app/api/account/route.ts` console → logger 교체, GET 에러 로그 추가.
 - [ ] **A35 URL 중복 저장 무방비**: 같은 페이지 N회 저장 시 중복 행. unique 제약/upsert 검토.
 
 ### 검색 품질 (튜닝)
