@@ -18,8 +18,9 @@ const STATE_PATH = 'e2e/.auth/state.json'
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const EMAIL = process.env.E2E_TEST_EMAIL ?? 'e2e-bot@example.com'
-const PASSWORD = process.env.E2E_TEST_PASSWORD ?? 'e2e-bot-password-1234!'
+// ||(??아님) — 워크플로가 미설정 시크릿을 빈 문자열로 전달하므로 빈 값도 기본값 폴백
+const EMAIL = process.env.E2E_TEST_EMAIL || 'e2e-bot@example.com'
+const PASSWORD = process.env.E2E_TEST_PASSWORD || 'e2e-bot-password-1234!'
 
 setup('테스트 유저 세션 주입', async () => {
   const admin = createClient(URL, SERVICE, {
