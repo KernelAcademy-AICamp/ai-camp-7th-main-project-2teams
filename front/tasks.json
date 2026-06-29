@@ -430,6 +430,18 @@
         "A5"
       ],
       "testStrategy": "selectConfidentTags 단위테스트(임계값·빈태그·degrade), tag-eval 지표테스트, RUN_TAG_EVAL=1 골든셋 macro-F1 >= 0.85 회귀 게이트."
+    },
+    {
+      "id": "A44",
+      "title": "골든셋 확장 스킬",
+      "description": "tag-golden.json 안전 확장 워크플로 스킬 + 검증 스크립트.",
+      "details": ".claude/skills/golden-set-expand/. SKILL.md: 기존 수집→균형 생성→검증→eval 회귀 워크플로. scripts/validate_golden.py: few-shot 고유명사 소분류 leak·단일 대분류 정책·중분류 vocab 드리프트·URL 중복·빈태그 차단(하드 위반 exit 1), 대분류 분포 리포트. TOP_CATEGORIES·중분류 vocab은 tag-alias.ts·tag-taxonomy.md에서 파싱(드리프트 방지). 대분류 6→9 확장에서 반복된 오류를 코드화.",
+      "priority": "low",
+      "status": "done",
+      "dependencies": [
+        "A43"
+      ],
+      "testStrategy": "validate_golden.py 역검증(leak·중복·대분류2개·무효대분류·vocab 드리프트 적중), with-skill vs baseline 비교(baseline 패션/컬러 vocab 드리프트 적발)."
     }
   ]
 }
