@@ -289,7 +289,7 @@
       "description": "회원 탈퇴 시 bookmarks 삭제와 Auth 유저 삭제의 부분 실패 처리. 백로그(파이프라인 재검토).",
       "details": "app/api/account/route.ts. 현재 bookmarks DELETE 성공 후 admin.auth.admin.deleteUser 실패 시 계정은 남고 데이터만 소실. 보강: deleteUser 우선 + bookmarks는 FK ON DELETE CASCADE 의존, 또는 실패 시 롤백/재시도. Postgres 함수(SECURITY DEFINER)로 단일 트랜잭션 처리 검토.",
       "priority": "low",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A14"
       ],
