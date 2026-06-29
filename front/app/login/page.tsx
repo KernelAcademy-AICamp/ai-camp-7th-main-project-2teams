@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -30,6 +31,9 @@ function LoginContent() {
       >
         Google로 계속하기
       </button>
+      <Link href="/welcome" className="text-sm text-gray-500 underline-offset-2 hover:underline">
+        서비스 소개 보기
+      </Link>
     </main>
   )
 }
