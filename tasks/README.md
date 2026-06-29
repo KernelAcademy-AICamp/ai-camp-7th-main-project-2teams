@@ -183,6 +183,10 @@ A17 (Extension 셋업)
 - [x] **A36 비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 저장 doc=title+content(김) vs 쿼리=짧은 자연어 → cosine 낮아 recall 누락 가능. 운영 데이터로 threshold 튜닝.
 - [x] **A37 빈 content 약한 벡터**: `logger.warn('[weak-vector]')` 로 모니터링 추가. content 없으면 title 단독 임베딩. PR #54.
 
+### 태깅 품질 (튜닝)
+
+- [x] **A43 confidence 필터 + 골든셋 평가** (`lib/ai.ts`, `lib/tag-eval.ts`): generateTags가 태그별 confidence 반환, threshold 0.6 미만 자동 제외. alias 보강·Few-shot 반례로 RAG 과태깅 교정. 골든셋(`eval/tag-golden.json`) held-out F1 0.94, 회귀 게이트 ≥0.85(`RUN_TAG_EVAL=1`). PR #87.
+
 ### Minor
 
 - [ ] **A38 중복 normalize** (`app/api/bookmarks/route.ts`): `normalizeTags` + `resolveTopCategory`가 rawTags 2회 정규화. 결과 동일, 정리 가능.
