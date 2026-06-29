@@ -34,7 +34,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A12: 개인정보처리방침 페이지 (/privacy)
 - [x] A13: 이용약관 페이지 (/terms)
 - [x] A14: DELETE /api/account — 회원 탈퇴 + 데이터 파기
-- [x] A15: GET /api/account/data — 개인정보 열람 API
+- [x] A15: GET /api/account — 개인정보 열람 API
 - [x] A16: 회원 탈퇴 UI + 데이터 파기 플로우
 - [x] A26: 온보딩 페이지 (/onboarding)
 - [x] A27: PATCH /api/bookmarks/:id — 즐겨찾기 토글 API
@@ -79,7 +79,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 | A12 | 개인정보처리방침 페이지 (/privacy)                        | high     | 법적   |      |
 | A13 | 이용약관 페이지 (/terms)                                  | high     | 법적   |      |
 | A14 | DELETE /api/account — 회원 탈퇴 + 데이터 파기             | high     | 법적   |      |
-| A15 | GET /api/account/data — 개인정보 열람 API                 | medium   | 법적   |      |
+| A15 | GET /api/account — 개인정보 열람 API                      | medium   | 법적   |      |
 | A16 | 회원 탈퇴 UI + 데이터 파기 플로우                         | medium   | 법적   |      |
 | A26 | 온보딩 페이지 (/onboarding)                               | high     | 기능   | 수정 |
 | A27 | PATCH /api/bookmarks/:id — 즐겨찾기 토글 API             | medium   | 기능   | 신규 |
@@ -114,7 +114,7 @@ A1 (DB 스키마) ──── A2 (Next.js 셋업)
     ├── A6 (GET /api/bookmarks)
     ├── A7 (POST /api/search)
     ├── A14 (DELETE /api/account)
-    ├── A15 (GET /api/account/data)
+    ├── A15 (GET /api/account)
     ├── A27 (PATCH /api/bookmarks/:id 즐겨찾기)
     └── A29 (POST /api/bookmarks/import)
 
@@ -166,8 +166,8 @@ A17 (Extension 셋업)
 ### 데이터/정합성
 
 - [x] **A32 account DELETE 비원자성** (`app/api/account/route.ts`): `deleteUser` 단일 호출 + `ON DELETE CASCADE` 위임으로 원자적 처리. PR #48.
-- [ ] **A33 경로 드리프트**: 문서상 `GET /api/account/data`, 실제 구현·UI는 `GET /api/account`. 문서 또는 경로 일치화.
-- [x] **A34 maskSensitive 로깅 가드 연결**: `lib/logger.ts`에 `logger` 래퍼 추가(객체 인자 자동 마스킹). `app/api/account/route.ts` console → logger 교체, GET 에러 로그 추가.
+- [x] **A33 경로 드리프트**: `tasks/README.md`, `front/tasks.json` A15 title을 실제 구현 경로(`GET /api/account`)로 수정. `docs/specs/nextjs-supabase.md`는 이미 정합.
+- [x] **A34 maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
 - [ ] **A35 URL 중복 저장 무방비**: 같은 페이지 N회 저장 시 중복 행. unique 제약/upsert 검토.
 
 ### 검색 품질 (튜닝)
