@@ -34,7 +34,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A12: 개인정보처리방침 페이지 (/privacy)
 - [x] A13: 이용약관 페이지 (/terms)
 - [x] A14: DELETE /api/account — 회원 탈퇴 + 데이터 파기
-- [x] A15: GET /api/account/data — 개인정보 열람 API
+- [x] A15: GET /api/account — 개인정보 열람 API
 - [x] A16: 회원 탈퇴 UI + 데이터 파기 플로우
 - [x] A26: 온보딩 페이지 (/onboarding)
 - [x] A27: PATCH /api/bookmarks/:id — 즐겨찾기 토글 API
@@ -79,7 +79,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 | A12 | 개인정보처리방침 페이지 (/privacy)                        | high     | 법적   |      |
 | A13 | 이용약관 페이지 (/terms)                                  | high     | 법적   |      |
 | A14 | DELETE /api/account — 회원 탈퇴 + 데이터 파기             | high     | 법적   |      |
-| A15 | GET /api/account/data — 개인정보 열람 API                 | medium   | 법적   |      |
+| A15 | GET /api/account — 개인정보 열람 API                      | medium   | 법적   |      |
 | A16 | 회원 탈퇴 UI + 데이터 파기 플로우                         | medium   | 법적   |      |
 | A26 | 온보딩 페이지 (/onboarding)                               | high     | 기능   | 수정 |
 | A27 | PATCH /api/bookmarks/:id — 즐겨찾기 토글 API             | medium   | 기능   | 신규 |
@@ -114,7 +114,7 @@ A1 (DB 스키마) ──── A2 (Next.js 셋업)
     ├── A6 (GET /api/bookmarks)
     ├── A7 (POST /api/search)
     ├── A14 (DELETE /api/account)
-    ├── A15 (GET /api/account/data)
+    ├── A15 (GET /api/account)
     ├── A27 (PATCH /api/bookmarks/:id 즐겨찾기)
     └── A29 (POST /api/bookmarks/import)
 
@@ -165,15 +165,15 @@ A17 (Extension 셋업)
 
 ### 데이터/정합성
 
-- [ ] **A32 account DELETE 비원자성** (`app/api/account/route.ts`): bookmarks 삭제 후 `deleteUser` 실패 시 계정 남고 데이터만 소실. 트랜잭션/복구 처리 검토.
-- [ ] **A33 경로 드리프트**: 문서상 `GET /api/account/data`, 실제 구현·UI는 `GET /api/account`. 문서 또는 경로 일치화.
-- [ ] **A34 maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
-- [ ] **A35 URL 중복 저장 무방비**: 같은 페이지 N회 저장 시 중복 행. unique 제약/upsert 검토.
+- [x] **A32 account DELETE 비원자성** (`app/api/account/route.ts`): `deleteUser` 단일 호출 + `ON DELETE CASCADE` 위임으로 원자적 처리. PR #48.
+- [x] **A33 경로 드리프트**: `tasks/README.md`, `front/tasks.json` A15 title을 실제 구현 경로(`GET /api/account`)로 수정. `docs/specs/nextjs-supabase.md`는 이미 정합.
+- [x] **A34 maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
+- [x] **A35 URL 중복 저장 무방비**: `(user_id, url)` UNIQUE 제약 + upsert 전환. PR #52.
 
 ### 검색 품질 (튜닝)
 
-- [ ] **A36 비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 저장 doc=title+content(김) vs 쿼리=짧은 자연어 → cosine 낮아 recall 누락 가능. 운영 데이터로 threshold 튜닝.
-- [ ] **A37 빈 content 약한 벡터**: PDF·`chrome://` 등 content script 차단 시 embedding=title만. 허용 degradation, 모니터링.
+- [x] **A36 비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 저장 doc=title+content(김) vs 쿼리=짧은 자연어 → cosine 낮아 recall 누락 가능. 운영 데이터로 threshold 튜닝.
+- [x] **A37 빈 content 약한 벡터**: `logger.warn('[weak-vector]')` 로 모니터링 추가. content 없으면 title 단독 임베딩. PR #54.
 
 ### Minor
 
