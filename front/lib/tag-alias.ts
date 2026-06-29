@@ -1,6 +1,6 @@
 // AI 태깅 출력 정규화 (docs/specs/alias.md). 운영 중 누락 발견 시 추가.
 
-// 대분류 alias — categories 테이블 name 매핑. 고정 6개 외 값은 null(미분류).
+// 대분류 alias — categories 테이블 name 매핑. 고정 8개 외 값은 null(미분류).
 export const CATEGORY_ALIAS: Record<string, string> = {
   // 개발
   dev: '개발', development: '개발', programming: '개발',
@@ -24,6 +24,12 @@ export const CATEGORY_ALIAS: Record<string, string> = {
 
   // 쇼핑
   shopping: '쇼핑', 구매: '쇼핑', buy: '쇼핑',
+
+  // 커뮤니티
+  community: '커뮤니티', 커뮤니티: '커뮤니티', 소셜: '커뮤니티', social: '커뮤니티',
+
+  // 브랜드
+  brand: '브랜드', 브랜드: '브랜드',
 }
 
 // 중분류 alias — tags 배열 정규화용. 소분류는 자유 텍스트 — alias 없음.
@@ -64,11 +70,17 @@ export const TAG_ALIAS: Record<string, string> = {
   electronics: '전자기기', 전자제품: '전자기기', gadget: '전자기기',
   // 소프트웨어
   SaaS: '소프트웨어', saas: '소프트웨어', 협업툴: '소프트웨어', 협업도구: '소프트웨어',
+  // 포럼 (커뮤니티)
+  forum: '포럼', 게시판: '포럼', 'q&a': 'Q&A', qna: 'Q&A', 질문답변: 'Q&A',
+  // 소셜미디어 (커뮤니티)
+  sns: '소셜미디어', 'social media': '소셜미디어', 소셜미디어: '소셜미디어',
+  // 마케팅·기업 (브랜드)
+  marketing: '마케팅', 광고: '마케팅', company: '기업', corporate: '기업', 기업소개: '기업',
   // 소분류 표기 통일
   파이썬: 'Python',
 }
 
-const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑'])
+const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드'])
 
 export function normalizeTags(tags: string[]): string[] {
   return tags.map((t) => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)

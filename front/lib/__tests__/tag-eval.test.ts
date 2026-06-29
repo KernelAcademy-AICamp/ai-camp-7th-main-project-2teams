@@ -49,8 +49,8 @@ describe('aggregate', () => {
 // 실 OpenAI 골든셋 평가 — 비용·flaky 때문에 RUN_TAG_EVAL=1에서만.
 // 실행: RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts
 // 회귀 게이트: macro-F1 baseline 미만이면 실패.
-// held-out 실측(n=30): B버킷 규칙 보강 후 F1 0.85 (2026-06). 레버리지 1/30≈0.033 → 마진 두고 0.78.
-// 남은: Stripe 중분류·LangChain/OpenCV 소분류 등 라벨 모호 케이스(팀 검수 후 상향).
+// held-out 실측(n=36, 커뮤니티·브랜드 대분류 추가): F1 0.82 (2026-06). 레버리지 1/36≈0.028 → 0.78.
+// 새 분기 라벨 미정착(Tesla 기업/마케팅, Discord 포럼/소셜 등) → 팀 검수 후 상향.
 const F1_BASELINE = 0.78
 
 describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)', () => {

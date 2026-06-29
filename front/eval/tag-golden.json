@@ -168,6 +168,42 @@
     "gold": ["쇼핑", "전자기기"]
   },
   {
+    "url": "https://stackoverflow.com/questions/11227809",
+    "title": "Why is processing a sorted array faster than an unsorted array? - Stack Overflow",
+    "description": "프로그래밍 질문과 답변 커뮤니티.",
+    "gold": ["커뮤니티", "Q&A", "Stack Overflow"]
+  },
+  {
+    "url": "https://news.ycombinator.com/",
+    "title": "Hacker News",
+    "description": "기술·스타트업 뉴스 토론 커뮤니티.",
+    "gold": ["커뮤니티", "포럼"]
+  },
+  {
+    "url": "https://discord.com/invite/reactiflux",
+    "title": "Reactiflux Discord 커뮤니티",
+    "description": "React 개발자 실시간 채팅 커뮤니티.",
+    "gold": ["커뮤니티", "소셜미디어", "Discord"]
+  },
+  {
+    "url": "https://www.tesla.com/",
+    "title": "Tesla | 전기차·태양광·에너지",
+    "description": "Tesla 브랜드·기업 소개 페이지.",
+    "gold": ["브랜드", "기업", "Tesla"]
+  },
+  {
+    "url": "https://www.coca-cola.com/us/en",
+    "title": "Coca-Cola® | 브랜드 캠페인",
+    "description": "코카콜라 브랜드 스토리와 마케팅 캠페인.",
+    "gold": ["브랜드", "마케팅"]
+  },
+  {
+    "url": "https://news.airbnb.com/about-us/",
+    "title": "About Us - Airbnb Newsroom",
+    "description": "Airbnb 기업·브랜드 소개.",
+    "gold": ["브랜드", "기업", "Airbnb"]
+  },
+  {
     "url": "https://github.com/login",
     "title": "Sign in to GitHub",
     "description": "",
