@@ -37,7 +37,7 @@ describe('POST /api/search', () => {
 
   it('기본 threshold 0.3으로 match_bookmarks RPC 호출', async () => {
     await POST(req({ query: '머신러닝 입문' }))
-    expect(createEmbedding).toHaveBeenCalledWith('머신러닝 입문', 'query')
+    expect(createEmbedding).toHaveBeenCalledWith('머신러닝 입문')
     expect(rpc).toHaveBeenCalledWith('match_bookmarks', {
       query_embedding: [0.1, 0.2],
       match_threshold: 0.3,

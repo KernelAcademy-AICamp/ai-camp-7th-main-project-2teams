@@ -525,11 +525,11 @@
       "description": "벤치마크(recall@1 75%→92.5%, 저장 414KB→276KB) 근거로 OpenAI text-embedding-3-small → bge-m3(NVIDIA 엔드포인트) 교체.",
       "details": "마이그레이션 0005: 백업 테이블 + embedding vector(1536→1024) + HNSW 재생성 + match_bookmarks(1024). lib/bge.ts 신규(embedBge, input_type passage/query). lib/ai.ts: createEmbedding(text, inputType) bge-m3로 교체, MOCK 1024. search route 'query'. scripts/reembed-bge.mjs 재임베딩(머지 후 수동). BGE_API_KEY 서버 전용.",
       "priority": "medium",
-      "status": "done",
+      "status": "pending",
       "dependencies": [
         "A7"
       ],
-      "testStrategy": "ai.mock.test.ts 차원 1024 검증. 0005 적용 + reembed-bge.mjs로 1277건 재임베딩 완료(2026-06-30). /api/search 스모크 통과."
+      "testStrategy": "롤백됨(2026-06-30): 0005/bge-m3 → 0006으로 OpenAI text-embedding-3-small(1536) 복귀, 백업에서 원본 임베딩 복원. 재추진 여부는 품질 개선 vs 운영 비용 재검토 후 결정."
     }
   ]
 }

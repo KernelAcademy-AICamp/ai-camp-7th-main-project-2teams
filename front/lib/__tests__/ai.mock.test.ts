@@ -41,11 +41,11 @@ describe('OpenAI 목 seam (E2E_MOCK_OPENAI)', () => {
     ])
   })
 
-  it('createEmbedding — 목 모드에서 1024차원 상수 벡터(쿼리·저장 일치)', async () => {
+  it('createEmbedding — 목 모드에서 1536차원 상수 벡터(쿼리·저장 일치)', async () => {
     vi.stubEnv('E2E_MOCK_OPENAI', '1')
     const a = await createEmbedding('저장 텍스트')
-    const b = await createEmbedding('완전히 다른 쿼리', 'query')
-    expect(a).toHaveLength(1024)
+    const b = await createEmbedding('완전히 다른 쿼리')
+    expect(a).toHaveLength(1536)
     expect(a).toEqual(b) // 동일 벡터 → cosine=1 → 검색 결정적
   })
 })
