@@ -6,6 +6,8 @@ export interface Bookmark {
   url: string
   tags: string[]
   category_id: string | null
+  /** AI가 지정한 대분류 이름 (null = 미분류). 평면 모델에서 tags[0]과 무관. */
+  category: string | null
   is_favorite: boolean
   folder_hint: string[] | null
   created_at: string

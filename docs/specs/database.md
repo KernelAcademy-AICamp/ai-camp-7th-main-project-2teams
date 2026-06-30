@@ -15,7 +15,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 ## 테이블 DDL
 
 ```sql
--- 유저별 개인 카테고리 (시드 없음, 북마크 저장/임포트 시 AI tags[0] 기반 자동 생성)
+-- 유저별 개인 카테고리 (시드 없음, 북마크 저장/임포트 시 AI category 지정값 기반 자동 생성)
 -- 마이그레이션 0004_user_categories.sql 에서 전역 고정값 → 유저별로 전환
 CREATE TABLE categories (
   id      UUID  PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -30,7 +30,7 @@ CREATE TABLE bookmarks (
   title       TEXT        NOT NULL,
   url         TEXT        NOT NULL,
   tags        TEXT[]      NOT NULL DEFAULT '{}',
-  category_id UUID        REFERENCES categories(id),   -- tags[0] 매핑, null = 미분류
+  category_id UUID        REFERENCES categories(id),   -- AI category 지정값 매핑(tags와 독립), null = 미분류
   folder_hint TEXT[],                                   -- 크롬 폴더 경로 (파일 임포트 시 원본 경로 보존)
   is_favorite BOOLEAN     NOT NULL DEFAULT false,       -- 즐겨찾기 토글 (A27)
   embedding   vector(1536),                              -- text-embedding-3-small (A51 bge-m3 롤백, 마이그레이션 0006)

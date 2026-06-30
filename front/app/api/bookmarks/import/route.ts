@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { withAuth } from '@/lib/auth'
-import { generateTags, createEmbedding } from '@/lib/ai'
-import { normalizeTags, resolveTopCategory } from '@/lib/tag-alias'
+import { classifyBookmark, createEmbedding } from '@/lib/ai'
+import { normalizeTags, resolveCategory } from '@/lib/tag-alias'
 import { parseNetscapeBookmarks } from '@/lib/parseNetscapeBookmarks'
 
 // 대량 임포트 중 OpenAI 호출이 누적되므로 Vercel Pro 최대값(300s) 지정
@@ -79,7 +79,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
       chunk.map(async ({ title, url, folder_hint }) => {
         try {
           const [tagsResult, embeddingResult] = await Promise.allSettled([
-            generateTags({ title, url }),
+            classifyBookmark({ title, url }),
             createEmbedding(title),
           ])
 
@@ -90,25 +90,27 @@ export const POST = withAuth(async (req, { user, supabase }) => {
           }
 
           const embedding = embeddingResult.value
-          // 태깅 실패는 빈 태그로 degrade.
+          // 분류 실패는 빈 태그 + 미분류로 degrade.
           // A5(단건)와 달리 임포트는 임베딩 실패 시에도 전체 중단하지 않고 해당 항목만 실패 처리.
-          const rawTags = tagsResult.status === 'fulfilled' ? tagsResult.value : []
-          const tags = normalizeTags(rawTags)
+          const classification =
+            tagsResult.status === 'fulfilled' ? tagsResult.value : { category: null, tags: [] }
+          const tags = normalizeTags(classification.tags)
 
-          const top = resolveTopCategory(tags)
+          // 카테고리는 AI가 직접 지정 (tags[0] 비종속)
+          const categoryName = resolveCategory(classification.category)
           let category_id: string | null = null
-          if (top) {
-            if (categoryCache.has(top)) {
-              category_id = categoryCache.get(top)!
+          if (categoryName) {
+            if (categoryCache.has(categoryName)) {
+              category_id = categoryCache.get(categoryName)!
             } else {
               // 유저 카테고리 upsert (없으면 생성, 있으면 id만 반환)
               const { data: category } = await supabase
                 .from('categories')
-                .upsert({ name: top, user_id: user.id }, { onConflict: 'user_id,name' })
+                .upsert({ name: categoryName, user_id: user.id }, { onConflict: 'user_id,name' })
                 .select('id')
                 .single()
               category_id = category?.id ?? null
-              categoryCache.set(top, category_id)
+              categoryCache.set(categoryName, category_id)
             }
           }
 
