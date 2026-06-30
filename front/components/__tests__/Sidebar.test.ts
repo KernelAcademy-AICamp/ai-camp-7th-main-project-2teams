@@ -3,41 +3,35 @@ import { aggregateTags, aggregateCategories } from '../Sidebar'
 import { useFilterStore } from '@/store/filterStore'
 import type { Bookmark } from '@/hooks/useBookmarks'
 
-const makeBookmark = (tags: string[], category: string | null = null): Bookmark => ({
+const makeBookmark = (tags: string[]): Bookmark => ({
   id: crypto.randomUUID(),
   title: 'test',
   url: 'https://example.com',
   tags,
   category_id: null,
-  category,
   is_favorite: false,
   folder_hint: null,
   created_at: new Date().toISOString(),
 })
 
 describe('aggregateCategories', () => {
-  it('category 필드 노출, 순서 보존', () => {
-    const result = aggregateCategories([makeBookmark([], '개발'), makeBookmark([], '디자인')])
+  it('고정 대분류만 노출, 순서 보존', () => {
+    const result = aggregateCategories([makeBookmark(['개발', '프론트엔드']), makeBookmark(['디자인'])])
     expect(result).toEqual(['개발', '디자인'])
   })
 
-  it('category=null → 미분류로 묶고 맨 뒤', () => {
-    const result = aggregateCategories([makeBookmark([], '개발'), makeBookmark([], null)])
+  it('고정 외 tags[0] → 미분류로 묶고 맨 뒤', () => {
+    const result = aggregateCategories([makeBookmark(['개발']), makeBookmark(['잡동사니'])])
     expect(result).toEqual(['개발', '미분류'])
   })
 
-  it('category=null → 미분류', () => {
-    expect(aggregateCategories([makeBookmark([], null)])).toEqual(['미분류'])
+  it('tags=[] → 미분류', () => {
+    expect(aggregateCategories([makeBookmark([])])).toEqual(['미분류'])
   })
 
   it('미분류는 중복 없이 1개', () => {
-    const result = aggregateCategories([makeBookmark([], null), makeBookmark([], null), makeBookmark([], '개발')])
+    const result = aggregateCategories([makeBookmark([]), makeBookmark(['기타값']), makeBookmark(['개발'])])
     expect(result.filter((c) => c === '미분류')).toHaveLength(1)
-  })
-
-  it('같은 category 중복 제거', () => {
-    const result = aggregateCategories([makeBookmark([], '개발'), makeBookmark([], '개발')])
-    expect(result).toEqual(['개발'])
   })
 
   it('빈 입력 → 빈 결과', () => {

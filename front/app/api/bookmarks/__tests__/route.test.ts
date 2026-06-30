@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // AI 모킹 — 실제 OpenAI 호출 차단 (vi.hoisted: factory가 init 시점에 참조)
-const { classifyBookmark, createEmbedding } = vi.hoisted(() => ({
-  classifyBookmark: vi.fn(),
+const { generateTags, createEmbedding } = vi.hoisted(() => ({
+  generateTags: vi.fn(),
   createEmbedding: vi.fn(),
 }))
-vi.mock('@/lib/ai', () => ({ classifyBookmark, createEmbedding }))
+vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
 
 // logger 모킹 — weak-vector 경고 로그 검증용 (content 평문 노출 없음 확인)
 const { warnSpy } = vi.hoisted(() => ({ warnSpy: vi.fn() }))
@@ -82,9 +82,9 @@ describe('POST /api/bookmarks', () => {
     upsertOptsSpy.mockReset()
     selectArgSpy.mockReset()
     warnSpy.mockReset()
-    classifyBookmark.mockReset()
+    generateTags.mockReset()
     createEmbedding.mockReset()
-    classifyBookmark.mockResolvedValue({ category: 'dev', tags: ['frontend', 'Next.js'] })
+    generateTags.mockResolvedValue(['dev', 'frontend', 'Next.js'])
     createEmbedding.mockResolvedValue([0.1, 0.2, 0.3])
   })
 
@@ -94,13 +94,11 @@ describe('POST /api/bookmarks', () => {
     expect(payload).not.toHaveProperty('content')
   })
 
-  it('upsert에 embedding 포함, 평면 tags 정규화, category 독립 조회', async () => {
+  it('upsert에 embedding 포함, tags 정규화, category_id 조회', async () => {
     await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
     const payload = upsertSpy.mock.calls[0][0]
     expect(payload.embedding).toEqual([0.1, 0.2, 0.3])
-    // 평면 태그 — category('dev')는 tags에 포함되지 않음
-    expect(payload.tags).toEqual(['프론트엔드', 'Next.js'])
-    // category는 AI가 지정('dev' → 정규화 '개발') → category_id 조회
+    expect(payload.tags).toEqual(['개발', '프론트엔드', 'Next.js'])
     expect(payload.category_id).toBe('cat-개발')
     expect(payload.user_id).toBe('u1')
   })
@@ -120,7 +118,7 @@ describe('POST /api/bookmarks', () => {
   it('잘못된 body → 400, AI 미호출', async () => {
     const res = await POST(req({ title: '', url: 'not-a-url' }))
     expect(res.status).toBe(400)
-    expect(classifyBookmark).not.toHaveBeenCalled()
+    expect(generateTags).not.toHaveBeenCalled()
   })
 
   it('미인증 → 401', async () => {
@@ -136,8 +134,8 @@ describe('POST /api/bookmarks', () => {
     expect(upsertSpy).not.toHaveBeenCalled()
   })
 
-  it('분류 실패 → 빈 태그 + 미분류로 저장(degrade)', async () => {
-    classifyBookmark.mockRejectedValue(new Error('parse fail'))
+  it('태깅 실패 → 빈 태그로 저장(degrade)', async () => {
+    generateTags.mockRejectedValue(new Error('parse fail'))
     const res = await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
     expect(res.status).toBe(201)
     const payload = upsertSpy.mock.calls[0][0]

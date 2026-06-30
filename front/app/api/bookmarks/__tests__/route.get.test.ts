@@ -90,23 +90,11 @@ describe('GET /api/bookmarks', () => {
     expect(bookmarksBuilder.calls.selectOpts).toEqual({ count: 'exact' })
   })
 
-  it('{ bookmarks, total } 반환 — categories 평탄화하여 category 필드 노출', async () => {
+  it('{ bookmarks, total } 반환', async () => {
     const res = await GET(req())
     const json = await res.json()
-    // 조인 categories 없는 행 → category: null
-    expect(json.bookmarks).toEqual([{ id: 'bm1', title: 'T', category: null }])
+    expect(json.bookmarks).toEqual([{ id: 'bm1', title: 'T' }])
     expect(json.total).toBe(1)
-  })
-
-  it('categories(name) 조인 → category 이름 평탄화', async () => {
-    bookmarksBuilder = makeBuilder({
-      data: [{ id: 'bm2', title: 'T2', categories: { name: '개발' } }],
-      count: 1,
-      error: null,
-    })
-    const res = await GET(req())
-    const json = await res.json()
-    expect(json.bookmarks).toEqual([{ id: 'bm2', title: 'T2', category: '개발' }])
   })
 
   it('tab=favorites → is_favorite eq true', async () => {

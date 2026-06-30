@@ -9,7 +9,6 @@ const makeBookmark = (id: string): Bookmark => ({
   url: 'https://example.com',
   tags: [],
   category_id: null,
-  category: null,
   is_favorite: false,
   folder_hint: null,
   created_at: '2026-01-01T00:00:00Z',

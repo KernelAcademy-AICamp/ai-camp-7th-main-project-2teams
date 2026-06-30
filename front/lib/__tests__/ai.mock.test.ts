@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { classifyBookmark, createEmbedding, selectConfidentTags, parseTagging } from '../ai'
+import { generateTags, createEmbedding, selectConfidentTags } from '../ai'
 
 describe('selectConfidentTags — confidence 임계값 필터', () => {
   it('0.6 미만 태그 제거', () => {
@@ -28,39 +28,17 @@ describe('selectConfidentTags — confidence 임계값 필터', () => {
   })
 })
 
-describe('parseTagging — category + 평면 tags 분리', () => {
-  it('category 문자열 + confidence 통과 tags 추출', () => {
-    const raw = {
-      category: 'AI/ML',
-      tags: [
-        { tag: 'LLM', confidence: 0.85 },
-        { tag: '추측', confidence: 0.3 },
-      ],
-    }
-    expect(parseTagging(raw)).toEqual({ category: 'AI/ML', tags: ['LLM'] })
-  })
-
-  it('category 누락/빈 문자열 → null', () => {
-    expect(parseTagging({ tags: [] })).toEqual({ category: null, tags: [] })
-    expect(parseTagging({ category: '  ', tags: [] })).toEqual({ category: null, tags: [] })
-  })
-
-  it('형식 깨지면 category null + 빈 tags', () => {
-    expect(parseTagging(null)).toEqual({ category: null, tags: [] })
-    expect(parseTagging({})).toEqual({ category: null, tags: [] })
-  })
-})
-
 // E2E_MOCK_OPENAI=1 시 실제 OpenAI 호출 없이 결정적 값 반환 검증.
 describe('OpenAI 목 seam (E2E_MOCK_OPENAI)', () => {
   afterEach(() => vi.unstubAllEnvs())
 
-  it('classifyBookmark — 목 모드에서 고정 분류 반환(실 API 미호출)', async () => {
+  it('generateTags — 목 모드에서 고정 태그 반환(실 API 미호출)', async () => {
     vi.stubEnv('E2E_MOCK_OPENAI', '1')
-    expect(await classifyBookmark({ title: 't', url: 'https://x' })).toEqual({
-      category: '개발',
-      tags: ['프론트엔드', '테스트'],
-    })
+    expect(await generateTags({ title: 't', url: 'https://x' })).toEqual([
+      '개발',
+      '프론트엔드',
+      '테스트',
+    ])
   })
 
   it('createEmbedding — 목 모드에서 1536차원 상수 벡터(쿼리·저장 일치)', async () => {
