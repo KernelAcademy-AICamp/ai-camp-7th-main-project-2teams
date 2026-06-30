@@ -7,6 +7,8 @@ import { useShallow } from "zustand/react/shallow";
 import { useFilterStore } from "@/store/filterStore";
 import { useFolders } from "@/hooks/useFolders";
 import { buildFolderTree, type FolderNode } from "@/lib/folderTree";
+import { resolveTopCategory, UNCATEGORIZED_LABEL } from "@/lib/tag-alias";
+import { SidebarSkeleton } from "@/components/SidebarSkeleton";
 import { createClient } from "@/lib/supabase/client";
 import type { Bookmark } from "@/hooks/useBookmarks";
 
@@ -21,11 +23,32 @@ export function aggregateTags(bookmarks: Bookmark[], limit = 20): string[] {
     .map(([tag]) => tag);
 }
 
-interface SidebarProps {
-  bookmarks: Bookmark[];
+// 고정 대분류만 노출, 그 외(미상위·tags=[])는 "미분류" 한 항목으로 묶음(맨 뒤)
+export function aggregateCategories(bookmarks: Bookmark[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  let hasUncategorized = false;
+  for (const b of bookmarks) {
+    const top = resolveTopCategory(b.tags);
+    if (top) {
+      if (!seen.has(top)) {
+        seen.add(top);
+        result.push(top);
+      }
+    } else {
+      hasUncategorized = true;
+    }
+  }
+  if (hasUncategorized) result.push(UNCATEGORIZED_LABEL);
+  return result;
 }
 
-export function Sidebar({ bookmarks }: SidebarProps) {
+interface SidebarProps {
+  bookmarks: Bookmark[];
+  loading?: boolean;
+}
+
+export function Sidebar({ bookmarks, loading = false }: SidebarProps) {
   const [categoryOpen, setCategoryOpen] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
   const [popupOpen, setPopupOpen] = useState(false);
@@ -45,7 +68,7 @@ export function Sidebar({ bookmarks }: SidebarProps) {
     })),
   );
 
-  const { data: foldersData } = useFolders();
+  const { data: foldersData, isPending: foldersPending } = useFolders();
   const folders = useMemo(() => foldersData?.folders ?? [], [foldersData]);
   const folderTree = useMemo(() => buildFolderTree(foldersData?.paths ?? []), [foldersData]);
 
@@ -74,16 +97,7 @@ export function Sidebar({ bookmarks }: SidebarProps) {
   // 즐겨찾기 탭에서는 즐겨찾기 북마크 기준으로만 추출 (없는 카테고리 노출 방지)
   const categories = useMemo(() => {
     const source = tab === "favorites" ? bookmarks.filter((b) => b.is_favorite) : bookmarks;
-    const seen = new Set<string>();
-    const result: string[] = [];
-    for (const b of source) {
-      const cat = b.tags[0];
-      if (cat && !seen.has(cat)) {
-        seen.add(cat);
-        result.push(cat);
-      }
-    }
-    return result;
+    return aggregateCategories(source);
   }, [bookmarks, tab]);
 
   // folder_hint 있을 때만 "내 폴더" 탭 포함
@@ -129,6 +143,8 @@ export function Sidebar({ bookmarks }: SidebarProps) {
 
   // 탭별 축 분리: 내 폴더 탭은 폴더만, 그 외(홈·즐겨찾기)는 카테고리만 노출
   const showFolders = tab === "folders";
+  // 폴더 탭은 폴더 쿼리, 그 외는 북마크(카테고리) 로딩 기준
+  const showSkeleton = showFolders ? foldersPending : loading;
 
   return (
     <nav aria-label="북마크 필터" className="flex max-h-full w-48 shrink-0 flex-col gap-6 self-stretch overflow-y-auto">
@@ -173,7 +189,9 @@ export function Sidebar({ bookmarks }: SidebarProps) {
           </span>
         </button>
 
-        {categoryOpen && (
+        {categoryOpen && showSkeleton && <SidebarSkeleton />}
+
+        {categoryOpen && !showSkeleton && (
           <ul className="flex flex-col gap-0.5">
             {/* 전체 — 카테고리 필터 없음. 내 폴더 탭에서는 숨김 */}
             {!showFolders && (
