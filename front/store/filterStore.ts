@@ -3,7 +3,7 @@ import { useShallow } from 'zustand/react/shallow' // v5 import 경로
 
 type SidebarTab = 'all' | 'favorites' | 'categories' | 'folders'
 type SortOrder = 'latest' | 'oldest'
-type ViewMode = 'list' | 'grid'
+type ViewMode = 'list' | 'grid' | 'compact'
 
 interface FilterState {
   tab: SidebarTab

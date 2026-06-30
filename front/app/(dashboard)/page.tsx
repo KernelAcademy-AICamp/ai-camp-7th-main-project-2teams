@@ -211,11 +211,13 @@ function DashboardContent() {
               className={
                 viewMode === 'grid'
                   ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
-                  : 'flex flex-col gap-3'
+                  : viewMode === 'compact'
+                    ? 'flex flex-col gap-1.5'
+                    : 'flex flex-col gap-3'
               }
             >
               {sortedItems.map((item) => (
-                <BookmarkCard key={item.id} bookmark={item} />
+                <BookmarkCard key={item.id} bookmark={item} compact={viewMode === 'compact'} />
               ))}
             </div>
           </>

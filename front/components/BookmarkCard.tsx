@@ -10,6 +10,8 @@ import { useDeleteBookmark } from '@/hooks/useDeleteBookmark'
 
 interface BookmarkCardProps {
   bookmark: Bookmark
+  /** 컴팩트 뷰 — 한 줄 밀집 레이아웃 (IA v0.7 뷰 3종) */
+  compact?: boolean
 }
 
 /** javascript: URL XSS 방어 — http/https만 허용 */
@@ -56,7 +58,7 @@ export function getDeleteConfirmMessage(title: string): string {
   return `"${safeTitle}" 북마크를 삭제하시겠습니까?`
 }
 
-export function BookmarkCard({ bookmark }: BookmarkCardProps) {
+export function BookmarkCard({ bookmark, compact = false }: BookmarkCardProps) {
   const { mutate: toggleFavorite, isPending: isTogglePending } = useToggleFavorite()
   const { mutate: deleteBookmark, isPending: isDeletePending } = useDeleteBookmark()
 
@@ -87,6 +89,96 @@ export function BookmarkCard({ bookmark }: BookmarkCardProps) {
     setIsMenuOpen(false)
     if (!window.confirm(getDeleteConfirmMessage(bookmark.title))) return
     deleteBookmark(bookmark.id)
+  }
+
+  // 메뉴 버튼 + 드롭다운 — 일반/컴팩트 공유
+  const menu = (
+    <div ref={menuRef} className="relative">
+      <button
+        onClick={() => setIsMenuOpen((prev) => !prev)}
+        aria-label={isMenuOpen ? '북마크 메뉴 닫기' : '북마크 메뉴 열기'}
+        aria-haspopup="menu"
+        aria-expanded={isMenuOpen}
+        disabled={isDeletePending}
+        className="rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800"
+      >
+        <MoreVertical size={16} className="text-gray-400" />
+      </button>
+
+      {isMenuOpen && (
+        <div
+          role="menu"
+          aria-label="북마크 작업 메뉴"
+          className={cn(
+            'absolute right-0 top-full z-10 mt-1 min-w-[120px] rounded-lg border border-gray-200',
+            'bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800'
+          )}
+        >
+          <button
+            role="menuitem"
+            onClick={handleDeleteClick}
+            className={cn(
+              'flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600',
+              'hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20'
+            )}
+          >
+            <Trash2 size={14} />
+            삭제
+          </button>
+        </div>
+      )}
+    </div>
+  )
+
+  // 컴팩트 뷰 — 한 줄 밀집 행 (즐겨찾기 + 제목 + 도메인 + 태그 + 메뉴)
+  if (compact) {
+    return (
+      <article
+        className={cn(
+          'group flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5',
+          'transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800'
+        )}
+      >
+        <button
+          onClick={handleToggleFavorite}
+          aria-label={getFavoriteAriaLabel(bookmark.is_favorite)}
+          aria-pressed={bookmark.is_favorite}
+          aria-busy={isTogglePending}
+          disabled={isTogglePending}
+          className="shrink-0 rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800"
+        >
+          <Star size={14} className={getFavoriteIconClass(bookmark.is_favorite)} />
+        </button>
+
+        <a
+          href={safeUrl(bookmark.url)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="min-w-0 flex-1 truncate text-sm font-medium text-gray-900 hover:underline dark:text-gray-100"
+        >
+          {bookmark.title}
+        </a>
+
+        <span className="hidden shrink-0 max-w-[160px] truncate text-xs text-gray-400 sm:inline dark:text-gray-500">
+          {extractDomain(bookmark.url)}
+        </span>
+
+        {bookmark.tags.length > 0 && (
+          <span className="hidden shrink-0 items-center gap-1 md:flex">
+            {bookmark.tags.slice(0, 2).map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+              >
+                {tag}
+              </span>
+            ))}
+          </span>
+        )}
+
+        {menu}
+      </article>
+    )
   }
 
   return (
@@ -131,42 +223,7 @@ export function BookmarkCard({ bookmark }: BookmarkCardProps) {
           </a>
 
           {/* 메뉴 버튼 + 드롭다운 */}
-          <div ref={menuRef} className="relative">
-            <button
-              onClick={() => setIsMenuOpen((prev) => !prev)}
-              aria-label={isMenuOpen ? '북마크 메뉴 닫기' : '북마크 메뉴 열기'}
-              aria-haspopup="menu"
-              aria-expanded={isMenuOpen}
-              disabled={isDeletePending}
-              className="rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800"
-            >
-              <MoreVertical size={16} className="text-gray-400" />
-            </button>
-
-            {/* 메뉴 모달(팝업) */}
-            {isMenuOpen && (
-              <div
-                role="menu"
-                aria-label="북마크 작업 메뉴"
-                className={cn(
-                  'absolute right-0 top-full z-10 mt-1 min-w-[120px] rounded-lg border border-gray-200',
-                  'bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800'
-                )}
-              >
-                <button
-                  role="menuitem"
-                  onClick={handleDeleteClick}
-                  className={cn(
-                    'flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600',
-                    'hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20'
-                  )}
-                >
-                  <Trash2 size={14} />
-                  삭제
-                </button>
-              </div>
-            )}
-          </div>
+          {menu}
         </div>
       </div>
 
