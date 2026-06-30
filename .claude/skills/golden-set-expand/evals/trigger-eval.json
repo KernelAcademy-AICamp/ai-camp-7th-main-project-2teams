@@ -1,0 +1,21 @@
+[
+  {"query": "골든셋이 게임 쪽 케이스가 부족한 거 같은데 인벤이나 디시 같은 한국 게임 커뮤니티 URL 몇 개 더 넣어줘", "should_trigger": true},
+  {"query": "tag-golden.json에 held-out 케이스 10개 정도 추가해서 평가 표본 좀 키우자. 지금 41개라 신뢰구간이 너무 넓어", "should_trigger": true},
+  {"query": "디자인 대분류 골든 케이스가 3개밖에 없어서 편중됐어. 5개 정도 더 보강해줘", "should_trigger": true},
+  {"query": "front/eval에 새 정답 데이터 추가하는데 few-shot 예제랑 안 겹치게 leak 없이 해줘", "should_trigger": true},
+  {"query": "태그 분류 회귀 테스트 표본 늘려줘. 대분류별로 골고루 들어가게", "should_trigger": true},
+  {"query": "쇼핑 카테고리 평가 케이스가 2개뿐이라 부족해. tag-golden 늘려줘", "should_trigger": true},
+  {"query": "golden set 좀 키워줘 지금 41개인데 60개까지 늘리고 싶어", "should_trigger": true},
+  {"query": "커뮤니티 대분류 새로 만들었는데 그쪽 평가 케이스가 거의 없네. held-out 데이터 보강해줘", "should_trigger": true},
+  {"query": "평가 정확도 측정할 때 표본이 작아서 F1이 들쭉날쭉해. 골든 정답 데이터를 더 모아서 안정화하고 싶어", "should_trigger": true},
+
+  {"query": "RUN_TAG_EVAL 돌려서 지금 골든셋 기준 F1 점수가 얼마 나오는지 알려줘", "should_trigger": false},
+  {"query": "tag-golden.json에서 Tesla 항목 라벨이 틀린 거 같은데 마케팅에서 기업으로 고쳐줘", "should_trigger": false},
+  {"query": "tag-eval.test.ts의 baseline을 0.78에서 0.80으로 올려줘. 실측이 0.82니까", "should_trigger": false},
+  {"query": "selectConfidentTags 단위 테스트에 빈 문자열 confidence 케이스 좀 더 추가해줘", "should_trigger": false},
+  {"query": "골든셋 평가 결과 보니까 Stripe가 자꾸 비즈니스로 분류되는데 SYSTEM_PROMPT 규칙 고쳐줘", "should_trigger": false},
+  {"query": "tag-alias.ts에 컨테이너→인프라 alias 추가해줘. 모델이 도커를 컨테이너로 태깅함", "should_trigger": false},
+  {"query": "북마크 import할 때 크롬 골드 폴더 구조 파싱하는 로직 한번 봐줘", "should_trigger": false},
+  {"query": "vitest 커버리지가 낮아서 올리고 싶어. 평가 안 되는 컴포넌트 테스트 더 짜줘", "should_trigger": false},
+  {"query": "대시보드에 골든타임 지표 차트 추가하는데 표본 데이터 좀 생성해줘", "should_trigger": false}
+]
