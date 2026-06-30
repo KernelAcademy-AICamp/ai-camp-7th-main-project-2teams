@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { withAuth } from '@/lib/auth'
 import { bookmarkCreateSchema } from '@/lib/schemas'
 import { generateTags, createEmbedding } from '@/lib/ai'
-import { normalizeTags, resolveTopCategory } from '@/lib/tag-alias'
+import { normalizeTags, resolveTopCategory, UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
 import { fetchMeta } from '@/lib/fetchMeta'
 
@@ -108,8 +108,12 @@ export const GET = withAuth(async (req, { supabase }) => {
   const to = from + limit - 1
 
   // category는 이름으로 전달 → category_id 해석. 없는 이름이면 빈 결과.
+  // '미분류'는 category_id IS NULL 조회 (고정 12개 외·태깅 실패분)
   let categoryId: string | null = null
-  if (category) {
+  let uncategorized = false
+  if (category === UNCATEGORIZED_LABEL) {
+    uncategorized = true
+  } else if (category) {
     const { data: cat } = await supabase
       .from('categories')
       .select('id')
@@ -126,7 +130,8 @@ export const GET = withAuth(async (req, { supabase }) => {
     .range(from, to)
 
   if (tab === 'favorites') query = query.eq('is_favorite', true)
-  if (categoryId) query = query.eq('category_id', categoryId)
+  if (uncategorized) query = query.is('category_id', null)
+  else if (categoryId) query = query.eq('category_id', categoryId)
   if (tag) query = query.contains('tags', [tag])
   if (folder) query = query.contains('folder_hint', [folder])
 
