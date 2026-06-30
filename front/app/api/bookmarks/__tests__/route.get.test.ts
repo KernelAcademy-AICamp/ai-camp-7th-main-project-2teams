@@ -8,6 +8,7 @@ function makeBuilder(result: { data: unknown; count?: number; error: unknown }) 
     order: null as unknown,
     range: null as unknown,
     eq: [] as unknown[],
+    is: [] as unknown[],
     contains: [] as unknown[],
   }
   const q = {
@@ -26,6 +27,10 @@ function makeBuilder(result: { data: unknown; count?: number; error: unknown }) 
     },
     eq(c: string, v: unknown) {
       calls.eq.push([c, v])
+      return q
+    },
+    is(c: string, v: unknown) {
+      calls.is.push([c, v])
       return q
     },
     contains(c: string, v: unknown) {
@@ -105,6 +110,12 @@ describe('GET /api/bookmarks', () => {
   it('category 이름 → category_id eq', async () => {
     await GET(req('?category=개발'))
     expect(bookmarksBuilder.calls.eq).toContainEqual(['category_id', 'cat-개발'])
+  })
+
+  it('category=미분류 → category_id is null (categories 조회 안 함)', async () => {
+    await GET(req('?category=미분류'))
+    expect(bookmarksBuilder.calls.is).toContainEqual(['category_id', null])
+    expect(bookmarksBuilder.calls.eq).not.toContainEqual(['category_id', 'cat-개발'])
   })
 
   it('없는 category → 빈 결과, bookmarks 조회 안 함', async () => {

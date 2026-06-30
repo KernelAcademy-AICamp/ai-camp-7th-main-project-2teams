@@ -114,7 +114,7 @@ function DashboardContent() {
 
   // 사이드바 카테고리/폴더는 필터 무관 전체 목록 기준 — path·필터 변동에도 고정.
   // 필터된 bookmarkData를 쓰면 카테고리 선택 시 목록이 해당 카테고리 하나로 축소됨.
-  const { data: sidebarData } = useBookmarks({})
+  const { data: sidebarData, isPending: isSidebarPending } = useBookmarks({})
   const sidebarBookmarks = sidebarData?.bookmarks ?? []
 
   const isPending = isSearching ? isSearchPending : isBookmarkPending
@@ -136,7 +136,7 @@ function DashboardContent() {
   return (
     <>
       {fromExtension && <ExtensionSync />}
-      <Sidebar bookmarks={sidebarBookmarks} />
+      <Sidebar bookmarks={sidebarBookmarks} loading={isSidebarPending} />
 
       <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
         {/* 북마크가 하나도 없으면 검색 의미 없음 → 검색바 숨김 (검색 중에는 유지) */}
