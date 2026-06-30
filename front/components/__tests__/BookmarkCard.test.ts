@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getFavoriteAriaLabel, getFavoriteIconClass, safeUrl } from '../BookmarkCard'
+import { getFavoriteAriaLabel, getFavoriteIconClass, safeUrl, getDeleteConfirmMessage } from '../BookmarkCard'
 
 // --- (5) BookmarkCard is_favorite 상태별 aria/아이콘 ---
 describe('BookmarkCard helpers', () => {
@@ -46,6 +46,26 @@ describe('BookmarkCard helpers', () => {
 
     it('잘못된 URL → # 반환', () => {
       expect(safeUrl('not-a-url')).toBe('#')
+    })
+  })
+
+  // --- (6) getDeleteConfirmMessage 삭제 확인 메시지 ---
+  describe('getDeleteConfirmMessage', () => {
+    it('제목이 포함된 확인 메시지 반환', () => {
+      expect(getDeleteConfirmMessage('My Bookmark')).toBe(
+        '"My Bookmark" 북마크를 삭제하시겠습니까?'
+      )
+    })
+
+    it('빈 문자열 제목도 처리', () => {
+      expect(getDeleteConfirmMessage('')).toBe('"" 북마크를 삭제하시겠습니까?')
+    })
+
+    it('특수문자 포함 제목도 처리', () => {
+      const title = 'React & TypeScript "Guide"'
+      const msg = getDeleteConfirmMessage(title)
+      expect(msg).toContain(title)
+      expect(msg).toContain('삭제하시겠습니까?')
     })
   })
 })

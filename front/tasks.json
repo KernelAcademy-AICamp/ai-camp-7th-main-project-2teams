@@ -399,7 +399,7 @@
       "description": "카드 메뉴 버튼 → 메뉴 모달 → 삭제 액션으로 본인 북마크 단건 삭제.",
       "details": "components/BookmarkCard.tsx에 메뉴 버튼 + 메뉴 모달(팝업) 추가. 삭제 선택 시 확인 후 DELETE /api/bookmarks/:id(A27 라우트 파일의 DELETE) 호출, 성공 시 목록에서 제거. 수정은 v1.1 제외. IA 카드>메뉴 버튼>삭제(MVP).",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A9",
         "A27"
