@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // AI 모킹 — 실제 OpenAI 호출 차단
-const { classifyBookmark, createEmbedding } = vi.hoisted(() => ({
-  classifyBookmark: vi.fn(),
+const { generateTags, createEmbedding } = vi.hoisted(() => ({
+  generateTags: vi.fn(),
   createEmbedding: vi.fn(),
 }))
-vi.mock('@/lib/ai', () => ({ classifyBookmark, createEmbedding }))
+vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
 
 // Supabase 모킹: auth + categories 조회 + bookmarks upsert
 const insertSpy = vi.fn() // ponytail: alias kept for backward-compat test assertions
@@ -76,9 +76,9 @@ describe('POST /api/bookmarks/import', () => {
   beforeEach(() => {
     currentUser = { id: 'u1' }
     insertSpy.mockReset()
-    classifyBookmark.mockReset()
+    generateTags.mockReset()
     createEmbedding.mockReset()
-    classifyBookmark.mockResolvedValue({ category: '개발', tags: ['프론트엔드'] })
+    generateTags.mockResolvedValue(['개발', '프론트엔드'])
     createEmbedding.mockResolvedValue([0.1, 0.2])
   })
 
