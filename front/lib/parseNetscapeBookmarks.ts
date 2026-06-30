@@ -8,6 +8,24 @@ export interface ParsedBookmark {
 /** 무한 중첩 방어: 폴더 스택 최대 깊이 */
 const MAX_DEPTH = 20
 
+/** 크롬 기본 폴더 — folder_hint에서 제외 (KO·EN export 변형 포함) */
+const DEFAULT_FOLDERS = new Set([
+  '북마크바',
+  '북마크 바',
+  'bookmarks bar',
+  'bookmarks toolbar',
+  '기타 북마크',
+  '다른 북마크',
+  'other bookmarks',
+  '모바일 북마크',
+  'mobile bookmarks',
+])
+
+/** 기본 폴더 여부 — 공백 정규화 + 소문자 비교 */
+export function isDefaultFolder(name: string): boolean {
+  return DEFAULT_FOLDERS.has(name.toLowerCase().replace(/\s+/g, ' ').trim())
+}
+
 /** 잔여 HTML 태그 제거 (`<b>AT</b>` → `AT`) */
 function stripTags(text: string): string {
   return text.replace(/<[^>]*>/g, '')
@@ -90,7 +108,8 @@ export function parseNetscapeBookmarks(html: string): ParsedBookmark[] {
       results.push({
         title,
         url,
-        folder_hint: [...folderStack],
+        // 기본 폴더 제외 — stack push/pop 대칭은 유지하고 결과에서만 필터
+        folder_hint: folderStack.filter((f) => !isDefaultFolder(f)),
       })
     }
   }

@@ -138,7 +138,7 @@ function DashboardContent() {
       {fromExtension && <ExtensionSync />}
       <Sidebar bookmarks={sidebarBookmarks} />
 
-      <main className="flex min-w-0 flex-1 flex-col gap-4">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
         {/* 북마크가 하나도 없으면 검색 의미 없음 → 검색바 숨김 (검색 중에는 유지) */}
         {(allBookmarks.length > 0 || isSearching) && (
           <SearchBar onSearch={handleSearch} onClear={handleClear} value={searchQuery} onChange={setSearchQuery} />
