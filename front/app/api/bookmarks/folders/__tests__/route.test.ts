@@ -38,23 +38,23 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => makeSupabase(currentUser),
 }))
 
-import { GET, extractTopFolders } from '../route'
+import { GET, extractFolders, extractFolderPaths } from '../route'
 
 function req() {
   return new Request('http://t/api/bookmarks/folders')
 }
 
 // ─────────────────────────────────────────────
-// (1) extractTopFolders — 순수 함수 단위 테스트
+// (1) extractFolders — 순수 함수 단위 테스트
 // ─────────────────────────────────────────────
-describe('extractTopFolders — folder_hint[0] distinct 집계', () => {
-  it('중복 최상위 폴더를 제거하고 정렬된 배열을 반환한다', () => {
+describe('extractFolders — folder_hint 전체 depth distinct 집계', () => {
+  it('하위 폴더까지 모두 포함하고 정렬된 배열을 반환한다', () => {
     const rows = [
       { folder_hint: ['개발', '프론트엔드'] },
       { folder_hint: ['개발', '백엔드'] },
       { folder_hint: ['디자인'] },
     ]
-    expect(extractTopFolders(rows)).toEqual(['개발', '디자인'].sort())
+    expect(extractFolders(rows)).toEqual(['개발', '디자인', '백엔드', '프론트엔드'])
   })
 
   it('null인 행은 무시한다', () => {
@@ -63,19 +63,19 @@ describe('extractTopFolders — folder_hint[0] distinct 집계', () => {
       { folder_hint: ['개발'] },
       { folder_hint: null },
     ]
-    expect(extractTopFolders(rows)).toEqual(['개발'])
+    expect(extractFolders(rows)).toEqual(['개발'])
   })
 
-  it('빈 배열인 행은 무시한다 (folder_hint[0] 없음)', () => {
+  it('빈 배열인 행은 무시한다', () => {
     const rows = [
       { folder_hint: [] },
       { folder_hint: ['학습'] },
     ]
-    expect(extractTopFolders(rows)).toEqual(['학습'])
+    expect(extractFolders(rows)).toEqual(['학습'])
   })
 
   it('빈 입력이면 빈 배열을 반환한다', () => {
-    expect(extractTopFolders([])).toEqual([])
+    expect(extractFolders([])).toEqual([])
   })
 
   it('동일 폴더가 여러 번 나와도 한 번만 포함된다', () => {
@@ -84,16 +84,29 @@ describe('extractTopFolders — folder_hint[0] distinct 집계', () => {
       { folder_hint: ['AI'] },
       { folder_hint: ['AI', '하위'] },
     ]
-    expect(extractTopFolders(rows)).toEqual(['AI'])
+    expect(extractFolders(rows)).toEqual(['AI', '하위'])
   })
 
-  it('folder_hint[0]이 빈 문자열이면 제외한다 (folder="" 쿼리 방지)', () => {
+  it('빈 문자열은 제외한다 (folder="" 쿼리 방지)', () => {
     const rows = [
       { folder_hint: [''] },
       { folder_hint: ['', '하위'] },
       { folder_hint: ['개발'] },
     ]
-    expect(extractTopFolders(rows)).toEqual(['개발'])
+    expect(extractFolders(rows)).toEqual(['개발', '하위'])
+  })
+})
+
+describe('extractFolderPaths — 트리용 distinct 경로', () => {
+  it('중복 경로를 한 번만, 빈 세그먼트 제거', () => {
+    const rows = [
+      { folder_hint: ['개발', '프론트엔드'] },
+      { folder_hint: ['개발', '프론트엔드'] },
+      { folder_hint: ['', '하위'] },
+      { folder_hint: null },
+      { folder_hint: [] },
+    ]
+    expect(extractFolderPaths(rows)).toEqual([['개발', '프론트엔드'], ['하위']])
   })
 })
 
@@ -119,12 +132,12 @@ describe('GET /api/bookmarks/folders', () => {
     expect(res.status).toBe(401)
   })
 
-  it('folder_hint[0] distinct 집계 후 정렬된 목록 반환', async () => {
+  it('전체 depth distinct 집계 후 정렬된 목록 반환', async () => {
     const res = await GET(req())
     expect(res.status).toBe(200)
     const { folders } = await res.json()
-    // ['개발', '디자인'] — distinct + sort
-    expect(folders).toEqual(['개발', '디자인'])
+    // 하위 폴더 포함 — distinct + sort
+    expect(folders).toEqual(['개발', '디자인', '백엔드', '프론트엔드'])
   })
 
   it('select 컬럼에 embedding 미포함 (보안)', async () => {

@@ -33,6 +33,15 @@ export const CATEGORY_ALIAS: Record<string, string> = {
 
   // 게임
   game: '게임', gaming: '게임', 비디오게임: '게임',
+
+  // 라이프스타일
+  lifestyle: '라이프스타일', 라이프: '라이프스타일',
+
+  // 여행
+  travel: '여행', trip: '여행',
+
+  // 금융
+  finance: '금융', 재테크: '금융', 금융재테크: '금융',
 }
 
 // 중분류 alias — tags 배열 정규화용. 소분류는 자유 텍스트 — alias 없음.
@@ -79,19 +88,33 @@ export const TAG_ALIAS: Record<string, string> = {
   sns: '소셜미디어', 'social media': '소셜미디어', 소셜미디어: '소셜미디어',
   // 마케팅·기업 (브랜드) — company/corporate는 범용어라 제외(개발 org 등 오분류 방지)
   marketing: '마케팅', 광고: '마케팅', 기업소개: '기업', 뉴스룸: '기업',
-  // 게임 중분류 — 가이드/walkthrough는 범용어라 제외(개발 문서 오분류 방지). 게임 공략은 모델이 직접 반환.
+  // 게임 중분류 — 전부 bare(공략·e스포츠·리뷰·뉴스). 모델이 접두어판 뱉을 때 흡수.
   게임공략: '공략', esports: 'e스포츠', 'e-sports': 'e스포츠',
+  게임리뷰: '리뷰', 게임뉴스: '뉴스',
+  // 라이프스타일 중분류
+  헬스: '운동', 피트니스: '운동', 홈트: '운동', workout: '운동',
+  레시피: '요리', recipe: '요리', 쿠킹: '요리',
+  홈데코: '인테리어', interior: '인테리어',
+  // 여행 중분류
+  호텔: '숙소', accommodation: '숙소', 항공권: '항공', flight: '항공',
+  명소: '관광', 여행지: '관광', 관광지: '관광', restaurant: '맛집',
+  // 금융 중분류
+  전월세: '부동산', 부동산매물: '부동산', insurance: '보험',
+  // 쇼핑 중분류 보강
+  fashion: '패션', 의류: '패션', food: '식품', 식료품: '식품',
+  // 학습 중분류 보강
+  certificate: '자격증', certification: '자격증',
   // 소분류 표기 통일
   파이썬: 'Python',
 }
 
-const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드', '게임'])
+const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드', '게임', '라이프스타일', '여행', '금융'])
 
 export function normalizeTags(tags: string[]): string[] {
   return tags.map((t) => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)
 }
 
-export function resolveTopCategory(tags: string[]): string | null {
-  const normalized = normalizeTags(tags)
-  return TOP_CATEGORIES.has(normalized[0]) ? normalized[0] : null
+// 입력은 normalizeTags() 거친 태그 배열. 재정규화하지 않음(중복 호출 방지, A38).
+export function resolveTopCategory(normalizedTags: string[]): string | null {
+  return TOP_CATEGORIES.has(normalizedTags[0]) ? normalizedTags[0] : null
 }

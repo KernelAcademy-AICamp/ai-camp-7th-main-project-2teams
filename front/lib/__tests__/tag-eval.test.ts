@@ -49,8 +49,9 @@ describe('aggregate', () => {
 // 실 OpenAI 골든셋 평가 — 비용·flaky 때문에 RUN_TAG_EVAL=1에서만.
 // 실행: RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts
 // 회귀 게이트: macro-F1 baseline 미만이면 실패.
-// held-out 실측(n=41, 커뮤니티·브랜드·게임): 리뷰 반영 후 F1 0.82 (2026-06). 레버리지 1/41≈0.024 → 0.78.
-// 남은 모호: inven 포털 과태깅, 게임 게임리뷰/리뷰 → 팀 검수 후 상향.
+// held-out 실측: n=69, 대분류 12종(라이프스타일·여행·금융 신설 포함). macro-F1 ≈ 0.79 (2026-06). 레버리지 1/69≈0.014.
+// 라이프스타일·여행·금융은 현 DB 표본 부족으로 합성 케이스 — 실데이터 유입 시 교체 권장.
+// 남은 모호: ev 충전소(여행 오판), 브랜드 디자인스튜디오 마케팅/기업 → 팀 검수 후 상향.
 const F1_BASELINE = 0.78
 
 describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)', () => {

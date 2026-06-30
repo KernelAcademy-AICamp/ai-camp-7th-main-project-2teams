@@ -1,35 +1,36 @@
-'use client'
+"use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useShallow } from 'zustand/react/shallow'
-import { useFilterStore } from '@/store/filterStore'
-import { useFolders } from '@/hooks/useFolders'
-import { createClient } from '@/lib/supabase/client'
-import type { Bookmark } from '@/hooks/useBookmarks'
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useShallow } from "zustand/react/shallow";
+import { useFilterStore } from "@/store/filterStore";
+import { useFolders } from "@/hooks/useFolders";
+import { buildFolderTree, type FolderNode } from "@/lib/folderTree";
+import { createClient } from "@/lib/supabase/client";
+import type { Bookmark } from "@/hooks/useBookmarks";
 
 export function aggregateTags(bookmarks: Bookmark[], limit = 20): string[] {
-  const counts: Record<string, number> = {}
+  const counts: Record<string, number> = {};
   for (const b of bookmarks) {
-    for (const t of b.tags) counts[t] = (counts[t] ?? 0) + 1
+    for (const t of b.tags) counts[t] = (counts[t] ?? 0) + 1;
   }
   return Object.entries(counts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
-    .map(([tag]) => tag)
+    .map(([tag]) => tag);
 }
 
 interface SidebarProps {
-  bookmarks: Bookmark[]
+  bookmarks: Bookmark[];
 }
 
 export function Sidebar({ bookmarks }: SidebarProps) {
-  const [categoryOpen, setCategoryOpen] = useState(true)
-  const [email, setEmail] = useState<string | null>(null)
-  const [popupOpen, setPopupOpen] = useState(false)
-  const popupRef = useRef<HTMLDivElement>(null)
-  const router = useRouter()
+  const [categoryOpen, setCategoryOpen] = useState(true);
+  const [email, setEmail] = useState<string | null>(null);
+  const [popupOpen, setPopupOpen] = useState(false);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const { category, folder, tab, setCategory, setFolder, setTag, setTab, setSearchQuery } = useFilterStore(
     useShallow((s) => ({
@@ -41,94 +42,96 @@ export function Sidebar({ bookmarks }: SidebarProps) {
       setTag: s.setTag,
       setTab: s.setTab,
       setSearchQuery: s.setSearchQuery,
-    }))
-  )
+    })),
+  );
 
-  const { data: folders = [] } = useFolders()
+  const { data: foldersData } = useFolders();
+  const folders = useMemo(() => foldersData?.folders ?? [], [foldersData]);
+  const folderTree = useMemo(() => buildFolderTree(foldersData?.paths ?? []), [foldersData]);
 
   useEffect(() => {
     createClient()
       .auth.getUser()
-      .then(({ data: { user } }) => setEmail(user?.email ?? null))
-  }, [])
+      .then(({ data: { user } }) => setEmail(user?.email ?? null));
+  }, []);
 
   // 팝업 외부 클릭 시 닫기
   useEffect(() => {
-    if (!popupOpen) return
+    if (!popupOpen) return;
     const handler = (e: MouseEvent) => {
-      if (!popupRef.current?.contains(e.target as Node)) setPopupOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [popupOpen])
+      if (!popupRef.current?.contains(e.target as Node)) setPopupOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [popupOpen]);
 
   const handleSignOut = async () => {
-    await createClient().auth.signOut()
-    router.push('/welcome')
-  }
+    await createClient().auth.signOut();
+    router.push("/welcome");
+  };
 
   // 유저 북마크에서 카테고리 동적 추출 (tags[0] = AI가 설정한 대분류)
   // 즐겨찾기 탭에서는 즐겨찾기 북마크 기준으로만 추출 (없는 카테고리 노출 방지)
   const categories = useMemo(() => {
-    const source = tab === 'favorites' ? bookmarks.filter((b) => b.is_favorite) : bookmarks
-    const seen = new Set<string>()
-    const result: string[] = []
+    const source = tab === "favorites" ? bookmarks.filter((b) => b.is_favorite) : bookmarks;
+    const seen = new Set<string>();
+    const result: string[] = [];
     for (const b of source) {
-      const cat = b.tags[0]
+      const cat = b.tags[0];
       if (cat && !seen.has(cat)) {
-        seen.add(cat)
-        result.push(cat)
+        seen.add(cat);
+        result.push(cat);
       }
     }
-    return result
-  }, [bookmarks, tab])
+    return result;
+  }, [bookmarks, tab]);
 
   // folder_hint 있을 때만 "내 폴더" 탭 포함
   const topTabs = useMemo(() => {
-    const base: Array<{ id: 'all' | 'favorites' | 'folders'; label: string }> = [
-      { id: 'all', label: '홈' },
-      { id: 'favorites', label: '즐겨찾기' },
-    ]
-    if (folders.length > 0) base.push({ id: 'folders', label: '내 폴더' })
-    return base
-  }, [folders])
+    const base: Array<{ id: "all" | "favorites" | "folders"; label: string }> = [
+      { id: "all", label: "홈" },
+      { id: "favorites", label: "즐겨찾기" },
+    ];
+    if (folders.length > 0) base.push({ id: "folders", label: "내 폴더" });
+    return base;
+  }, [folders]);
 
-  const handleTabClick = (t: 'all' | 'favorites' | 'folders') => {
-    setTab(t)
-    setCategory(null)
-    setTag(null)
-    setFolder(t === 'folders' ? (folders[0] ?? null) : null)
-    setSearchQuery('')
-  }
+  const handleTabClick = (t: "all" | "favorites" | "folders") => {
+    setTab(t);
+    setCategory(null);
+    setTag(null);
+    setFolder(t === "folders" ? (folders[0] ?? null) : null);
+    setSearchQuery("");
+  };
 
   const handleAll = () => {
-    setCategory(null)
-    setTag(null)
-    setFolder(null)
+    setCategory(null);
+    setTag(null);
+    setFolder(null);
     // 탭 유지 — 홈 전체·즐겨찾기 전체 각각 독립 동작
-  }
+  };
 
   const handleCategory = (name: string) => {
-    if (category === name) return
-    setCategory(name)
-    setTag(null)
-    setFolder(null)
-  }
+    if (category === name) return;
+    setCategory(name);
+    setTag(null);
+    setFolder(null);
+  };
 
   const handleFolder = (name: string) => {
-    if (folder === name) return
-    setFolder(name)
-    setCategory(null)
-    setTag(null)
-  }
+    if (folder === name) return;
+    setFolder(name);
+    setCategory(null);
+    setTag(null);
+  };
 
-  const isAllActive = category === null && folder === null
+  const isAllActive = category === null && folder === null;
 
   // 탭별 축 분리: 내 폴더 탭은 폴더만, 그 외(홈·즐겨찾기)는 카테고리만 노출
-  const showFolders = tab === 'folders'
+  const showFolders = tab === "folders";
 
   return (
-    <nav aria-label="북마크 필터" className="flex w-48 shrink-0 flex-col gap-6 self-stretch">
+    <nav aria-label="북마크 필터" className="flex max-h-full w-48 shrink-0 flex-col gap-6 self-stretch overflow-y-auto">
       {/* 상단 탭 — 홈 / 즐겨찾기 / 내 폴더(폴더 있을 때만) */}
       <section>
         <div className="flex gap-0.5 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
@@ -138,11 +141,11 @@ export function Sidebar({ bookmarks }: SidebarProps) {
               aria-pressed={tab === t.id}
               onClick={() => handleTabClick(t.id)}
               className={[
-                'flex-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors',
+                "flex-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors",
                 tab === t.id
-                  ? 'bg-white text-gray-900 shadow dark:bg-gray-700 dark:text-gray-100'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200',
-              ].join(' ')}
+                  ? "bg-white text-gray-900 shadow dark:bg-gray-700 dark:text-gray-100"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+              ].join(" ")}
             >
               {t.label}
             </button>
@@ -151,20 +154,20 @@ export function Sidebar({ bookmarks }: SidebarProps) {
       </section>
 
       {/* 카테고리 + 폴더 통합 리스트 (접기/펼치기) */}
-      <section>
+      <section className="overflow-y-auto">
         <button
           onClick={() => setCategoryOpen((o) => !o)}
           className="mb-2 flex w-full items-center justify-between"
           aria-expanded={categoryOpen}
         >
           <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            {showFolders ? '폴더' : '카테고리'}
+            {showFolders ? "폴더" : "카테고리"}
           </h2>
           <span
             className={[
-              'text-xs text-gray-400 transition-transform duration-200',
-              categoryOpen ? 'rotate-0' : '-rotate-90',
-            ].join(' ')}
+              "text-xs text-gray-400 transition-transform duration-200",
+              categoryOpen ? "rotate-0" : "-rotate-90",
+            ].join(" ")}
           >
             ▾
           </span>
@@ -179,11 +182,11 @@ export function Sidebar({ bookmarks }: SidebarProps) {
                   onClick={handleAll}
                   aria-pressed={isAllActive}
                   className={[
-                    'w-full rounded-md px-3 py-1.5 text-left text-sm font-medium transition-colors',
+                    "w-full rounded-md px-3 py-1.5 text-left text-sm font-medium transition-colors",
                     isAllActive
-                      ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
-                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800',
-                  ].join(' ')}
+                      ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+                      : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800",
+                  ].join(" ")}
                 >
                   전체
                 </button>
@@ -191,42 +194,36 @@ export function Sidebar({ bookmarks }: SidebarProps) {
             )}
 
             {/* 유저 카테고리 — 홈·즐겨찾기 탭 */}
-            {!showFolders && categories.map((name) => (
-              <li key={`cat-${name}`}>
-                <button
-                  onClick={() => handleCategory(name)}
-                  aria-pressed={category === name}
-                  className={[
-                    'flex w-full items-center gap-1 rounded-md px-3 py-1.5 text-left text-sm transition-colors',
-                    category === name
-                      ? 'bg-indigo-100 font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
-                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800',
-                  ].join(' ')}
-                >
-                  <span className="text-gray-400">›</span>
-                  {name}
-                </button>
-              </li>
-            ))}
+            {!showFolders &&
+              categories.map((name) => (
+                <li key={`cat-${name}`}>
+                  <button
+                    onClick={() => handleCategory(name)}
+                    aria-pressed={category === name}
+                    className={[
+                      "flex w-full items-center gap-1 rounded-md px-3 py-1.5 text-left text-sm transition-colors",
+                      category === name
+                        ? "bg-indigo-100 font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+                        : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800",
+                    ].join(" ")}
+                  >
+                    <span className="text-gray-400">›</span>
+                    {name}
+                  </button>
+                </li>
+              ))}
 
-            {/* 폴더 목록 — 내 폴더 탭 */}
-            {showFolders && folders.map((name) => (
-              <li key={`folder-${name}`}>
-                <button
-                  onClick={() => handleFolder(name)}
-                  aria-pressed={folder === name}
-                  className={[
-                    'flex w-full items-center gap-1.5 rounded-md px-3 py-1.5 text-left text-sm transition-colors',
-                    folder === name
-                      ? 'bg-indigo-100 font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
-                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800',
-                  ].join(' ')}
-                >
-                  <span className="text-xs text-gray-400">📁</span>
-                  {name}
-                </button>
-              </li>
-            ))}
+            {/* 폴더 트리 — 내 폴더 탭 (folder_hint 경로 계층 노출) */}
+            {showFolders &&
+              folderTree.map((node) => (
+                <FolderTreeItem
+                  key={node.path.join("/")}
+                  node={node}
+                  depth={0}
+                  selected={folder}
+                  onSelect={handleFolder}
+                />
+              ))}
           </ul>
         )}
       </section>
@@ -286,9 +283,7 @@ export function Sidebar({ bookmarks }: SidebarProps) {
               </svg>
             </span>
             {/* 이메일 */}
-            <span className="min-w-0 truncate text-xs text-gray-700 dark:text-gray-300">
-              {email ?? '로딩 중...'}
-            </span>
+            <span className="min-w-0 truncate text-xs text-gray-700 dark:text-gray-300">{email ?? "로딩 중..."}</span>
           </button>
 
           {/* 설정 바로가기 */}
@@ -298,12 +293,76 @@ export function Sidebar({ bookmarks }: SidebarProps) {
             className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"
+              />
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
             </svg>
           </Link>
         </div>
       </div>
     </nav>
-  )
+  );
+}
+
+interface FolderTreeItemProps {
+  node: FolderNode;
+  depth: number;
+  selected: string | null;
+  onSelect: (name: string) => void;
+}
+
+// 폴더 트리 노드 1개 — 자식 있으면 펼침/접기, 행 클릭 시 폴더 필터 선택.
+// ponytail: 같은 이름 다른 부모면 함께 선택됨(전역 contains 필터). 경로 정밀 필터 필요 시 API에 path 전달.
+function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps) {
+  const [open, setOpen] = useState(false); // 기본 접힘
+  const hasChildren = node.children.length > 0;
+  const active = selected === node.name;
+
+  return (
+    <li>
+      <div className="flex items-center gap-0.5" style={{ paddingLeft: depth * 12 }}>
+        {hasChildren ? (
+          <button
+            onClick={() => setOpen((o) => !o)}
+            aria-label={open ? "접기" : "펼치기"}
+            aria-expanded={open}
+            className="shrink-0 px-0.5 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+          >
+            <span className={open ? "inline-block" : "inline-block -rotate-90"}>▾</span>
+          </button>
+        ) : (
+          <span className="w-4 shrink-0" />
+        )}
+        <button
+          onClick={() => onSelect(node.name)}
+          aria-pressed={active}
+          className={[
+            "flex flex-1 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+            active
+              ? "bg-indigo-100 font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+              : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800",
+          ].join(" ")}
+        >
+          <span className="text-xs text-gray-400">📁</span>
+          {node.name}
+        </button>
+      </div>
+      {hasChildren && open && (
+        <ul className="flex flex-col gap-0.5">
+          {node.children.map((child) => (
+            <FolderTreeItem
+              key={child.path.join("/")}
+              node={child}
+              depth={depth + 1}
+              selected={selected}
+              onSelect={onSelect}
+            />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
 }

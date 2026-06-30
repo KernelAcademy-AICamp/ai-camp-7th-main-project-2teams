@@ -361,7 +361,7 @@
       "description": "태그 정규화 중복 호출 제거. 백로그(파이프라인 재검토).",
       "details": "app/api/bookmarks/route.ts. normalizeTags(rawTags) + resolveTopCategory(rawTags)가 내부에서 rawTags를 2회 정규화. 결과 동일, 한 번만 정규화 후 재사용하도록 정리.",
       "priority": "low",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A5"
       ],
