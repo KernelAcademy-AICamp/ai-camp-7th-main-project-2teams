@@ -5,7 +5,7 @@ MVP v1.0 태스크 — PRD `scripts/prd.md` 기반 (v0.5, IA 정리본 반영)
 ## 구조
 
 ```
-front/tasks.json       # Next.js 웹앱 + API Routes (A1~A16, A26~A31)
+front/tasks.json       # Next.js 웹앱 + API Routes (A1~A16, A26~A47)
 extension/tasks.json   # Chrome Extension (A17~A25)
 tasks/README.md        # 이 파일 (진행 현황 포함)
 ```
@@ -46,6 +46,8 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A40: 헤더 단건 URL 북마크 추가 팝업
 - [x] A41: 북마크 카드 메뉴 → 단건 삭제 UI
 - [x] A42: 프로필 팝업 + 로그아웃
+- [x] A50: 컴팩트 뷰 추가 (뷰 3종 전환) — IA v0.7
+- [ ] A51: 임베딩 모델 bge-m3 전환 (1536→1024) — 롤백됨(마이그레이션 0006, OpenAI 1536 복귀)
 
 ### Chrome Extension — extension/ (A17~A25)
 
@@ -59,7 +61,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A24: 로그아웃·탈퇴 시 로컬 데이터 파기
 - [x] A25: Chrome 웹스토어 Privacy Practices 작성
 
-**진행률: 25 / 25 완료 (MVP 범위 A1~A25 기준) · IA 갭 추가 A39~A42 (4/4 완료)**
+**진행률: 25 / 25 완료 (MVP 범위 A1~A25 기준) · IA 갭 추가 A39~A42 (4/4 완료) · IA v0.7 추가 A50 (1/1 완료) · 임베딩 개선 A51 (롤백, OpenAI 1536 유지)**
 
 ---
 
@@ -95,6 +97,8 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 | A40 | 헤더 단건 URL 북마크 추가 팝업                            | high     | 기능   | 신규 |
 | A41 | 북마크 카드 메뉴 → 단건 삭제 UI                          | medium   | 기능   | 신규 |
 | A42 | 프로필 팝업 + 로그아웃                                    | medium   | 기능   | 신규 |
+| A50 | 컴팩트 뷰 추가 (뷰 3종 전환)                             | medium   | 기능   | 신규 |
+| A51 | 임베딩 모델 bge-m3 전환 (1536→1024)                      | medium   | 개선   | 신규 |
 
 ### Chrome Extension — extension/ (A17~A25)
 
@@ -170,6 +174,7 @@ A17 (Extension 셋업)
 ### 배포 차단급
 
 - [x] **WEB_APP_URL 하드코딩** — esbuild define으로 빌드 타임 치환 처리. `WEB_APP_URL`/`SUPABASE_URL`/`SUPABASE_ANON_KEY` 환경변수 주입, 미설정 시 localhost fallback.
+- [x] **A48 로그인 직후 /welcome 튕김** (`lib/supabase/client.ts`): `createClient()`가 호출마다 새 `createBrowserClient`(GoTrueClient) 생성 → 대시보드 mount 시 onboarding effect·`Sidebar`·`ExtensionSync` 동시 호출로 다중 인스턴스가 단일사용 refresh token 회전을 레이스 → 세션 무효화 → 네비게이션에서 middleware `getUser()` null → `/welcome`. 브라우저 클라이언트 모듈 레벨 싱글톤화로 수정.
 
 ### 데이터/정합성
 
@@ -192,6 +197,9 @@ A17 (Extension 셋업)
 
 - [x] **A38 중복 normalize** (`app/api/bookmarks/route.ts`): `resolveTopCategory`가 정규화된 태그를 입력받도록 변경, 단건·임포트 라우트에서 `tags` 재사용. rawTags 2회 정규화 제거.
 - [x] **A45 폴더 목록 하위 폴더 누락** (`app/api/bookmarks/folders/route.ts`, A31 후속): `folder_hint[0]`만 집계하던 `extractTopFolders` → 전체 depth 집계 `extractFolders`로 변경. 사이드바 '내 폴더'에 하위 폴더 노출. 필터는 `contains()`로 이미 전체 depth 매칭. PR #107.
+- [x] **A46 폴더 트리 사이드바** (`lib/folderTree.ts`, `components/Sidebar.tsx`, A31·A45 후속): `folder_hint` 경로를 `buildFolderTree`로 계층 트리화, folders API에 트리용 `paths` 응답 추가. 크롬 기본 폴더(북마크바·기타 북마크 등)는 `parseNetscapeBookmarks`·표시에서 제외. 트리 노드 기본 접힘, nav·main 독립 스크롤. PR #109.
+- [x] **A47 미분류 버킷 + 사이드바 스켈레톤** (`app/api/bookmarks/route.ts`, `components/Sidebar.tsx`, `components/SidebarSkeleton.tsx`): 고정 12개 대분류 외·`tags=[]` 북마크를 '미분류'로 묶음(`category=미분류` → `category_id IS NULL`). 사이드바 로딩 중 `SidebarSkeleton` 노출로 pop-in 깜빡임 제거. `aggregateCategories` 순수 함수 추출(raw `tags[0]` 노출 버그 수정). PR #111.
+- [x] **A49 프로필 팝업 미표시** (`components/Sidebar.tsx`, A46 회귀): nav `overflow-y-auto`가 x축도 클리핑 → 팝업이 `left-full`로 사이드바 폭 밖에 렌더되어 잘림. `bottom-full left-0 right-0 mb-2 z-10`으로 폭 안·행 위 배치.
 
 ---
 

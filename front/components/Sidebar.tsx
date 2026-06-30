@@ -248,9 +248,10 @@ export function Sidebar({ bookmarks, loading = false }: SidebarProps) {
 
       {/* 유저 프로필 — 사이드바 최하단 */}
       <div ref={popupRef} className="relative mt-auto">
-        {/* 팝업 — 프로필 행 위에 표시 */}
+        {/* 팝업 — 프로필 행 위에 표시. nav가 overflow-y-auto라 x축도 클리핑되므로
+            사이드바 폭 밖(left-full) 대신 폭 안·행 위(bottom-full)로 띄운다. */}
         {popupOpen && (
-          <div className="absolute bottom-0 left-full ml-2 w-44 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+          <div className="absolute bottom-full left-0 right-0 z-10 mb-2 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
             <p className="px-3 py-1.5 text-xs text-gray-400">프로필 팝업 항목</p>
             <ul className="flex flex-col">
               <li>

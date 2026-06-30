@@ -442,6 +442,94 @@
         "A43"
       ],
       "testStrategy": "validate_golden.py 역검증(leak·중복·대분류2개·무효대분류·vocab 드리프트 적중), with-skill vs baseline 비교(baseline 패션/컬러 vocab 드리프트 적발)."
+    },
+    {
+      "id": "A45",
+      "title": "폴더 목록 하위 폴더 노출 (A31 후속)",
+      "description": "사이드바 '내 폴더'에 folder_hint 전체 depth 노출.",
+      "details": "app/api/bookmarks/folders/route.ts: folder_hint[0]만 집계하던 extractTopFolders → 전체 depth 집계 extractFolders로 변경. 사이드바 '내 폴더'에 하위 폴더 노출. 필터는 contains()로 이미 전체 depth 매칭. PR #107.",
+      "priority": "low",
+      "status": "done",
+      "dependencies": [
+        "A31"
+      ],
+      "testStrategy": "extractFolders 단위테스트(하위 depth 집계), 사이드바 하위 폴더 노출 확인."
+    },
+    {
+      "id": "A46",
+      "title": "폴더 트리 사이드바 + 기본 폴더 제외",
+      "description": "folder_hint 경로를 계층 트리로 노출, 크롬 기본 폴더 제외.",
+      "details": "lib/folderTree.ts buildFolderTree로 folder_hint 경로를 계층 트리 변환, folders API에 트리용 paths 응답 추가. 크롬 기본 폴더(북마크바·기타 북마크 등)는 parseNetscapeBookmarks·표시에서 제외. 트리 노드 기본 접힘, 헤더·컨텐츠 풀스크린, nav·main 독립 스크롤. PR #109.",
+      "priority": "medium",
+      "status": "done",
+      "dependencies": [
+        "A31",
+        "A45"
+      ],
+      "testStrategy": "buildFolderTree 단위테스트(중첩 경로 트리화), folders route paths 응답, 기본 폴더 제외 파싱 테스트."
+    },
+    {
+      "id": "A47",
+      "title": "미분류 카테고리 버킷 + 사이드바 로딩 스켈레톤",
+      "description": "고정 12개 외·미태깅 북마크를 '미분류'로 묶고, 사이드바 로딩 스켈레톤 노출.",
+      "details": "고정 12개 대분류 외·tags=[] 북마크를 '미분류' 항목으로 묶어 노출. category=미분류 → category_id IS NULL 필터(app/api/bookmarks/route.ts). 사이드바 카테고리/폴더 로딩 중 SidebarSkeleton 노출(pop-in 깜빡임 제거). aggregateCategories 순수 함수 추출(raw tags[0] 노출 버그 수정). PR #111.",
+      "priority": "medium",
+      "status": "done",
+      "dependencies": [
+        "A11",
+        "A46"
+      ],
+      "testStrategy": "aggregateCategories 단위테스트(미분류 버킷·tags[0] 비노출), category=미분류 필터 GET 테스트, SidebarSkeleton 렌더 테스트."
+    },
+    {
+      "id": "A48",
+      "title": "로그인 직후 welcome 튕김 수정 (브라우저 클라이언트 싱글톤)",
+      "description": "createClient()가 호출마다 새 GoTrueClient 생성 → 다중 인스턴스 refresh token 회전 레이스로 세션 무효화 → 네비게이션 시 welcome 튕김.",
+      "details": "lib/supabase/client.ts: createBrowserClient를 모듈 레벨 메모이즈(탭당 1개)로 변경. 대시보드 mount 시 onboarding effect·Sidebar·ExtensionSync 3곳이 동시 createClient().getUser()/getSession() 호출 → 다중 GoTrueClient가 단일사용 refresh token을 동시 회전 → 세션 무효 → onboarding push 네비게이션에서 middleware getUser() null → /welcome(middleware:43). 싱글톤화로 내부 lock이 동시 refresh 중복 제거.",
+      "priority": "high",
+      "status": "done",
+      "dependencies": [
+        "A3",
+        "A4"
+      ],
+      "testStrategy": "lib/supabase/__tests__/client.test.ts — createClient() 다회 호출 시 동일 인스턴스 반환·createBrowserClient 1회만 호출 검증(fix 전 실패→후 통과)."
+    },
+    {
+      "id": "A49",
+      "title": "프로필 팝업 미표시 수정 (사이드바 overflow 클리핑)",
+      "description": "프로필 팝업이 사이드바 오른쪽 바깥에 렌더되어 nav overflow에 잘려 안 보임.",
+      "details": "components/Sidebar.tsx: A46(폴더 트리)에서 nav에 overflow-y-auto 부여 → CSS상 overflow-x도 auto로 계산되어 x축 클리핑. 팝업이 bottom-0 left-full ml-2로 사이드바 폭 밖에 렌더 → 잘림. bottom-full left-0 right-0 mb-2 z-10으로 변경해 nav 폭 안·프로필 행 위로 배치.",
+      "priority": "medium",
+      "status": "done",
+      "dependencies": [
+        "A42",
+        "A46"
+      ],
+      "testStrategy": "순수 CSS 위치 변경(로직 분기 없음). 기존 Sidebar.test.ts 회귀 통과로 확인."
+    },
+    {
+      "id": "A50",
+      "title": "컴팩트 뷰 추가 (뷰 3종 전환)",
+      "description": "IA v0.7: 컴팩트 뷰 v1.1→MVP 승격. 리스트/그리드에 컴팩트 뷰 추가로 뷰 3종 전환.",
+      "details": "store/filterStore.ts: ViewMode 타입에 'compact' 추가. components/BookmarkToolbar.tsx: 컴팩트 뷰 토글 버튼(3번째 옵션) 추가. app/(dashboard)/page.tsx: viewMode === 'compact'일 때 한 줄 밀집 레이아웃 렌더. components/BookmarkCard.tsx 또는 컴팩트 변형으로 행 높이 축소(파비콘+제목+도메인 1행). IA 뷰 형태 선택 아이콘 3종.",
+      "priority": "medium",
+      "status": "done",
+      "dependencies": [
+        "A9"
+      ],
+      "testStrategy": "툴바 컴팩트 버튼 클릭 시 viewMode='compact' 반영·밀집 레이아웃 렌더 확인. 3종 뷰 전환 동작 확인."
+    },
+    {
+      "id": "A51",
+      "title": "임베딩 모델 bge-m3 전환 (1536→1024)",
+      "description": "벤치마크(recall@1 75%→92.5%, 저장 414KB→276KB) 근거로 OpenAI text-embedding-3-small → bge-m3(NVIDIA 엔드포인트) 교체.",
+      "details": "마이그레이션 0005: 백업 테이블 + embedding vector(1536→1024) + HNSW 재생성 + match_bookmarks(1024). lib/bge.ts 신규(embedBge, input_type passage/query). lib/ai.ts: createEmbedding(text, inputType) bge-m3로 교체, MOCK 1024. search route 'query'. scripts/reembed-bge.mjs 재임베딩(머지 후 수동). BGE_API_KEY 서버 전용.",
+      "priority": "medium",
+      "status": "pending",
+      "dependencies": [
+        "A7"
+      ],
+      "testStrategy": "롤백됨(2026-06-30): 0005/bge-m3 → 0006으로 OpenAI text-embedding-3-small(1536) 복귀, 백업에서 원본 임베딩 복원. 재추진 여부는 품질 개선 vs 운영 비용 재검토 후 결정."
     }
   ]
 }

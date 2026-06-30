@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutGrid, List, ArrowDownUp } from 'lucide-react'
+import { LayoutGrid, List, Rows3, ArrowDownUp } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 import { useFilterStore } from '@/store/filterStore'
 
@@ -28,34 +28,28 @@ export function BookmarkToolbar() {
         {sortOrder === 'latest' ? '최신순' : '오래된순'}
       </button>
 
-      {/* 뷰 전환 — 그리드/리스트 */}
+      {/* 뷰 전환 — 그리드/리스트/컴팩트 */}
       <div className="flex gap-0.5 rounded-md border border-gray-200 p-0.5 dark:border-gray-700">
-        <button
-          onClick={() => setViewMode('grid')}
-          aria-label="그리드 보기"
-          aria-pressed={viewMode === 'grid'}
-          className={[
-            'rounded p-1 transition-colors',
-            viewMode === 'grid'
-              ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
-              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
-          ].join(' ')}
-        >
-          <LayoutGrid size={16} />
-        </button>
-        <button
-          onClick={() => setViewMode('list')}
-          aria-label="리스트 보기"
-          aria-pressed={viewMode === 'list'}
-          className={[
-            'rounded p-1 transition-colors',
-            viewMode === 'list'
-              ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
-              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
-          ].join(' ')}
-        >
-          <List size={16} />
-        </button>
+        {([
+          { mode: 'grid', label: '그리드 보기', Icon: LayoutGrid },
+          { mode: 'list', label: '리스트 보기', Icon: List },
+          { mode: 'compact', label: '컴팩트 보기', Icon: Rows3 },
+        ] as const).map(({ mode, label, Icon }) => (
+          <button
+            key={mode}
+            onClick={() => setViewMode(mode)}
+            aria-label={label}
+            aria-pressed={viewMode === mode}
+            className={[
+              'rounded p-1 transition-colors',
+              viewMode === mode
+                ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
+            ].join(' ')}
+          >
+            <Icon size={16} />
+          </button>
+        ))}
       </div>
     </div>
   )
