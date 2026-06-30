@@ -117,7 +117,10 @@ export function normalizeTags(tags: string[]): string[] {
   return tags.map((t) => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)
 }
 
-// 입력은 normalizeTags() 거친 태그 배열. 재정규화하지 않음(중복 호출 방지, A38).
-export function resolveTopCategory(normalizedTags: string[]): string | null {
-  return TOP_CATEGORIES.has(normalizedTags[0]) ? normalizedTags[0] : null
+// AI가 반환한 단일 category 문자열 → 정식 대분류 이름. 별칭 해석 후 12개 검증, 누락/미일치 시 null(미분류).
+// tags와 독립 — 평면 태그 모델에서 category는 tags[0]에 종속되지 않음.
+export function resolveCategory(rawCategory: string | null): string | null {
+  if (!rawCategory) return null
+  const normalized = CATEGORY_ALIAS[rawCategory] ?? rawCategory
+  return TOP_CATEGORIES.has(normalized) ? normalized : null
 }

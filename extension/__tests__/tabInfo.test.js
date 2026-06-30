@@ -1,18 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // GET_TAB_INFO 핸들러 로직 단위 테스트
-// background/index.js 직접 import 없이 핸들러 동작을 재현
+// content 수집은 chrome.scripting.executeScript(라이브 DOM)로 일원화 — 외부 페이지도 커버.
 
 function makeHandler(chromeMock) {
+  async function extractPageInfo(tabId) {
+    try {
+      const [injection] = await chromeMock.scripting.executeScript({
+        target: { tabId },
+        func: () => {},
+      })
+      return injection?.result ?? null
+    } catch {
+      return null
+    }
+  }
+
   return function handleGetTabInfo(sendResponse) {
-    chromeMock.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+    chromeMock.tabs.query({ active: true, currentWindow: true }).then(async ([tab]) => {
       if (!tab?.id) return sendResponse({ error: 'no active tab' })
-      chromeMock.tabs.sendMessage(tab.id, { type: 'GET_CONTENT' }, (res) => {
-        sendResponse({
-          url: tab.url ?? '',
-          title: tab.title ?? '',
-          content: res?.content ?? '',
-        })
+      const info = await extractPageInfo(tab.id)
+      sendResponse({
+        url: tab.url ?? '',
+        title: info?.title || tab.title || '',
+        content: info?.content ?? '',
       })
     })
   }
@@ -23,29 +34,30 @@ describe('GET_TAB_INFO 핸들러', () => {
 
   beforeEach(() => {
     chromeMock = {
-      tabs: {
-        query: vi.fn(),
-        sendMessage: vi.fn(),
-      },
+      tabs: { query: vi.fn() },
+      scripting: { executeScript: vi.fn() },
     }
   })
 
-  it('활성 탭 url/title/content 반환', async () => {
-    chromeMock.tabs.query.mockResolvedValue([{ id: 1, url: 'https://example.com', title: '예시' }])
-    chromeMock.tabs.sendMessage.mockImplementation((_id, _msg, cb) => cb({ content: '본문 내용' }))
+  it('활성 탭 url + 라이브 DOM title/content 반환', async () => {
+    chromeMock.tabs.query.mockResolvedValue([{ id: 1, url: 'https://example.com', title: '탭제목' }])
+    chromeMock.scripting.executeScript.mockResolvedValue([
+      { result: { title: 'DOM 제목', content: '본문 내용' } },
+    ])
 
     const result = await new Promise((resolve) => makeHandler(chromeMock)(resolve))
 
-    expect(result).toEqual({ url: 'https://example.com', title: '예시', content: '본문 내용' })
+    expect(result).toEqual({ url: 'https://example.com', title: 'DOM 제목', content: '본문 내용' })
   })
 
-  it('content script 무응답 → content 빈 문자열', async () => {
-    chromeMock.tabs.query.mockResolvedValue([{ id: 2, url: 'https://x.com', title: 'X' }])
-    chromeMock.tabs.sendMessage.mockImplementation((_id, _msg, cb) => cb(undefined))
+  it('executeScript 실패 → content 빈 문자열 + tab.title 폴백', async () => {
+    chromeMock.tabs.query.mockResolvedValue([{ id: 2, url: 'https://x.com', title: '탭제목' }])
+    chromeMock.scripting.executeScript.mockRejectedValue(new Error('Cannot access'))
 
     const result = await new Promise((resolve) => makeHandler(chromeMock)(resolve))
 
     expect(result.content).toBe('')
+    expect(result.title).toBe('탭제목')
     expect(result.url).toBe('https://x.com')
   })
 
@@ -58,16 +70,17 @@ describe('GET_TAB_INFO 핸들러', () => {
   })
 })
 
-describe('GET_CONTENT content script 로직', () => {
-  it('innerText 앞 2000자만 반환', () => {
-    const innerText = 'a'.repeat(3000)
-    const content = innerText.slice(0, 2000)
+describe('extractPageInfo 추출 로직', () => {
+  it('description + 본문 결합, 2000자 상한', () => {
+    const description = '메타 설명'
+    const body = 'a'.repeat(3000)
+    const content = [description, body].filter(Boolean).join('\n').slice(0, 2000)
     expect(content.length).toBe(2000)
-    expect(content).toBe('a'.repeat(2000))
+    expect(content.startsWith('메타 설명\n')).toBe(true)
   })
 
-  it('2000자 미만이면 전체 반환', () => {
-    const innerText = '안녕하세요'
-    expect(innerText.slice(0, 2000)).toBe('안녕하세요')
+  it('description 없으면 본문만', () => {
+    const content = ['', '안녕하세요'].filter(Boolean).join('\n').slice(0, 2000)
+    expect(content).toBe('안녕하세요')
   })
 })

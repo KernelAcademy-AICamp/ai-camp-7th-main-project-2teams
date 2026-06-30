@@ -7,7 +7,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useFilterStore } from "@/store/filterStore";
 import { useFolders } from "@/hooks/useFolders";
 import { buildFolderTree, type FolderNode } from "@/lib/folderTree";
-import { resolveTopCategory, UNCATEGORIZED_LABEL } from "@/lib/tag-alias";
+import { UNCATEGORIZED_LABEL } from "@/lib/tag-alias";
 import { SidebarSkeleton } from "@/components/SidebarSkeleton";
 import { createClient } from "@/lib/supabase/client";
 import type { Bookmark } from "@/hooks/useBookmarks";
@@ -23,17 +23,16 @@ export function aggregateTags(bookmarks: Bookmark[], limit = 20): string[] {
     .map(([tag]) => tag);
 }
 
-// 고정 대분류만 노출, 그 외(미상위·tags=[])는 "미분류" 한 항목으로 묶음(맨 뒤)
+// 북마크의 category 필드(AI 지정 대분류)로 목록 구성, category=null은 "미분류"로 묶음(맨 뒤)
 export function aggregateCategories(bookmarks: Bookmark[]): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
   let hasUncategorized = false;
   for (const b of bookmarks) {
-    const top = resolveTopCategory(b.tags);
-    if (top) {
-      if (!seen.has(top)) {
-        seen.add(top);
-        result.push(top);
+    if (b.category) {
+      if (!seen.has(b.category)) {
+        seen.add(b.category);
+        result.push(b.category);
       }
     } else {
       hasUncategorized = true;
@@ -93,7 +92,7 @@ export function Sidebar({ bookmarks, loading = false }: SidebarProps) {
     router.push("/welcome");
   };
 
-  // 유저 북마크에서 카테고리 동적 추출 (tags[0] = AI가 설정한 대분류)
+  // 유저 북마크에서 카테고리 동적 추출 (category 필드 = AI가 지정한 대분류, tags와 독립)
   // 즐겨찾기 탭에서는 즐겨찾기 북마크 기준으로만 추출 (없는 카테고리 노출 방지)
   const categories = useMemo(() => {
     const source = tab === "favorites" ? bookmarks.filter((b) => b.is_favorite) : bookmarks;

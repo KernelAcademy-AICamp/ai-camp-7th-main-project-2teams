@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { withAuth } from '@/lib/auth'
 import { bookmarkCreateSchema } from '@/lib/schemas'
-import { generateTags, createEmbedding } from '@/lib/ai'
-import { normalizeTags, resolveTopCategory, UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
+import { classifyBookmark, createEmbedding } from '@/lib/ai'
+import { normalizeTags, resolveCategory, UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
 import { fetchMeta } from '@/lib/fetchMeta'
 
@@ -40,7 +40,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   // 태깅 + 임베딩 병렬 실행 → 응답시간 단축. content는 이 스코프 안에서만 사용 후 파기.
   // description에 content 전달 → 태깅 품질 확보(익스텐션이 수집한 본문 활용).
   const [tagsResult, embeddingResult] = await Promise.allSettled([
-    generateTags({ title, url, description: content }),
+    classifyBookmark({ title, url, description: content }),
     createEmbedding(hasContent ? `${title}\n${content}` : title),
   ])
 
@@ -49,18 +49,20 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     return NextResponse.json({ error: '임베딩 생성 실패' }, { status: 502 })
   }
   const embedding = embeddingResult.value
-  // 태깅 실패는 빈 태그로 degrade — 저장 자체는 진행.
-  const rawTags = tagsResult.status === 'fulfilled' ? tagsResult.value : []
+  // 분류 실패는 빈 태그 + 미분류로 degrade — 저장 자체는 진행.
+  const classification =
+    tagsResult.status === 'fulfilled' ? tagsResult.value : { category: null, tags: [] }
 
-  const tags = normalizeTags(rawTags)
+  // 평면 태그 정규화 — category와 독립
+  const tags = normalizeTags(classification.tags)
 
-  // 대분류 추출 → 유저 카테고리 upsert (없으면 생성)
-  const top = resolveTopCategory(tags)
+  // 카테고리는 AI가 직접 지정 (tags[0] 비종속) → 유저 카테고리 upsert (없으면 생성)
+  const categoryName = resolveCategory(classification.category)
   let category_id: string | null = null
-  if (top) {
+  if (categoryName) {
     const { data: category } = await supabase
       .from('categories')
-      .upsert({ name: top, user_id: user.id }, { onConflict: 'user_id,name' })
+      .upsert({ name: categoryName, user_id: user.id }, { onConflict: 'user_id,name' })
       .select('id')
       .single()
     category_id = category?.id ?? null
@@ -89,12 +91,14 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ bookmark: data }, { status: 201 })
+  // category 이름을 응답에 포함 (클라이언트 사이드바가 category_id 조인 없이 사용)
+  return NextResponse.json({ bookmark: { ...data, category: categoryName } }, { status: 201 })
 })
 
 // 목록 조회 + 필터. RLS로 본인 데이터만. embedding 컬럼 제외.
+// categories(name) 조인 — 평면 모델에서 category는 tags[0]이 아닌 별도 컬럼이므로 이름을 함께 반환.
 const LIST_COLUMNS =
-  'id, url, title, tags, category_id, folder_hint, is_favorite, created_at'
+  'id, url, title, tags, category_id, categories(name), folder_hint, is_favorite, created_at'
 
 export const GET = withAuth(async (req, { supabase }) => {
   const parsed = getQuerySchema.safeParse(
@@ -140,5 +144,15 @@ export const GET = withAuth(async (req, { supabase }) => {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ bookmarks: data, total: count ?? 0 })
+  // 조인된 categories를 평탄화 → category 이름 문자열로 노출 (null = 미분류).
+  // PostgREST 임베드는 타입상 배열로 추론되지만 to-one FK라 런타임은 객체 — 둘 다 처리.
+  const bookmarks = (data ?? []).map((row) => {
+    const { categories, ...rest } = row as unknown as Record<string, unknown> & {
+      categories?: { name: string } | { name: string }[] | null
+    }
+    const cat = Array.isArray(categories) ? categories[0] : categories
+    return { ...rest, category: cat?.name ?? null }
+  })
+
+  return NextResponse.json({ bookmarks, total: count ?? 0 })
 })

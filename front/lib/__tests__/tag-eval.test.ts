@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { scoreTags, aggregate, type TagScore } from '../tag-eval'
-import { generateTags } from '../ai'
+import { classifyBookmark } from '../ai'
 
 // 지표 함수 단위 테스트 — 항상 실행 (OpenAI 미호출).
 describe('scoreTags', () => {
@@ -58,7 +58,7 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
   it(
     `macro-F1 >= ${F1_BASELINE}`,
     async () => {
-      // 목 모드면 generateTags가 고정값 반환 → 평가 무의미. 동시 설정 실수 차단.
+      // 목 모드면 classifyBookmark가 고정값 반환 → 평가 무의미. 동시 설정 실수 차단.
       expect(process.env.E2E_MOCK_OPENAI, 'RUN_TAG_EVAL과 E2E_MOCK_OPENAI 동시 설정 불가').not.toBe('1')
 
       const golden: { url: string; title: string; description: string; gold: string[] }[] =
@@ -66,11 +66,13 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
 
       const scores: TagScore[] = []
       for (const item of golden) {
-        const predicted = await generateTags({
+        const { category, tags } = await classifyBookmark({
           title: item.title,
           url: item.url,
           description: item.description,
         })
+        // 평면 모델: [category, ...tags]는 기존 [대,중,소] 골든셋과 동치 (category가 옛 tags[0] 역할)
+        const predicted = category ? [category, ...tags] : tags
         const s = scoreTags(predicted, item.gold)
         scores.push(s)
         // 항목별 결과 출력 — 어떤 URL이 틀렸는지 확인용
