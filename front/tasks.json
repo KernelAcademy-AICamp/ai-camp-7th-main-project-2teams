@@ -513,7 +513,7 @@
       "description": "IA v0.7: 컴팩트 뷰 v1.1→MVP 승격. 리스트/그리드에 컴팩트 뷰 추가로 뷰 3종 전환.",
       "details": "store/filterStore.ts: ViewMode 타입에 'compact' 추가. components/BookmarkToolbar.tsx: 컴팩트 뷰 토글 버튼(3번째 옵션) 추가. app/(dashboard)/page.tsx: viewMode === 'compact'일 때 한 줄 밀집 레이아웃 렌더. components/BookmarkCard.tsx 또는 컴팩트 변형으로 행 높이 축소(파비콘+제목+도메인 1행). IA 뷰 형태 선택 아이콘 3종.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A9"
       ],
@@ -525,11 +525,11 @@
       "description": "벤치마크(recall@1 75%→92.5%, 저장 414KB→276KB) 근거로 OpenAI text-embedding-3-small → bge-m3(NVIDIA 엔드포인트) 교체.",
       "details": "마이그레이션 0005: 백업 테이블 + embedding vector(1536→1024) + HNSW 재생성 + match_bookmarks(1024). lib/bge.ts 신규(embedBge, input_type passage/query). lib/ai.ts: createEmbedding(text, inputType) bge-m3로 교체, MOCK 1024. search route 'query'. scripts/reembed-bge.mjs 재임베딩(머지 후 수동). BGE_API_KEY 서버 전용.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A7"
       ],
-      "testStrategy": "ai.mock.test.ts 차원 1024 검증. 머지 후 0005 적용+reembed-bge.mjs 실행→/api/search 스모크."
+      "testStrategy": "ai.mock.test.ts 차원 1024 검증. 0005 적용 + reembed-bge.mjs로 1277건 재임베딩 완료(2026-06-30). /api/search 스모크 통과."
     }
   ]
 }
