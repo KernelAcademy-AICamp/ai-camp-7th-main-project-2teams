@@ -191,7 +191,7 @@ A17 (Extension 셋업)
 ### Minor
 
 - [x] **A38 중복 normalize** (`app/api/bookmarks/route.ts`): `resolveTopCategory`가 정규화된 태그를 입력받도록 변경, 단건·임포트 라우트에서 `tags` 재사용. rawTags 2회 정규화 제거.
-- [ ] **A45 폴더 목록 하위 폴더 누락** (`app/api/bookmarks/folders/route.ts`, A31 후속): `folder_hint[0]`만 집계하던 `extractTopFolders` → 전체 depth 집계 `extractFolders`로 변경. 사이드바 '내 폴더'에 하위 폴더 노출. 필터는 `contains()`로 이미 전체 depth 매칭. PR #107.
+- [x] **A45 폴더 목록 하위 폴더 누락** (`app/api/bookmarks/folders/route.ts`, A31 후속): `folder_hint[0]`만 집계하던 `extractTopFolders` → 전체 depth 집계 `extractFolders`로 변경. 사이드바 '내 폴더'에 하위 폴더 노출. 필터는 `contains()`로 이미 전체 depth 매칭. PR #107.
 
 ---
 
