@@ -1,17 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // saveCurrentTab 핵심 로직 단위 테스트 (background/index.js에서 추출)
+// content 수집은 chrome.scripting.executeScript(라이브 DOM)로 일원화 — 외부 페이지도 커버.
 function makeSaveCurrentTab({ supabase, chromeMock, fetchMock, WEB_APP_URL }) {
+  async function extractPageInfo(tabId) {
+    try {
+      const [injection] = await chromeMock.scripting.executeScript({
+        target: { tabId },
+        func: () => {},
+      })
+      return injection?.result ?? null
+    } catch {
+      return null
+    }
+  }
+
   return async function saveCurrentTab() {
     const { data: sessionData } = await supabase.auth.getSession()
     if (!sessionData.session) return { error: 'not authenticated' }
 
     const [tab] = await chromeMock.tabs.query({ active: true, currentWindow: true })
     if (!tab?.id) return { error: 'no active tab' }
+    if (!tab.url) return { error: 'tab url unavailable' }
 
-    const contentRes = await new Promise((resolve) => {
-      chromeMock.tabs.sendMessage(tab.id, { type: 'GET_CONTENT' }, (res) => resolve(res))
-    })
+    const info = await extractPageInfo(tab.id)
 
     const res = await fetchMock(`${WEB_APP_URL}/api/bookmarks`, {
       method: 'POST',
@@ -21,8 +33,8 @@ function makeSaveCurrentTab({ supabase, chromeMock, fetchMock, WEB_APP_URL }) {
       },
       body: JSON.stringify({
         url: tab.url ?? '',
-        title: tab.title ?? '',
-        content: contentRes?.content ?? '',
+        title: info?.title || tab.title || '',
+        content: info?.content ?? '',
       }),
     })
 
@@ -37,20 +49,20 @@ describe('saveCurrentTab', () => {
   beforeEach(() => {
     supabase = { auth: { getSession: vi.fn() } }
     chromeMock = {
-      tabs: {
-        query: vi.fn(),
-        sendMessage: vi.fn(),
-      },
+      tabs: { query: vi.fn() },
+      scripting: { executeScript: vi.fn() },
     }
     fetchMock = vi.fn()
   })
 
-  it('정상 저장 → bookmark 반환', async () => {
+  it('정상 저장 → 라이브 DOM title/content 전송 + bookmark 반환', async () => {
     supabase.auth.getSession.mockResolvedValue({
       data: { session: { access_token: 'tok123' } },
     })
-    chromeMock.tabs.query.mockResolvedValue([{ id: 1, url: 'https://ex.com', title: '예시' }])
-    chromeMock.tabs.sendMessage.mockImplementation((_id, _msg, cb) => cb({ content: '본문' }))
+    chromeMock.tabs.query.mockResolvedValue([{ id: 1, url: 'https://ex.com', title: '탭제목' }])
+    chromeMock.scripting.executeScript.mockResolvedValue([
+      { result: { title: 'DOM 제목', content: '메타 설명\n본문' } },
+    ])
     fetchMock.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ bookmark: { id: 'b1' } }),
@@ -60,6 +72,9 @@ describe('saveCurrentTab', () => {
     const result = await save()
 
     expect(result).toEqual({ bookmark: { id: 'b1' } })
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(body.title).toBe('DOM 제목')
+    expect(body.content).toBe('메타 설명\n본문')
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:3000/api/bookmarks',
       expect.objectContaining({
@@ -96,7 +111,7 @@ describe('saveCurrentTab', () => {
       data: { session: { access_token: 'tok' } },
     })
     chromeMock.tabs.query.mockResolvedValue([{ id: 1, url: 'https://x.com', title: 'X' }])
-    chromeMock.tabs.sendMessage.mockImplementation((_id, _msg, cb) => cb({ content: '' }))
+    chromeMock.scripting.executeScript.mockResolvedValue([{ result: { title: 'X', content: '' } }])
     fetchMock.mockResolvedValue({ ok: false, status: 500 })
 
     const save = makeSaveCurrentTab({ supabase, chromeMock, fetchMock, WEB_APP_URL: '' })
@@ -105,12 +120,12 @@ describe('saveCurrentTab', () => {
     expect(result).toEqual({ error: 'HTTP 500' })
   })
 
-  it('content script 무응답 → content 빈 문자열로 전송', async () => {
+  it('executeScript 주입 불가(chrome:// 등) → content 빈 문자열 + tab.title 폴백', async () => {
     supabase.auth.getSession.mockResolvedValue({
       data: { session: { access_token: 'tok' } },
     })
-    chromeMock.tabs.query.mockResolvedValue([{ id: 1, url: 'https://x.com', title: 'X' }])
-    chromeMock.tabs.sendMessage.mockImplementation((_id, _msg, cb) => cb(undefined))
+    chromeMock.tabs.query.mockResolvedValue([{ id: 1, url: 'https://x.com', title: '탭제목' }])
+    chromeMock.scripting.executeScript.mockRejectedValue(new Error('Cannot access'))
     fetchMock.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ bookmark: { id: 'b2' } }),
@@ -121,5 +136,6 @@ describe('saveCurrentTab', () => {
 
     const body = JSON.parse(fetchMock.mock.calls[0][1].body)
     expect(body.content).toBe('')
+    expect(body.title).toBe('탭제목')
   })
 })
