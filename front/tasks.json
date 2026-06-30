@@ -506,6 +506,18 @@
         "A46"
       ],
       "testStrategy": "순수 CSS 위치 변경(로직 분기 없음). 기존 Sidebar.test.ts 회귀 통과로 확인."
+    },
+    {
+      "id": "A51",
+      "title": "임베딩 모델 bge-m3 전환 (1536→1024)",
+      "description": "벤치마크(recall@1 75%→92.5%, 저장 414KB→276KB) 근거로 OpenAI text-embedding-3-small → bge-m3(NVIDIA 엔드포인트) 교체.",
+      "details": "마이그레이션 0005: 백업 테이블 + embedding vector(1536→1024) + HNSW 재생성 + match_bookmarks(1024). lib/bge.ts 신규(embedBge, input_type passage/query). lib/ai.ts: createEmbedding(text, inputType) bge-m3로 교체, MOCK 1024. search route 'query'. scripts/reembed-bge.mjs 재임베딩(머지 후 수동). BGE_API_KEY 서버 전용.",
+      "priority": "medium",
+      "status": "pending",
+      "dependencies": [
+        "A7"
+      ],
+      "testStrategy": "ai.mock.test.ts 차원 1024 검증. 머지 후 0005 적용+reembed-bge.mjs 실행→/api/search 스모크."
     }
   ]
 }
