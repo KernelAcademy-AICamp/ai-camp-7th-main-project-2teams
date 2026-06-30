@@ -33,7 +33,7 @@ CREATE TABLE bookmarks (
   category_id UUID        REFERENCES categories(id),   -- tags[0] 매핑, null = 미분류
   folder_hint TEXT[],                                   -- 크롬 폴더 경로 (파일 임포트 시 원본 경로 보존)
   is_favorite BOOLEAN     NOT NULL DEFAULT false,       -- 즐겨찾기 토글 (A27)
-  embedding   vector(1024),                              -- bge-m3 (A51, 마이그레이션 0005). 이전 1536 = text-embedding-3-small
+  embedding   vector(1536),                              -- text-embedding-3-small (A51 bge-m3 롤백, 마이그레이션 0006)
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
@@ -110,7 +110,7 @@ CREATE POLICY "categories_delete"
 
 ```sql
 CREATE OR REPLACE FUNCTION match_bookmarks(
-  query_embedding vector(1024),
+  query_embedding vector(1536),
   match_threshold float,
   match_count     int,
   p_user_id       uuid
