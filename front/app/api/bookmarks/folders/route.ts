@@ -14,6 +14,22 @@ export function extractFolders(rows: { folder_hint: string[] | null }[]): string
   return [...set].sort()
 }
 
+/** folder_hint 경로를 distinct 배열로 반환 (빈 세그먼트 제거). 트리 구성용 */
+export function extractFolderPaths(rows: { folder_hint: string[] | null }[]): string[][] {
+  const seen = new Set<string>()
+  const result: string[][] = []
+  for (const row of rows) {
+    if (!Array.isArray(row.folder_hint)) continue
+    const path = row.folder_hint.filter(Boolean)
+    if (path.length === 0) continue
+    const key = JSON.stringify(path)
+    if (seen.has(key)) continue
+    seen.add(key)
+    result.push(path)
+  }
+  return result
+}
+
 // 본인 북마크의 folder_hint 전체 depth distinct 목록 반환. embedding 컬럼 제외.
 // RLS 외 user_id 명시적 격리 (A27 패턴과 통일).
 export const GET = withAuth(async (_req, { supabase, user }) => {
@@ -27,6 +43,7 @@ export const GET = withAuth(async (_req, { supabase, user }) => {
     return Response.json({ error: error.message }, { status: 500 })
   }
 
-  const folders = extractFolders(data ?? [])
-  return Response.json({ folders })
+  const rows = data ?? []
+  // folders: 평면 distinct (탭 노출 조건용), paths: 트리 구성용
+  return Response.json({ folders: extractFolders(rows), paths: extractFolderPaths(rows) })
 })

@@ -5,9 +5,9 @@ import { AddBookmarkModal } from '@/components/AddBookmarkModal'
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-950">
+    <div className="flex h-screen flex-col overflow-hidden bg-gray-50 dark:bg-gray-950">
       <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+        <div className="flex h-14 items-center justify-between px-6">
           <Link href="/" className="text-lg font-bold tracking-tight text-brand">
             Bookmarker
           </Link>
@@ -23,7 +23,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <div className="mx-auto flex w-full max-w-6xl flex-1 gap-8 px-4 py-8">
+      <div className="flex min-h-0 w-full flex-1 gap-8 px-6 py-8">
         {children}
       </div>
     </div>

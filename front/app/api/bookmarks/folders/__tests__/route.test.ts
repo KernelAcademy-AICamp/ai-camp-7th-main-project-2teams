@@ -38,7 +38,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => makeSupabase(currentUser),
 }))
 
-import { GET, extractFolders } from '../route'
+import { GET, extractFolders, extractFolderPaths } from '../route'
 
 function req() {
   return new Request('http://t/api/bookmarks/folders')
@@ -94,6 +94,19 @@ describe('extractFolders — folder_hint 전체 depth distinct 집계', () => {
       { folder_hint: ['개발'] },
     ]
     expect(extractFolders(rows)).toEqual(['개발', '하위'])
+  })
+})
+
+describe('extractFolderPaths — 트리용 distinct 경로', () => {
+  it('중복 경로를 한 번만, 빈 세그먼트 제거', () => {
+    const rows = [
+      { folder_hint: ['개발', '프론트엔드'] },
+      { folder_hint: ['개발', '프론트엔드'] },
+      { folder_hint: ['', '하위'] },
+      { folder_hint: null },
+      { folder_hint: [] },
+    ]
+    expect(extractFolderPaths(rows)).toEqual([['개발', '프론트엔드'], ['하위']])
   })
 })
 

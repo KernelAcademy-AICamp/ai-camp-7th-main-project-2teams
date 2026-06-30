@@ -16,22 +16,22 @@ describe('fetchFolders', () => {
     expect(fetch).toHaveBeenCalledWith('/api/bookmarks/folders')
   })
 
-  it('성공 시 folders 배열 반환', async () => {
+  it('성공 시 folders + paths 반환', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ folders: ['개발', '디자인', '학습'] }),
+      json: async () => ({ folders: ['개발', '디자인', '학습'], paths: [['개발', '프론트엔드']] }),
     })
     const result = await fetchFolders()
-    expect(result).toEqual(['개발', '디자인', '학습'])
+    expect(result).toEqual({ folders: ['개발', '디자인', '학습'], paths: [['개발', '프론트엔드']] })
   })
 
   it('폴더 없으면 빈 배열 반환', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ folders: [] }),
+      json: async () => ({ folders: [], paths: [] }),
     })
     const result = await fetchFolders()
-    expect(result).toEqual([])
+    expect(result).toEqual({ folders: [], paths: [] })
   })
 
   it('fetch 실패 시 에러 throw', async () => {
@@ -42,19 +42,19 @@ describe('fetchFolders', () => {
   it('런타임 가드: folders가 배열이 아니면 빈 배열 fallback', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ folders: null }),
+      json: async () => ({ folders: null, paths: null }),
     })
     const result = await fetchFolders()
-    expect(result).toEqual([])
+    expect(result).toEqual({ folders: [], paths: [] })
   })
 
-  it('런타임 가드: folders 키 자체 없으면 빈 배열 fallback', async () => {
+  it('런타임 가드: 키 자체 없으면 빈 배열 fallback', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({}),
     })
     const result = await fetchFolders()
-    expect(result).toEqual([])
+    expect(result).toEqual({ folders: [], paths: [] })
   })
 })
 
