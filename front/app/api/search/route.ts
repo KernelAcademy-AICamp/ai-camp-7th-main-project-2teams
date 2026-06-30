@@ -11,10 +11,11 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const queryEmbedding = await createEmbedding(parsed.data.query)
+  // bge-m3 비대칭 — 쿼리는 input_type='query'로 임베딩 (저장 doc은 'passage')
+  const queryEmbedding = await createEmbedding(parsed.data.query, 'query')
 
   // SEARCH_MATCH_THRESHOLD: 운영 데이터로 튜닝 가능. 기본 0.3 — 실험적 기준치, recall@k 측정 전 보수적 기본값.
-  // (text-embedding-3-small 비대칭: 저장 doc=title+content 長 vs 쿼리=短 → cosine 낮게 나옴)
+  // (bge-m3 query/passage 비대칭 임베딩 — 모델 교체 후 임계값 재튜닝 권장)
   const raw = parseFloat(process.env.SEARCH_MATCH_THRESHOLD ?? '0.3')
   const threshold = Number.isFinite(raw) && raw > 0 && raw <= 1 ? raw : 0.3
 

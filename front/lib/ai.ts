@@ -1,11 +1,13 @@
 import { getOpenAI } from './openai'
+import { embedBge, type EmbedInputType } from './bge'
 
-// e2e 전용: 실제 OpenAI 호출 회피(비용·지연·flaky 제거). 결정적 목 값 반환.
+// e2e 전용: 실제 API 호출 회피(비용·지연·flaky 제거). 결정적 목 값 반환.
 // 프로덕션 환경엔 절대 미설정 — nightly authed e2e 워크플로에서만 '1'.
 // 호출 시점 평가 — import 순서 무관 + 테스트 stubEnv 용이.
 const isMockOpenAI = () => process.env.E2E_MOCK_OPENAI === '1'
 // 모든 입력에 동일 상수 벡터 → 저장·쿼리 임베딩이 일치(cosine=1)하여 검색 결정적.
-const MOCK_EMBEDDING = new Array(1536).fill(0.01)
+// 차원 1024 = bge-m3 (마이그레이션 0005).
+const MOCK_EMBEDDING = new Array(1024).fill(0.01)
 
 // 태그 분류 체계: docs/specs/tag-taxonomy.md. 대→중→소 0~3개.
 const SYSTEM_PROMPT = `당신은 북마크 분류기입니다. 웹페이지를 대/중/소 계층으로 분류해 태그 0~3개를 생성합니다.
@@ -124,12 +126,12 @@ export async function generateTags({
   }
 }
 
-export async function createEmbedding(text: string): Promise<number[]> {
+// bge-m3 비대칭 모델 — 저장 문서는 'passage'(기본), 검색 쿼리는 'query'로 임베딩.
+export async function createEmbedding(
+  text: string,
+  inputType: EmbedInputType = 'passage'
+): Promise<number[]> {
   if (isMockOpenAI()) return MOCK_EMBEDDING
 
-  const response = await getOpenAI().embeddings.create({
-    model: 'text-embedding-3-small', // 기본 1536 차원
-    input: text,
-  })
-  return response.data[0].embedding
+  return embedBge(text, inputType)
 }
