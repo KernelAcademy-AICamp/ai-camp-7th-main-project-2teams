@@ -135,7 +135,7 @@
     "url": "https://www.notion.so/product",
     "title": "Notion - 올인원 협업 워크스페이스",
     "description": "문서·위키·프로젝트 관리 협업 도구.",
-    "gold": ["비즈니스", "소프트웨어", "Notion"]
+    "gold": ["브랜드", "마케팅", "Notion"]
   },
   {
     "url": "https://www.udemy.com/course/100-days-of-code/",
@@ -213,7 +213,7 @@
     "url": "https://www.nintendo.com/us/store/products/the-legend-of-zelda-tears-of-the-kingdom/",
     "title": "The Legend of Zelda: Tears of the Kingdom 리뷰",
     "description": "젤다의 전설 신작 게임 리뷰와 평가.",
-    "gold": ["게임", "게임리뷰", "젤다의 전설"]
+    "gold": ["게임", "리뷰", "젤다의 전설"]
   },
   {
     "url": "https://lol.inven.co.kr/lck",
@@ -244,5 +244,173 @@
     "title": "결제 처리 중 오류가 발생했습니다",
     "description": "요청을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.",
     "gold": []
+  },
+  {
+    "url": "https://heroicons.com/",
+    "title": "Heroicons",
+    "description": "Tailwind 제작팀이 만든 무료 SVG 아이콘 세트.",
+    "gold": ["디자인"]
+  },
+  {
+    "url": "https://m3.material.io/",
+    "title": "Material Design 3",
+    "description": "구글의 디자인 시스템 가이드라인 — 컴포넌트·색상·타이포.",
+    "gold": ["디자인", "UI/UX", "Material Design"]
+  },
+  {
+    "url": "https://unsplash.com/",
+    "title": "Unsplash — 무료 고화질 이미지",
+    "description": "상업적으로 이용 가능한 무료 스톡 사진 라이브러리.",
+    "gold": ["디자인"]
+  },
+  {
+    "url": "https://mobbin.com/browse/ios/apps",
+    "title": "Mobbin — 모바일 UI 패턴 레퍼런스",
+    "description": "실제 앱의 화면·플로우를 모은 UI/UX 디자인 레퍼런스.",
+    "gold": ["디자인", "UI/UX", "Mobbin"]
+  },
+  {
+    "url": "https://www.jobkorea.co.kr/",
+    "title": "잡코리아 | 구인구직·채용 정보 플랫폼",
+    "description": "기업 채용 공고 검색과 이력서 등록 취업 플랫폼.",
+    "gold": ["비즈니스", "커리어"]
+  },
+  {
+    "url": "https://www.appsflyer.com/ko/glossary/cpc/",
+    "title": "CPC (클릭당 비용)란? | AppsFlyer 용어집",
+    "description": "퍼포먼스 마케팅 핵심 지표 CPC의 정의와 활용.",
+    "gold": ["비즈니스", "마케팅", "CPC"]
+  },
+  {
+    "url": "https://maily.so/productlab/posts/0319ee08",
+    "title": "100개 유니콘 기업이 초기 유저를 확보한 방법",
+    "description": "스타트업의 초기 사용자 확보 전략 사례 분석.",
+    "gold": ["비즈니스", "스타트업"]
+  },
+  {
+    "url": "https://www.pinterest.co.kr/",
+    "title": "Pinterest",
+    "description": "이미지 기반 아이디어 수집·공유 소셜 플랫폼.",
+    "gold": ["커뮤니티", "소셜미디어", "Pinterest"]
+  },
+  {
+    "url": "https://disquiet.io/",
+    "title": "Disquiet — 메이커 커뮤니티",
+    "description": "프로덕트 메이커들이 제품을 공유하고 토론하는 커뮤니티.",
+    "gold": ["커뮤니티", "포럼", "Disquiet"]
+  },
+  {
+    "url": "https://careerly.co.kr/",
+    "title": "커리어리 | 직장인 소셜 커뮤니티",
+    "description": "현직자들이 인사이트를 나누는 피드형 소셜 커뮤니티.",
+    "gold": ["커뮤니티", "소셜미디어", "커리어리"]
+  },
+  {
+    "url": "https://www.portorocha.com/",
+    "title": "PORTO ROCHA — Branding Studio",
+    "description": "뉴욕 기반 브랜딩·아이덴티티 디자인 스튜디오 공식 홈페이지.",
+    "gold": ["브랜드", "마케팅", "PORTO ROCHA"]
+  },
+  {
+    "url": "http://huskyfox.com/",
+    "title": "HuskyFox",
+    "description": "브랜드 아이덴티티 디자인 스튜디오 공식 홈페이지.",
+    "gold": ["브랜드", "마케팅", "HuskyFox"]
+  },
+  {
+    "url": "https://bizschool.naver.com/",
+    "title": "네이버 비즈니스 스쿨",
+    "description": "소상공인·마케팅 실무 온라인 강의 플랫폼.",
+    "gold": ["학습", "강의"]
+  },
+  {
+    "url": "https://www.musinsa.com/",
+    "title": "무신사 — 온라인 패션 스토어",
+    "description": "의류·신발·액세서리를 판매하는 온라인 쇼핑몰.",
+    "gold": ["쇼핑"]
+  },
+  {
+    "url": "https://www.perplexity.ai/",
+    "title": "Perplexity",
+    "description": "출처를 함께 제공하는 AI 검색·대화 어시스턴트.",
+    "gold": ["AI/ML", "LLM", "Perplexity"]
+  },
+  {
+    "url": "https://accounts.google.com/signin",
+    "title": "로그인 - Google 계정",
+    "description": "",
+    "gold": []
+  },
+  {
+    "url": "https://www.notion.com/page-not-found",
+    "title": "404 — 페이지를 찾을 수 없습니다",
+    "description": "요청하신 페이지가 존재하지 않거나 이동되었습니다.",
+    "gold": []
+  },
+  {
+    "url": "https://www.10000recipe.com/recipe/6912345",
+    "title": "토마토 파스타 만들기 - 만개의레시피",
+    "description": "집에서 간단하게 만드는 토마토 파스타 레시피.",
+    "gold": ["라이프스타일", "요리"]
+  },
+  {
+    "url": "https://ohou.se/contents/12345",
+    "title": "6평 원룸 인테리어 꾸미기 - 오늘의집",
+    "description": "좁은 원룸 공간 활용 인테리어 아이디어.",
+    "gold": ["라이프스타일", "인테리어"]
+  },
+  {
+    "url": "https://post.naver.com/parenting/98765",
+    "title": "신생아 수면교육 언제부터 시작할까",
+    "description": "초보 부모를 위한 아기 수면 루틴 가이드.",
+    "gold": ["라이프스타일", "육아"]
+  },
+  {
+    "url": "https://blog.example.com/home-training-routine",
+    "title": "맨몸 홈트레이닝 4주 루틴",
+    "description": "기구 없이 집에서 하는 전신 운동 루틴.",
+    "gold": ["라이프스타일", "운동"]
+  },
+  {
+    "url": "https://ev.or.kr/charging-stations",
+    "title": "전기차 충전소 위치 및 요금 안내",
+    "description": "전국 전기차 급속 충전소 찾기와 충전 요금.",
+    "gold": ["라이프스타일", "자동차"]
+  },
+  {
+    "url": "https://www.goodchoice.kr/product/jeju",
+    "title": "제주 호텔 예약 - 여기어때",
+    "description": "제주 숙소 객실 요금 비교 및 예약.",
+    "gold": ["여행", "숙소"]
+  },
+  {
+    "url": "https://www.skyscanner.co.kr/routes/icn/cju",
+    "title": "서울-제주 항공권 최저가 비교",
+    "description": "원하는 날짜의 국내선 항공권 검색.",
+    "gold": ["여행", "항공"]
+  },
+  {
+    "url": "https://blog.example.com/jeju-2night-3days",
+    "title": "제주도 2박 3일 여행 코스 추천",
+    "description": "제주 동부 관광 명소와 일정 정리.",
+    "gold": ["여행", "관광"]
+  },
+  {
+    "url": "https://land.naver.com/article/55667788",
+    "title": "신촌 전세 매물 - 네이버부동산",
+    "description": "전월세 매물 시세와 조건 비교.",
+    "gold": ["금융", "부동산"]
+  },
+  {
+    "url": "https://finance.naver.com/marketindex/",
+    "title": "환율 - 네이버페이 증권",
+    "description": "오늘의 원/달러 환율 시세 조회.",
+    "gold": ["금융", "투자"]
+  },
+  {
+    "url": "https://www.tossbank.com/product/insurance",
+    "title": "실손의료보험 비교 가입",
+    "description": "실손보험 보장 내용과 보험료 비교.",
+    "gold": ["금융", "보험"]
   }
 ]
