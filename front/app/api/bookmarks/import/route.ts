@@ -95,7 +95,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
           const rawTags = tagsResult.status === 'fulfilled' ? tagsResult.value : []
           const tags = normalizeTags(rawTags)
 
-          const top = resolveTopCategory(rawTags)
+          const top = resolveTopCategory(tags)
           let category_id: string | null = null
           if (top) {
             if (categoryCache.has(top)) {

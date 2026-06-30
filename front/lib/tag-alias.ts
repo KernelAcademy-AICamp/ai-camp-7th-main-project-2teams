@@ -114,7 +114,7 @@ export function normalizeTags(tags: string[]): string[] {
   return tags.map((t) => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)
 }
 
-export function resolveTopCategory(tags: string[]): string | null {
-  const normalized = normalizeTags(tags)
-  return TOP_CATEGORIES.has(normalized[0]) ? normalized[0] : null
+// 입력은 normalizeTags() 거친 태그 배열. 재정규화하지 않음(중복 호출 방지, A38).
+export function resolveTopCategory(normalizedTags: string[]): string | null {
+  return TOP_CATEGORIES.has(normalizedTags[0]) ? normalizedTags[0] : null
 }

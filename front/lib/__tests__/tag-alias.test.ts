@@ -32,12 +32,13 @@ describe('normalizeTags', () => {
 })
 
 describe('resolveTopCategory', () => {
-  it('정규화 후 top 6이면 해당 값', () => {
-    expect(resolveTopCategory(['dev', 'frontend'])).toBe('개발')
-    expect(resolveTopCategory(['AI', 'LLM'])).toBe('AI/ML')
+  // 입력은 normalizeTags() 거친 배열 — 재정규화 안 함(A38).
+  it('normalize 거친 top이면 해당 값', () => {
+    expect(resolveTopCategory(normalizeTags(['dev', 'frontend']))).toBe('개발')
+    expect(resolveTopCategory(normalizeTags(['AI', 'LLM']))).toBe('AI/ML')
   })
 
-  it('top 6 아니면 null', () => {
+  it('top 아니면 null', () => {
     expect(resolveTopCategory(['프론트엔드'])).toBeNull()
     expect(resolveTopCategory([])).toBeNull()
   })

@@ -190,7 +190,7 @@ A17 (Extension 셋업)
 
 ### Minor
 
-- [ ] **A38 중복 normalize** (`app/api/bookmarks/route.ts`): `normalizeTags` + `resolveTopCategory`가 rawTags 2회 정규화. 결과 동일, 정리 가능.
+- [x] **A38 중복 normalize** (`app/api/bookmarks/route.ts`): `resolveTopCategory`가 정규화된 태그를 입력받도록 변경, 단건·임포트 라우트에서 `tags` 재사용. rawTags 2회 정규화 제거.
 
 ---
 
