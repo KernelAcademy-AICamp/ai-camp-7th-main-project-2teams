@@ -616,5 +616,41 @@
     "title": "때용의 일상 - YouTube",
     "description": "직장인의 소소한 일상을 담는 브이로그 채널.",
     "gold": []
+  },
+  {
+    "url": "https://www.goodtv.co.kr/sermon/12345",
+    "title": "주일 예배 설교 — 믿음으로 사는 삶",
+    "description": "교회 주일 예배 설교 영상과 성경 본문 묵상 나눔.",
+    "gold": []
+  },
+  {
+    "url": "https://www.lawtimes.co.kr/case/98765",
+    "title": "대법원 형사 판례 해설 — 정당방위 성립 요건",
+    "description": "정당방위 인정 범위에 관한 대법원 판결 요지와 법리 해설.",
+    "gold": []
+  },
+  {
+    "url": "https://www.amc.seoul.kr/healthinfo/disease/31910",
+    "title": "제2형 당뇨병 증상과 치료 - 서울아산병원",
+    "description": "당뇨병의 원인·증상·약물 치료와 합병증 관리 안내.",
+    "gold": []
+  },
+  {
+    "url": "https://news.example.com/politics/2024-general-election",
+    "title": "제22대 총선 판세 분석 — 여야 격돌",
+    "description": "국회의원 선거 정당별 판세와 주요 공약 비교 분석.",
+    "gold": []
+  },
+  {
+    "url": "https://blog.example.com/puppy-training-basics",
+    "title": "강아지 배변 훈련 기초 가이드",
+    "description": "반려견 배변·사회화 훈련 방법과 초기 적응 팁.",
+    "gold": []
+  },
+  {
+    "url": "https://sports.example.com/kbo/korean-series-g7",
+    "title": "KBO 한국시리즈 7차전 경기 리뷰",
+    "description": "프로야구 한국시리즈 최종전 결과와 결정적 장면 분석.",
+    "gold": []
   }
 ]
