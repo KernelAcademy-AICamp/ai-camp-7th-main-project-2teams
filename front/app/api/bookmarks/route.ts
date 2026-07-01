@@ -6,6 +6,7 @@ import { generateTags, createEmbedding } from '@/lib/ai'
 import { normalizeTags, resolveTopCategory, UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
 import { fetchMeta } from '@/lib/fetchMeta'
+import { normalizeUrl } from '@/lib/normalizeUrl'
 
 const getQuerySchema = z.object({
   tab: z.string().optional(),
@@ -24,7 +25,9 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   }
 
   let { title, content } = parsed.data
-  const { url, folder_hint } = parsed.data
+  const { folder_hint } = parsed.data
+  // 중복 방지: 정규화된 canonical URL로 저장 (trailing slash·fragment·트래킹파라미터 흡수)
+  const url = normalizeUrl(parsed.data.url)
 
   // content 없으면 URL fetch → 실제 title·description 추출 (단일 북마크 추가 경로)
   if (!content.trim()) {

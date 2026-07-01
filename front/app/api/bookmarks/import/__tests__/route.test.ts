@@ -90,13 +90,13 @@ describe('POST /api/bookmarks/import', () => {
     expect(json.imported).toBe(2)
     expect(json.failed).toBe(0)
 
-    // folder_hint 보존 확인
+    // folder_hint 보존 확인 (url은 normalizeUrl로 canonical 형태 — 루트 slash 포함)
     const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
-    const nextjsInsert = calls.find((c) => c[0].url === 'https://nextjs.org')
+    const nextjsInsert = calls.find((c) => c[0].url === 'https://nextjs.org/')
     expect(nextjsInsert?.[0].folder_hint).toEqual(['개발'])
 
     // 루트 항목은 null 저장
-    const exampleInsert = calls.find((c) => c[0].url === 'https://example.com')
+    const exampleInsert = calls.find((c) => c[0].url === 'https://example.com/')
     expect(exampleInsert?.[0].folder_hint).toBeNull()
   })
 
@@ -130,7 +130,7 @@ describe('POST /api/bookmarks/import', () => {
     const json = await res.json()
     expect(json.imported).toBe(1)
     expect(insertSpy).toHaveBeenCalledTimes(1)
-    expect(insertSpy.mock.calls[0][0].url).toBe('https://valid.com')
+    expect(insertSpy.mock.calls[0][0].url).toBe('https://valid.com/')
   })
 
   it('미인증 → 401', async () => {

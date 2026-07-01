@@ -4,6 +4,7 @@ import { withAuth } from '@/lib/auth'
 import { generateTags, createEmbedding } from '@/lib/ai'
 import { normalizeTags, resolveTopCategory } from '@/lib/tag-alias'
 import { parseNetscapeBookmarks } from '@/lib/parseNetscapeBookmarks'
+import { normalizeUrl } from '@/lib/normalizeUrl'
 
 // 대량 임포트 중 OpenAI 호출이 누적되므로 Vercel Pro 최대값(300s) 지정
 export const maxDuration = 300
@@ -76,8 +77,10 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     const chunk = items.slice(i, i + CHUNK_SIZE)
 
     await Promise.all(
-      chunk.map(async ({ title, url, folder_hint }) => {
+      chunk.map(async ({ title, url: rawUrl, folder_hint }) => {
         try {
+          // 중복 방지: 단건 저장(A5)과 동일하게 canonical URL로 정규화
+          const url = normalizeUrl(rawUrl)
           const [tagsResult, embeddingResult] = await Promise.allSettled([
             generateTags({ title, url }),
             createEmbedding(title),

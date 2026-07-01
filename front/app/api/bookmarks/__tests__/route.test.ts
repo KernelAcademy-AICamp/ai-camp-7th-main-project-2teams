@@ -148,7 +148,7 @@ describe('POST /api/bookmarks', () => {
     expect(warnSpy).toHaveBeenCalledWith(
       '[weak-vector]',
       expect.objectContaining({
-        url: 'https://a.com',
+        url: 'https://a.com/', // normalizeUrl canonical (루트 slash)
         title: 'T',
         user_id: 'u1',
         reason: expect.stringContaining('content 없음'),
