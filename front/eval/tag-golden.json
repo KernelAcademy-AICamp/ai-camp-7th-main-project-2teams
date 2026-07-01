@@ -652,5 +652,41 @@
     "title": "KBO 한국시리즈 7차전 경기 리뷰",
     "description": "프로야구 한국시리즈 최종전 결과와 결정적 장면 분석.",
     "gold": []
+  },
+  {
+    "url": "https://toss.tech/",
+    "title": "토스 기술 블로그, 토스 테크",
+    "description": "토스 개발팀의 프론트엔드·백엔드·인프라 기술 아티클 모음.",
+    "gold": ["개발"]
+  },
+  {
+    "url": "https://techblog.woowahan.com/",
+    "title": "우아한형제들 기술블로그",
+    "description": "배달의민족 개발자들이 쓰는 서버·프론트엔드 기술 블로그.",
+    "gold": ["개발"]
+  },
+  {
+    "url": "https://uppity.co.kr/",
+    "title": "뉴스레터 어피티",
+    "description": "2030을 위한 경제·금융 소식을 쉽게 풀어주는 구독 뉴스레터.",
+    "gold": ["콘텐츠", "뉴스레터"]
+  },
+  {
+    "url": "https://feedly.com/",
+    "title": "Feedly - RSS Reader",
+    "description": "여러 사이트의 글을 한곳에서 구독·정리하는 RSS 큐레이션 리더.",
+    "gold": ["콘텐츠", "큐레이션"]
+  },
+  {
+    "url": "https://yozm.wishket.com/magazine",
+    "title": "요즘 사람들의 IT 매거진, 요즘IT",
+    "description": "IT 업계 트렌드·일하는 방식을 다루는 종합 매거진.",
+    "gold": ["콘텐츠", "블로그"]
+  },
+  {
+    "url": "https://brunch.co.kr/@blckschrl/62",
+    "title": "iOS & Android UI 차이",
+    "description": "모바일 플랫폼별 UI 가이드라인 차이를 정리한 디자인 아티클.",
+    "gold": ["디자인", "UI/UX"]
   }
 ]
