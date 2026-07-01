@@ -412,5 +412,161 @@
     "title": "실손의료보험 비교 가입",
     "description": "실손보험 보장 내용과 보험료 비교.",
     "gold": ["금융", "보험"]
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=dev-react-hooks",
+    "title": "React useState 15분 완성 - 코딩 튜토리얼",
+    "description": "React useState 훅 사용법을 예제로 설명하는 단발 강좌.",
+    "gold": ["개발", "프론트엔드", "React"]
+  },
+  {
+    "url": "https://www.youtube.com/playlist?list=nextjs-course",
+    "title": "Next.js 풀스택 완주반 (30강 커리큘럼)",
+    "description": "입문부터 배포까지 순서대로 배우는 Next.js 강의 시리즈.",
+    "gold": ["학습", "강의", "Next.js"]
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=lol-jungle-guide",
+    "title": "정글 갱킹 루트 완벽 정리 - LoL 공략",
+    "description": "리그 오브 레전드 정글러 동선과 갱킹 타이밍 공략.",
+    "gold": ["게임", "공략", "리그 오브 레전드"]
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=tomato-pasta",
+    "title": "10분 토마토 파스타 만들기",
+    "description": "집에서 간단히 만드는 토마토 파스타 레시피 영상.",
+    "gold": ["라이프스타일", "요리"]
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=home-workout-abs",
+    "title": "복근 홈트 10분 루틴",
+    "description": "기구 없이 집에서 하는 복부 운동 루틴.",
+    "gold": ["라이프스타일", "운동"]
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=etf-explained",
+    "title": "ETF 초보 가이드 - 분산투자의 기본",
+    "description": "ETF 개념과 장기 분산투자 전략 설명.",
+    "gold": ["금융", "투자", "ETF"]
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=official-mv-2024",
+    "title": "NewJeans - Supernatural M/V",
+    "description": "뮤직비디오 공식 영상.",
+    "gold": []
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=daily-vlog-jeju",
+    "title": "제주 3일 브이로그 | 혼자 여행",
+    "description": "제주 여행 일상을 담은 브이로그.",
+    "gold": []
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=deleted-video",
+    "title": "이 동영상을 재생할 수 없습니다",
+    "description": "",
+    "gold": []
+  },
+  {
+    "url": "https://jwt.io/introduction",
+    "title": "JWT 소개 - jwt.io",
+    "description": "JSON Web Token 구조와 인증 토큰 검증 흐름 설명.",
+    "gold": ["개발", "보안", "JWT"]
+  },
+  {
+    "url": "https://reactnative.dev/docs/getting-started",
+    "title": "Getting Started - React Native",
+    "description": "React Native로 네이티브 모바일 앱 개발 시작하기.",
+    "gold": ["개발", "모바일", "React Native"]
+  },
+  {
+    "url": "https://github.com/sindresorhus/awesome",
+    "title": "sindresorhus/awesome — 큐레이션 리스트",
+    "description": "주제별 오픈소스 프로젝트를 모은 awesome 리스트 저장소.",
+    "gold": ["개발", "오픈소스"]
+  },
+  {
+    "url": "https://pandas.pydata.org/docs/user_guide/index.html",
+    "title": "User Guide - pandas documentation",
+    "description": "pandas 데이터프레임 조작·집계·분석 가이드.",
+    "gold": ["AI/ML", "데이터분석", "Pandas"]
+  },
+  {
+    "url": "https://noonnu.cc/",
+    "title": "눈누 — 상업용 무료 한글폰트",
+    "description": "상업적으로 이용 가능한 무료 한글 글꼴 모음.",
+    "gold": ["디자인", "그래픽", "폰트"]
+  },
+  {
+    "url": "https://blog.example.com/logo-design-principles",
+    "title": "좋은 로고 디자인의 7가지 원칙",
+    "description": "브랜드 아이덴티티를 담는 로고 디자인 기본 원칙.",
+    "gold": ["디자인", "브랜딩", "로고"]
+  },
+  {
+    "url": "https://blog.example.com/how-to-write-prd",
+    "title": "PM을 위한 PRD 작성 가이드",
+    "description": "제품 요구사항 문서(PRD) 구조와 작성 방법.",
+    "gold": ["비즈니스", "기획", "PRD"]
+  },
+  {
+    "url": "https://martinfowler.com/books/refactoring.html",
+    "title": "Refactoring - Martin Fowler",
+    "description": "리팩터링 기술서 소개와 목차.",
+    "gold": ["학습", "책"]
+  },
+  {
+    "url": "https://www.q-net.or.kr/crf005.do?id=processing",
+    "title": "정보처리기사 시험 안내 - 큐넷",
+    "description": "정보처리기사 응시 자격과 시험 일정 안내.",
+    "gold": ["학습", "자격증", "정보처리기사"]
+  },
+  {
+    "url": "https://www.adobe.com/kr/creativecloud/plans.html",
+    "title": "Creative Cloud 요금제 구매 - Adobe",
+    "description": "포토샵·일러스트레이터 구독 요금제 구매 페이지.",
+    "gold": ["쇼핑", "소프트웨어"]
+  },
+  {
+    "url": "https://www.musinsa.com/products/3948210",
+    "title": "오버핏 코튼 후드 티셔츠 - 무신사",
+    "description": "남녀공용 오버핏 후드 티셔츠 상품 구매 페이지.",
+    "gold": ["쇼핑", "패션"]
+  },
+  {
+    "url": "https://www.kurly.com/goods/1000456",
+    "title": "유기농 방울토마토 500g - 마켓컬리",
+    "description": "산지직송 유기농 방울토마토 식료품 구매.",
+    "gold": ["쇼핑", "식품"]
+  },
+  {
+    "url": "https://www.ikea.com/kr/ko/p/markus-office-chair",
+    "title": "MARKUS 사무용 의자 - 이케아",
+    "description": "장시간 착석에 적합한 사무용 의자 구매.",
+    "gold": ["쇼핑", "기타용품"]
+  },
+  {
+    "url": "https://playvalorant.com/ko-kr/news/game-updates/",
+    "title": "발로란트 패치노트 8.11",
+    "description": "요원 밸런스 조정과 버그 수정 업데이트 내역.",
+    "gold": ["게임", "뉴스"]
+  },
+  {
+    "url": "https://blog.example.com/sleep-hygiene",
+    "title": "잠 잘 자는 법 — 수면 위생 7가지",
+    "description": "숙면을 돕는 생활 습관과 수면 환경 가이드.",
+    "gold": ["라이프스타일", "건강"]
+  },
+  {
+    "url": "https://blog.example.com/mangwon-matjip",
+    "title": "망원동 로컬 맛집 5곳 추천",
+    "description": "망원동 현지인이 자주 가는 식당과 카페 정리.",
+    "gold": ["여행", "맛집"]
+  },
+  {
+    "url": "https://www.hometax.go.kr/yearend/guide",
+    "title": "연말정산 간소화 서비스 이용 안내 - 홈택스",
+    "description": "연말정산 소득·세액공제 자료 조회 방법.",
+    "gold": ["금융", "세금"]
   }
 ]
