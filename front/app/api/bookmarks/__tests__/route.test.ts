@@ -11,10 +11,12 @@ vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
 const { warnSpy } = vi.hoisted(() => ({ warnSpy: vi.fn() }))
 vi.mock('@/lib/logger', () => ({ logger: { warn: warnSpy, log: vi.fn(), error: vi.fn() } }))
 
-// supabase 서버 클라이언트 모킹: auth + categories upsert + bookmarks upsert
-const upsertSpy = vi.fn()
-const upsertOptsSpy = vi.fn()
+// supabase 서버 클라이언트 모킹: auth + categories upsert + bookmarks 중복검사/insert
+const insertSpy = vi.fn()
 const selectArgSpy = vi.fn()
+// 중복 선검사 결과·insert 에러 제어 (테스트별로 beforeEach에서 리셋)
+let existingBookmark: unknown = null
+let insertError: { code?: string; message: string } | null = null
 
 function makeSupabase(user: unknown) {
   return {
@@ -36,14 +38,26 @@ function makeSupabase(user: unknown) {
       }
       // bookmarks
       return {
-        upsert(payload: Record<string, unknown>, opts: unknown) {
-          upsertSpy(payload)
-          upsertOptsSpy(opts)
+        // 중복 선검사: select('id').eq('user_id').eq('url').maybeSingle()
+        select() {
+          return {
+            eq: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: existingBookmark, error: null }),
+              }),
+            }),
+          }
+        },
+        insert(payload: Record<string, unknown>) {
+          insertSpy(payload)
           return {
             select(cols: string) {
               selectArgSpy(cols)
               return {
-                single: async () => ({ data: { id: 'bm1', ...stripped(payload) }, error: null }),
+                single: async () =>
+                  insertError
+                    ? { data: null, error: insertError }
+                    : { data: { id: 'bm1', ...stripped(payload) }, error: null },
               }
             },
           }
@@ -78,8 +92,9 @@ function req(body: unknown) {
 describe('POST /api/bookmarks', () => {
   beforeEach(() => {
     currentUser = { id: 'u1' }
-    upsertSpy.mockReset()
-    upsertOptsSpy.mockReset()
+    existingBookmark = null
+    insertError = null
+    insertSpy.mockReset()
     selectArgSpy.mockReset()
     warnSpy.mockReset()
     generateTags.mockReset()
@@ -88,15 +103,32 @@ describe('POST /api/bookmarks', () => {
     createEmbedding.mockResolvedValue([0.1, 0.2, 0.3])
   })
 
-  it('content는 upsert payload에 없음 (본문 미저장)', async () => {
+  it('content는 insert payload에 없음 (본문 미저장)', async () => {
     await POST(req({ title: 'T', url: 'https://a.com', content: '비밀 본문' }))
-    const payload = upsertSpy.mock.calls[0][0]
+    const payload = insertSpy.mock.calls[0][0]
     expect(payload).not.toHaveProperty('content')
   })
 
-  it('upsert에 embedding 포함, tags 정규화, category_id 조회', async () => {
+  it('이미 저장된 URL → 409, AI 미호출, insert 안 함', async () => {
+    existingBookmark = { id: 'bm-existing' }
+    const res = await POST(req({ title: 'T', url: 'https://a.com' }))
+    expect(res.status).toBe(409)
+    const json = await res.json()
+    expect(json.duplicate).toBe(true)
+    expect(generateTags).not.toHaveBeenCalled()
+    expect(insertSpy).not.toHaveBeenCalled()
+  })
+
+  it('동시 저장 경합 — insert unique 위반(23505) → 409', async () => {
+    insertError = { code: '23505', message: 'duplicate key value' }
+    const res = await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
+    expect(res.status).toBe(409)
+    expect((await res.json()).duplicate).toBe(true)
+  })
+
+  it('insert에 embedding 포함, tags 정규화, category_id 조회', async () => {
     await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
-    const payload = upsertSpy.mock.calls[0][0]
+    const payload = insertSpy.mock.calls[0][0]
     expect(payload.embedding).toEqual([0.1, 0.2, 0.3])
     expect(payload.tags).toEqual(['개발', '프론트엔드', 'Next.js'])
     expect(payload.category_id).toBe('cat-개발')
@@ -127,18 +159,18 @@ describe('POST /api/bookmarks', () => {
     expect(res.status).toBe(401)
   })
 
-  it('임베딩 실패 → 502, upsert 안 함', async () => {
+  it('임베딩 실패 → 502, insert 안 함', async () => {
     createEmbedding.mockRejectedValue(new Error('rate limit'))
     const res = await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
     expect(res.status).toBe(502)
-    expect(upsertSpy).not.toHaveBeenCalled()
+    expect(insertSpy).not.toHaveBeenCalled()
   })
 
   it('태깅 실패 → 빈 태그로 저장(degrade)', async () => {
     generateTags.mockRejectedValue(new Error('parse fail'))
     const res = await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
     expect(res.status).toBe(201)
-    const payload = upsertSpy.mock.calls[0][0]
+    const payload = insertSpy.mock.calls[0][0]
     expect(payload.tags).toEqual([])
     expect(payload.category_id).toBeNull()
   })

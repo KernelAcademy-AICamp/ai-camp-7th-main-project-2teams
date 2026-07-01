@@ -29,6 +29,21 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   // 중복 방지: 정규화된 canonical URL로 저장 (trailing slash·fragment·트래킹파라미터 흡수)
   const url = normalizeUrl(parsed.data.url)
 
+  // 중복 선검사 — 이미 저장된 URL이면 409 (AI 호출 전이라 비용 절약).
+  // 조용한 덮어쓰기 대신 명시적 안내. 경합은 아래 insert의 unique 위반(23505)으로 이중 방어.
+  const { data: existing } = await supabase
+    .from('bookmarks')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('url', url)
+    .maybeSingle()
+  if (existing) {
+    return NextResponse.json(
+      { error: '이미 저장된 북마크입니다.', duplicate: true },
+      { status: 409 },
+    )
+  }
+
   // content 없으면 URL fetch → 실제 title·description 추출 (단일 북마크 추가 경로)
   if (!content.trim()) {
     const meta = await fetchMeta(url)
@@ -69,26 +84,29 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     category_id = category?.id ?? null
   }
 
-  // onConflict: (user_id, url) unique 제약 — 같은 URL 재저장 시 갱신(AI 태깅·임베딩 최신화)
   const { data, error } = await supabase
     .from('bookmarks')
-    .upsert(
-      {
-        user_id: user.id,
-        title,
-        url,
-        tags,
-        category_id,
-        folder_hint: folder_hint ?? null,
-        embedding,
-      },
-      { onConflict: 'user_id, url', ignoreDuplicates: false },
-    )
+    .insert({
+      user_id: user.id,
+      title,
+      url,
+      tags,
+      category_id,
+      folder_hint: folder_hint ?? null,
+      embedding,
+    })
     // 명시 컬럼 — embedding 누출 방지
     .select('id, url, title, tags, category_id, folder_hint, is_favorite, created_at')
     .single()
 
   if (error) {
+    // 경합: 선검사 통과 후 동시 insert로 (user_id, url) unique 위반 → 중복 취급
+    if (error.code === '23505') {
+      return NextResponse.json(
+        { error: '이미 저장된 북마크입니다.', duplicate: true },
+        { status: 409 },
+      )
+    }
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
