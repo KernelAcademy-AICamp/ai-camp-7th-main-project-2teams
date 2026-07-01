@@ -50,9 +50,10 @@ export const TAG_ALIAS: Record<string, string> = {
   frontend: '프론트엔드', 'front-end': '프론트엔드', FE: '프론트엔드', 프론트: '프론트엔드',
   // 백엔드
   backend: '백엔드', 'back-end': '백엔드', BE: '백엔드', 서버: '백엔드', server: '백엔드',
-  // 인프라
+  // 인프라 (배포·클라우드 표현 흡수 — 전부 인프라 중분류로)
   infra: '인프라', infrastructure: '인프라', DevOps: '인프라', devops: '인프라', 'CI/CD': '인프라',
   컨테이너: '인프라', container: '인프라', 클라우드네이티브: '인프라', 'cloud native': '인프라',
+  배포: '인프라', deploy: '인프라', deployment: '인프라', 클라우드: '인프라', cloud: '인프라',
   // 데이터베이스
   DB: '데이터베이스', database: '데이터베이스', db: '데이터베이스',
   // LLM
@@ -104,8 +105,12 @@ export const TAG_ALIAS: Record<string, string> = {
   fashion: '패션', 의류: '패션', food: '식품', 식료품: '식품',
   // 학습 중분류 보강
   certificate: '자격증', certification: '자격증',
+  // 보안 (인증=보안 중분류)
+  인증: '보안', auth: '보안', authentication: '보안',
+  // 기획 (제품관리=기획 중분류)
+  제품관리: '기획', 프로덕트: '기획', 'product management': '기획',
   // 소분류 표기 통일
-  파이썬: 'Python',
+  파이썬: 'Python', 도커: 'Docker', 쿠버네티스: 'Kubernetes',
 }
 
 const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드', '게임', '라이프스타일', '여행', '금융'])
