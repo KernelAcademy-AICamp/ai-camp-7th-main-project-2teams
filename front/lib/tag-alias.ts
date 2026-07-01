@@ -113,7 +113,7 @@ export const TAG_ALIAS: Record<string, string> = {
   파이썬: 'Python', 도커: 'Docker', 쿠버네티스: 'Kubernetes',
 }
 
-const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드', '게임', '라이프스타일', '여행', '금융'])
+const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '콘텐츠', '브랜드', '게임', '라이프스타일', '여행', '금융'])
 
 // 고정 12개 외 / 태깅 실패(tags=[]) → category_id null. UI·필터에서 이 라벨로 묶음.
 export const UNCATEGORIZED_LABEL = '미분류'

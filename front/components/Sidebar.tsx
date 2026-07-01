@@ -130,6 +130,7 @@ export function Sidebar({ bookmarks, loading = false }: SidebarProps) {
     setCategory(name);
     setTag(null);
     setFolder(null);
+    setSearchQuery("");
   };
 
   const handleFolder = (name: string) => {
