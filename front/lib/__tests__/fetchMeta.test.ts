@@ -23,6 +23,22 @@ describe('fetchMeta — YouTube oEmbed', () => {
     expect((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toContain('/oembed')
   })
 
+  it('채널 메인(/@handle) → og:title이 50KB 밖이어도 추출(채널 캡 상향)', async () => {
+    // YouTube 채널 HTML은 og:title이 ~628KB 지점 → 기본 50KB 캡으로는 누락.
+    const padding = 'x'.repeat(60_000)
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce(mockResponse({ ok: false, status: 404 })) // oEmbed 404
+      .mockResolvedValueOnce(
+        mockResponse({
+          ok: true,
+          text: `<head>${padding}<meta property="og:title" content="구디사는 개발자 9Diin"><meta property="og:description" content="개발 채널"></head>`,
+        }),
+      )
+    const meta = await fetchMeta('https://www.youtube.com/@9diin')
+    expect(meta.title).toBe('구디사는 개발자 9Diin')
+  })
+
   it('채널 URL → oEmbed 404 → HTML 폴백(og:title/description)', async () => {
     global.fetch = vi
       .fn()
