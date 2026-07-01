@@ -83,6 +83,6 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
       console.log('\n=== 집계 ===', JSON.stringify(agg, null, 2))
       expect(agg.f1).toBeGreaterThanOrEqual(F1_BASELINE)
     },
-    120_000,
+    300_000, // 골든셋 95건 순차 OpenAI 호출 — n=69 시절 120s로는 부족
   )
 })
