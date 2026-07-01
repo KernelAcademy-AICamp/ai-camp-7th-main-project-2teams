@@ -21,6 +21,32 @@ async function signOutAndPurge() {
   await chrome.storage.local.clear()
 }
 
+// 활성 탭의 라이브 DOM에서 title/description/content 추출 (activeTab + scripting 권한).
+// content script는 웹앱에만 주입되므로 외부 페이지(YouTube 등)는 executeScript로 직접 수집.
+// SPA·동의 페이지 때문에 서버 fetchMeta가 빈약한 경우를 보완 — title·메타 설명 확보로 AI 태깅 품질 향상.
+export async function extractPageInfo(tabId) {
+  try {
+    const [injection] = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => {
+        const meta = (sel) =>
+          document.querySelector(sel)?.getAttribute('content')?.trim() ?? ''
+        const description =
+          meta('meta[property="og:description"]') || meta('meta[name="description"]')
+        const title = document.title || meta('meta[property="og:title"]')
+        const body = (document.body?.innerText ?? '').replace(/\s+/g, ' ').trim()
+        // description(있으면) + 본문을 합쳐 AI 입력 신호 강화, 2000자 상한
+        const content = [description, body].filter(Boolean).join('\n').slice(0, 2000)
+        return { title, content }
+      },
+    })
+    return injection?.result ?? null
+  } catch {
+    // chrome:// 등 주입 불가 페이지 → null (title은 호출부에서 tab.title 폴백)
+    return null
+  }
+}
+
 // 현재 탭 정보(url/title/content) + 세션 토큰으로 POST /api/bookmarks
 async function saveCurrentTab() {
   const { data: sessionData } = await supabase.auth.getSession()
@@ -31,9 +57,7 @@ async function saveCurrentTab() {
   if (!tab?.id) return { error: 'no active tab' }
   if (!tab.url) return { error: 'tab url unavailable' }
 
-  const contentRes = await new Promise((resolve) => {
-    chrome.tabs.sendMessage(tab.id, { type: 'GET_CONTENT' }, (res) => resolve(res))
-  })
+  const info = await extractPageInfo(tab.id)
 
   const res = await fetch(`${WEB_APP_URL}/api/bookmarks`, {
     method: 'POST',
@@ -43,8 +67,9 @@ async function saveCurrentTab() {
     },
     body: JSON.stringify({
       url: tab.url ?? '',
-      title: tab.title ?? '',
-      content: contentRes?.content ?? '',
+      // 라이브 DOM title 우선, 실패 시 탭 메타데이터 폴백
+      title: info?.title || tab.title || '',
+      content: info?.content ?? '',
     }),
   })
 
@@ -69,14 +94,13 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 
   if (msg.type === 'GET_TAB_INFO') {
-    chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+    chrome.tabs.query({ active: true, currentWindow: true }).then(async ([tab]) => {
       if (!tab?.id) return sendResponse({ error: 'no active tab' })
-      chrome.tabs.sendMessage(tab.id, { type: 'GET_CONTENT' }, (res) => {
-        sendResponse({
-          url: tab.url ?? '',
-          title: tab.title ?? '',
-          content: res?.content ?? '',
-        })
+      const info = await extractPageInfo(tab.id)
+      sendResponse({
+        url: tab.url ?? '',
+        title: info?.title || tab.title || '',
+        content: info?.content ?? '',
       })
     })
     return true
