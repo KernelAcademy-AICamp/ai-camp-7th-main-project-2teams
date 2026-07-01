@@ -2,11 +2,24 @@
 
 const FETCH_TIMEOUT_MS = 5000
 const MAX_HTML = 50_000 // <head> 파싱에 충분, 대용량 바디 방지
+// YouTube 채널 메인 페이지는 <title>/og:title이 ~630KB 지점에 있어 기본 캡으론 누락 → 상향.
+const CHANNEL_MAX_HTML = 800_000
 
 function isYouTube(url: string): boolean {
   try {
     const host = new URL(url).hostname
     return /(^|\.)youtube\.com$/.test(host) || host === 'youtu.be'
+  } catch {
+    return false
+  }
+}
+
+// 채널·크리에이터 메인 페이지(/@handle·/channel·/c·/user) — oEmbed 미지원(404)이라 HTML 폴백 필요.
+function isYouTubeChannel(url: string): boolean {
+  try {
+    const u = new URL(url)
+    if (!/(^|\.)youtube\.com$/.test(u.hostname)) return false
+    return /^\/(@[^/]+|channel\/|c\/|user\/)/.test(u.pathname)
   } catch {
     return false
   }
@@ -58,7 +71,9 @@ export async function fetchMeta(url: string): Promise<{ title: string; descripti
     })
     if (!res.ok) return { title: '', description: '' }
 
-    const html = (await res.text()).slice(0, MAX_HTML)
+    // 유튜브 채널 메인은 head가 커서 캡 상향 (og:title이 50KB 밖)
+    const cap = isYouTubeChannel(url) ? CHANNEL_MAX_HTML : MAX_HTML
+    const html = (await res.text()).slice(0, cap)
 
     // <title> 우선, 없으면 og:title → twitter:title
     const title =
