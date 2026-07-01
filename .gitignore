@@ -11,6 +11,7 @@ dist/
 out/
 *.tsbuildinfo
 .playwright-mcp
+everything-claude-code/
 
 # 테스트 커버리지
 coverage/
