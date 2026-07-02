@@ -530,6 +530,55 @@
         "A7"
       ],
       "testStrategy": "롤백됨(2026-06-30): 0005/bge-m3 → 0006으로 OpenAI text-embedding-3-small(1536) 복귀, 백업에서 원본 임베딩 복원. 재추진 여부는 품질 개선 vs 운영 비용 재검토 후 결정."
+    },
+    {
+      "id": "A52",
+      "title": "임포트 태깅 입력 보강 (description 굶김 해소)",
+      "description": "임포트 경로가 generateTags({ title, url })만 호출 — description 누락으로 태깅 정확도 바닥. 단일 추가 경로는 content/meta를 description으로 넘기는데 임포트만 굶김. eval(골든셋)은 이 경로를 측정하지 않아 여태 미검출.",
+      "details": "app/api/bookmarks/import/route.ts:85. fetchMeta를 임포트에도 적용(동시성 제한 — 대량 URL fetch 폭주 방지, p-limit 등). content/description은 태깅 스코프 내에서만 사용 후 즉시 파기 — DB 저장·로그 금지(기존 프라이버시 규칙 준수). fetchMeta 실패·빈 description은 title+url 폴백 유지.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": [
+        "A43"
+      ],
+      "testStrategy": "임포트 후 태그 채움율·대분류 정확도 측정. fetchMeta 타임아웃/실패 시 저장 자체는 진행되는지 확인. content가 DB/로그에 남지 않는지 확인."
+    },
+    {
+      "id": "A53",
+      "title": "골든셋 실입력 분포 반영 (train/serve skew 제거)",
+      "description": "eval/tag-golden.json 모든 항목이 잘 다듬은 description 보유 → eval F1 0.85가 실사용 태깅 품질을 과대평가. 프로덕션 임포트 경로(title+url만)의 실패 모드를 골든셋이 담지 못해 회귀 게이트가 거짓 안심.",
+      "details": "골든셋에 description 빈/얇은(title+url만) 항목군 추가 — 임포트 현실 반영. 러너(RUN_TAG_EVAL, lib/__tests__/tag-eval.test.ts)가 입력 조건별(rich desc vs title-only) macro-F1 분리 리포트하도록 확장 고려. golden-set-expand 스킬 validate_golden.py 정책 유지.",
+      "priority": "high",
+      "status": "pending",
+      "dependencies": [
+        "A43",
+        "A44"
+      ],
+      "testStrategy": "title-only 서브셋 F1이 별도 집계되는지 확인. A52 적용 전/후 title-only F1 개선폭 측정."
+    },
+    {
+      "id": "A54",
+      "title": "자연어 검색 하이브리드 (pgvector + FTS)",
+      "description": "순수 벡터 단독은 정확 단어 매칭에 취약. Postgres 내장 tsvector(FTS)와 벡터 검색을 RRF로 병합해 recall·정밀도 보강. 확장 설치 불필요.",
+      "details": "match_bookmarks RPC를 벡터 결과 + FTS 결과 RRF 병합으로 확장. title/tags 대상 tsvector 인덱스 추가. GraphRAG는 도입 안 함 — 북마크 검색은 단일 홉 시맨틱 검색이라 형태 불일치, 서버리스·content 미저장 제약과도 충돌(2026-07 판단, 집계·관통 질문 기능 생기면 재검토).",
+      "priority": "medium",
+      "status": "pending",
+      "dependencies": [
+        "A36"
+      ],
+      "testStrategy": "검색 골든셋 recall@k로 벡터 단독 대비 하이브리드 개선 실측."
+    },
+    {
+      "id": "A55",
+      "title": "검색 메타데이터 필터 (tags/category)",
+      "description": "match_bookmarks가 tags/category_id 필터를 못 받음. '즐겨찾기 중 리액트' 같은 쿼리에 이미 있는 메타데이터 결합 시 공짜 정확도.",
+      "details": "match_bookmarks RPC에 선택적 tag/category/is_favorite 필터 파라미터 추가, search route에서 쿼리 파싱 후 전달. RLS·명시 컬럼 select 유지(embedding 미포함).",
+      "priority": "medium",
+      "status": "pending",
+      "dependencies": [
+        "A36"
+      ],
+      "testStrategy": "필터 결합 쿼리에서 관련 없는 카테고리 결과가 배제되는지 확인."
     }
   ]
 }

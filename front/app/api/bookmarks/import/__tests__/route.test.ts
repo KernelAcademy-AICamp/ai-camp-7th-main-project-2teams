@@ -7,6 +7,10 @@ const { generateTags, createEmbedding } = vi.hoisted(() => ({
 }))
 vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
 
+// A52: 임포트가 fetchMeta로 description 조회 — 실네트워크 차단, 기본 빈 메타 반환
+const { fetchMeta } = vi.hoisted(() => ({ fetchMeta: vi.fn() }))
+vi.mock('@/lib/fetchMeta', () => ({ fetchMeta }))
+
 // Supabase 모킹: auth + categories 조회 + bookmarks upsert
 const insertSpy = vi.fn() // ponytail: alias kept for backward-compat test assertions
 
@@ -78,8 +82,10 @@ describe('POST /api/bookmarks/import', () => {
     insertSpy.mockReset()
     generateTags.mockReset()
     createEmbedding.mockReset()
+    fetchMeta.mockReset()
     generateTags.mockResolvedValue(['개발', '프론트엔드'])
     createEmbedding.mockResolvedValue([0.1, 0.2])
+    fetchMeta.mockResolvedValue({ title: '', description: '' })
   })
 
   it('정상 임포트 — 200 + imported 카운트 + folder_hint 보존', async () => {
@@ -98,6 +104,32 @@ describe('POST /api/bookmarks/import', () => {
     // 루트 항목은 null 저장
     const exampleInsert = calls.find((c) => c[0].url === 'https://example.com/')
     expect(exampleInsert?.[0].folder_hint).toBeNull()
+  })
+
+  it('A52: fetchMeta description을 태깅·임베딩 입력으로 전달', async () => {
+    fetchMeta.mockResolvedValue({ title: 'meta title', description: 'Next.js 서버 컴포넌트 가이드' })
+
+    await POST(makeReq(makeFile(SAMPLE_HTML)))
+
+    // 태깅에 description 전달 (title+url 굶김 해소)
+    expect(generateTags).toHaveBeenCalledWith(
+      expect.objectContaining({ description: 'Next.js 서버 컴포넌트 가이드' }),
+    )
+    // 임베딩도 title+description 결합 (약한 벡터 개선)
+    expect(createEmbedding).toHaveBeenCalledWith(
+      expect.stringContaining('Next.js 서버 컴포넌트 가이드'),
+    )
+  })
+
+  it('A52: fetchMeta 빈 description → title 폴백 (description 미전달)', async () => {
+    // 기본 목이 빈 메타 반환
+    await POST(makeReq(makeFile(SAMPLE_HTML)))
+
+    expect(generateTags).toHaveBeenCalledWith(
+      expect.objectContaining({ description: undefined }),
+    )
+    // 임베딩은 title 단독
+    expect(createEmbedding).toHaveBeenCalledWith('Next.js')
   })
 
   it('insert payload에 user_id 포함', async () => {

@@ -5,6 +5,7 @@ import { generateTags, createEmbedding } from '@/lib/ai'
 import { normalizeTags, resolveTopCategory } from '@/lib/tag-alias'
 import { parseNetscapeBookmarks } from '@/lib/parseNetscapeBookmarks'
 import { normalizeUrl } from '@/lib/normalizeUrl'
+import { fetchMeta } from '@/lib/fetchMeta'
 
 // 대량 임포트 중 OpenAI 호출이 누적되므로 Vercel Pro 최대값(300s) 지정
 export const maxDuration = 300
@@ -27,8 +28,9 @@ const fileSchema = z.object({
 })
 
 // FormData 'file' 필드로 Netscape 북마크 HTML을 받아 배치 저장.
-// content 없음 — 임포트는 본문 처리 없이 title+url 기반 태깅만 수행.
-// 응답: { imported, failed, skipped } — embedding/content 절대 미포함.
+// A52: 각 URL을 fetchMeta로 조회해 description 확보 → 태깅·임베딩 입력 보강.
+//      description은 태깅/임베딩 스코프 내에서만 사용 후 파기 — DB 저장·로그 금지(프라이버시).
+// 응답: { imported, failed, skipped } — embedding/content/description 절대 미포함.
 export const POST = withAuth(async (req, { user, supabase }) => {
   let formData: FormData
   try {
@@ -81,9 +83,17 @@ export const POST = withAuth(async (req, { user, supabase }) => {
         try {
           // 중복 방지: 단건 저장(A5)과 동일하게 canonical URL로 정규화
           const url = normalizeUrl(rawUrl)
+
+          // A52: URL 메타 조회 → description 확보(태깅 굶김 해소). fetchMeta는 throw 안 함(실패=빈 값),
+          // 내부 5s 타임아웃. description은 아래 태깅·임베딩 입력으로만 쓰고 저장·로그하지 않음.
+          // ponytail: 항목당 최대 5s(죽은 URL) 추가 — 청크 동시성(CHUNK_SIZE)이 상한. 대량+저속 URL로
+          //           maxDuration(300s) 압박 시 백그라운드 큐로 승격(현재는 인라인으로 충분).
+          const meta = await fetchMeta(url)
+          const description = meta.description || undefined
+
           const [tagsResult, embeddingResult] = await Promise.allSettled([
-            generateTags({ title, url }),
-            createEmbedding(title),
+            generateTags({ title, url, description }),
+            createEmbedding(description ? `${title}\n${description}` : title),
           ])
 
           // 임베딩 실패 → 검색 불가 북마크 → 해당 항목만 실패 처리, 전체 중단 금지

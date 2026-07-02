@@ -69,35 +69,65 @@ describe('aggregate', () => {
 // 남은 모호: ev 충전소(여행 오판), 브랜드 디자인스튜디오 마케팅/기업 → 팀 검수 후 상향.
 const F1_BASELINE = 0.82
 
+// A53: 입력 조건별 평가.
+// - rich: description 포함 — 단건 추가·A52 임포트(fetchMeta 성공) 경로. 회귀 게이트 대상.
+// - title-only: description 제거 — 임포트에서 메타 조회 실패·본문 부재 시의 하한(floor).
+//   프로덕션 실패 모드를 eval이 보게 하는 것이 목적. rich 대비 하락폭 = train/serve skew 크기.
+//   baseline 미측정 → 하드 게이트 보류(리포트만). 첫 측정 후 TITLE_ONLY_F1_BASELINE 설정.
+type GoldenItem = { url: string; title: string; description: string; gold: string[] }
+
+function loadGolden(): GoldenItem[] {
+  return JSON.parse(readFileSync(join(__dirname, '../../eval/tag-golden.json'), 'utf-8'))
+}
+
+// 골든셋 전체를 지정 입력 조건으로 채점. includeDescription=false면 임포트 굶김 재현.
+async function runGolden(
+  golden: GoldenItem[],
+  includeDescription: boolean,
+): Promise<TagScore[]> {
+  const scores: TagScore[] = []
+  for (const item of golden) {
+    const predicted = await generateTags({
+      title: item.title,
+      url: item.url,
+      description: includeDescription ? item.description : undefined,
+    })
+    const s = scoreTags(predicted, item.gold)
+    scores.push(s)
+    // 항목별 결과 출력 — 어떤 URL이 틀렸는지 확인용
+    console.log(
+      `[${includeDescription ? 'rich' : 'title'}] F1=${s.f1.toFixed(2)} exact=${s.exact} | pred=[${predicted}] gold=[${item.gold}] | ${item.url}`,
+    )
+  }
+  return scores
+}
+
 describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)', () => {
   it(
-    `macro-F1 >= ${F1_BASELINE}`,
+    `rich(description 포함) macro-F1 >= ${F1_BASELINE}`,
     async () => {
       // 목 모드면 generateTags가 고정값 반환 → 평가 무의미. 동시 설정 실수 차단.
       expect(process.env.E2E_MOCK_OPENAI, 'RUN_TAG_EVAL과 E2E_MOCK_OPENAI 동시 설정 불가').not.toBe('1')
 
-      const golden: { url: string; title: string; description: string; gold: string[] }[] =
-        JSON.parse(readFileSync(join(__dirname, '../../eval/tag-golden.json'), 'utf-8'))
-
-      const scores: TagScore[] = []
-      for (const item of golden) {
-        const predicted = await generateTags({
-          title: item.title,
-          url: item.url,
-          description: item.description,
-        })
-        const s = scoreTags(predicted, item.gold)
-        scores.push(s)
-        // 항목별 결과 출력 — 어떤 URL이 틀렸는지 확인용
-        console.log(
-          `F1=${s.f1.toFixed(2)} exact=${s.exact} | pred=[${predicted}] gold=[${item.gold}] | ${item.url}`,
-        )
-      }
-
-      const agg = aggregate(scores)
-      console.log('\n=== 집계 ===', JSON.stringify(agg, null, 2))
+      const agg = aggregate(await runGolden(loadGolden(), true))
+      console.log('\n=== 집계 [rich] ===', JSON.stringify(agg, null, 2))
       expect(agg.f1).toBeGreaterThanOrEqual(F1_BASELINE)
     },
     300_000, // 골든셋 115건 순차 OpenAI 호출 — 항목당 ~1.5s
+  )
+
+  it(
+    'title-only(description 제거) — 임포트 굶김 하한 리포트',
+    async () => {
+      expect(process.env.E2E_MOCK_OPENAI, 'RUN_TAG_EVAL과 E2E_MOCK_OPENAI 동시 설정 불가').not.toBe('1')
+
+      const golden = loadGolden()
+      const agg = aggregate(await runGolden(golden, false))
+      console.log('\n=== 집계 [title-only] ===', JSON.stringify(agg, null, 2))
+      // 하드 게이트 보류(baseline 미측정). 스모크: 전체 채점 완료만 확인.
+      // TODO(A53 후속): 첫 측정치로 TITLE_ONLY_F1_BASELINE 설정 후 게이트 승격.
+      expect(agg.n).toBe(golden.length)
+    },
+    300_000,
   )
 })
