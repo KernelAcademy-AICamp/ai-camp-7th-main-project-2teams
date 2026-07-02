@@ -1,9 +1,11 @@
 // 전체 북마크 재태깅 — 개선된 SYSTEM_PROMPT(lib/ai.ts) 기준으로 tags 갱신.
 // 실행: source .env 후 `npx tsx scripts/retag.ts`
 // 환경변수:
-//   DRY=1         쓰기 없이 예측만 출력(카나리)
-//   RETAG_LIMIT=N 앞 N개만 처리(0=전체)
-//   CONCURRENCY=N 동시 OpenAI 호출 수(기본 6)
+//   DRY=1          쓰기 없이 예측만 출력(카나리)
+//   RETAG_LIMIT=N  앞 N개만 처리(0=전체)
+//   CONCURRENCY=N  동시 OpenAI 호출 수(기본 6)
+//   KEEP_NONEMPTY=1 새 태그가 빈 배열이고 기존 태그가 있으면 스킵(순손실 방지).
+//                   content 없이 재태깅 시 저품질 title이 태그를 통째로 날리는 것 방지 — docs/specs/tag-eval-redesign.md §B-2.
 // 롤백: bookmarks_tags_backup_20260701 테이블에서 복원.
 import { createClient } from '@supabase/supabase-js'
 import { generateTags } from '../lib/ai'
@@ -11,6 +13,7 @@ import { generateTags } from '../lib/ai'
 const DRY = process.env.DRY === '1'
 const LIMIT = Number(process.env.RETAG_LIMIT ?? '0')
 const CONCURRENCY = Number(process.env.CONCURRENCY ?? '6')
+const KEEP_NONEMPTY = process.env.KEEP_NONEMPTY === '1'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -57,6 +60,7 @@ async function main() {
   let processed = 0
   let changed = 0
   let failed = 0
+  let kept = 0
 
   // 고정 워커 풀 — 인덱스를 원자적으로 소비
   let cursor = 0
@@ -66,6 +70,13 @@ async function main() {
       try {
         await rateGate()
         const next = await generateTags({ title: row.title, url: row.url })
+        // KEEP_NONEMPTY: 새 태그가 비었고 기존 태그가 있으면 순손실 → 스킵(기존 유지)
+        if (KEEP_NONEMPTY && next.length === 0 && (row.tags?.length ?? 0) > 0) {
+          kept++
+          console.log(`= 유지 [${row.tags.join(',')}] (새 태그 빈값) | ${row.title}`)
+          processed++
+          continue
+        }
         const isDiff = !eq(row.tags ?? [], next)
         if (isDiff) {
           changed++
@@ -88,7 +99,8 @@ async function main() {
   }
 
   await Promise.all(Array.from({ length: CONCURRENCY }, worker))
-  console.log(`[완료] 처리 ${processed} · 변경 ${changed} · 실패 ${failed}${DRY ? ' · (DRY: 미반영)' : ''}`)
+  const keptMsg = KEEP_NONEMPTY ? ` · 유지 ${kept}` : ''
+  console.log(`[완료] 처리 ${processed} · 변경 ${changed}${keptMsg} · 실패 ${failed}${DRY ? ' · (DRY: 미반영)' : ''}`)
 }
 
 main().catch((e) => {
