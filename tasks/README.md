@@ -194,8 +194,8 @@ A17 (Extension 셋업)
 
 - [x] **A43 confidence 필터 + 골든셋 평가** (`lib/ai.ts`, `lib/tag-eval.ts`): generateTags가 태그별 confidence 반환, threshold 0.6 미만 자동 제외. alias 보강·Few-shot 반례로 RAG 과태깅 교정. 골든셋(`eval/tag-golden.json`, n=115) 실측 macro-F1 0.85·대분류 정확도 0.93(2026-07), 회귀 게이트 baseline 0.82(`RUN_TAG_EVAL=1`, 실측 0.85 대비 여유). PR #87.
 - [x] **A44 골든셋 확장 스킬** (`.claude/skills/golden-set-expand/`): tag-golden.json 안전 확장 스킬. few-shot leak·대분류 정책 위반·중분류 vocab 드리프트·URL 중복을 `validate_golden.py`로 차단. 대분류 6→9 확장 과정에서 반복된 오류를 코드화.
-- [ ] **A52 임포트 태깅 입력 보강** (`app/api/bookmarks/import/route.ts:85`): 임포트가 `generateTags({ title, url })`만 호출 — description 굶김이 실사용 태깅 품질 저하의 주원인. fetchMeta를 임포트에도 적용(동시성 제한, content 즉시 파기). ★현 최우선.
-- [ ] **A53 골든셋 실입력 분포 반영** (`eval/tag-golden.json`): 골든셋 전 항목이 잘 다듬은 description 보유 → eval F1 0.85가 실사용 과대평가(train/serve skew). title+url만 항목군 추가해 임포트 실패 모드를 eval이 보게 함. A52와 병행.
+- [x] **A52 임포트 태깅 입력 보강** (`app/api/bookmarks/import/route.ts`): 임포트가 `generateTags({ title, url })`만 호출 — description 굶김이 실사용 태깅 품질 저하의 주원인. fetchMeta를 임포트에 적용(청크 동시성 5, description 즉시 파기), 임베딩도 title+description 결합. 실측: 골든셋 macro-F1 +0.039 회복. PR #155.
+- [x] **A53 골든셋 입력조건별 평가** (`lib/__tests__/tag-eval.test.ts`): 러너를 rich/title-only 2패스로 확장, train/serve skew 정량. title-only 회귀 게이트 baseline 0.77(실측 0.799). PR #155. 이월: 실 임포트 수준 지저분 title 표본 확충(실데이터 필요) — 현 skew −0.039는 하한.
 
 ### Minor
 
