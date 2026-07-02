@@ -122,11 +122,11 @@ export function Sidebar() {
   return (
     <nav
       aria-label="북마크 필터"
-      className="flex max-h-full w-52 shrink-0 flex-col gap-6 self-stretch overflow-x-hidden overflow-y-auto bg-[#F8FAFB] p-4 dark:border-gray-800 dark:bg-gray-900"
+      className="glass flex max-h-full w-52 shrink-0 flex-col gap-6 self-stretch overflow-x-hidden overflow-y-auto border-r border-line p-4"
     >
       {/* 상단 탭 — 홈 / 즐겨찾기 / 내 폴더(폴더 있을 때만) */}
       <section>
-        <div className="flex gap-0.5 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+        <div className="flex gap-0.5 rounded-lg bg-slate-100 p-1">
           {topTabs.map((t) => (
             <button
               key={t.id}
@@ -135,8 +135,8 @@ export function Sidebar() {
               className={[
                 "flex-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors",
                 tab === t.id
-                  ? "bg-white text-gray-900 shadow dark:bg-gray-700 dark:text-gray-100"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+                  ? "bg-white text-brand shadow-sm"
+                  : "text-text-secondary hover:text-text-primary",
               ].join(" ")}
             >
               {t.label}
@@ -152,12 +152,12 @@ export function Sidebar() {
           className="mb-2 flex w-full items-center justify-between"
           aria-expanded={categoryOpen}
         >
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
             {showFolders ? "폴더" : "카테고리"}
           </h2>
           <span
             className={[
-              "text-xs text-gray-400 transition-transform duration-200",
+              "text-xs text-text-secondary transition-transform duration-200",
               categoryOpen ? "rotate-0" : "-rotate-90",
             ].join(" ")}
           >
@@ -176,10 +176,10 @@ export function Sidebar() {
                   onClick={handleAll}
                   aria-pressed={isAllActive}
                   className={[
-                    "w-full rounded-md px-3 py-1.5 text-left text-sm font-medium transition-colors",
+                    "w-full rounded-md border-l-4 px-3 py-1.5 text-left text-sm font-medium transition-colors",
                     isAllActive
-                      ? "gradient-brand text-white shadow-[0_4px_14px_-8px_rgba(15,23,42,.4)]"
-                      : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800",
+                      ? "border-brand bg-accent text-brand"
+                      : "border-transparent text-text-secondary hover:bg-slate-100",
                   ].join(" ")}
                 >
                   전체
@@ -195,16 +195,16 @@ export function Sidebar() {
                     onClick={() => handleCategory(name)}
                     aria-pressed={category === name}
                     className={[
-                      "flex w-full items-center gap-1 rounded-md px-3 py-1.5 text-left text-sm transition-colors",
+                      "flex w-full items-center gap-1.5 rounded-md border-l-4 px-3 py-1.5 text-left text-sm transition-colors",
                       category === name
-                        ? "gradient-brand font-medium text-white shadow-[0_4px_14px_-8px_rgba(15,23,42,.4)]"
-                        : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800",
+                        ? "border-brand bg-accent font-medium text-brand"
+                        : "border-transparent text-text-secondary hover:bg-slate-100",
                     ].join(" ")}
                   >
                     {/* 카테고리 컬러코딩 도트 (Design.md 7×7 라운드 스퀘어) */}
                     <span
                       className="h-[7px] w-[7px] shrink-0 rounded-[2px]"
-                      style={{ backgroundColor: category === name ? "#fff" : categoryColor(name) }}
+                      style={{ backgroundColor: categoryColor(name) }}
                     />
                     {name}
                   </button>
@@ -231,16 +231,16 @@ export function Sidebar() {
         {/* 팝업 — 프로필 행 위에 표시. nav가 overflow-y-auto라 x축도 클리핑되므로
             사이드바 폭 밖(left-full) 대신 폭 안·행 위(bottom-full)로 띄운다. */}
         {popupOpen && (
-          <div className="absolute bottom-full left-0 right-0 z-10 mb-2 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-            <p className="px-3 py-1.5 text-xs text-gray-400">프로필 팝업 항목</p>
+          <div className="absolute bottom-full left-0 right-0 z-10 mb-2 rounded-lg border border-line bg-white py-1 shadow-lg">
+            <p className="px-3 py-1.5 text-xs text-text-secondary">프로필 팝업 항목</p>
             <ul className="flex flex-col">
               <li>
                 <Link
                   href="/profile"
                   onClick={() => setPopupOpen(false)}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm text-text-primary hover:bg-slate-50"
                 >
-                  <span className="text-gray-400">›</span>
+                  <span className="text-text-secondary">›</span>
                   프로필 정보
                 </Link>
               </li>
@@ -248,18 +248,18 @@ export function Sidebar() {
                 <Link
                   href="/settings"
                   onClick={() => setPopupOpen(false)}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm text-text-primary hover:bg-slate-50"
                 >
-                  <span className="text-gray-400">›</span>
+                  <span className="text-text-secondary">›</span>
                   설정
                 </Link>
               </li>
               <li>
                 <button
                   onClick={handleSignOut}
-                  className="flex w-full items-center gap-1.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                  className="flex w-full items-center gap-1.5 px-3 py-2 text-sm text-text-primary hover:bg-slate-50"
                 >
-                  <span className="text-gray-400">›</span>
+                  <span className="text-text-secondary">›</span>
                   로그아웃
                 </button>
               </li>
@@ -268,7 +268,7 @@ export function Sidebar() {
         )}
 
         {/* 프로필 행 */}
-        <div className="flex items-center gap-2 rounded-lg border border-gray-200 p-2 dark:border-gray-700">
+        <div className="flex items-center gap-2 rounded-lg border border-line bg-white/60 p-2">
           <button
             onClick={() => setPopupOpen((o) => !o)}
             className="flex min-w-0 flex-1 items-center gap-2"
@@ -282,7 +282,7 @@ export function Sidebar() {
               </svg>
             </span>
             {/* 이메일 */}
-            <span className="min-w-0 truncate font-mono text-xs text-gray-700 dark:text-gray-300">
+            <span className="min-w-0 truncate font-mono text-xs text-text-secondary">
               {email ?? "로딩 중..."}
             </span>
           </button>
@@ -291,7 +291,7 @@ export function Sidebar() {
           <Link
             href="/settings"
             aria-label="설정"
-            className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            className="shrink-0 text-text-secondary hover:text-text-primary"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4">
               <path
@@ -330,7 +330,7 @@ function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps
             onClick={() => setOpen((o) => !o)}
             aria-label={open ? "접기" : "펼치기"}
             aria-expanded={open}
-            className="shrink-0 px-0.5 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            className="shrink-0 px-0.5 text-xs text-text-secondary hover:text-text-primary"
           >
             <span className={open ? "inline-block" : "inline-block -rotate-90"}>▾</span>
           </button>
@@ -341,13 +341,13 @@ function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps
           onClick={() => onSelect(node.name)}
           aria-pressed={active}
           className={[
-            "flex flex-1 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+            "flex flex-1 items-center gap-1.5 rounded-md border-l-4 px-2 py-1.5 text-left text-sm transition-colors",
             active
-              ? "gradient-brand font-medium text-white shadow-[0_4px_14px_-8px_rgba(15,23,42,.4)]"
-              : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800",
+              ? "border-brand bg-accent font-medium text-brand"
+              : "border-transparent text-text-secondary hover:bg-slate-100",
           ].join(" ")}
         >
-          <span className="text-xs text-gray-400">📁</span>
+          <span className="text-xs text-text-secondary">📁</span>
           {node.name}
         </button>
       </div>

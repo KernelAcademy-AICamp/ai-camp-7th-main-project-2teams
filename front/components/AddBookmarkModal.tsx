@@ -146,7 +146,7 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
         onClick={() => setOpen(true)}
         className={
           triggerClassName ??
-          "gradient-brand rounded-[11px] px-3 py-1.5 text-sm font-medium text-white shadow-[0_10px_20px_-6px_rgba(15,118,110,.5)] transition-transform hover:-translate-y-px"
+          "gradient-brand rounded-lg px-3 py-1.5 text-sm font-medium text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px"
         }
       >
         + 북마크 추가
@@ -160,14 +160,14 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
           aria-modal="true"
           aria-label="북마크 추가"
         >
-          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-gray-900">
+          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-[0_20px_40px_-12px_rgba(45,62,80,.25)]">
             <div className="p-6">
               <div className="mb-5 flex items-center justify-between">
-                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">북마크 추가</h2>
+                <h2 className="text-base font-semibold text-text-primary">북마크 추가</h2>
                 <button
                   onClick={handleClose}
                   aria-label="닫기"
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none"
+                  className="text-text-secondary hover:text-text-primary text-xl leading-none"
                 >
                   ✕
                 </button>
@@ -175,7 +175,7 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
 
               {isSuccess ? (
                 <div className="flex flex-col items-center gap-4 py-4 text-center">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <p className="text-sm text-text-primary">
                     북마크가 저장됐습니다. AI가 자동으로 태그를 생성했습니다.
                   </p>
                   <div className="flex gap-2">
@@ -184,13 +184,13 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                         reset();
                         setUrl("");
                       }}
-                      className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                      className="rounded-lg border border-line px-4 py-2 text-sm text-text-primary hover:bg-slate-50"
                     >
                       계속 추가
                     </button>
                     <button
                       onClick={handleClose}
-                      className="gradient-brand rounded-[11px] px-4 py-2 text-sm text-white transition-transform hover:-translate-y-px"
+                      className="gradient-brand rounded-lg px-4 py-2 text-sm text-white transition-transform hover:-translate-y-px"
                     >
                       닫기
                     </button>
@@ -207,7 +207,7 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                       URL 입력 필드
                     </label>
                     <div className="relative">
-                      <Globe size={16} aria-hidden className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-600" />
+                      <Globe size={16} aria-hidden className="absolute left-3 top-1/2 -translate-y-1/2 text-brand" />
                       <input
                         ref={inputRef}
                         id="bookmark-url"
@@ -218,27 +218,27 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                         placeholder="https://example.com"
                         disabled={isPending}
                         className={[
-                          "w-full rounded-[11px] border py-2.5 pl-9 pr-3 text-sm outline-none transition-colors",
-                          "placeholder:text-gray-400 dark:bg-gray-800 dark:text-gray-100",
+                          "w-full rounded-lg border py-2.5 pl-9 pr-3 text-sm text-text-primary outline-none transition-all",
+                          "placeholder:text-text-secondary",
                           urlError
-                            ? "border-red-400 focus:border-red-500"
-                            : "border-gray-300 focus:border-teal-600 focus:ring-2 focus:ring-teal-600/10 dark:border-gray-600 dark:focus:border-teal-400",
+                            ? "border-destructive focus:border-destructive"
+                            : "border-line focus:border-brand focus:ring-2 focus:ring-brand/20",
                         ].join(" ")}
                       />
                     </div>
-                    {urlError && <p className="mt-1.5 text-xs text-red-500">{urlError}</p>}
+                    {urlError && <p className="mt-1.5 text-xs text-destructive">{urlError}</p>}
                   </div>
 
                   {/* URL 미리보기 — 항상 노출: placeholder → 검증 중 스켈레톤 → 완성본 (Design.md Modal) */}
-                  <div className="rounded-[11px] border border-dashed border-[#99F6E4] bg-[#F0FDFA] p-4 dark:border-teal-800 dark:bg-teal-950/30">
-                    <p className="mb-2.5 text-sm text-gray-400 dark:text-gray-500">
+                  <div className="rounded-lg border border-dashed border-brand/30 bg-accent p-4">
+                    <p className="mb-2.5 text-sm text-text-secondary">
                       {previewDone ? "URL 미리보기" : isValidInput ? "URL 검증 중..." : "URL 미리보기"}
                     </p>
                     {!isValidInput ? (
                       // placeholder — 유효 URL 입력 전
                       <div className="flex items-center gap-3">
-                        <span className="h-9 w-9 shrink-0 rounded-lg bg-gray-200 dark:bg-gray-700" />
-                        <p className="text-sm text-gray-400 dark:text-gray-500">
+                        <span className="h-9 w-9 shrink-0 rounded-lg bg-slate-200" />
+                        <p className="text-sm text-text-secondary">
                           URL을 입력하면 미리보기가 표시됩니다.
                         </p>
                       </div>
@@ -247,37 +247,37 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                       <div className="flex items-center gap-3">
                         <Favicon url={withProtocol} key={withProtocol} />
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{meta.title}</p>
-                          <p className="truncate font-mono text-xs text-gray-500 dark:text-gray-400">{withProtocol}</p>
+                          <p className="truncate text-sm font-semibold text-text-primary">{meta.title}</p>
+                          <p className="truncate font-mono text-xs text-text-secondary">{withProtocol}</p>
                         </div>
                       </div>
                     ) : (
                       // 검증 중 스켈레톤
                       <div className="flex items-center gap-3">
-                        <span className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-teal-200/60 dark:bg-teal-800/50" />
+                        <span className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-brand/20" />
                         <div className="min-w-0 flex-1 space-y-1.5">
-                          <span className="block h-3.5 w-2/3 animate-pulse rounded bg-teal-200/60 dark:bg-teal-800/50" />
-                          <span className="block h-3 w-1/2 animate-pulse rounded bg-teal-200/40 dark:bg-teal-800/30" />
+                          <span className="block h-3.5 w-2/3 animate-pulse rounded bg-brand/20" />
+                          <span className="block h-3 w-1/2 animate-pulse rounded bg-brand/10" />
                         </div>
                       </div>
                     )}
                   </div>
 
-                  {error && <p className="text-xs text-red-500">{(error as Error).message}</p>}
+                  {error && <p className="text-xs text-destructive">{(error as Error).message}</p>}
 
                   <div className="mt-1 flex gap-3">
                     <button
                       type="button"
                       onClick={handleClose}
                       disabled={isPending}
-                      className="flex-1 rounded-[11px] border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                      className="flex-1 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-slate-50"
                     >
                       닫기
                     </button>
                     <button
                       type="submit"
                       disabled={isPending}
-                      className="gradient-brand flex flex-1 items-center justify-center rounded-[11px] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(15,118,110,.5)] transition-transform hover:-translate-y-px disabled:opacity-60"
+                      className="gradient-brand flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px disabled:opacity-60"
                     >
                       {isPending ? (
                         <span className="flex items-center gap-1.5">
