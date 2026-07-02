@@ -22,7 +22,7 @@ export function OnboardingGuideButton() {
       <button
         type="button"
         onClick={() => dialogRef.current?.showModal()}
-        className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        className="text-sm font-medium text-white/85 transition-colors hover:text-white"
       >
         사용법
       </button>

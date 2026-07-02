@@ -138,7 +138,7 @@ function DashboardContent() {
       {fromExtension && <ExtensionSync />}
       <Sidebar />
 
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 px-4 py-8 overflow-y-auto">
         {/* 북마크가 하나도 없으면 검색 의미 없음 → 검색바 숨김 (검색 중에는 유지) */}
         {(allBookmarks.length > 0 || isSearching) && (
           <SearchBar onSearch={handleSearch} onClear={handleClear} value={searchQuery} onChange={setSearchQuery} />
@@ -157,7 +157,7 @@ function DashboardContent() {
             <p className="text-gray-500 dark:text-gray-400">북마크를 불러오는 중 오류가 발생했습니다.</p>
             <button
               onClick={() => refetch()}
-              className="mt-3 rounded-md bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
+              className="gradient-brand mt-3 rounded-[11px] px-4 py-2 text-sm text-white transition-transform hover:-translate-y-px"
             >
               다시 시도
             </button>
@@ -192,7 +192,7 @@ function DashboardContent() {
                   <AddBookmarkModal />
                   <Link
                     href="/import"
-                    className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                    className="rounded-[11px] border border-teal-200 bg-[#F0FDFA] px-4 py-2 text-sm font-medium text-teal-700 transition-colors hover:bg-[#CCFBF1] dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-300"
                   >
                     파일 업로드
                   </Link>
@@ -210,12 +210,12 @@ function DashboardContent() {
                 viewMode === "grid"
                   ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
                   : viewMode === "compact"
-                    ? "flex flex-col gap-1.5"
+                    ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900"
                     : "flex flex-col gap-3"
               }
             >
               {sortedItems.map((item) => (
-                <BookmarkCard key={item.id} bookmark={item} compact={viewMode === "compact"} />
+                <BookmarkCard key={item.id} bookmark={item} view={viewMode} />
               ))}
             </div>
           </>
@@ -228,7 +228,7 @@ function DashboardContent() {
 function DashboardFallback() {
   return (
     <>
-      <div className="w-48 shrink-0" />
+      <div className="w-52 shrink-0" />
       <div className="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <BookmarkSkeleton key={i} />

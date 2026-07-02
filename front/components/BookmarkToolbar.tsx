@@ -21,7 +21,7 @@ export function BookmarkToolbar() {
       {/* 정렬 토글 */}
       <button
         onClick={() => setSortOrder(sortOrder === 'latest' ? 'oldest' : 'latest')}
-        className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        className="flex items-center gap-1.5 rounded-[10px] border border-teal-200 bg-[#F0FDFA] px-2.5 py-1.5 text-xs font-medium text-teal-700 transition-colors hover:bg-[#CCFBF1] dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-300"
         aria-label="정렬 순서 전환"
       >
         <ArrowDownUp size={14} />
@@ -43,7 +43,7 @@ export function BookmarkToolbar() {
             className={[
               'rounded p-1 transition-colors',
               viewMode === mode
-                ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+                ? 'bg-[#F0FDFA] text-teal-700 dark:bg-teal-950/40 dark:text-teal-300'
                 : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
             ].join(' ')}
           >
