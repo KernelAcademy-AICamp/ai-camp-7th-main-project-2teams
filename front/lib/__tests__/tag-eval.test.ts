@@ -73,7 +73,12 @@ const F1_BASELINE = 0.82
 // - rich: description 포함 — 단건 추가·A52 임포트(fetchMeta 성공) 경로. 회귀 게이트 대상.
 // - title-only: description 제거 — 임포트에서 메타 조회 실패·본문 부재 시의 하한(floor).
 //   프로덕션 실패 모드를 eval이 보게 하는 것이 목적. rich 대비 하락폭 = train/serve skew 크기.
-//   baseline 미측정 → 하드 게이트 보류(리포트만). 첫 측정 후 TITLE_ONLY_F1_BASELINE 설정.
+// 실측(2026-07, gpt-4o-mini, n=115):
+//   rich       F1 0.838 · 대분류 0.922 · exact 0.635
+//   title-only F1 0.799 · 대분류 0.896 · exact 0.617  → skew F1 −0.039(A52가 회복하는 몫)
+//   주의: 골든셋 title이 실 임포트보다 깔끔해 이 skew는 프로덕션 실 skew의 하한. 지저분 title 표본
+//        확충 시 격차 커질 것(A53 후속).
+const TITLE_ONLY_F1_BASELINE = 0.77 // 실측 0.799 − ~0.03 여유(rich 0.838→0.82와 동일 마진)
 type GoldenItem = { url: string; title: string; description: string; gold: string[] }
 
 function loadGolden(): GoldenItem[] {
@@ -117,16 +122,14 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
   )
 
   it(
-    'title-only(description 제거) — 임포트 굶김 하한 리포트',
+    `title-only(description 제거) macro-F1 >= ${TITLE_ONLY_F1_BASELINE}`,
     async () => {
       expect(process.env.E2E_MOCK_OPENAI, 'RUN_TAG_EVAL과 E2E_MOCK_OPENAI 동시 설정 불가').not.toBe('1')
 
-      const golden = loadGolden()
-      const agg = aggregate(await runGolden(golden, false))
+      const agg = aggregate(await runGolden(loadGolden(), false))
       console.log('\n=== 집계 [title-only] ===', JSON.stringify(agg, null, 2))
-      // 하드 게이트 보류(baseline 미측정). 스모크: 전체 채점 완료만 확인.
-      // TODO(A53 후속): 첫 측정치로 TITLE_ONLY_F1_BASELINE 설정 후 게이트 승격.
-      expect(agg.n).toBe(golden.length)
+      // 임포트 굶김 경로 회귀 게이트 — 이 값이 떨어지면 임포트 태깅 품질 저하.
+      expect(agg.f1).toBeGreaterThanOrEqual(TITLE_ONLY_F1_BASELINE)
     },
     300_000,
   )
