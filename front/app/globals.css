@@ -6,9 +6,15 @@
 
 /* 커스텀 토큰 — Tailwind v4 @theme (v3 theme.extend 대체) */
 @theme {
-  --color-brand: #6366f1;
+  /* 브랜드 = Deep Teal (Design.md Structured Teal) */
+  --color-brand: #0f766e;
   --font-sans: "Pretendard", var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+/* 시그니처 그라디언트 — 상단바·프라이머리·아바타에만 (남발 금지) */
+@utility gradient-brand {
+  background-image: linear-gradient(135deg, #0f766e, #14b8a6);
 }
 
 @theme inline {
@@ -62,7 +68,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.52 0.09 182);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -73,7 +79,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.52 0.09 182);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);

@@ -37,7 +37,7 @@ export function SearchBar({ onSearch, onClear, value, onChange }: SearchBarProps
     <div role="search" aria-label="북마크 검색 영역" className="relative w-full">
       <Search
         size={16}
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-600"
         aria-hidden
       />
       <label htmlFor="bookmark-search" className="sr-only">
@@ -49,7 +49,7 @@ export function SearchBar({ onSearch, onClear, value, onChange }: SearchBarProps
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="북마크 검색..."
-        className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-9 text-sm outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        className="w-full rounded-full border border-gray-200 bg-[#F1F5F9] py-2.5 pl-10 pr-10 text-sm outline-none transition-colors focus:border-teal-600 focus:bg-white focus:ring-2 focus:ring-teal-600/10 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
       />
       {value && (
         <button

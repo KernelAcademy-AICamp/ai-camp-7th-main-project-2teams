@@ -9,6 +9,7 @@ import { useFolders } from "@/hooks/useFolders";
 import { useCategories } from "@/hooks/useCategories";
 import { buildFolderTree, type FolderNode } from "@/lib/folderTree";
 import { UNCATEGORIZED_LABEL } from "@/lib/tag-alias";
+import { categoryColor } from "@/lib/categoryColor";
 import { SidebarSkeleton } from "@/components/SidebarSkeleton";
 import { createClient } from "@/lib/supabase/client";
 
@@ -116,7 +117,10 @@ export function Sidebar() {
   const showSkeleton = showFolders ? foldersPending : categoriesPending;
 
   return (
-    <nav aria-label="북마크 필터" className="flex max-h-full w-48 shrink-0 flex-col gap-6 self-stretch overflow-y-auto">
+    <nav
+      aria-label="북마크 필터"
+      className="flex max-h-full w-52 shrink-0 flex-col gap-6 self-stretch overflow-x-hidden overflow-y-auto bg-[#F8FAFB] p-4 dark:border-gray-800 dark:bg-gray-900"
+    >
       {/* 상단 탭 — 홈 / 즐겨찾기 / 내 폴더(폴더 있을 때만) */}
       <section>
         <div className="flex gap-0.5 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
@@ -139,7 +143,7 @@ export function Sidebar() {
       </section>
 
       {/* 카테고리 + 폴더 통합 리스트 (접기/펼치기) */}
-      <section className="overflow-y-auto">
+      <section className="overflow-x-hidden overflow-y-auto">
         <button
           onClick={() => setCategoryOpen((o) => !o)}
           className="mb-2 flex w-full items-center justify-between"
@@ -171,7 +175,7 @@ export function Sidebar() {
                   className={[
                     "w-full rounded-md px-3 py-1.5 text-left text-sm font-medium transition-colors",
                     isAllActive
-                      ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+                      ? "gradient-brand text-white shadow-[0_4px_14px_-8px_rgba(15,23,42,.4)]"
                       : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800",
                   ].join(" ")}
                 >
@@ -190,11 +194,15 @@ export function Sidebar() {
                     className={[
                       "flex w-full items-center gap-1 rounded-md px-3 py-1.5 text-left text-sm transition-colors",
                       category === name
-                        ? "bg-indigo-100 font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+                        ? "gradient-brand font-medium text-white shadow-[0_4px_14px_-8px_rgba(15,23,42,.4)]"
                         : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800",
                     ].join(" ")}
                   >
-                    <span className="text-gray-400">›</span>
+                    {/* 카테고리 컬러코딩 도트 (Design.md 7×7 라운드 스퀘어) */}
+                    <span
+                      className="h-[7px] w-[7px] shrink-0 rounded-[2px]"
+                      style={{ backgroundColor: category === name ? "#fff" : categoryColor(name) }}
+                    />
                     {name}
                   </button>
                 </li>
@@ -265,13 +273,15 @@ export function Sidebar() {
             aria-haspopup="true"
           >
             {/* 아바타 */}
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-300">
+            <span className="gradient-brand flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white">
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                 <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
               </svg>
             </span>
             {/* 이메일 */}
-            <span className="min-w-0 truncate text-xs text-gray-700 dark:text-gray-300">{email ?? "로딩 중..."}</span>
+            <span className="min-w-0 truncate font-mono text-xs text-gray-700 dark:text-gray-300">
+              {email ?? "로딩 중..."}
+            </span>
           </button>
 
           {/* 설정 바로가기 */}
@@ -330,7 +340,7 @@ function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps
           className={[
             "flex flex-1 items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
             active
-              ? "bg-indigo-100 font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+              ? "gradient-brand font-medium text-white shadow-[0_4px_14px_-8px_rgba(15,23,42,.4)]"
               : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800",
           ].join(" ")}
         >
