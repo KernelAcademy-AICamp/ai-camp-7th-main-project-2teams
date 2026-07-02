@@ -10,14 +10,16 @@ AI 태깅 출력 정규화용. 운영 중 누락 발견 시 이 파일에 추가
 
 ## 대분류 (categories 매핑)
 
-`CATEGORY_ALIAS` — `tags[0]`을 `categories` 테이블 name으로 정규화. 고정 9개 외 값은 `null` (미분류).
+`CATEGORY_ALIAS` — `tags[0]`을 `categories` 테이블 name으로 정규화. 고정 13개(`TOP_CATEGORIES`) 외 값은 `null` (미분류).
 
 | 대분류 | 비고 |
 |--------|------|
 | 개발 · AI/ML · 디자인 · 비즈니스 · 학습 · 쇼핑 | MVP 6종 |
 | 커뮤니티 | 포럼·SNS·Q&A — 토론·소통 목적 사이트 |
+| 콘텐츠 | 블로그·매거진·뉴스레터·RSS — 읽을거리 |
 | 브랜드 | 마케팅·기업 — 브랜드 소개·캠페인 |
 | 게임 | 공략·e스포츠·게임뉴스·게임리뷰 |
+| 라이프스타일 · 여행 · 금융 | 일상·여행·자산 — 경계 규칙은 tag-taxonomy.md |
 
 영문·약어·동의어(dev→개발, community→커뮤니티 등)를 한국어 대분류로 매핑. 전체 키는 코드 참조.
 
@@ -36,7 +38,7 @@ AI 태깅 출력 정규화용. 운영 중 누락 발견 시 이 파일에 추가
 ## 적용 함수
 
 ```typescript
-const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '브랜드', '게임'])
+const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '콘텐츠', '브랜드', '게임', '라이프스타일', '여행', '금융'])
 
 export function normalizeTags(tags: string[]): string[] {
   return tags.map(t => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)

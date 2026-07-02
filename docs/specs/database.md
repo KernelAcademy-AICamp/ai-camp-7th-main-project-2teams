@@ -126,6 +126,7 @@ RETURNS TABLE (
   similarity  float
 )
 LANGUAGE sql STABLE
+SET search_path = public
 AS $$
   SELECT
     id,
