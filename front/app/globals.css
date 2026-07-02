@@ -2,25 +2,50 @@
 @import "../node_modules/tw-animate-css/dist/tw-animate.css";
 @import "shadcn/tailwind.css";
 
+/* dark: 변형은 .dark 클래스가 붙을 때만 활성 — 앱은 라이트 전용이라 .dark를 절대
+   부여하지 않는다. 이 정의를 제거하면 dark:가 prefers-color-scheme 미디어쿼리로
+   되살아나 OS 다크 사용자에게 죽은 dark: 클래스가 새어나오므로 그대로 둔다. */
 @custom-variant dark (&:is(.dark *));
 
-/* 커스텀 토큰 — Tailwind v4 @theme (v3 theme.extend 대체) */
+/* ── Mowaba Design System 토큰 (Design.md) ───────────────────────────
+   Corporate / Modern · Glassmorphism · Knowledge-First · 라이트 전용 */
 @theme {
-  /* 브랜드 = Deep Teal (Design.md Structured Teal) */
-  --color-brand: #0f766e;
-  --font-sans: "Pretendard", var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  /* 브랜드 — Vibrant Blue(메인 액션) / Deep Blue(구조) / Mint(성장·성공) */
+  --color-brand: #4a90e2;
+  --color-brand-strong: #2d6fd1;
+  --color-ink: #2d3e50;
+  --color-mint: #48c9b0;
+  --color-mint-soft: #e6f9f4;
+  --color-warning: #f1c40f;
+
+  /* 서페이스 & 텍스트 (쿨그레이 계열) */
+  --color-surface: #f8fafc;
+  --color-surface-card: #ffffff;
+  --color-line: #e2e8f0;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+
+  /* 타이포 — 정보 밀도 높은 환경 가독성: Inter + Pretendard(한글) */
+  --font-sans: "Pretendard", var(--font-inter), var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;
 }
 
-/* 시그니처 그라디언트 — 상단바·프라이머리·아바타에만 (남발 금지) */
+/* 시그니처 그라디언트 — 상단바·프라이머리·아바타·활성 상태 (남발 금지) */
 @utility gradient-brand {
-  background-image: linear-gradient(135deg, #0f766e, #14b8a6);
+  background-image: linear-gradient(135deg, #4a90e2, #2d6fd1);
+}
+
+/* Level 2 — Glassmorphic 사이드바/내비 (backdrop blur + 반투명 흰색) */
+@utility glass {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 @theme inline {
   /* shadcn init 후 순환 참조 수정 (shadcn.md 필수 사항) */
-  --font-heading: "Pretendard", var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Pretendard", var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Pretendard", var(--font-inter), var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Pretendard", var(--font-inter), var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -52,82 +77,50 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* Design.md rounded 스케일 — 표준 컴포넌트 lg(0.5rem), 카드 xl(1.5rem) */
+  --radius-sm: calc(var(--radius) * 0.5); /* 0.25rem */
+  --radius-md: calc(var(--radius) * 0.75); /* 0.375rem */
+  --radius-lg: var(--radius); /* 0.5rem — 표준 */
+  --radius-xl: calc(var(--radius) * 3); /* 1.5rem — 북마크 카드 */
+  --radius-2xl: calc(var(--radius) * 4); /* 2rem — 모달 */
+  --radius-3xl: calc(var(--radius) * 5);
+  --radius-4xl: calc(var(--radius) * 6);
 }
 
+/* shadcn/컴포넌트 시맨틱 토큰 — Mowaba 팔레트 매핑 (라이트 전용) */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.52 0.09 182);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.52 0.09 182);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --radius: 0.5rem; /* Design.md 표준 Rounded */
+  --background: #f8fafc; /* Level 0 오프화이트 */
+  --foreground: #1e293b;
+  --card: #ffffff;
+  --card-foreground: #1e293b;
+  --popover: #ffffff;
+  --popover-foreground: #1e293b;
+  --primary: #4a90e2; /* Vibrant Blue */
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9; /* slate-100 */
+  --secondary-foreground: #2d3e50; /* Deep Blue */
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #eff6ff; /* blue-50 */
+  --accent-foreground: #2d6fd1;
+  --destructive: #e74c3c;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #4a90e2;
+  --chart-1: #4a90e2;
+  --chart-2: #48c9b0;
+  --chart-3: #2d3e50;
+  --chart-4: #64748b;
+  --chart-5: #f1c40f;
+  --sidebar: rgba(255, 255, 255, 0.7); /* Glassmorphic */
+  --sidebar-foreground: #1e293b;
+  --sidebar-primary: #4a90e2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eff6ff;
+  --sidebar-accent-foreground: #2d6fd1;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #4a90e2;
 }
 
 @layer base {

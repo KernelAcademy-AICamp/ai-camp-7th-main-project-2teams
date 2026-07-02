@@ -102,13 +102,13 @@ export default function ImportPage() {
           className={[
             'flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-12 transition-colors',
             isUploading
-              ? 'cursor-not-allowed border-[#E2E8F0] bg-[#F8FAFB] dark:border-gray-800 dark:bg-gray-900'
+              ? 'cursor-not-allowed border-[#E2E8F0] bg-surface dark:border-gray-800 dark:bg-gray-900'
               : isDragging
-                ? 'cursor-pointer border-[#14B8A6] bg-[#F0FDFA] dark:border-teal-500 dark:bg-teal-950'
-                : 'cursor-pointer border-[#CBD5E1] bg-white hover:border-[#5EEAD4] hover:bg-[#F0FDFA] dark:border-gray-700 dark:bg-gray-900 dark:hover:border-teal-600 dark:hover:bg-gray-800',
+                ? 'cursor-pointer border-[#4A90E2] bg-[#EFF6FF] dark:border-teal-500 dark:bg-teal-950'
+                : 'cursor-pointer border-[#CBD5E1] bg-white hover:border-[#93C5FD] hover:bg-[#EFF6FF] dark:border-gray-700 dark:bg-gray-900 dark:hover:border-teal-600 dark:hover:bg-gray-800',
           ].join(' ')}
         >
-          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl gradient-brand shadow-[0_10px_20px_-6px_rgba(15,118,110,.5)]">
+          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl gradient-brand shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)]">
             <Upload className="h-7 w-7 text-white" />
           </div>
           <p className="text-sm font-semibold text-[#334155] dark:text-gray-300">
@@ -138,8 +138,8 @@ export default function ImportPage() {
 
       {/* 선택된 파일 정보 */}
       {file && !isSuccess && (
-        <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#99F6E4] bg-[#F0FDFA] px-4 py-3 dark:border-teal-800 dark:bg-teal-950/40">
-          <FileText className="h-5 w-5 shrink-0 text-[#0F766E] dark:text-teal-400" />
+        <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-3 dark:border-teal-800 dark:bg-teal-950/40">
+          <FileText className="h-5 w-5 shrink-0 text-[#2D6FD1] dark:text-teal-400" />
           <div className="min-w-0 flex-1">
             <p className="truncate font-mono text-sm font-medium text-[#0F172A] dark:text-gray-200">
               {file.name}
@@ -165,7 +165,7 @@ export default function ImportPage() {
         <button
           onClick={handleUpload}
           disabled={!file || isUploading}
-          className="gradient-brand mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(15,118,110,.5)] transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+          className="gradient-brand mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
         >
           {isUploading ? (
             <>
@@ -183,22 +183,22 @@ export default function ImportPage() {
 
       {/* 성공 결과 — 틸 계열(Design.md 원칙 5: 초록 대신 브랜드 그라디언트) */}
       {isSuccess && mutation.data && (
-        <div className="rounded-2xl border border-[#99F6E4] bg-[#F0FDFA] p-6 dark:border-teal-800 dark:bg-teal-950/40">
+        <div className="rounded-2xl border border-[#BFDBFE] bg-[#EFF6FF] p-6 dark:border-teal-800 dark:bg-teal-950/40">
           <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full gradient-brand shadow-[0_10px_20px_-6px_rgba(15,118,110,.5)]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full gradient-brand shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)]">
               <CheckCircle className="h-5 w-5 text-white" />
             </div>
-            <p className="text-lg font-extrabold text-[#0F766E] dark:text-teal-200">
+            <p className="text-lg font-extrabold text-[#2D6FD1] dark:text-teal-200">
               업로드 완료
             </p>
           </div>
           <ul className="space-y-2 text-sm text-[#334155] dark:text-teal-100">
             <li className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <span className="h-[7px] w-[7px] rounded-sm bg-[#0F766E]" />
+                <span className="h-[7px] w-[7px] rounded-sm bg-[#2D6FD1]" />
                 가져오기 성공
               </span>
-              <strong className="font-mono text-[#0F766E] dark:text-teal-300">{mutation.data.imported}건</strong>
+              <strong className="font-mono text-[#2D6FD1] dark:text-teal-300">{mutation.data.imported}건</strong>
             </li>
             <li className="flex items-center justify-between">
               <span className="flex items-center gap-2">
@@ -218,13 +218,13 @@ export default function ImportPage() {
           <div className="mt-5 flex gap-2">
             <button
               onClick={handleReupload}
-              className="flex-1 rounded-xl border border-[#E2E8F0] bg-white px-4 py-2.5 text-sm font-semibold text-[#334155] transition-colors hover:bg-[#F1F5F9] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              className="flex-1 rounded-xl border border-[#E2E8F0] bg-white px-4 py-2.5 text-sm font-semibold text-[#334155] transition-colors hover:bg-surface dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
             >
               다시 업로드
             </button>
             <button
               onClick={() => router.push('/')}
-              className="gradient-brand flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(15,118,110,.5)] transition-transform hover:-translate-y-px"
+              className="gradient-brand flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px"
             >
               홈으로
             </button>

@@ -24,7 +24,7 @@ function LoginContent() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-[#F1F5F9] px-6 dark:bg-gray-950">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-surface px-6 dark:bg-gray-950">
       <div className="flex w-full max-w-sm flex-col items-center gap-8 rounded-2xl border border-[#E2E8F0] bg-white p-10 shadow-[0_24px_48px_-28px_rgba(15,23,42,.30)] dark:border-gray-800 dark:bg-gray-900">
         {/* 풀 로고 (Design.md Screen 1) */}
         <Image src={fullLogo} alt="Mowaba" width={180} height={48} priority className="h-auto w-44" />
@@ -34,7 +34,7 @@ function LoginContent() {
         <button
           type="button"
           onClick={signInWithGoogle}
-          className="gradient-brand w-full rounded-xl px-6 py-3 font-semibold text-white shadow-[0_10px_20px_-6px_rgba(15,118,110,.5)] transition-transform hover:-translate-y-px"
+          className="gradient-brand w-full rounded-xl px-6 py-3 font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px"
         >
           Google로 계속하기
         </button>
