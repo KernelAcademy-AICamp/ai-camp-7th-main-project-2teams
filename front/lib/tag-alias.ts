@@ -1,6 +1,6 @@
 // AI 태깅 출력 정규화 (docs/specs/alias.md). 운영 중 누락 발견 시 추가.
 
-// 대분류 alias — categories 테이블 name 매핑. 고정 9개 외 값은 null(미분류).
+// 대분류 alias — categories 테이블 name 매핑. 고정 13개(TOP_CATEGORIES) 외 값은 null(미분류).
 export const CATEGORY_ALIAS: Record<string, string> = {
   // 개발
   dev: '개발', development: '개발', programming: '개발',
@@ -115,7 +115,7 @@ export const TAG_ALIAS: Record<string, string> = {
 
 const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '콘텐츠', '브랜드', '게임', '라이프스타일', '여행', '금융'])
 
-// 고정 12개 외 / 태깅 실패(tags=[]) → category_id null. UI·필터에서 이 라벨로 묶음.
+// 고정 13개 외 / 태깅 실패(tags=[]) → category_id null. UI·필터에서 이 라벨로 묶음.
 export const UNCATEGORIZED_LABEL = '미분류'
 
 export function normalizeTags(tags: string[]): string[] {

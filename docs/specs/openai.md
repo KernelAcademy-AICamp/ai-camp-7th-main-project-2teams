@@ -18,10 +18,16 @@ npm install openai
 // lib/openai.ts
 import OpenAI from 'openai'
 
-// 서버사이드 전용 — 클라이언트 번들 미포함 보장
-export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// 서버사이드 전용 — 클라이언트 번들 미포함 보장 (OPENAI_API_KEY는 NEXT_PUBLIC_ 금지).
+// 지연 초기화: 첫 호출 시 생성 → 키 없는 빌드 단계 throw 방지.
+let client: OpenAI | null = null
+
+export function getOpenAI(): OpenAI {
+  if (!client) {
+    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  }
+  return client
+}
 ```
 
 ---
@@ -33,7 +39,7 @@ export const openai = new OpenAI({
 AI 출력 정규화(alias): `docs/specs/alias.md` 참조.
 
 ```typescript
-import { openai } from '@/lib/openai'
+import { getOpenAI } from '@/lib/openai'
 
 interface TaggingInput {
   title: string
@@ -42,7 +48,7 @@ interface TaggingInput {
 }
 
 // SYSTEM_PROMPT 전문·Few-shot 예제·경계 규칙은 lib/ai.ts 단일 출처. 분류 체계는 tag-taxonomy.md.
-const completion = await openai.chat.completions.create({
+const completion = await getOpenAI().chat.completions.create({
   model: 'gpt-4o-mini',
   messages: [
     { role: 'system', content: SYSTEM_PROMPT },
@@ -65,7 +71,7 @@ return selectConfidentTags(JSON.parse(completion.choices[0].message.content ?? '
   { "tag": "Next.js", "confidence": 0.8 }
 ] }
 ```
-대분류 9종·중분류·경계 규칙·Few-shot 예제는 `lib/ai.ts` SYSTEM_PROMPT 참조.
+대분류 13종·중분류·경계 규칙·Few-shot 예제는 `lib/ai.ts` SYSTEM_PROMPT 참조.
 
 ---
 

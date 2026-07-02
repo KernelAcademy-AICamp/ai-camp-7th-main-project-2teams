@@ -5,7 +5,7 @@ MVP v1.0 태스크 — PRD `scripts/prd.md` 기반 (v0.5, IA 정리본 반영)
 ## 구조
 
 ```
-front/tasks.json       # Next.js 웹앱 + API Routes (A1~A16, A26~A47)
+front/tasks.json       # Next.js 웹앱 + API Routes (A1~A16, A26~A51)
 extension/tasks.json   # Chrome Extension (A17~A25)
 tasks/README.md        # 이 파일 (진행 현황 포함)
 ```
@@ -181,7 +181,7 @@ A17 (Extension 셋업)
 - [x] **A32 account DELETE 비원자성** (`app/api/account/route.ts`): `deleteUser` 단일 호출 + `ON DELETE CASCADE` 위임으로 원자적 처리. PR #48.
 - [x] **A33 경로 드리프트**: `tasks/README.md`, `front/tasks.json` A15 title을 실제 구현 경로(`GET /api/account`)로 수정. `docs/specs/nextjs-supabase.md`는 이미 정합.
 - [x] **A34 maskSensitive 미연결** (A8): `lib/logger.ts` 정의됐으나 route 어디서도 호출 안 됨. 에러 로깅 추가 시 경유 가드 없음.
-- [x] **A35 URL 중복 저장 무방비**: `(user_id, url)` UNIQUE 제약 + upsert 전환. PR #52.
+- [x] **A35 URL 중복 저장 무방비**: `(user_id, url)` UNIQUE 제약 + canonical URL 정규화. 중복 시 AI 호출 전 409 선검사(조용한 덮어쓰기 제거), 경합은 unique 위반 catch로 409. PR #52.
 
 ### 검색 품질 (튜닝)
 
@@ -190,7 +190,7 @@ A17 (Extension 셋업)
 
 ### 태깅 품질 (튜닝)
 
-- [x] **A43 confidence 필터 + 골든셋 평가** (`lib/ai.ts`, `lib/tag-eval.ts`): generateTags가 태그별 confidence 반환, threshold 0.6 미만 자동 제외. alias 보강·Few-shot 반례로 RAG 과태깅 교정. 골든셋(`eval/tag-golden.json`) held-out F1 0.94, 회귀 게이트 ≥0.85(`RUN_TAG_EVAL=1`). PR #87.
+- [x] **A43 confidence 필터 + 골든셋 평가** (`lib/ai.ts`, `lib/tag-eval.ts`): generateTags가 태그별 confidence 반환, threshold 0.6 미만 자동 제외. alias 보강·Few-shot 반례로 RAG 과태깅 교정. 골든셋(`eval/tag-golden.json`, n=115) 실측 macro-F1 0.85·대분류 정확도 0.93(2026-07), 회귀 게이트 baseline 0.82(`RUN_TAG_EVAL=1`, 실측 0.85 대비 여유). PR #87.
 - [x] **A44 골든셋 확장 스킬** (`.claude/skills/golden-set-expand/`): tag-golden.json 안전 확장 스킬. few-shot leak·대분류 정책 위반·중분류 vocab 드리프트·URL 중복을 `validate_golden.py`로 차단. 대분류 6→9 확장 과정에서 반복된 오류를 코드화.
 
 ### Minor
