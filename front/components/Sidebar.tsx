@@ -6,49 +6,13 @@ import { useRouter } from "next/navigation";
 import { useShallow } from "zustand/react/shallow";
 import { useFilterStore } from "@/store/filterStore";
 import { useFolders } from "@/hooks/useFolders";
+import { useCategories } from "@/hooks/useCategories";
 import { buildFolderTree, type FolderNode } from "@/lib/folderTree";
-import { resolveTopCategory, UNCATEGORIZED_LABEL } from "@/lib/tag-alias";
+import { UNCATEGORIZED_LABEL } from "@/lib/tag-alias";
 import { SidebarSkeleton } from "@/components/SidebarSkeleton";
 import { createClient } from "@/lib/supabase/client";
-import type { Bookmark } from "@/hooks/useBookmarks";
 
-export function aggregateTags(bookmarks: Bookmark[], limit = 20): string[] {
-  const counts: Record<string, number> = {};
-  for (const b of bookmarks) {
-    for (const t of b.tags) counts[t] = (counts[t] ?? 0) + 1;
-  }
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([tag]) => tag);
-}
-
-// 고정 대분류만 노출, 그 외(미상위·tags=[])는 "미분류" 한 항목으로 묶음(맨 뒤)
-export function aggregateCategories(bookmarks: Bookmark[]): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
-  let hasUncategorized = false;
-  for (const b of bookmarks) {
-    const top = resolveTopCategory(b.tags);
-    if (top) {
-      if (!seen.has(top)) {
-        seen.add(top);
-        result.push(top);
-      }
-    } else {
-      hasUncategorized = true;
-    }
-  }
-  if (hasUncategorized) result.push(UNCATEGORIZED_LABEL);
-  return result;
-}
-
-interface SidebarProps {
-  bookmarks: Bookmark[];
-  loading?: boolean;
-}
-
-export function Sidebar({ bookmarks, loading = false }: SidebarProps) {
+export function Sidebar() {
   const [categoryOpen, setCategoryOpen] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
   const [popupOpen, setPopupOpen] = useState(false);
@@ -72,6 +36,8 @@ export function Sidebar({ bookmarks, loading = false }: SidebarProps) {
   const folders = useMemo(() => foldersData?.folders ?? [], [foldersData]);
   const folderTree = useMemo(() => buildFolderTree(foldersData?.paths ?? []), [foldersData]);
 
+  const { data: categoriesData, isPending: categoriesPending } = useCategories();
+
   useEffect(() => {
     createClient()
       .auth.getUser()
@@ -93,12 +59,12 @@ export function Sidebar({ bookmarks, loading = false }: SidebarProps) {
     router.push("/welcome");
   };
 
-  // 유저 북마크에서 카테고리 동적 추출 (tags[0] = AI가 설정한 대분류)
-  // 즐겨찾기 탭에서는 즐겨찾기 북마크 기준으로만 추출 (없는 카테고리 노출 방지)
+  // 카테고리는 전용 API(전체 집계) 기준 — 목록 API 페이지네이션과 무관.
+  // 미분류(category_id null) 있으면 맨 뒤에 한 항목으로 노출.
   const categories = useMemo(() => {
-    const source = tab === "favorites" ? bookmarks.filter((b) => b.is_favorite) : bookmarks;
-    return aggregateCategories(source);
-  }, [bookmarks, tab]);
+    const names = categoriesData?.categories ?? [];
+    return categoriesData?.hasUncategorized ? [...names, UNCATEGORIZED_LABEL] : names;
+  }, [categoriesData]);
 
   // folder_hint 있을 때만 "내 폴더" 탭 포함
   const topTabs = useMemo(() => {
@@ -142,10 +108,12 @@ export function Sidebar({ bookmarks, loading = false }: SidebarProps) {
 
   const isAllActive = category === null && folder === null;
 
-  // 탭별 축 분리: 내 폴더 탭은 폴더만, 그 외(홈·즐겨찾기)는 카테고리만 노출
+  // 탭별 축 분리: 내 폴더 탭은 폴더 트리, 그 외는 카테고리
   const showFolders = tab === "folders";
-  // 폴더 탭은 폴더 쿼리, 그 외는 북마크(카테고리) 로딩 기준
-  const showSkeleton = showFolders ? foldersPending : loading;
+  // 즐겨찾기 탭은 카테고리 하위 버튼만 숨김 (전체 버튼·헤더는 유지)
+  const showCategoryList = !showFolders && tab !== "favorites";
+  // 폴더 탭은 폴더 쿼리, 그 외는 카테고리 쿼리 로딩 기준
+  const showSkeleton = showFolders ? foldersPending : categoriesPending;
 
   return (
     <nav aria-label="북마크 필터" className="flex max-h-full w-48 shrink-0 flex-col gap-6 self-stretch overflow-y-auto">
@@ -212,8 +180,8 @@ export function Sidebar({ bookmarks, loading = false }: SidebarProps) {
               </li>
             )}
 
-            {/* 유저 카테고리 — 홈·즐겨찾기 탭 */}
-            {!showFolders &&
+            {/* 유저 카테고리 — 홈 탭만 (즐겨찾기 탭에서는 하위 버튼 숨김) */}
+            {showCategoryList &&
               categories.map((name) => (
                 <li key={`cat-${name}`}>
                   <button
