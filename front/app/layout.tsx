@@ -7,8 +7,12 @@ import { cn } from "@/lib/utils";
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist' });
 
 export const metadata: Metadata = {
-  title: '북마크 AI',
-  description: 'AI 기반 북마크 관리 서비스',
+  title: {
+    default: '모와바 · 북마크 AI',
+    template: '%s · 모와바',
+  },
+  description: '모와바(Mowaba) — AI가 자동 태깅·분류하고 자연어로 다시 찾는 북마크 관리 서비스',
+  applicationName: '모와바',
 }
 
 export default function RootLayout({
