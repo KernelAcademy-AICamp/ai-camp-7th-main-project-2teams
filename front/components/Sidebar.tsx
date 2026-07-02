@@ -63,7 +63,10 @@ export function Sidebar() {
   // 카테고리는 전용 API(전체 집계) 기준 — 목록 API 페이지네이션과 무관.
   // 미분류(category_id null) 있으면 맨 뒤에 한 항목으로 노출.
   const categories = useMemo(() => {
-    const names = categoriesData?.categories ?? [];
+    // a-z, A-Z, ㄱ-ㅎ 순 정렬. 미분류는 정렬에서 제외하고 항상 맨 뒤에 붙임.
+    const names = [...(categoriesData?.categories ?? [])].sort((a, b) =>
+      a.localeCompare(b, "ko")
+    );
     return categoriesData?.hasUncategorized ? [...names, UNCATEGORIZED_LABEL] : names;
   }, [categoriesData]);
 
