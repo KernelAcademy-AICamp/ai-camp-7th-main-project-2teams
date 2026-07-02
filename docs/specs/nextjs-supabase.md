@@ -160,8 +160,8 @@ import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow' // v5 import 경로
 
 type SidebarTab = 'all' | 'favorites' | 'categories' | 'folders'
-type SortOrder = 'created_at' | 'similarity'
-type ViewMode = 'list' | 'grid'  // 'compact'는 v1.1
+type SortOrder = 'latest' | 'oldest'
+type ViewMode = 'list' | 'grid' | 'compact'  // compact = A50
 
 interface FilterState {
   tab: SidebarTab
@@ -187,8 +187,8 @@ export const useFilterStore = create<FilterState>((set) => ({
   folder: null,
   tag: null,
   searchQuery: '',
-  sortOrder: 'created_at',
-  viewMode: 'list',
+  sortOrder: 'latest',
+  viewMode: 'grid',
   setTab: (tab) => set({ tab }),
   setCategory: (category) => set({ category }),
   setFolder: (folder) => set({ folder }),
@@ -196,7 +196,7 @@ export const useFilterStore = create<FilterState>((set) => ({
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setSortOrder: (sortOrder) => set({ sortOrder }),
   setViewMode: (viewMode) => set({ viewMode }),
-  reset: () => set({ tab: 'all', category: null, folder: null, tag: null, searchQuery: '', sortOrder: 'created_at', viewMode: 'list' }),
+  reset: () => set({ tab: 'all', category: null, folder: null, tag: null, searchQuery: '', sortOrder: 'latest', viewMode: 'grid' }),
 }))
 
 // 여러 값 구독 시 useShallow로 불필요한 리렌더 방지
@@ -217,10 +217,17 @@ export function useFilters() {
 // lib/schemas.ts
 import { z } from 'zod'
 
+// content는 DB insert 금지(보안 규칙) → 공개 bookmarkSchema에 미포함.
 export const bookmarkSchema = z.object({
   title: z.string().min(1).max(500),
   url: z.url(),                             // v4: z.url() 독립 메서드
+})
+
+// A5 전용 transient — content는 OpenAI 처리 후 파기, DB 저장·로그 금지.
+// 영속 스키마(bookmarkSchema)와 분리해 content 누출 차단.
+export const bookmarkCreateSchema = bookmarkSchema.extend({
   content: z.string().max(2000).optional().default(''),
+  folder_hint: z.array(z.string()).optional(),
 })
 
 export const searchSchema = z.object({
@@ -237,6 +244,7 @@ export const importSchema = z.object({
 })
 
 export type BookmarkInput = z.infer<typeof bookmarkSchema>
+export type BookmarkCreateInput = z.infer<typeof bookmarkCreateSchema>
 export type SearchInput = z.infer<typeof searchSchema>
 export type FavoriteInput = z.infer<typeof favoriteSchema>
 ```
@@ -276,7 +284,7 @@ export const POST = withAuth(async (req, { user }) => {
 
 /* 커스텀 토큰 — v4 @theme (v3 theme.extend 대체) */
 @theme {
-  --color-brand: #6366f1;
+  --color-brand: #0f766e;   /* Deep Teal — design-system.md */
   --font-sans: 'Pretendard', sans-serif;
 }
 ```
@@ -407,19 +415,20 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
-  const isPublic = ['/login', '/auth', '/privacy', '/terms', '/goodbye'].some(
+  const isPublic = ['/login', '/auth', '/privacy', '/terms', '/goodbye', '/welcome'].some(
     p => pathname.startsWith(p)
   )
 
   if (!user && !isPublic) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    return NextResponse.redirect(new URL('/welcome', request.url))
   }
 
   return supabaseResponse
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // api 제외: API 라우트는 withAuth가 401 JSON. 미들웨어 302 시 fetch 클라이언트가 HTML 로그인 페이지 수신.
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }
 ```
 
@@ -430,15 +439,16 @@ export const config = {
 ```typescript
 // lib/auth.ts
 import { NextResponse } from 'next/server'
+import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { createClient } from './supabase/server'
 
-type AuthedHandler = (
-  req: Request,
-  ctx: { user: { id: string; email?: string } }
-) => Promise<Response>
+// 핸들러에 { user, supabase } 주입 + 동적 라우트 params(제네릭 P) 그대로 전달.
+type AuthContext<P> = { user: User; supabase: SupabaseClient } & P
 
-export function withAuth(handler: AuthedHandler) {
-  return async (req: Request) => {
+export function withAuth<P = unknown>(
+  handler: (req: Request, ctx: AuthContext<P>) => Promise<Response> | Response
+) {
+  return async (req: Request, routeCtx?: P) => {
     const supabase = await createClient()
     const { data: { user }, error } = await supabase.auth.getUser()
 
@@ -446,7 +456,7 @@ export function withAuth(handler: AuthedHandler) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    return handler(req, { user })
+    return handler(req, { user, supabase, ...((routeCtx ?? {}) as P) })
   }
 }
 ```
@@ -500,24 +510,26 @@ front/
 │   │   │   │   └── route.ts      # PATCH is_favorite(A27) + DELETE(카드 삭제)
 │   │   │   ├── import/
 │   │   │   │   └── route.ts      # POST — HTML 파싱 + 배치 태깅 (A29)
+│   │   │   ├── preview/
+│   │   │   │   └── route.ts      # POST — URL 메타 미리보기 (단건 추가 검증)
+│   │   │   ├── categories/
+│   │   │   │   └── route.ts      # GET — 사이드바 카테고리 전용 API
 │   │   │   └── folders/
 │   │   │       └── route.ts      # GET — folder_hint distinct 목록 (A31)
 │   │   ├── search/
 │   │   │   └── route.ts          # POST(A7)
 │   │   └── account/
 │   │       └── route.ts          # DELETE(A14) + GET(A15)
-│   ├── onboarding/
-│   │   └── page.tsx               # A26 — 온보딩 별도 페이지 (MVP)
+│   ├── onboarding/                # A26 — 온보딩 별도 페이지 (MVP)
+│   │   ├── page.tsx
+│   │   ├── OnboardingContent.tsx  # 스텝 UI + 노출 제어
+│   │   └── onboardingUtils.ts     # STEPS·상태 유틸
+│   ├── welcome/page.tsx           # A39 — 랜딩 페이지 (미인증 진입점)
 │   ├── login/page.tsx             # A4 — Google OAuth 버튼만
 │   ├── auth/callback/route.ts     # A4 — OAuth 콜백 핸들러
 │   ├── privacy/page.tsx           # A12
 │   ├── terms/page.tsx             # A13
 │   └── goodbye/page.tsx
-├── components/
-│   └── onboarding/               # v1.1 Modal Wizard (onboarding-modal.md 참조)
-│       ├── OnboardingModal.tsx    # 노출 제어 + 스텝 상태
-│       ├── OnboardingStep.tsx     # 개별 스텝 콘텐츠
-│       └── steps.ts               # STEPS 배열 정의
 ├── lib/
 │   ├── supabase/
 │   │   ├── server.ts

@@ -12,7 +12,19 @@ describe('scoreTags', () => {
       recall: 1,
       f1: 1,
       exact: true,
+      categoryHit: true,
     })
+  })
+
+  it('대분류 다르면 categoryHit=false', () => {
+    expect(scoreTags(['디자인'], ['개발']).categoryHit).toBe(false)
+    // 부분 태그 일치해도 대분류 틀리면 categoryHit=false
+    expect(scoreTags(['디자인', 'React'], ['개발', 'React']).categoryHit).toBe(false)
+  })
+
+  it('둘 다 미분류(빈 태그) → categoryHit=true', () => {
+    expect(scoreTags([], []).categoryHit).toBe(true)
+    expect(scoreTags([], ['개발']).categoryHit).toBe(false)
   })
 
   it('부분 일치 → 교집합 기반', () => {
@@ -23,7 +35,7 @@ describe('scoreTags', () => {
   })
 
   it('둘 다 빈 태그(로그인 페이지) → 완벽', () => {
-    expect(scoreTags([], [])).toMatchObject({ precision: 1, recall: 1, f1: 1, exact: true })
+    expect(scoreTags([], [])).toMatchObject({ precision: 1, recall: 1, f1: 1, exact: true, categoryHit: true })
   })
 
   it('예측만 빈 태그 → recall=0', () => {
@@ -43,16 +55,19 @@ describe('aggregate', () => {
     expect(a.precision).toBe(0.5)
     expect(a.recall).toBe(0.5)
     expect(a.f1).toBe(0.5)
+    expect(a.categoryAccuracy).toBe(0.5)
   })
 })
 
 // 실 OpenAI 골든셋 평가 — 비용·flaky 때문에 RUN_TAG_EVAL=1에서만.
 // 실행: RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts
 // 회귀 게이트: macro-F1 baseline 미만이면 실패.
-// held-out 실측: n=69, 대분류 12종(라이프스타일·여행·금융 신설 포함). macro-F1 ≈ 0.79 (2026-06). 레버리지 1/69≈0.014.
-// 라이프스타일·여행·금융은 현 DB 표본 부족으로 합성 케이스 — 실데이터 유입 시 교체 권장.
+// 골든셋: n=115, 대분류 13종(콘텐츠 신설 포함). 레버리지 1/115≈0.009.
+// 실측(2026-07): macro-F1 0.85, precision 0.86, recall 0.87, 대분류 정확도 0.93, exact 0.63.
+// baseline 0.82 = 실측 0.85 대비 ~0.03 여유(~3항목 오탐 허용). 실회귀는 잡고 노이즈는 통과.
+// 콘텐츠(3)·여행(4)은 표본 얇음 — 실데이터 유입 시 확충 권장.
 // 남은 모호: ev 충전소(여행 오판), 브랜드 디자인스튜디오 마케팅/기업 → 팀 검수 후 상향.
-const F1_BASELINE = 0.78
+const F1_BASELINE = 0.82
 
 describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)', () => {
   it(
@@ -83,6 +98,6 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
       console.log('\n=== 집계 ===', JSON.stringify(agg, null, 2))
       expect(agg.f1).toBeGreaterThanOrEqual(F1_BASELINE)
     },
-    300_000, // 골든셋 95건 순차 OpenAI 호출 — n=69 시절 120s로는 부족
+    300_000, // 골든셋 115건 순차 OpenAI 호출 — 항목당 ~1.5s
   )
 })
