@@ -3,7 +3,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import { OnboardingGuideButton } from "@/components/OnboardingGuideButton";
 import { AddBookmarkModal } from "@/components/AddBookmarkModal";
-import markLogo from "@/assets/mowaba_mark.png";
+import markLogo from "@/assets/mowaba_logo.png";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
