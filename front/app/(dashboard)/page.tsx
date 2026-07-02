@@ -192,7 +192,7 @@ function DashboardContent() {
                   <AddBookmarkModal />
                   <Link
                     href="/import"
-                    className="rounded-[11px] border border-teal-200 bg-[#F0FDFA] px-4 py-2 text-sm font-medium text-teal-700 transition-colors hover:bg-[#CCFBF1] dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-300"
+                    className="rounded-[11px] border border-blue-200 bg-[#EFF6FF] px-4 py-2 text-sm font-medium text-brand transition-colors hover:bg-[#DBEAFE] dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-300"
                   >
                     파일 업로드
                   </Link>

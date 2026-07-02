@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Providers } from './providers'
-import { Geist } from "next/font/google";
+import { Geist, Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist' });
+// Design.md 지정 본문 폰트 — 라틴/숫자, 한글은 Pretendard 우선
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: {
@@ -21,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ko" className={cn("font-sans", geist.variable)}>
+    <html lang="ko" className={cn("font-sans", geist.variable, inter.variable)}>
       <body className="antialiased">
         <Providers>{children}</Providers>
       </body>

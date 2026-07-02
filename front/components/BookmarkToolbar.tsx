@@ -21,7 +21,7 @@ export function BookmarkToolbar() {
       {/* 정렬 토글 */}
       <button
         onClick={() => setSortOrder(sortOrder === 'latest' ? 'oldest' : 'latest')}
-        className="flex items-center gap-1.5 rounded-[10px] border border-teal-200 bg-[#F0FDFA] px-2.5 py-1.5 text-xs font-medium text-teal-700 transition-colors hover:bg-[#CCFBF1] dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-300"
+        className="flex items-center gap-1.5 rounded-lg border border-brand/25 bg-accent px-2.5 py-1.5 text-xs font-medium text-brand transition-colors hover:bg-blue-100"
         aria-label="정렬 순서 전환"
       >
         <ArrowDownUp size={14} />
@@ -29,7 +29,7 @@ export function BookmarkToolbar() {
       </button>
 
       {/* 뷰 전환 — 그리드/리스트/컴팩트 */}
-      <div className="flex gap-0.5 rounded-md border border-gray-200 p-0.5 dark:border-gray-700">
+      <div className="flex gap-0.5 rounded-md border border-line bg-white p-0.5">
         {([
           { mode: 'grid', label: '그리드 보기', Icon: LayoutGrid },
           { mode: 'list', label: '리스트 보기', Icon: List },
@@ -43,8 +43,8 @@ export function BookmarkToolbar() {
             className={[
               'rounded p-1 transition-colors',
               viewMode === mode
-                ? 'bg-[#F0FDFA] text-teal-700 dark:bg-teal-950/40 dark:text-teal-300'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200',
+                ? 'bg-accent text-brand'
+                : 'text-text-secondary hover:text-text-primary',
             ].join(' ')}
           >
             <Icon size={16} />

@@ -7,7 +7,7 @@ import markLogo from "@/assets/mowaba_logo.png";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-[#F1F5F9] dark:bg-gray-950">
+    <div className="flex h-screen flex-col overflow-hidden bg-surface">
       {/* 시그니처 그라디언트 상단바 (Design.md Top Bar) */}
       <header className="gradient-brand shadow-[0_4px_14px_-8px_rgba(15,23,42,.4)]">
         <div className="flex h-14 items-center justify-between px-6">
@@ -25,7 +25,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             >
               파일 업로드
             </Link>
-            <AddBookmarkModal triggerClassName="rounded-[11px] bg-white px-3 py-1.5 text-sm font-semibold text-teal-700 shadow-sm transition-transform hover:-translate-y-px" />
+            <AddBookmarkModal triggerClassName="rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-brand shadow-sm transition-transform hover:-translate-y-px" />
           </div>
         </div>
       </header>

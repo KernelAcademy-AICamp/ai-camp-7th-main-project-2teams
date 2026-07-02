@@ -15,8 +15,8 @@ interface BookmarkCardProps {
   view?: "grid" | "list" | "compact";
 }
 
-/** 태그 칩 공통 클래스 — 그레이 5px */
-const TAG_CHIP = "rounded-[5px] bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300";
+/** AI 태그 칩 — Design.md: 작은 pill, 연한 블루 배경 + 블루 텍스트 */
+const TAG_CHIP = "rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-brand-strong";
 
 /** javascript: URL XSS 방어 — http/https만 허용 */
 export function safeUrl(url: string): string {
@@ -176,12 +176,9 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
   // 리스트 뷰 — 큰 가로 행 카드 (파비콘 + 제목 + 메타 한 줄)
   if (view === "list") {
     return (
-      <article className="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-[0_4px_14px_-8px_rgba(15,23,42,.12)] transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-900">
+      <article className="group flex items-center gap-4 rounded-xl border border-line bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-md">
         <Favicon url={bookmark.url} boxClassName="h-12 w-12 rounded-xl" />
         <div className="min-w-0 flex-1">
-          {bookmark.is_favorite && (
-            <Star size={13} className="mb-0.5 fill-yellow-400 text-yellow-400" aria-hidden />
-          )}
           <a
             href={safeUrl(bookmark.url)}
             target="_blank"
@@ -216,8 +213,8 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
   return (
     <article
       className={cn(
-        "group flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4",
-        "shadow-[0_4px_14px_-8px_rgba(15,23,42,.12)] transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-900",
+        "group flex flex-col gap-3 rounded-xl border border-line bg-white p-4",
+        "shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-md",
       )}
     >
       {/* 파비콘 + 제목 + 우측 액션 그룹 */}
@@ -268,10 +265,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
         <div className="flex flex-wrap items-center gap-1.5">
           <Tag size={12} className="shrink-0 text-gray-400" />
           {bookmark.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-[5px] bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300"
-            >
+            <span key={tag} className={TAG_CHIP}>
               {tag}
             </span>
           ))}
