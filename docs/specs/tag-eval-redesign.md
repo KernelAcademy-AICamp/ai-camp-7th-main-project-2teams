@@ -68,8 +68,10 @@
 
 ### 시나리오 B — retag 안전장치 (우선순위 1)
 
-**B-1. 백업 필수화**
-- retag 실행 전 `bookmarks_tags_backup_YYYYMMDD` 자동 생성 + RLS 활성 (2026-07-02 수동 수행분 절차화).
+**B-1. 백업 필수화** ✅ 구현 (파일 스냅샷 방식)
+- retag 비-DRY 실행 시 쓰기 전 전체 `(id, tags)` 스냅샷을 `scripts/backups/retag-tags-<ts>.json`에 자동 저장. 백업 실패면 재태깅 중단. 복원: `RESTORE=<file> npx tsx scripts/retag.ts`.
+- DB 테이블(`bookmarks_tags_backup_YYYYMMDD`) 대신 로컬 파일 채택 — 프로젝트에 pg 연결·DDL RPC 경로 없음(supabase-js는 DDL 불가), 새 의존성 회피. 파일은 user 데이터라 `.gitignore`.
+- 상위 경로(선택): B-3 사후검증 SQL join을 쓰려면 DB 백업 테이블 필요 → 마이그레이션으로 백업 함수/테이블 추가 시 전환.
 
 **B-2. 빈 태그 전환 스킵 옵션**
 - `KEEP_NONEMPTY=1`: 새 태그가 `[]`인데 기존 태그가 있으면 업데이트 스킵(기존 유지). 순손실 방지.
