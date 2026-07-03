@@ -108,6 +108,27 @@ const SAMPLE_HTML = `<DL><p>
   <DT><A HREF="https://example.com" ADD_DATE="3">Example</A>
 </DL><p>`
 
+// 동일 URL이 서로 다른 폴더에 2번 등장 — 배치 내부 중복(폴더 다름) 테스트용
+const DUPLICATE_DIFFERENT_FOLDER_HTML = `<DL><p>
+  <DT><H3>폴더A</H3>
+  <DL><p>
+    <DT><A HREF="https://dup.com">Dup A</A>
+  </DL><p>
+  <DT><H3>폴더B</H3>
+  <DL><p>
+    <DT><A HREF="https://dup.com">Dup B</A>
+  </DL><p>
+</DL><p>`
+
+// 동일 URL이 같은 폴더에 2번 등장 — 배치 내부 중복(폴더 같음) 테스트용
+const DUPLICATE_SAME_FOLDER_HTML = `<DL><p>
+  <DT><H3>폴더A</H3>
+  <DL><p>
+    <DT><A HREF="https://dup.com">Dup A</A>
+    <DT><A HREF="https://dup.com">Dup A2</A>
+  </DL><p>
+</DL><p>`
+
 // ------ 테스트 ------
 
 describe('POST /api/bookmarks/import', () => {
@@ -183,11 +204,11 @@ describe('POST /api/bookmarks/import', () => {
     expect(res.status).toBe(400)
   })
 
-  it('빈 HTML (파싱 0건) → { imported:0, failed:0, skipped:0 }', async () => {
+  it('빈 HTML (파싱 0건) → { imported:0, failed:0, skipped:0, duplicate:0 }', async () => {
     const res = await POST(makeReq(makeFile('<html><body>no bookmarks</body></html>')))
     expect(res.status).toBe(200)
     const json = await res.json()
-    expect(json).toEqual({ imported: 0, failed: 0, skipped: 0 })
+    expect(json).toEqual({ imported: 0, failed: 0, skipped: 0, duplicate: 0 })
     expect(insertSpy).not.toHaveBeenCalled()
   })
 
@@ -267,5 +288,71 @@ describe('POST /api/bookmarks/import', () => {
     const file = new File([SAMPLE_HTML], 'bookmarks.html', { type: 'text/plain' })
     const res = await POST(makeReq(file))
     expect(res.status).toBe(200)
+  })
+
+  it('DB 기존 URL 재업로드(폴더 경로 동일) → 완전 스킵, duplicate 카운트', async () => {
+    existingRows = [{ url: 'https://nextjs.org/', folder_hint: ['개발'] }]
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(json.imported).toBe(1) // example.com만 신규 저장
+    expect(generateTags).toHaveBeenCalledTimes(1) // nextjs.org는 AI 호출 없음
+    expect(updateSpy).not.toHaveBeenCalled()
+
+    const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
+    expect(calls.some((c) => c[0].url === 'https://nextjs.org/')).toBe(false)
+  })
+
+  it('DB 기존 URL, folder_hint 다름 → update만 호출, AI 호출 없음, duplicate 카운트', async () => {
+    existingRows = [{ url: 'https://nextjs.org/', folder_hint: ['옛폴더'] }]
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(updateSpy).toHaveBeenCalledWith({ folder_hint: ['개발'] })
+    expect(generateTags).toHaveBeenCalledTimes(1) // nextjs.org는 AI 호출 없음, example.com만
+  })
+
+  it('배치 내부 동일 URL, 폴더 경로 다름 → 마지막 등장 채택, 1회만 upsert, duplicate 카운트', async () => {
+    const res = await POST(makeReq(makeFile(DUPLICATE_DIFFERENT_FOLDER_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(insertSpy).toHaveBeenCalledTimes(1)
+    expect(insertSpy.mock.calls[0][0].folder_hint).toEqual(['폴더B'])
+  })
+
+  it('배치 내부 동일 URL, 폴더 경로 같음 → 1회만 upsert, duplicate 카운트', async () => {
+    const res = await POST(makeReq(makeFile(DUPLICATE_SAME_FOLDER_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(insertSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('기존 URL 조회(select().eq().in()) 에러 → fail-open으로 정상 처리', async () => {
+    existingLookupShouldError = true
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+
+    expect(json.imported).toBe(2)
+    expect(json.duplicate).toBe(0)
+  })
+
+  it('folder_hint update 에러 → fail-open, duplicate만 집계 (failed 증가 안 함)', async () => {
+    existingRows = [{ url: 'https://nextjs.org/', folder_hint: ['옛폴더'] }]
+    updateShouldError = true
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(json.failed).toBe(0)
   })
 })
