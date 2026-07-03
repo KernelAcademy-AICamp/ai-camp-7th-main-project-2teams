@@ -166,14 +166,16 @@ function DashboardContent() {
 
         {!isPending && items.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
-            {isSearching && isSearchError && !isSearchPending && (
-              <p className="mb-3 text-sm text-red-500">검색 중 오류가 발생했습니다. 다시 시도해 주세요.</p>
-            )}
             {isSearching ? (
-              <>
-                <p className="text-lg font-medium text-gray-700 dark:text-gray-300">검색 결과가 없습니다</p>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">다른 검색어로 시도해 보세요.</p>
-              </>
+              isSearchError && !isSearchPending ? (
+                // 검색 오류 시 empty 문구 없이 에러만 노출 (상호배타)
+                <p className="text-sm text-red-500">검색 중 오류가 발생했습니다. 다시 시도해 주세요.</p>
+              ) : (
+                <>
+                  <p className="text-lg font-medium text-gray-700 dark:text-gray-300">검색 결과가 없습니다</p>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">다른 검색어로 시도해 보세요.</p>
+                </>
+              )
             ) : tab === "favorites" ? (
               // 즐겨찾기 탭은 북마크는 있으나 즐겨찾기만 없는 상태 — 추가/업로드 CTA 부적절
               <>
