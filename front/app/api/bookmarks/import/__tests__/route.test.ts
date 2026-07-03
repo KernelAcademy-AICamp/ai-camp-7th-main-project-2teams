@@ -135,6 +135,30 @@ const DUPLICATE_SAME_FOLDER_HTML = `<DL><p>
   </DL><p>
 </DL><p>`
 
+// 동일 URL이 서로 다른 폴더에 2번 등장(배치 내부 중복) + DB에도 이미 존재(제3의 폴더) —
+// 배치 내부 dedup·DB 매치 복합 케이스 테스트용
+const COMBINED_DUPLICATE_HTML = `<DL><p>
+  <DT><H3>폴더A</H3>
+  <DL><p>
+    <DT><A HREF="https://combo.com">Combo A</A>
+  </DL><p>
+  <DT><H3>폴더C</H3>
+  <DL><p>
+    <DT><A HREF="https://combo.com">Combo C</A>
+  </DL><p>
+</DL><p>`
+
+// 2단계 중첩 폴더(개발 > 프론트엔드) — 다단계 folder_hint 비교 테스트용
+const NESTED_FOLDER_HTML = `<DL><p>
+  <DT><H3>개발</H3>
+  <DL><p>
+    <DT><H3>프론트엔드</H3>
+    <DL><p>
+      <DT><A HREF="https://nested.com">Nested</A>
+    </DL><p>
+  </DL><p>
+</DL><p>`
+
 // ------ 테스트 ------
 
 describe('POST /api/bookmarks/import', () => {
@@ -389,5 +413,55 @@ describe('POST /api/bookmarks/import', () => {
 
     expect(json.duplicate).toBe(1)
     expect(json.failed).toBe(0)
+  })
+
+  it('배치 내부 중복(폴더 다름) + DB 기존 존재(제3 폴더) 복합 → duplicate 2회 집계, 마지막 등장 folder_hint로 update, AI/upsert 없음', async () => {
+    // 배치 내부: 폴더A → 폴더C 순서로 같은 URL 2번 등장(dedupeBatch가 마지막 등장 '폴더C' 채택 → duplicate 1건).
+    // 그 결과물을 DB 기존 URL(folder_hint: ['옛폴더'])과 비교 → 추가로 duplicate 1건, 총 2건.
+    // 배치의 마지막 등장('폴더C')과도, DB 기존 값('옛폴더')과도 다르므로 update() 호출 대상.
+    existingRows = [{ url: 'https://combo.com/', folder_hint: ['옛폴더'] }]
+
+    const res = await POST(makeReq(makeFile(COMBINED_DUPLICATE_HTML)))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+
+    // dedupeBatch의 배치 내부 중복 1건 + 분류 루프의 DB 매치 1건 = 2건
+    expect(json.duplicate).toBe(2)
+    expect(json.imported).toBe(0)
+    expect(json.failed).toBe(0)
+
+    // update()는 배치 내 마지막 등장(폴더C)의 folder_hint로 호출 — DB의 옛 값도, 첫 등장(폴더A)도 아님
+    expect(updateSpy).toHaveBeenCalledTimes(1)
+    expect(updateSpy).toHaveBeenCalledWith({ folder_hint: ['폴더C'] })
+
+    // DB 매치로 완전히 분류된 URL이므로 AI 호출(태깅) 없음, upsert도 없음
+    expect(generateTags).not.toHaveBeenCalled()
+    expect(insertSpy).not.toHaveBeenCalled()
+  })
+
+  it('다단계 folder_hint(2단계) 비교 — 두 번째 레벨만 달라도 update 호출, 정확한 새 배열 전달', async () => {
+    // DB 기존: ['개발', '백엔드'], 배치: ['개발', '프론트엔드'] — 1단계는 같고 2단계만 다름
+    existingRows = [{ url: 'https://nested.com/', folder_hint: ['개발', '백엔드'] }]
+
+    const res = await POST(makeReq(makeFile(NESTED_FOLDER_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(updateSpy).toHaveBeenCalledTimes(1)
+    expect(updateSpy).toHaveBeenCalledWith({ folder_hint: ['개발', '프론트엔드'] })
+    expect(generateTags).not.toHaveBeenCalled()
+  })
+
+  it('다단계 folder_hint(2단계) 완전 일치 → 완전 스킵, update 호출 없음', async () => {
+    // DB 기존과 배치 모두 ['개발', '프론트엔드']로 2단계까지 완전 일치
+    existingRows = [{ url: 'https://nested.com/', folder_hint: ['개발', '프론트엔드'] }]
+
+    const res = await POST(makeReq(makeFile(NESTED_FOLDER_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(json.imported).toBe(0)
+    expect(updateSpy).not.toHaveBeenCalled()
+    expect(generateTags).not.toHaveBeenCalled()
   })
 })

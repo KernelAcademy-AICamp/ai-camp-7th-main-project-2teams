@@ -205,6 +205,13 @@ export default function ImportPage() {
                 <span className="h-[7px] w-[7px] rounded-sm bg-[#94A3B8]" />
                 건너뜀(중복)
               </span>
+              <strong className="font-mono">{mutation.data.duplicate}건</strong>
+            </li>
+            <li className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <span className="h-[7px] w-[7px] rounded-sm bg-[#D97706]" />
+                처리량 초과 제외
+              </span>
               <strong className="font-mono">{mutation.data.skipped}건</strong>
             </li>
             <li className="flex items-center justify-between">
