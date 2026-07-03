@@ -19,6 +19,9 @@ const updateSpy = vi.fn()
 let existingRows: Array<{ url: string; folder_hint: string[] | null }> = []
 let existingLookupShouldError = false
 let updateShouldError = false
+// 멀티 청크(>200 URL) 테스트에서 특정 청크만 실패시키기 위한 스위치 —
+// 해당 URL을 포함한 in() 호출만 에러 반환, 다른 청크는 정상 응답(부분 실패 검증용)
+let existingLookupFailForUrl: string | null = null
 
 function makeSupabase(user: unknown) {
   return {
@@ -47,6 +50,9 @@ function makeSupabase(user: unknown) {
                 async in(_col: string, urls: string[]) {
                   if (existingLookupShouldError) {
                     return { data: null, error: { message: 'lookup failed' } }
+                  }
+                  if (existingLookupFailForUrl && urls.includes(existingLookupFailForUrl)) {
+                    return { data: null, error: { message: 'chunk lookup failed' } }
                   }
                   const matched = existingRows.filter((r) => urls.includes(r.url))
                   return { data: matched, error: null }
@@ -142,6 +148,7 @@ describe('POST /api/bookmarks/import', () => {
     existingRows = []
     existingLookupShouldError = false
     updateShouldError = false
+    existingLookupFailForUrl = null
     generateTags.mockResolvedValue(['개발', '프론트엔드'])
     createEmbedding.mockResolvedValue([0.1, 0.2])
     fetchMeta.mockResolvedValue({ title: '', description: '' })
@@ -343,6 +350,34 @@ describe('POST /api/bookmarks/import', () => {
     expect(json.imported).toBe(2)
     expect(json.duplicate).toBe(0)
   })
+
+  it('기존 URL 조회 250건(2청크) 중 1개 청크만 에러 → 실패 청크는 fail-open으로 신규 처리, 성공 청크는 정상 중복 판정', async () => {
+    // EXISTING_LOOKUP_CHUNK=200 → 250개면 청크1(0~199) + 청크2(200~249)로 나뉨
+    const links = Array.from(
+      { length: 250 },
+      (_, i) => `<DT><A HREF="https://example.com/${i}">BM ${i}</A>`,
+    ).join('\n')
+    const html = `<DL><p>\n${links}\n</DL><p>`
+
+    // 청크1(성공)에 속한 URL 하나를 기존 URL로 등록 — 정상 중복 판정 확인용
+    existingRows = [{ url: 'https://example.com/0', folder_hint: null }]
+    // 청크2(200~249)에 속한 URL을 포함시켜 해당 청크의 in() 호출만 에러 처리
+    existingLookupFailForUrl = 'https://example.com/200'
+
+    const res = await POST(makeReq(makeFile(html)))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+
+    // 청크1의 example.com/0만 duplicate로 잡힘 — 청크2는 조회 실패로 기존 여부를 알 수 없어 전부 신규 처리
+    expect(json.duplicate).toBe(1)
+    expect(json.imported).toBe(249)
+
+    const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
+    // 청크1에서 중복 판정된 URL은 upsert 대상에서 제외됨
+    expect(calls.some((c) => c[0].url === 'https://example.com/0')).toBe(false)
+    // 청크2는 조회 자체가 실패했으므로 fail-open — 정상적으로 신규 upsert됨(누락되지 않음)
+    expect(calls.some((c) => c[0].url === 'https://example.com/200')).toBe(true)
+  }, 15000)
 
   it('folder_hint update 에러 → fail-open, duplicate만 집계 (failed 증가 안 함)', async () => {
     existingRows = [{ url: 'https://nextjs.org/', folder_hint: ['옛폴더'] }]

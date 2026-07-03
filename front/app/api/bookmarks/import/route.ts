@@ -19,6 +19,8 @@ const MAX_ITEMS = 500
 const CHUNK_SIZE = 5
 /** 기존 URL 존재 여부 배치 조회 시 IN절 청크 크기 */
 const EXISTING_LOOKUP_CHUNK = 200
+/** folder_hint 갱신 동시 처리 청크 크기 — 대량 중복(최대 500건) 시 update() 무제한 fan-out 방지 */
+const FOLDER_UPDATE_CHUNK = 20
 
 // file 필드 존재 + 타입 검증 (400). 크기는 별도 413 처리.
 const fileSchema = z.object({
@@ -126,32 +128,48 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   // 기존 저장된 URL 배치 조회 — AI 호출 전 사전 필터링
   const existingByUrl = await fetchExistingByUrl(supabase, user.id, [...candidates.keys()])
 
+  // 신규 처리 대상과 folder_hint만 갱신할 대상을 먼저 동기적으로 분류(await 없음) —
+  // toProcess는 원본 순서를 그대로 보존해야 하므로(임베딩 실패 순서 테스트 등) 비동기 fan-out 이전에 확정한다.
   const toProcess: CandidateBookmark[] = []
+  const needsFolderUpdate: Array<{ url: string; newFolderHint: string[] | null }> = []
 
-  await Promise.all(
-    [...candidates.values()].map(async (item) => {
-      if (!existingByUrl.has(item.url)) {
-        toProcess.push(item)
-        return
-      }
+  for (const item of candidates.values()) {
+    if (!existingByUrl.has(item.url)) {
+      toProcess.push(item)
+      continue
+    }
 
-      // 이미 DB에 존재 — folder_hint 비교 후 완전 스킵 또는 folder_hint만 갱신
-      duplicate++
-      const existingFolderHint = existingByUrl.get(item.url) ?? null
-      const newFolderHint = item.folder_hint.length > 0 ? item.folder_hint : null
-      if (foldersEqual(existingFolderHint, newFolderHint)) return
+    // 이미 DB에 존재 — folder_hint 비교 후 완전 스킵 또는 folder_hint만 갱신
+    duplicate++
+    const existingFolderHint = existingByUrl.get(item.url) ?? null
+    const newFolderHint = item.folder_hint.length > 0 ? item.folder_hint : null
+    if (foldersEqual(existingFolderHint, newFolderHint)) continue
 
-      try {
-        await supabase
-          .from('bookmarks')
-          .update({ folder_hint: newFolderHint })
-          .eq('user_id', user.id)
-          .eq('url', item.url)
-      } catch {
-        // fail-open — folder_hint 갱신 실패는 duplicate로만 집계, failed 증가 안 함
-      }
-    }),
-  )
+    needsFolderUpdate.push({ url: item.url, newFolderHint })
+  }
+
+  // FOLDER_UPDATE_CHUNK개씩 청크로 나눠 처리 — 최대 500건이 한꺼번에 몰려도
+  // update() 커넥션이 무제한 fan-out 되지 않도록 방어(AI 처리 루프의 CHUNK_SIZE와 동일한 스로틀링 패턴)
+  for (let i = 0; i < needsFolderUpdate.length; i += FOLDER_UPDATE_CHUNK) {
+    const chunk = needsFolderUpdate.slice(i, i + FOLDER_UPDATE_CHUNK)
+    await Promise.all(
+      chunk.map(async ({ url, newFolderHint }) => {
+        try {
+          // supabase-js 쿼리 빌더는 DB 에러를 throw하지 않고 { error } 필드로 resolve한다.
+          // 여기서 error를 의도적으로 확인하지 않는 것 자체가 fail-open 처리다 — 실패해도
+          // duplicate 집계만 유지하고 failed는 증가시키지 않는다. try/catch는 그와 별개로
+          // 네트워크 단절 등 실제 예외 상황에 대한 방어선일 뿐이다.
+          await supabase
+            .from('bookmarks')
+            .update({ folder_hint: newFolderHint })
+            .eq('user_id', user.id)
+            .eq('url', url)
+        } catch {
+          // 실제 예외(네트워크 등) 방어 — 위 주석 참고, 여기도 failed 증가 안 함
+        }
+      }),
+    )
+  }
 
   let imported = 0
   let failed = 0
