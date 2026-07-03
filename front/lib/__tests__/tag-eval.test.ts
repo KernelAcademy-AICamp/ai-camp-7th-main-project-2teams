@@ -13,7 +13,25 @@ describe('scoreTags', () => {
       f1: 1,
       exact: true,
       categoryHit: true,
+      goldNonEmpty: true,
+      miss: false,
     })
+  })
+
+  it('D-1: gold 있는데 예측 빈 태그 → miss=true (미분류 실패)', () => {
+    const s = scoreTags([], ['개발', 'React'])
+    expect(s.goldNonEmpty).toBe(true)
+    expect(s.miss).toBe(true)
+  })
+
+  it('D-1: gold 빈 태그(로그인) + 예측 빈 태그 → miss=false (정답, 분모 제외)', () => {
+    const s = scoreTags([], [])
+    expect(s.goldNonEmpty).toBe(false)
+    expect(s.miss).toBe(false)
+  })
+
+  it('D-1: gold 있고 예측도 있으면 → miss=false', () => {
+    expect(scoreTags(['디자인'], ['개발']).miss).toBe(false)
   })
 
   it('대분류 다르면 categoryHit=false', () => {
@@ -57,6 +75,27 @@ describe('aggregate', () => {
     expect(a.f1).toBe(0.5)
     expect(a.categoryAccuracy).toBe(0.5)
   })
+
+  it('D-1: emptyRate = gold 있는 항목 중 예측 빈 비율', () => {
+    // gold 있는 3건 중 1건만 예측 빈 태그 → 1/3
+    const a = aggregate([
+      scoreTags([], ['개발']), // miss
+      scoreTags(['개발'], ['개발']), // hit
+      scoreTags(['디자인'], ['디자인']), // hit
+    ])
+    expect(a.emptyRate).toBeCloseTo(1 / 3)
+  })
+
+  it('D-1: gold 빈 항목은 emptyRate 분모에서 제외', () => {
+    // gold 있는 1건(miss) + gold 빈 1건(정답) → 분모 1, 분자 1 = 1.0
+    const a = aggregate([scoreTags([], ['개발']), scoreTags([], [])])
+    expect(a.emptyRate).toBe(1)
+  })
+
+  it('D-1: gold 있는 항목 없으면 emptyRate=0 (0 나눗셈 방지)', () => {
+    const a = aggregate([scoreTags([], []), scoreTags(['개발'], [])])
+    expect(a.emptyRate).toBe(0)
+  })
 })
 
 // 실 OpenAI 골든셋 평가 — 비용·flaky 때문에 RUN_TAG_EVAL=1에서만.
@@ -79,6 +118,11 @@ const F1_BASELINE = 0.82
 //   주의: 골든셋 title이 실 임포트보다 깔끔해 이 skew는 프로덕션 실 skew의 하한. 지저분 title 표본
 //        확충 시 격차 커질 것(A53 후속).
 const TITLE_ONLY_F1_BASELINE = 0.77 // 실측 0.799 − ~0.03 여유(rich 0.838→0.82와 동일 마진)
+
+// D-2: 미분류율 상한. F1만으론 "태그 삭제로 오답 회피"가 통과됨(retag 미분류 29% 사례).
+// emptyRate 병행 게이트로 대량 태그 삭제 회귀 차단. 골든셋 실측 emptyRate는 rich 0%·title-only ~2%로
+// 낮아 0.15는 느슨한 가드레일 — 큰 열화만 잡음. 프롬프트 회귀로 급증 시 실패.
+const EMPTY_RATE_MAX = 0.15
 type GoldenItem = { url: string; title: string; description: string; gold: string[] }
 
 function loadGolden(): GoldenItem[] {
@@ -117,6 +161,7 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
       const agg = aggregate(await runGolden(loadGolden(), true))
       console.log('\n=== 집계 [rich] ===', JSON.stringify(agg, null, 2))
       expect(agg.f1).toBeGreaterThanOrEqual(F1_BASELINE)
+      expect(agg.emptyRate).toBeLessThanOrEqual(EMPTY_RATE_MAX) // D-2: 미분류 급증 차단
     },
     300_000, // 골든셋 115건 순차 OpenAI 호출 — 항목당 ~1.5s
   )
@@ -130,6 +175,7 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
       console.log('\n=== 집계 [title-only] ===', JSON.stringify(agg, null, 2))
       // 임포트 굶김 경로 회귀 게이트 — 이 값이 떨어지면 임포트 태깅 품질 저하.
       expect(agg.f1).toBeGreaterThanOrEqual(TITLE_ONLY_F1_BASELINE)
+      expect(agg.emptyRate).toBeLessThanOrEqual(EMPTY_RATE_MAX) // D-2: retag 입력 조건 미분류 급증 차단
     },
     300_000,
   )
