@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { withAuth } from '@/lib/auth'
 import { bookmarkCreateSchema } from '@/lib/schemas'
 import { generateTags, createEmbedding } from '@/lib/ai'
-import { normalizeTags, resolveTopCategory, UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
+import { normalizeTags, extractTopCategory, UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
 import { fetchMeta } from '@/lib/fetchMeta'
 import { normalizeUrl } from '@/lib/normalizeUrl'
@@ -70,10 +70,8 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   // 태깅 실패는 빈 태그로 degrade — 저장 자체는 진행.
   const rawTags = tagsResult.status === 'fulfilled' ? tagsResult.value : []
 
-  const tags = normalizeTags(rawTags)
-
-  // 대분류 추출 → 유저 카테고리 upsert (없으면 생성)
-  const top = resolveTopCategory(tags)
+  // 대분류 추출 + 제거 → tags는 중·소분류 전용. 대분류명이 중간 위치여도 정확히 분리됨.
+  const { category: top, midTags: tags } = extractTopCategory(normalizeTags(rawTags))
   let category_id: string | null = null
   if (top) {
     const { data: category } = await supabase

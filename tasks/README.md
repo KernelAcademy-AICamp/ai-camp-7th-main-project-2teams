@@ -5,7 +5,7 @@ MVP v1.0 태스크 — PRD `scripts/prd.md` 기반 (v0.5, IA 정리본 반영)
 ## 구조
 
 ```
-front/tasks.json       # Next.js 웹앱 + API Routes (A1~A16, A26~A51)
+front/tasks.json       # Next.js 웹앱 + API Routes (A1~A16, A26~A55, A51 삭제됨)
 extension/tasks.json   # Chrome Extension (A17~A25)
 tasks/README.md        # 이 파일 (진행 현황 포함)
 ```
@@ -47,7 +47,6 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A41: 북마크 카드 메뉴 → 단건 삭제 UI
 - [x] A42: 프로필 팝업 + 로그아웃
 - [x] A50: 컴팩트 뷰 추가 (뷰 3종 전환) — IA v0.7
-- [ ] A51: 임베딩 모델 bge-m3 전환 (1536→1024) — 롤백됨(마이그레이션 0006, OpenAI 1536 복귀)
 
 ### Chrome Extension — extension/ (A17~A25)
 
@@ -61,7 +60,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A24: 로그아웃·탈퇴 시 로컬 데이터 파기
 - [x] A25: Chrome 웹스토어 Privacy Practices 작성
 
-**진행률: 25 / 25 완료 (MVP 범위 A1~A25 기준) · IA 갭 추가 A39~A42 (4/4 완료) · IA v0.7 추가 A50 (1/1 완료) · 임베딩 개선 A51 (롤백, OpenAI 1536 유지)**
+**진행률: 25 / 25 완료 (MVP 범위 A1~A25 기준) · IA 갭 추가 A39~A42 (4/4 완료) · IA v0.7 추가 A50 (1/1 완료)**
 
 ---
 
@@ -98,7 +97,6 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 | A41 | 북마크 카드 메뉴 → 단건 삭제 UI                          | medium   | 기능   | 신규 |
 | A42 | 프로필 팝업 + 로그아웃                                    | medium   | 기능   | 신규 |
 | A50 | 컴팩트 뷰 추가 (뷰 3종 전환)                             | medium   | 기능   | 신규 |
-| A51 | 임베딩 모델 bge-m3 전환 (1536→1024)                      | medium   | 개선   | 신규 |
 
 ### Chrome Extension — extension/ (A17~A25)
 

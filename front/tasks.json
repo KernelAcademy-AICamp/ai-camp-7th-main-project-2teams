@@ -520,18 +520,6 @@
       "testStrategy": "툴바 컴팩트 버튼 클릭 시 viewMode='compact' 반영·밀집 레이아웃 렌더 확인. 3종 뷰 전환 동작 확인."
     },
     {
-      "id": "A51",
-      "title": "임베딩 모델 bge-m3 전환 (1536→1024)",
-      "description": "벤치마크(recall@1 75%→92.5%, 저장 414KB→276KB) 근거로 OpenAI text-embedding-3-small → bge-m3(NVIDIA 엔드포인트) 교체.",
-      "details": "마이그레이션 0005: 백업 테이블 + embedding vector(1536→1024) + HNSW 재생성 + match_bookmarks(1024). lib/bge.ts 신규(embedBge, input_type passage/query). lib/ai.ts: createEmbedding(text, inputType) bge-m3로 교체, MOCK 1024. search route 'query'. scripts/reembed-bge.mjs 재임베딩(머지 후 수동). BGE_API_KEY 서버 전용.",
-      "priority": "medium",
-      "status": "pending",
-      "dependencies": [
-        "A7"
-      ],
-      "testStrategy": "롤백됨(2026-06-30): 0005/bge-m3 → 0006으로 OpenAI text-embedding-3-small(1536) 복귀, 백업에서 원본 임베딩 복원. 재추진 여부는 품질 개선 vs 운영 비용 재검토 후 결정."
-    },
-    {
       "id": "A52",
       "title": "임포트 태깅 입력 보강 (description 굶김 해소)",
       "description": "임포트 경로가 generateTags({ title, url })만 호출 — description 누락으로 태깅 정확도 바닥. 단일 추가 경로는 content/meta를 description으로 넘기는데 임포트만 굶김. eval(골든셋)은 이 경로를 측정하지 않아 여태 미검출.",

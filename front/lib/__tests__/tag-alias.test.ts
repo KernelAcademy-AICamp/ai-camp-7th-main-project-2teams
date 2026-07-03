@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeTags, resolveTopCategory, CATEGORY_ALIAS, TAG_ALIAS } from '../tag-alias'
+import { normalizeTags, extractTopCategory, CATEGORY_ALIAS, TAG_ALIAS } from '../tag-alias'
 
 // normalizeTags는 TAG_ALIAS를 먼저 조회 → 같은 키가 양쪽에 있으면 CATEGORY_ALIAS가 영구 무효화됨.
 describe('alias 키 충돌 방지', () => {
@@ -31,15 +31,37 @@ describe('normalizeTags', () => {
   })
 })
 
-describe('resolveTopCategory', () => {
-  // 입력은 normalizeTags() 거친 배열 — 재정규화 안 함(A38).
-  it('normalize 거친 top이면 해당 값', () => {
-    expect(resolveTopCategory(normalizeTags(['dev', 'frontend']))).toBe('개발')
-    expect(resolveTopCategory(normalizeTags(['AI', 'LLM']))).toBe('AI/ML')
+describe('extractTopCategory', () => {
+  // 입력은 normalizeTags() 거친 배열 — 재정규화 안 함.
+  it('첫 번째가 대분류면 추출·제거', () => {
+    expect(extractTopCategory(normalizeTags(['dev', 'frontend']))).toEqual({
+      category: '개발',
+      midTags: ['프론트엔드'],
+    })
   })
 
-  it('top 아니면 null', () => {
-    expect(resolveTopCategory(['프론트엔드'])).toBeNull()
-    expect(resolveTopCategory([])).toBeNull()
+  it('대분류가 중간에 있어도 추출·제거됨', () => {
+    // "유튜브", "콘텐츠" — 기존 resolveTopCategory는 이 케이스에서 null 반환하던 버그
+    expect(extractTopCategory(['유튜브', '콘텐츠', '영상편집'])).toEqual({
+      category: '콘텐츠',
+      midTags: ['유튜브', '영상편집'],
+    })
+  })
+
+  it('대분류명이 midTags에 남지 않음', () => {
+    const { midTags } = extractTopCategory(normalizeTags(['AI', 'LLM', 'RAG']))
+    expect(midTags).not.toContain('AI/ML')
+    expect(midTags).toEqual(['LLM', 'RAG'])
+  })
+
+  it('대분류 없으면 category null, midTags 원본 유지', () => {
+    expect(extractTopCategory(['프론트엔드', 'React'])).toEqual({
+      category: null,
+      midTags: ['프론트엔드', 'React'],
+    })
+  })
+
+  it('빈 배열', () => {
+    expect(extractTopCategory([])).toEqual({ category: null, midTags: [] })
   })
 })

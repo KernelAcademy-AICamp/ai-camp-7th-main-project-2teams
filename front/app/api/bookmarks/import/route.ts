@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { withAuth } from '@/lib/auth'
 import { generateTags, createEmbedding } from '@/lib/ai'
-import { normalizeTags, resolveTopCategory } from '@/lib/tag-alias'
+import { normalizeTags, extractTopCategory } from '@/lib/tag-alias'
 import { parseNetscapeBookmarks } from '@/lib/parseNetscapeBookmarks'
 import { normalizeUrl } from '@/lib/normalizeUrl'
 import { fetchMeta } from '@/lib/fetchMeta'
@@ -106,9 +106,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
           // 태깅 실패는 빈 태그로 degrade.
           // A5(단건)와 달리 임포트는 임베딩 실패 시에도 전체 중단하지 않고 해당 항목만 실패 처리.
           const rawTags = tagsResult.status === 'fulfilled' ? tagsResult.value : []
-          const tags = normalizeTags(rawTags)
-
-          const top = resolveTopCategory(tags)
+          const { category: top, midTags: tags } = extractTopCategory(normalizeTags(rawTags))
           let category_id: string | null = null
           if (top) {
             if (categoryCache.has(top)) {
