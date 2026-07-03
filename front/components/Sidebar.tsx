@@ -9,7 +9,6 @@ import { useFolders } from "@/hooks/useFolders";
 import { useCategories } from "@/hooks/useCategories";
 import { buildFolderTree, type FolderNode } from "@/lib/folderTree";
 import { UNCATEGORIZED_LABEL } from "@/lib/tag-alias";
-import { categoryColor } from "@/lib/categoryColor";
 import { SidebarSkeleton } from "@/components/SidebarSkeleton";
 import { createClient } from "@/lib/supabase/client";
 
@@ -198,10 +197,7 @@ export function Sidebar() {
                     ].join(" ")}
                   >
                     {/* 카테고리 컬러코딩 도트 (Design.md 7×7 라운드 스퀘어) */}
-                    <span
-                      className="h-[7px] w-[7px] shrink-0 rounded-[2px]"
-                      style={{ backgroundColor: categoryColor(name) }}
-                    />
+                    <span className="h-[7px] w-[7px] shrink-0 rounded-[2px]" style={{ backgroundColor: "#64748B" }} />
                     {name}
                   </button>
                 </li>
