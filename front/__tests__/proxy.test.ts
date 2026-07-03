@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isPublicPath } from '../middleware'
+import { isPublicPath } from '../proxy'
 
 describe('isPublicPath — 공개 경로 판별', () => {
   it('/login은 공개 경로다', () => {
