@@ -24,6 +24,9 @@ playwright-report/
 .playwright/
 **/e2e/.auth/
 
+# retag 자동 백업 스냅샷 (user 데이터 id·tags 포함 — 커밋 금지)
+front/scripts/backups/
+
 # 기타
 .DS_Store
 .vercel

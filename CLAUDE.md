@@ -45,3 +45,8 @@ tasks/       # 태스크 인덱스
 - **환경변수**: `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`는 `NEXT_PUBLIC_` 접두어 금지 — 서버사이드 전용.
 - **embedding 컬럼**: API 응답에 절대 포함하지 않음.
 - **본문(content)**: DB 저장 금지. OpenAI 처리 후 즉시 파기. 로그 마스킹 필수.
+
+## Next.js 16 규약
+
+- **미들웨어 = `proxy`**: Next 16에서 `middleware` 파일 규칙 deprecated. `front/proxy.ts`에 `export function proxy()` 사용 (구 `middleware.ts` 아님). 마이그레이션: `npx @next/codemod@canary middleware-to-proxy .`
+- **워크스페이스 루트**: `next.config.ts`의 `turbopack.root: __dirname`으로 `front/` 고정. 상위 디렉토리 lockfile로 인한 루트 오추론 경고 방지 — 제거 금지.
