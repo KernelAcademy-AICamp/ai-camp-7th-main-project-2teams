@@ -4,6 +4,7 @@ export interface ImportResult {
   imported: number
   failed: number
   skipped: number
+  duplicate: number
 }
 
 /** 바이트를 사람이 읽기 쉬운 단위로 변환 — 테스트 가능하도록 export */

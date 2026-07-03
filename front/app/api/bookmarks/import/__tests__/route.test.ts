@@ -11,8 +11,17 @@ vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
 const { fetchMeta } = vi.hoisted(() => ({ fetchMeta: vi.fn() }))
 vi.mock('@/lib/fetchMeta', () => ({ fetchMeta }))
 
-// Supabase 모킹: auth + categories 조회 + bookmarks upsert
+// Supabase 모킹: auth + categories 조회 + bookmarks select(중복조회)/upsert/update
 const insertSpy = vi.fn() // ponytail: alias kept for backward-compat test assertions
+const updateSpy = vi.fn()
+
+// 기존 저장된 URL 목록 — 중복 필터링 테스트에서 시나리오별로 채움
+let existingRows: Array<{ url: string; folder_hint: string[] | null }> = []
+let existingLookupShouldError = false
+let updateShouldError = false
+// 멀티 청크(>200 URL) 테스트에서 특정 청크만 실패시키기 위한 스위치 —
+// 해당 URL을 포함한 in() 호출만 에러 반환, 다른 청크는 정상 응답(부분 실패 검증용)
+let existingLookupFailForUrl: string | null = null
 
 function makeSupabase(user: unknown) {
   return {
@@ -32,11 +41,42 @@ function makeSupabase(user: unknown) {
           }),
         }
       }
-      // bookmarks upsert — select 체이닝 없음 (배치 임포트는 개수만 집계)
+      // bookmarks: select(기존 URL+folder_hint 배치 조회) / upsert(신규 저장) / update(folder_hint 갱신)
       return {
+        select() {
+          return {
+            eq() {
+              return {
+                async in(_col: string, urls: string[]) {
+                  if (existingLookupShouldError) {
+                    return { data: null, error: { message: 'lookup failed' } }
+                  }
+                  if (existingLookupFailForUrl && urls.includes(existingLookupFailForUrl)) {
+                    return { data: null, error: { message: 'chunk lookup failed' } }
+                  }
+                  const matched = existingRows.filter((r) => urls.includes(r.url))
+                  return { data: matched, error: null }
+                },
+              }
+            },
+          }
+        },
         upsert(payload: unknown) {
           insertSpy(payload)
           return { error: null }
+        },
+        update(payload: unknown) {
+          return {
+            eq() {
+              return {
+                async eq() {
+                  updateSpy(payload)
+                  if (updateShouldError) return { error: { message: 'update failed' } }
+                  return { error: null }
+                },
+              }
+            },
+          }
         },
       }
     },
@@ -74,15 +114,65 @@ const SAMPLE_HTML = `<DL><p>
   <DT><A HREF="https://example.com" ADD_DATE="3">Example</A>
 </DL><p>`
 
+// 동일 URL이 서로 다른 폴더에 2번 등장 — 배치 내부 중복(폴더 다름) 테스트용
+const DUPLICATE_DIFFERENT_FOLDER_HTML = `<DL><p>
+  <DT><H3>폴더A</H3>
+  <DL><p>
+    <DT><A HREF="https://dup.com">Dup A</A>
+  </DL><p>
+  <DT><H3>폴더B</H3>
+  <DL><p>
+    <DT><A HREF="https://dup.com">Dup B</A>
+  </DL><p>
+</DL><p>`
+
+// 동일 URL이 같은 폴더에 2번 등장 — 배치 내부 중복(폴더 같음) 테스트용
+const DUPLICATE_SAME_FOLDER_HTML = `<DL><p>
+  <DT><H3>폴더A</H3>
+  <DL><p>
+    <DT><A HREF="https://dup.com">Dup A</A>
+    <DT><A HREF="https://dup.com">Dup A2</A>
+  </DL><p>
+</DL><p>`
+
+// 동일 URL이 서로 다른 폴더에 2번 등장(배치 내부 중복) + DB에도 이미 존재(제3의 폴더) —
+// 배치 내부 dedup·DB 매치 복합 케이스 테스트용
+const COMBINED_DUPLICATE_HTML = `<DL><p>
+  <DT><H3>폴더A</H3>
+  <DL><p>
+    <DT><A HREF="https://combo.com">Combo A</A>
+  </DL><p>
+  <DT><H3>폴더C</H3>
+  <DL><p>
+    <DT><A HREF="https://combo.com">Combo C</A>
+  </DL><p>
+</DL><p>`
+
+// 2단계 중첩 폴더(개발 > 프론트엔드) — 다단계 folder_hint 비교 테스트용
+const NESTED_FOLDER_HTML = `<DL><p>
+  <DT><H3>개발</H3>
+  <DL><p>
+    <DT><H3>프론트엔드</H3>
+    <DL><p>
+      <DT><A HREF="https://nested.com">Nested</A>
+    </DL><p>
+  </DL><p>
+</DL><p>`
+
 // ------ 테스트 ------
 
 describe('POST /api/bookmarks/import', () => {
   beforeEach(() => {
     currentUser = { id: 'u1' }
     insertSpy.mockReset()
+    updateSpy.mockReset()
     generateTags.mockReset()
     createEmbedding.mockReset()
     fetchMeta.mockReset()
+    existingRows = []
+    existingLookupShouldError = false
+    updateShouldError = false
+    existingLookupFailForUrl = null
     generateTags.mockResolvedValue(['개발', '프론트엔드'])
     createEmbedding.mockResolvedValue([0.1, 0.2])
     fetchMeta.mockResolvedValue({ title: '', description: '' })
@@ -145,11 +235,11 @@ describe('POST /api/bookmarks/import', () => {
     expect(res.status).toBe(400)
   })
 
-  it('빈 HTML (파싱 0건) → { imported:0, failed:0, skipped:0 }', async () => {
+  it('빈 HTML (파싱 0건) → { imported:0, failed:0, skipped:0, duplicate:0 }', async () => {
     const res = await POST(makeReq(makeFile('<html><body>no bookmarks</body></html>')))
     expect(res.status).toBe(200)
     const json = await res.json()
-    expect(json).toEqual({ imported: 0, failed: 0, skipped: 0 })
+    expect(json).toEqual({ imported: 0, failed: 0, skipped: 0, duplicate: 0 })
     expect(insertSpy).not.toHaveBeenCalled()
   })
 
@@ -229,5 +319,149 @@ describe('POST /api/bookmarks/import', () => {
     const file = new File([SAMPLE_HTML], 'bookmarks.html', { type: 'text/plain' })
     const res = await POST(makeReq(file))
     expect(res.status).toBe(200)
+  })
+
+  it('DB 기존 URL 재업로드(폴더 경로 동일) → 완전 스킵, duplicate 카운트', async () => {
+    existingRows = [{ url: 'https://nextjs.org/', folder_hint: ['개발'] }]
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(json.imported).toBe(1) // example.com만 신규 저장
+    expect(generateTags).toHaveBeenCalledTimes(1) // nextjs.org는 AI 호출 없음
+    expect(updateSpy).not.toHaveBeenCalled()
+
+    const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
+    expect(calls.some((c) => c[0].url === 'https://nextjs.org/')).toBe(false)
+  })
+
+  it('DB 기존 URL, folder_hint 다름 → update만 호출, AI 호출 없음, duplicate 카운트', async () => {
+    existingRows = [{ url: 'https://nextjs.org/', folder_hint: ['옛폴더'] }]
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(updateSpy).toHaveBeenCalledWith({ folder_hint: ['개발'] })
+    expect(generateTags).toHaveBeenCalledTimes(1) // nextjs.org는 AI 호출 없음, example.com만
+  })
+
+  it('배치 내부 동일 URL, 폴더 경로 다름 → 마지막 등장 채택, 1회만 upsert, duplicate 카운트', async () => {
+    const res = await POST(makeReq(makeFile(DUPLICATE_DIFFERENT_FOLDER_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(insertSpy).toHaveBeenCalledTimes(1)
+    expect(insertSpy.mock.calls[0][0].folder_hint).toEqual(['폴더B'])
+  })
+
+  it('배치 내부 동일 URL, 폴더 경로 같음 → 1회만 upsert, duplicate 카운트', async () => {
+    const res = await POST(makeReq(makeFile(DUPLICATE_SAME_FOLDER_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(insertSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('기존 URL 조회(select().eq().in()) 에러 → fail-open으로 정상 처리', async () => {
+    existingLookupShouldError = true
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+
+    expect(json.imported).toBe(2)
+    expect(json.duplicate).toBe(0)
+  })
+
+  it('기존 URL 조회 250건(2청크) 중 1개 청크만 에러 → 실패 청크는 fail-open으로 신규 처리, 성공 청크는 정상 중복 판정', async () => {
+    // EXISTING_LOOKUP_CHUNK=200 → 250개면 청크1(0~199) + 청크2(200~249)로 나뉨
+    const links = Array.from(
+      { length: 250 },
+      (_, i) => `<DT><A HREF="https://example.com/${i}">BM ${i}</A>`,
+    ).join('\n')
+    const html = `<DL><p>\n${links}\n</DL><p>`
+
+    // 청크1(성공)에 속한 URL 하나를 기존 URL로 등록 — 정상 중복 판정 확인용
+    existingRows = [{ url: 'https://example.com/0', folder_hint: null }]
+    // 청크2(200~249)에 속한 URL을 포함시켜 해당 청크의 in() 호출만 에러 처리
+    existingLookupFailForUrl = 'https://example.com/200'
+
+    const res = await POST(makeReq(makeFile(html)))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+
+    // 청크1의 example.com/0만 duplicate로 잡힘 — 청크2는 조회 실패로 기존 여부를 알 수 없어 전부 신규 처리
+    expect(json.duplicate).toBe(1)
+    expect(json.imported).toBe(249)
+
+    const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
+    // 청크1에서 중복 판정된 URL은 upsert 대상에서 제외됨
+    expect(calls.some((c) => c[0].url === 'https://example.com/0')).toBe(false)
+    // 청크2는 조회 자체가 실패했으므로 fail-open — 정상적으로 신규 upsert됨(누락되지 않음)
+    expect(calls.some((c) => c[0].url === 'https://example.com/200')).toBe(true)
+  }, 15000)
+
+  it('folder_hint update 에러 → fail-open, duplicate만 집계 (failed 증가 안 함)', async () => {
+    existingRows = [{ url: 'https://nextjs.org/', folder_hint: ['옛폴더'] }]
+    updateShouldError = true
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(json.failed).toBe(0)
+  })
+
+  it('배치 내부 중복(폴더 다름) + DB 기존 존재(제3 폴더) 복합 → duplicate 2회 집계, 마지막 등장 folder_hint로 update, AI/upsert 없음', async () => {
+    // 배치 내부: 폴더A → 폴더C 순서로 같은 URL 2번 등장(dedupeBatch가 마지막 등장 '폴더C' 채택 → duplicate 1건).
+    // 그 결과물을 DB 기존 URL(folder_hint: ['옛폴더'])과 비교 → 추가로 duplicate 1건, 총 2건.
+    // 배치의 마지막 등장('폴더C')과도, DB 기존 값('옛폴더')과도 다르므로 update() 호출 대상.
+    existingRows = [{ url: 'https://combo.com/', folder_hint: ['옛폴더'] }]
+
+    const res = await POST(makeReq(makeFile(COMBINED_DUPLICATE_HTML)))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+
+    // dedupeBatch의 배치 내부 중복 1건 + 분류 루프의 DB 매치 1건 = 2건
+    expect(json.duplicate).toBe(2)
+    expect(json.imported).toBe(0)
+    expect(json.failed).toBe(0)
+
+    // update()는 배치 내 마지막 등장(폴더C)의 folder_hint로 호출 — DB의 옛 값도, 첫 등장(폴더A)도 아님
+    expect(updateSpy).toHaveBeenCalledTimes(1)
+    expect(updateSpy).toHaveBeenCalledWith({ folder_hint: ['폴더C'] })
+
+    // DB 매치로 완전히 분류된 URL이므로 AI 호출(태깅) 없음, upsert도 없음
+    expect(generateTags).not.toHaveBeenCalled()
+    expect(insertSpy).not.toHaveBeenCalled()
+  })
+
+  it('다단계 folder_hint(2단계) 비교 — 두 번째 레벨만 달라도 update 호출, 정확한 새 배열 전달', async () => {
+    // DB 기존: ['개발', '백엔드'], 배치: ['개발', '프론트엔드'] — 1단계는 같고 2단계만 다름
+    existingRows = [{ url: 'https://nested.com/', folder_hint: ['개발', '백엔드'] }]
+
+    const res = await POST(makeReq(makeFile(NESTED_FOLDER_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(updateSpy).toHaveBeenCalledTimes(1)
+    expect(updateSpy).toHaveBeenCalledWith({ folder_hint: ['개발', '프론트엔드'] })
+    expect(generateTags).not.toHaveBeenCalled()
+  })
+
+  it('다단계 folder_hint(2단계) 완전 일치 → 완전 스킵, update 호출 없음', async () => {
+    // DB 기존과 배치 모두 ['개발', '프론트엔드']로 2단계까지 완전 일치
+    existingRows = [{ url: 'https://nested.com/', folder_hint: ['개발', '프론트엔드'] }]
+
+    const res = await POST(makeReq(makeFile(NESTED_FOLDER_HTML)))
+    const json = await res.json()
+
+    expect(json.duplicate).toBe(1)
+    expect(json.imported).toBe(0)
+    expect(updateSpy).not.toHaveBeenCalled()
+    expect(generateTags).not.toHaveBeenCalled()
   })
 })
