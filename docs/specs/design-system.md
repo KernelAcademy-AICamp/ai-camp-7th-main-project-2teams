@@ -33,19 +33,12 @@
 `--primary`/`--ring` = `oklch(0.52 0.09 182)` ≈ Deep Teal. `:root`(라이트)·`.dark` 2벌.
 shadcn 컴포넌트는 이 시맨틱 토큰만 참조. Design.md 팔레트와 **표현 방식만 다름**(hex↔oklch), 의도 동일.
 
-## 카테고리 컬러코딩
+## 카테고리 도트 색상
 
-`lib/categoryColor.ts` 단일 유틸. Design.md §2 지정 4색은 `FIXED` 맵 고정,
-그 외 유저 카테고리는 이름 해시로 `PALETTE`(4색) 순환. `Sidebar.tsx`가 도트 색에 사용.
+카테고리 도트는 **단일 색상 `#64748B`(slate-500) 고정**. 카테고리별 색상 코딩 없음.
+`Sidebar.tsx` 도트가 이 색을 직접 사용.
 
-```ts
-categoryColor('개발')      // '#0F766E' (FIXED)
-categoryColor('AI/ML')     // 해시 → PALETTE 순환
-```
-
-색 추가 시 `FIXED`/`PALETTE`만 수정. 컴포넌트에서 카테고리별 색 하드코딩(`text-[#hex]`) 금지 — 이 유틸 경유.
-
-> `import/page.tsx` 등의 `text-[#0F766E]`/`[#64748B]`는 **카테고리 색 아님**(브랜드/본문 텍스트) — 유틸 대상 아님.
+> `import/page.tsx` 등의 `text-[#0F766E]`/`[#64748B]`는 브랜드/본문 텍스트 — 도트 색과 무관.
 
 ## 폰트
 
@@ -58,4 +51,4 @@ categoryColor('AI/ML')     // 해시 → PALETTE 순환
 
 - [ ] Design.md 팔레트 hex ↔ `globals.css` oklch 변수 대응 유지
 - [ ] `gradient-brand` 사용처 = 위 목록 (신규 남발 없음)
-- [ ] 카테고리 색은 `lib/categoryColor.ts` 경유 (컴포넌트 하드코딩 금지)
+- [ ] 카테고리 도트 = 단일 색상 `#64748B` 고정 (카테고리별 색 코딩 없음)
