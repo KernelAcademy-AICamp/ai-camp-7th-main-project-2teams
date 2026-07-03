@@ -11,8 +11,14 @@ vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
 const { fetchMeta } = vi.hoisted(() => ({ fetchMeta: vi.fn() }))
 vi.mock('@/lib/fetchMeta', () => ({ fetchMeta }))
 
-// Supabase 모킹: auth + categories 조회 + bookmarks upsert
+// Supabase 모킹: auth + categories 조회 + bookmarks select(중복조회)/upsert/update
 const insertSpy = vi.fn() // ponytail: alias kept for backward-compat test assertions
+const updateSpy = vi.fn()
+
+// 기존 저장된 URL 목록 — 중복 필터링 테스트에서 시나리오별로 채움
+let existingRows: Array<{ url: string; folder_hint: string[] | null }> = []
+let existingLookupShouldError = false
+let updateShouldError = false
 
 function makeSupabase(user: unknown) {
   return {
@@ -32,11 +38,39 @@ function makeSupabase(user: unknown) {
           }),
         }
       }
-      // bookmarks upsert — select 체이닝 없음 (배치 임포트는 개수만 집계)
+      // bookmarks: select(기존 URL+folder_hint 배치 조회) / upsert(신규 저장) / update(folder_hint 갱신)
       return {
+        select() {
+          return {
+            eq() {
+              return {
+                async in(_col: string, urls: string[]) {
+                  if (existingLookupShouldError) {
+                    return { data: null, error: { message: 'lookup failed' } }
+                  }
+                  const matched = existingRows.filter((r) => urls.includes(r.url))
+                  return { data: matched, error: null }
+                },
+              }
+            },
+          }
+        },
         upsert(payload: unknown) {
           insertSpy(payload)
           return { error: null }
+        },
+        update(payload: unknown) {
+          return {
+            eq() {
+              return {
+                async eq() {
+                  updateSpy(payload)
+                  if (updateShouldError) return { error: { message: 'update failed' } }
+                  return { error: null }
+                },
+              }
+            },
+          }
         },
       }
     },
@@ -80,9 +114,13 @@ describe('POST /api/bookmarks/import', () => {
   beforeEach(() => {
     currentUser = { id: 'u1' }
     insertSpy.mockReset()
+    updateSpy.mockReset()
     generateTags.mockReset()
     createEmbedding.mockReset()
     fetchMeta.mockReset()
+    existingRows = []
+    existingLookupShouldError = false
+    updateShouldError = false
     generateTags.mockResolvedValue(['개발', '프론트엔드'])
     createEmbedding.mockResolvedValue([0.1, 0.2])
     fetchMeta.mockResolvedValue({ title: '', description: '' })
