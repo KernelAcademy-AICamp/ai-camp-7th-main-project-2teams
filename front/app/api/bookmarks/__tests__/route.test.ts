@@ -130,7 +130,7 @@ describe('POST /api/bookmarks', () => {
     await POST(req({ title: 'T', url: 'https://a.com', content: 'x' }))
     const payload = insertSpy.mock.calls[0][0]
     expect(payload.embedding).toEqual([0.1, 0.2, 0.3])
-    expect(payload.tags).toEqual(['개발', '프론트엔드', 'Next.js'])
+    expect(payload.tags).toEqual(['프론트엔드', 'Next.js'])
     expect(payload.category_id).toBe('cat-개발')
     expect(payload.user_id).toBe('u1')
   })

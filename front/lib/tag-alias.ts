@@ -122,7 +122,16 @@ export function normalizeTags(tags: string[]): string[] {
   return tags.map((t) => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)
 }
 
-// 입력은 normalizeTags() 거친 태그 배열. 재정규화하지 않음(중복 호출 방지, A38).
-export function resolveTopCategory(normalizedTags: string[]): string | null {
-  return TOP_CATEGORIES.has(normalizedTags[0]) ? normalizedTags[0] : null
+// 대분류명을 tags 배열 어느 위치에서든 추출·제거. tags는 중·소분류 전용으로 정제됨.
+// 입력은 normalizeTags() 거친 배열. 재정규화하지 않음(중복 호출 방지).
+export function extractTopCategory(normalizedTags: string[]): {
+  category: string | null
+  midTags: string[]
+} {
+  const idx = normalizedTags.findIndex((t) => TOP_CATEGORIES.has(t))
+  if (idx === -1) return { category: null, midTags: normalizedTags }
+  return {
+    category: normalizedTags[idx],
+    midTags: normalizedTags.filter((_, i) => i !== idx),
+  }
 }
