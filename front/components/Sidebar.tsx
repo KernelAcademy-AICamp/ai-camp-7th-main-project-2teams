@@ -64,9 +64,7 @@ export function Sidebar() {
   // 미분류(category_id null) 있으면 맨 뒤에 한 항목으로 노출.
   const categories = useMemo(() => {
     // a-z, A-Z, ㄱ-ㅎ 순 정렬. 미분류는 정렬에서 제외하고 항상 맨 뒤에 붙임.
-    const names = [...(categoriesData?.categories ?? [])].sort((a, b) =>
-      a.localeCompare(b, "ko")
-    );
+    const names = [...(categoriesData?.categories ?? [])].sort((a, b) => a.localeCompare(b, "ko"));
     return categoriesData?.hasUncategorized ? [...names, UNCATEGORIZED_LABEL] : names;
   }, [categoriesData]);
 
@@ -133,10 +131,8 @@ export function Sidebar() {
               aria-pressed={tab === t.id}
               onClick={() => handleTabClick(t.id)}
               className={[
-                "flex-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors",
-                tab === t.id
-                  ? "bg-white text-brand shadow-sm"
-                  : "text-text-secondary hover:text-text-primary",
+                "flex-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors break-keep",
+                tab === t.id ? "bg-white text-brand shadow-sm" : "text-text-secondary hover:text-text-primary",
               ].join(" ")}
             >
               {t.label}
@@ -282,17 +278,11 @@ export function Sidebar() {
               </svg>
             </span>
             {/* 이메일 */}
-            <span className="min-w-0 truncate font-mono text-xs text-text-secondary">
-              {email ?? "로딩 중..."}
-            </span>
+            <span className="min-w-0 truncate font-mono text-xs text-text-secondary">{email ?? "로딩 중..."}</span>
           </button>
 
           {/* 설정 바로가기 */}
-          <Link
-            href="/settings"
-            aria-label="설정"
-            className="shrink-0 text-text-secondary hover:text-text-primary"
-          >
+          <Link href="/settings" aria-label="설정" className="shrink-0 text-text-secondary hover:text-text-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4">
               <path
                 strokeLinecap="round"
