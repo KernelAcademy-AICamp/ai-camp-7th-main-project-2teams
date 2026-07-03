@@ -688,5 +688,35 @@
     "title": "iOS & Android UI 차이",
     "description": "모바일 플랫폼별 UI 가이드라인 차이를 정리한 디자인 아티클.",
     "gold": ["디자인", "UI/UX"]
+  },
+  {
+    "url": "https://claude.ai/",
+    "title": "Claude",
+    "description": "",
+    "gold": ["AI/ML", "LLM"]
+  },
+  {
+    "url": "https://gemini.google.com/app",
+    "title": "Gemini",
+    "description": "",
+    "gold": ["AI/ML", "LLM"]
+  },
+  {
+    "url": "https://kosis.kr/",
+    "title": "KOSIS 국가통계포털",
+    "description": "",
+    "gold": ["비즈니스", "데이터"]
+  },
+  {
+    "url": "https://www.behance.net/",
+    "title": "https://www.behance.net/",
+    "description": "",
+    "gold": ["디자인"]
+  },
+  {
+    "url": "https://www.saramin.co.kr/",
+    "title": "사람인",
+    "description": "",
+    "gold": ["비즈니스", "커리어"]
   }
 ]
