@@ -17,6 +17,7 @@ export const bookmarkCreateSchema = bookmarkSchema.extend({
 
 export const searchSchema = z.object({
   query: z.string().min(1).max(50),
+  category: z.string().min(1).optional(),
 })
 
 export const favoriteSchema = z.object({

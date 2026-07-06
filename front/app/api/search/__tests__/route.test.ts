@@ -4,11 +4,13 @@ const { createEmbedding } = vi.hoisted(() => ({ createEmbedding: vi.fn() }))
 vi.mock('@/lib/ai', () => ({ createEmbedding }))
 
 const rpc = vi.fn()
+const categorySingle = vi.fn()
 let currentUser: unknown = { id: 'u1' }
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: { getUser: async () => ({ data: { user: currentUser }, error: null }) },
     rpc,
+    from: () => ({ select: () => ({ eq: () => ({ single: categorySingle }) }) }),
   }),
 }))
 
@@ -26,6 +28,7 @@ describe('POST /api/search', () => {
     currentUser = { id: 'u1' }
     createEmbedding.mockReset()
     rpc.mockReset()
+    categorySingle.mockReset()
     createEmbedding.mockResolvedValue([0.1, 0.2])
     rpc.mockResolvedValue({ data: [{ id: 'bm1', similarity: 0.8 }], error: null })
     delete process.env.SEARCH_MATCH_THRESHOLD
@@ -44,7 +47,29 @@ describe('POST /api/search', () => {
       match_threshold: 0.3,
       match_count: 20,
       p_user_id: 'u1',
+      p_category_id: null,
+      p_uncategorized: false,
     })
+  })
+
+  it('카테고리 지정 시 category_id 조회 후 RPC에 p_category_id 전달 (A55)', async () => {
+    categorySingle.mockResolvedValue({ data: { id: 'cat1' }, error: null })
+    await POST(req({ query: 'x', category: 'AI/ML' }))
+    expect(rpc.mock.calls[0][1]).toMatchObject({ p_category_id: 'cat1', p_uncategorized: false })
+  })
+
+  it('존재하지 않는 카테고리명 → 빈 결과, RPC 미호출', async () => {
+    categorySingle.mockResolvedValue({ data: null, error: null })
+    const res = await POST(req({ query: 'x', category: '없는카테고리' }))
+    const json = await res.json()
+    expect(json.results).toEqual([])
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it('미분류 선택 시 category_id 조회 없이 p_uncategorized: true 전달', async () => {
+    await POST(req({ query: 'x', category: '미분류' }))
+    expect(categorySingle).not.toHaveBeenCalled()
+    expect(rpc.mock.calls[0][1]).toMatchObject({ p_category_id: null, p_uncategorized: true })
   })
 
   it('SEARCH_MATCH_THRESHOLD 환경변수로 threshold 조정', async () => {

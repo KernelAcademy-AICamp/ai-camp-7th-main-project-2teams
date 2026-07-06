@@ -106,11 +106,12 @@ CREATE POLICY "categories_delete"
 
 ---
 
-## RPC 함수 — match_bookmarks (A7, A54 하이브리드 병합)
+## RPC 함수 — match_bookmarks (A7, A54 하이브리드 병합, A55 카테고리 필터)
 
 벡터 코사인 유사도 + pg_trgm 트라이그램 유사도를 RRF(Reciprocal Rank Fusion)로 병합.
 순수 벡터 검색은 의미 유사도만 보므로 정확 단어 매칭에 약함 — 트라이그램으로 키워드 매칭을 보강.
 한글은 형태소 분석 없는 tsvector('simple' config)보다 트라이그램 부분 문자열 매칭이 더 적합해 선택.
+`p_category_id`/`p_uncategorized`로 현재 선택된 카테고리(또는 미분류) 안에서만 검색 — `GET /api/bookmarks`와 동일 시맨틱.
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -124,7 +125,9 @@ CREATE OR REPLACE FUNCTION match_bookmarks(
   query_text      text,
   match_threshold float,
   match_count     int,
-  p_user_id       uuid
+  p_user_id       uuid,
+  p_category_id   uuid DEFAULT NULL,
+  p_uncategorized boolean DEFAULT false
 )
 RETURNS TABLE (
   id          uuid,
@@ -145,11 +148,21 @@ AS $$
     FROM bookmarks
     WHERE user_id = p_user_id
       AND 1 - (embedding <=> query_embedding) >= match_threshold
+      AND (
+        (p_uncategorized AND category_id IS NULL)
+        OR (NOT p_uncategorized AND p_category_id IS NULL)
+        OR (NOT p_uncategorized AND category_id = p_category_id)
+      )
   ),
   trgm_matches AS (
     SELECT id, row_number() OVER (ORDER BY similarity(title, query_text) DESC) AS trgm_rank
     FROM bookmarks
     WHERE user_id = p_user_id AND title % query_text
+      AND (
+        (p_uncategorized AND category_id IS NULL)
+        OR (NOT p_uncategorized AND p_category_id IS NULL)
+        OR (NOT p_uncategorized AND category_id = p_category_id)
+      )
   ),
   combined AS (
     SELECT
@@ -170,7 +183,8 @@ $$;
 
 > `<=>` = cosine distance 연산자. `%` = pg_trgm 유사도 연산자(기본 threshold 0.3). `embedding` 컬럼은 반환하지 않음.
 > 정렬 기준은 RRF 점수, 응답 `similarity` 필드는 벡터 코사인 유사도 값(트라이그램 전용 매칭 시 0).
-> 전체 구현: `supabase/migrations/0009_hybrid_search.sql`.
+> `p_category_id`/`p_uncategorized` 미지정(기본값) 시 카테고리 필터 없음 — 기존 전체 검색과 동일.
+> 전체 구현: `supabase/migrations/0009_hybrid_search.sql`, `supabase/migrations/0010_search_category_filter.sql`.
 
 ---
 

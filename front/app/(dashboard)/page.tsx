@@ -114,9 +114,9 @@ function DashboardContent() {
   const handleSearch = useCallback(
     (query: string) => {
       setSearchQuery(query);
-      search(query);
+      search({ query, category: category ?? undefined });
     },
-    [search, setSearchQuery],
+    [search, setSearchQuery, category],
   );
 
   const handleClear = useCallback(() => setSearchQuery(""), [setSearchQuery]);
