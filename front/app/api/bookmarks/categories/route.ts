@@ -37,7 +37,11 @@ export function extractCategories(
 }
 
 // 본인 북마크의 카테고리 목록. RLS 외 user_id 명시적 격리, embedding 컬럼 제외.
-export const GET = withAuth(async (_req, { supabase, user }) => {
+// is_favorite=true 쿼리 시 즐겨찾기 북마크만 집계 (사이드바 즐겨찾기 탭 카테고리 목록용).
+export const GET = withAuth(async (req, { supabase, user }) => {
+  const { searchParams } = new URL(req.url)
+  const favoritesOnly = searchParams.get('is_favorite') === 'true'
+
   const { data: cats, error: catErr } = await supabase
     .from('categories')
     .select('id, name')
@@ -46,10 +50,11 @@ export const GET = withAuth(async (_req, { supabase, user }) => {
     return Response.json({ error: catErr.message }, { status: 500 })
   }
 
-  const { data: rows, error } = await supabase
-    .from('bookmarks')
-    .select('category_id')
-    .eq('user_id', user.id)
+  let bookmarksQuery = supabase.from('bookmarks').select('category_id').eq('user_id', user.id)
+  if (favoritesOnly) {
+    bookmarksQuery = bookmarksQuery.eq('is_favorite', true)
+  }
+  const { data: rows, error } = await bookmarksQuery
   if (error) {
     return Response.json({ error: error.message }, { status: 500 })
   }

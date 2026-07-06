@@ -17,6 +17,7 @@ import { useFilterStore } from "@/store/filterStore";
 import { createClient } from "@/lib/supabase/client";
 import { getOnboardingKey, isOnboardingDone } from "@/lib/onboarding";
 import { parseFilterQuery, buildFilterQuery } from "@/lib/filterQuery";
+import { cn } from "@/lib/utils";
 
 function DashboardContent() {
   const router = useRouter();
@@ -97,6 +98,7 @@ function DashboardContent() {
   const {
     data: bookmarkData,
     isPending: isBookmarkPending,
+    isFetching: isBookmarkFetching,
     isError: isBookmarkError,
     refetch,
   } = useBookmarks({
@@ -112,14 +114,17 @@ function DashboardContent() {
   const handleSearch = useCallback(
     (query: string) => {
       setSearchQuery(query);
-      search(query);
+      search({ query, category: category ?? undefined });
     },
-    [search, setSearchQuery],
+    [search, setSearchQuery, category],
   );
 
   const handleClear = useCallback(() => setSearchQuery(""), [setSearchQuery]);
 
   const isPending = isSearching ? isSearchPending : isBookmarkPending;
+  // keepPreviousData로 카테고리·폴더·태그 전환 시 isPending은 false로 유지된 채
+  // 이전 목록이 그대로 보이는 동안 백그라운드 refetch만 진행됨 — 이 구간에서만 로딩 표시.
+  const isRefetching = !isSearching && !isBookmarkPending && isBookmarkFetching;
   const items = useMemo(
     () => (isSearching ? (searchData?.results ?? []) : (bookmarkData?.bookmarks ?? [])),
     [isSearching, searchData, bookmarkData],
@@ -207,18 +212,31 @@ function DashboardContent() {
         {!isPending && items.length > 0 && (
           <>
             <BookmarkToolbar />
-            <div
-              className={
-                viewMode === "grid"
-                  ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-                  : viewMode === "compact"
-                    ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900"
-                    : "flex flex-col gap-3"
-              }
-            >
-              {sortedItems.map((item) => (
-                <BookmarkCard key={item.id} bookmark={item} view={viewMode} />
-              ))}
+            <div className="relative">
+              {isRefetching && (
+                <div
+                  role="status"
+                  aria-label="목록 갱신 중"
+                  className="absolute right-0 top-0 z-10 flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-xs text-gray-500 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/90 dark:text-gray-400"
+                >
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-brand dark:border-gray-600" />
+                  불러오는 중
+                </div>
+              )}
+              <div
+                className={cn(
+                  viewMode === "grid"
+                    ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                    : viewMode === "compact"
+                      ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900"
+                      : "flex flex-col gap-3",
+                  isRefetching && "opacity-50 transition-opacity duration-200",
+                )}
+              >
+                {sortedItems.map((item) => (
+                  <BookmarkCard key={item.id} bookmark={item} view={viewMode} />
+                ))}
+              </div>
             </div>
           </>
         )}

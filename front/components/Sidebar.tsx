@@ -36,7 +36,7 @@ export function Sidebar() {
   const folders = useMemo(() => foldersData?.folders ?? [], [foldersData]);
   const folderTree = useMemo(() => buildFolderTree(foldersData?.paths ?? []), [foldersData]);
 
-  const { data: categoriesData, isPending: categoriesPending } = useCategories();
+  const { data: categoriesData, isPending: categoriesPending } = useCategories(tab);
 
   useEffect(() => {
     createClient()
@@ -110,9 +110,9 @@ export function Sidebar() {
   const isAllActive = category === null && folder === null;
 
   // 탭별 축 분리: 내 폴더 탭은 폴더 트리, 그 외는 카테고리
+  // 즐겨찾기 탭도 카테고리 목록 노출 — useCategories(tab)이 즐겨찾기 북마크만 집계해서 준다.
   const showFolders = tab === "folders";
-  // 즐겨찾기 탭은 카테고리 하위 버튼만 숨김 (전체 버튼·헤더는 유지)
-  const showCategoryList = !showFolders && tab !== "favorites";
+  const showCategoryList = !showFolders;
   // 폴더 탭은 폴더 쿼리, 그 외는 카테고리 쿼리 로딩 기준
   const showSkeleton = showFolders ? foldersPending : categoriesPending;
 
@@ -182,7 +182,7 @@ export function Sidebar() {
               </li>
             )}
 
-            {/* 유저 카테고리 — 홈 탭만 (즐겨찾기 탭에서는 하위 버튼 숨김) */}
+            {/* 유저 카테고리 — 내 폴더 탭 제외 전부 (즐겨찾기 탭은 즐겨찾기 기준 카테고리) */}
             {showCategoryList &&
               categories.map((name) => (
                 <li key={`cat-${name}`}>

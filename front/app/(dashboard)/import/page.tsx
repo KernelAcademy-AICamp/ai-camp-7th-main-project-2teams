@@ -3,7 +3,7 @@
 import { useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, X } from 'lucide-react'
-import { useImportBookmarks, formatFileSize } from '@/hooks/useImportBookmarks'
+import { useImportBookmarks, formatFileSize, type ImportProgress } from '@/hooks/useImportBookmarks'
 
 export default function ImportPage() {
   const router = useRouter()
@@ -11,6 +11,7 @@ export default function ImportPage() {
   const [file, setFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [fileTypeError, setFileTypeError] = useState<string | null>(null)
+  const [progress, setProgress] = useState<ImportProgress | null>(null)
 
   const mutation = useImportBookmarks()
 
@@ -33,6 +34,7 @@ export default function ImportPage() {
       setFileTypeError(null)
       setFile(selected)
       resetMutation()
+      setProgress(null)
     },
     [resetMutation],
   )
@@ -60,13 +62,15 @@ export default function ImportPage() {
     if (!file || isUploading) return
     const formData = new FormData()
     formData.append('file', file)
-    mutation.mutate(formData)
+    setProgress(null)
+    mutation.mutate({ formData, onProgress: setProgress })
   }
 
   const handleClearFile = () => {
     setFile(null)
     setFileTypeError(null)
     mutation.reset()
+    setProgress(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -74,6 +78,7 @@ export default function ImportPage() {
     setFile(null)
     setFileTypeError(null)
     mutation.reset()
+    setProgress(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -181,6 +186,24 @@ export default function ImportPage() {
         </button>
       )}
 
+      {/* 업로드 진행률 프로그레스바 */}
+      {isUploading && progress && (
+        <div className="mt-4">
+          <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-[#64748B] dark:text-gray-400">
+            <span>처리 중…</span>
+            <span className="font-mono">{progress.done} / {progress.total}건</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[#E2E8F0] dark:bg-gray-800">
+            <div
+              className="h-full rounded-full gradient-brand transition-all duration-300"
+              style={{
+                width: `${progress.total > 0 ? Math.min(100, Math.round((progress.done / progress.total) * 100)) : 0}%`,
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* 성공 결과 — 틸 계열(Design.md 원칙 5: 초록 대신 브랜드 그라디언트) */}
       {isSuccess && mutation.data && (
         <div className="rounded-2xl border border-[#BFDBFE] bg-[#EFF6FF] p-6 dark:border-teal-800 dark:bg-teal-950/40">
@@ -204,6 +227,13 @@ export default function ImportPage() {
               <span className="flex items-center gap-2">
                 <span className="h-[7px] w-[7px] rounded-sm bg-[#94A3B8]" />
                 건너뜀(중복)
+              </span>
+              <strong className="font-mono">{mutation.data.duplicate}건</strong>
+            </li>
+            <li className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <span className="h-[7px] w-[7px] rounded-sm bg-[#D97706]" />
+                처리량 초과 제외
               </span>
               <strong className="font-mono">{mutation.data.skipped}건</strong>
             </li>

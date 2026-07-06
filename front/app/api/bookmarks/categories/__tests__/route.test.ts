@@ -51,31 +51,38 @@ let categoryRows: { id: string; name: string }[]
 let bookmarkError: unknown = null
 let categoryError: unknown = null
 
+const bookmarkEqSpy = vi.fn()
+
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: { getUser: async () => ({ data: { user: { id: 'u1' } }, error: null }) },
     from(table: string) {
-      const result =
-        table === 'categories'
-          ? { data: categoryRows, error: categoryError }
-          : { data: bookmarkRows, error: bookmarkError }
-      return {
-        select: () => ({
-          eq: async () => result,
-        }),
+      if (table === 'categories') {
+        return { select: () => ({ eq: async () => ({ data: categoryRows, error: categoryError }) }) }
       }
+      // bookmarks — user_id eq 뒤 is_favorite eq가 조건부로 이어붙는 체이너블 빌더
+      const result = { data: bookmarkRows, error: bookmarkError }
+      const builder = {
+        eq: (col: string, val: unknown) => {
+          bookmarkEqSpy(col, val)
+          return builder
+        },
+        then: (resolve: (v: typeof result) => void) => resolve(result),
+      }
+      return { select: () => builder }
     },
   }),
 }))
 
 import { GET } from '../route'
 
-const req = () => new Request('http://t/api/bookmarks/categories')
+const req = (query = '') => new Request(`http://t/api/bookmarks/categories${query}`)
 
 describe('GET /api/bookmarks/categories', () => {
   beforeEach(() => {
     bookmarkError = null
     categoryError = null
+    bookmarkEqSpy.mockReset()
     categoryRows = [
       { id: 'c1', name: '개발' },
       { id: 'c3', name: '콘텐츠' },
@@ -99,5 +106,15 @@ describe('GET /api/bookmarks/categories', () => {
     categoryError = { message: 'db fail' }
     const res = await GET(req())
     expect(res.status).toBe(500)
+  })
+
+  it('is_favorite=true 쿼리 시 즐겨찾기 북마크만 집계 (사이드바 즐겨찾기 탭 카테고리 누락 회귀 방지)', async () => {
+    await GET(req('?is_favorite=true'))
+    expect(bookmarkEqSpy).toHaveBeenCalledWith('is_favorite', true)
+  })
+
+  it('is_favorite 파라미터 없으면 전체 북마크 집계 (기존 동작 유지)', async () => {
+    await GET(req())
+    expect(bookmarkEqSpy).not.toHaveBeenCalledWith('is_favorite', true)
   })
 })

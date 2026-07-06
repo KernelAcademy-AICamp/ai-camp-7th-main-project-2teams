@@ -124,6 +124,7 @@ export function normalizeTags(tags: string[]): string[] {
 
 // 대분류명을 tags 배열 어느 위치에서든 추출·제거. tags는 중·소분류 전용으로 정제됨.
 // 입력은 normalizeTags() 거친 배열. 재정규화하지 않음(중복 호출 방지).
+// 대분류 토큰이 여러 개 섞여 있어도(예: normalizeTags가 'AI'→'AI/ML'로 바꿔 대분류가 중복 등장) 전부 제거 — 첫 번째만 지우면 나머지가 중분류 자리에 남는다.
 export function extractTopCategory(normalizedTags: string[]): {
   category: string | null
   midTags: string[]
@@ -132,6 +133,6 @@ export function extractTopCategory(normalizedTags: string[]): {
   if (idx === -1) return { category: null, midTags: normalizedTags }
   return {
     category: normalizedTags[idx],
-    midTags: normalizedTags.filter((_, i) => i !== idx),
+    midTags: normalizedTags.filter((t) => !TOP_CATEGORIES.has(t)),
   }
 }
