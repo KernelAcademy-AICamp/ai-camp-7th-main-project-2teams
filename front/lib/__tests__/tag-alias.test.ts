@@ -54,6 +54,14 @@ describe('extractTopCategory', () => {
     expect(midTags).toEqual(['LLM', 'RAG'])
   })
 
+  it('대분류 토큰이 여러 개면 전부 제거(첫 번째만 category, 나머지는 버림)', () => {
+    // normalizeTags가 'AI'→'AI/ML'로 바꿔 대분류가 두 번 등장하는 실제 오염 케이스
+    expect(extractTopCategory(normalizeTags(['학습', '강의', 'AI']))).toEqual({
+      category: '학습',
+      midTags: ['강의'],
+    })
+  })
+
   it('대분류 없으면 category null, midTags 원본 유지', () => {
     expect(extractTopCategory(['프론트엔드', 'React'])).toEqual({
       category: null,
