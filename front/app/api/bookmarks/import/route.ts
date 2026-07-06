@@ -139,6 +139,8 @@ export const POST = withAuth(async (req, { user, supabase }) => {
       let imported = 0
       let failed = 0
       let done = 0
+      // A61: 실패 항목 상세 — 어떤 URL이 왜 실패했는지(고정 문구 3종). done 이벤트에서만 전달.
+      const failedItems: { url: string; reason: string }[] = []
 
       try {
         // 기존 저장된 URL 배치 조회 — AI 호출 전 사전 필터링
@@ -221,6 +223,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
                 // 임베딩 실패 → 검색 불가 북마크 → 해당 항목만 실패 처리, 전체 중단 금지
                 if (embeddingResult.status === 'rejected') {
                   failed++
+                  failedItems.push({ url, reason: '임베딩 생성 실패' })
                   return
                 }
 
@@ -263,13 +266,17 @@ export const POST = withAuth(async (req, { user, supabase }) => {
                 )
 
                 if (error) {
+                  // DB 에러 원문(error.message)은 로그에만 남기고 클라이언트엔 고정 문구만 전달
+                  // — 스키마·내부 구조 유출 방지(security.md 3번 원칙)
                   failed++
+                  failedItems.push({ url, reason: '저장 실패' })
                 } else {
                   imported++
                 }
               } catch {
                 // 개별 항목 예외 → 실패 카운트만 증가, 전체 배치 계속
                 failed++
+                failedItems.push({ url, reason: '처리 중 오류' })
               } finally {
                 // 항목 단위 진행률 — 청크 전체를 기다리지 않고 이 항목이 끝나는 즉시 전송
                 done++
@@ -279,7 +286,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
           )
         }
 
-        send(controller, { type: 'done', imported, failed, skipped, duplicate })
+        send(controller, { type: 'done', imported, failed, skipped, duplicate, failedItems })
         controller.close()
       } catch (err) {
         // 스트림 처리 중 예상 못한 예외 — error 이벤트로 명시 전달 후 종료(무한 대기 방지)
