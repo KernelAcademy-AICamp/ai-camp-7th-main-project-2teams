@@ -5,7 +5,7 @@ MVP v1.0 태스크 — PRD `scripts/prd.md` 기반 (v0.5, IA 정리본 반영)
 ## 구조
 
 ```
-front/tasks.json       # Next.js 웹앱 + API Routes (A1~A16, A26~A55, A51 삭제됨)
+front/tasks.json       # Next.js 웹앱 + API Routes (A1~A16, A26~A57, A51 삭제됨)
 extension/tasks.json   # Chrome Extension (A17~A25)
 tasks/README.md        # 이 파일 (진행 현황 포함)
 ```
@@ -202,6 +202,8 @@ A17 (Extension 셋업)
 - [x] **A46 폴더 트리 사이드바** (`lib/folderTree.ts`, `components/Sidebar.tsx`, A31·A45 후속): `folder_hint` 경로를 `buildFolderTree`로 계층 트리화, folders API에 트리용 `paths` 응답 추가. 크롬 기본 폴더(북마크바·기타 북마크 등)는 `parseNetscapeBookmarks`·표시에서 제외. 트리 노드 기본 접힘, nav·main 독립 스크롤. PR #109.
 - [x] **A47 미분류 버킷 + 사이드바 스켈레톤** (`app/api/bookmarks/route.ts`, `components/Sidebar.tsx`, `components/SidebarSkeleton.tsx`): 고정 12개 대분류 외·`tags=[]` 북마크를 '미분류'로 묶음(`category=미분류` → `category_id IS NULL`). 사이드바 로딩 중 `SidebarSkeleton` 노출로 pop-in 깜빡임 제거. `aggregateCategories` 순수 함수 추출(raw `tags[0]` 노출 버그 수정). PR #111.
 - [x] **A49 프로필 팝업 미표시** (`components/Sidebar.tsx`, A46 회귀): nav `overflow-y-auto`가 x축도 클리핑 → 팝업이 `left-full`로 사이드바 폭 밖에 렌더되어 잘림. `bottom-full left-0 right-0 mb-2 z-10`으로 폭 안·행 위 배치.
+- [x] **A56 즐겨찾기 탭 카테고리 리스트 미생성·미갱신** (`components/Sidebar.tsx`, A11·A28 후속): 즐겨찾기 탭 진입 시 카테고리 하위 리스트를 통째로 숨기던 회귀. `categories` API에 `is_favorite` 필터 추가, `useCategories(tab)`이 즐겨찾기 기준 집계 요청, `useToggleFavorite` onSettled에서 `categories` 쿼리도 invalidate(refetch 없이 즉시 반영). PR #171.
+- [x] **A57 extractTopCategory 대분류 토큰 중복 잔존** (`lib/tag-alias.ts`, A43 후속): `normalizeTags` 표준화로 대분류 토큰이 배열에 2회 이상 등장할 수 있는데 첫 매치 인덱스 하나만 제거해 나머지가 중분류(midTags)에 남던 버그. `TOP_CATEGORIES` 소속 토큰 전부 필터링으로 수정. PR #172.
 
 ---
 
