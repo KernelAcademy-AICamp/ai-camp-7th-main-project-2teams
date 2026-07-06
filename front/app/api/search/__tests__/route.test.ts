@@ -31,20 +31,14 @@ describe('POST /api/search', () => {
     categorySingle.mockReset()
     createEmbedding.mockResolvedValue([0.1, 0.2])
     rpc.mockResolvedValue({ data: [{ id: 'bm1', similarity: 0.8 }], error: null })
-    delete process.env.SEARCH_MATCH_THRESHOLD
   })
 
-  afterEach(() => {
-    delete process.env.SEARCH_MATCH_THRESHOLD
-  })
-
-  it('기본 threshold 0.3으로 match_bookmarks RPC 호출 (query_text 포함, trgm 병합용)', async () => {
+  it('match_bookmarks RPC 호출 (query_text 포함, trgm 병합용, threshold 없이 top-K)', async () => {
     await POST(req({ query: '머신러닝 입문' }))
     expect(createEmbedding).toHaveBeenCalledWith('머신러닝 입문')
     expect(rpc).toHaveBeenCalledWith('match_bookmarks', {
       query_embedding: [0.1, 0.2],
       query_text: '머신러닝 입문',
-      match_threshold: 0.3,
       match_count: 20,
       p_user_id: 'u1',
       p_category_id: null,
@@ -106,24 +100,6 @@ describe('POST /api/search', () => {
     expect(rpc.mock.calls[0][1]).toMatchObject({ p_category_id: null, p_uncategorized: true })
   })
 
-  it('SEARCH_MATCH_THRESHOLD 환경변수로 threshold 조정', async () => {
-    process.env.SEARCH_MATCH_THRESHOLD = '0.45'
-    await POST(req({ query: 'x' }))
-    const callArgs = rpc.mock.calls[0][1]
-    expect(callArgs.match_threshold).toBe(0.45)
-  })
-
-  it.each([
-    ['invalid', 'NaN'],
-    ['-0.5', '음수'],
-    ['0', '0 (임계값 없어 전체 반환 위험)'],
-    ['1.5', '1 초과'],
-  ])('SEARCH_MATCH_THRESHOLD=%s (%s) → 기본값 0.3 폴백', async (val) => {
-    process.env.SEARCH_MATCH_THRESHOLD = val
-    await POST(req({ query: 'x' }))
-    expect(rpc.mock.calls[0][1].match_threshold).toBe(0.3)
-  })
-
   it('{ results } 반환', async () => {
     const res = await POST(req({ query: 'x' }))
     const json = await res.json()
@@ -145,5 +121,42 @@ describe('POST /api/search', () => {
     currentUser = null
     const res = await POST(req({ query: 'x' }))
     expect(res.status).toBe(401)
+  })
+
+  describe('브랜드명 음차 교차검색 (A55 후속)', () => {
+    it('alias 있는 쿼리는 원문+영문 두 번 검색 후 병합', async () => {
+      createEmbedding.mockImplementation(async (text: string) =>
+        text === 'Figma' ? [0.3, 0.4] : [0.1, 0.2],
+      )
+      rpc.mockImplementation(async (_fn: string, args: { query_text: string }) =>
+        args.query_text === 'Figma'
+          ? { data: [{ id: 'bm2', similarity: 0.6 }], error: null }
+          : { data: [{ id: 'bm1', similarity: 0.5 }], error: null },
+      )
+
+      await POST(req({ query: '피그마' }))
+
+      expect(createEmbedding).toHaveBeenCalledWith('피그마')
+      expect(createEmbedding).toHaveBeenCalledWith('Figma')
+      expect(rpc).toHaveBeenCalledTimes(2)
+    })
+
+    it('같은 id가 양쪽에서 잡히면 similarity 높은 쪽만 남김', async () => {
+      rpc.mockImplementation(async (_fn: string, args: { query_text: string }) =>
+        args.query_text === 'Figma'
+          ? { data: [{ id: 'bm1', similarity: 0.9 }], error: null }
+          : { data: [{ id: 'bm1', similarity: 0.4 }], error: null },
+      )
+
+      const res = await POST(req({ query: '피그마' }))
+      const json = await res.json()
+
+      expect(json.results).toEqual([{ id: 'bm1', similarity: 0.9 }])
+    })
+
+    it('alias 없는 쿼리는 한 번만 검색 (기존 동작 유지)', async () => {
+      await POST(req({ query: '완전히 무관한 쿼리' }))
+      expect(rpc).toHaveBeenCalledTimes(1)
+    })
   })
 })
