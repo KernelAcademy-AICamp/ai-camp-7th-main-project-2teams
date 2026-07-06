@@ -22,6 +22,8 @@ let updateShouldError = false
 // 멀티 청크(>200 URL) 테스트에서 특정 청크만 실패시키기 위한 스위치 —
 // 해당 URL을 포함한 in() 호출만 에러 반환, 다른 청크는 정상 응답(부분 실패 검증용)
 let existingLookupFailForUrl: string | null = null
+// 최상위 예외(error 이벤트) 테스트용 — in() 호출 자체가 throw
+let existingLookupShouldThrow = false
 
 function makeSupabase(user: unknown) {
   return {
@@ -48,6 +50,9 @@ function makeSupabase(user: unknown) {
             eq() {
               return {
                 async in(_col: string, urls: string[]) {
+                  if (existingLookupShouldThrow) {
+                    throw new Error('boom')
+                  }
                   if (existingLookupShouldError) {
                     return { data: null, error: { message: 'lookup failed' } }
                   }
@@ -103,6 +108,58 @@ function makeReq(file?: File): Request {
     method: 'POST',
     body: fd,
   })
+}
+
+// ------ SSE 스트림 파싱 헬퍼 ------
+
+interface ProgressEvent {
+  type: 'progress'
+  total: number
+  done: number
+  imported: number
+  duplicate: number
+  failed: number
+  skipped: number
+}
+interface DoneEvent {
+  type: 'done'
+  imported: number
+  failed: number
+  skipped: number
+  duplicate: number
+}
+interface ErrorEvent {
+  type: 'error'
+  message: string
+}
+type StreamEvent = ProgressEvent | DoneEvent | ErrorEvent
+
+// 응답 스트림을 끝까지 읽어 SSE data: 라인들을 파싱 — 처리 완료를 보장하기 위해
+// 실제 처리가 일어나는 모든 테스트는 이 함수로 스트림을 반드시 drain해야 한다.
+async function readAllEvents(res: Response): Promise<StreamEvent[]> {
+  const reader = res.body!.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  const events: StreamEvent[] = []
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    let sepIndex: number
+    while ((sepIndex = buffer.indexOf('\n\n')) !== -1) {
+      const line = buffer.slice(0, sepIndex)
+      buffer = buffer.slice(sepIndex + 2)
+      if (!line.startsWith('data: ')) continue
+      events.push(JSON.parse(line.slice(6)) as StreamEvent)
+    }
+  }
+  return events
+}
+
+function readFinalResult(events: StreamEvent[]): DoneEvent {
+  const doneEvent = events.find((e): e is DoneEvent => e.type === 'done')
+  if (!doneEvent) throw new Error('done 이벤트 없음 — 테스트 목 설정을 확인하세요')
+  return doneEvent
 }
 
 // 폴더 1단계 + 북마크 2개
@@ -173,6 +230,7 @@ describe('POST /api/bookmarks/import', () => {
     existingLookupShouldError = false
     updateShouldError = false
     existingLookupFailForUrl = null
+    existingLookupShouldThrow = false
     generateTags.mockResolvedValue(['개발', '프론트엔드'])
     createEmbedding.mockResolvedValue([0.1, 0.2])
     fetchMeta.mockResolvedValue({ title: '', description: '' })
@@ -182,7 +240,8 @@ describe('POST /api/bookmarks/import', () => {
     const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
     expect(res.status).toBe(200)
 
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
     expect(json.imported).toBe(2)
     expect(json.failed).toBe(0)
 
@@ -199,7 +258,8 @@ describe('POST /api/bookmarks/import', () => {
   it('A52: fetchMeta description을 태깅·임베딩 입력으로 전달', async () => {
     fetchMeta.mockResolvedValue({ title: 'meta title', description: 'Next.js 서버 컴포넌트 가이드' })
 
-    await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    await readAllEvents(res)
 
     // 태깅에 description 전달 (title+url 굶김 해소)
     expect(generateTags).toHaveBeenCalledWith(
@@ -213,7 +273,8 @@ describe('POST /api/bookmarks/import', () => {
 
   it('A52: fetchMeta 빈 description → title 폴백 (description 미전달)', async () => {
     // 기본 목이 빈 메타 반환
-    await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    await readAllEvents(res)
 
     expect(generateTags).toHaveBeenCalledWith(
       expect.objectContaining({ description: undefined }),
@@ -223,7 +284,8 @@ describe('POST /api/bookmarks/import', () => {
   })
 
   it('insert payload에 user_id 포함', async () => {
-    await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    await readAllEvents(res)
     const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
     calls.forEach((call) => {
       expect(call[0].user_id).toBe('u1')
@@ -249,7 +311,8 @@ describe('POST /api/bookmarks/import', () => {
       <DT><A HREF="https://valid.com">Valid</A>
     </DL><p>`
     const res = await POST(makeReq(makeFile(html)))
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
     expect(json.imported).toBe(1)
     expect(insertSpy).toHaveBeenCalledTimes(1)
     expect(insertSpy.mock.calls[0][0].url).toBe('https://valid.com/')
@@ -270,18 +333,20 @@ describe('POST /api/bookmarks/import', () => {
 
     const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
     expect(res.status).toBe(200)
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
     expect(json.failed).toBe(1)
     expect(json.imported).toBe(1)
   })
 
   it('응답에 embedding 미포함', async () => {
     const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
     // 최상위 응답 키 검증
     expect(json).not.toHaveProperty('embedding')
     // 직렬화 결과에도 없는지 확인
-    expect(JSON.stringify(json)).not.toContain('embedding')
+    expect(JSON.stringify(events)).not.toContain('embedding')
   })
 
   it('처리량 상한 초과(501개) → skipped:1 보고, imported+failed==500', async () => {
@@ -293,7 +358,8 @@ describe('POST /api/bookmarks/import', () => {
 
     const res = await POST(makeReq(makeFile(html)))
     expect(res.status).toBe(200)
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
     expect(json.skipped).toBe(1)
     expect(json.imported + json.failed).toBe(500)
   }, 15000)
@@ -319,13 +385,15 @@ describe('POST /api/bookmarks/import', () => {
     const file = new File([SAMPLE_HTML], 'bookmarks.html', { type: 'text/plain' })
     const res = await POST(makeReq(file))
     expect(res.status).toBe(200)
+    await readAllEvents(res) // 처리 완료 대기 — 다음 테스트 목 상태 오염 방지
   })
 
   it('DB 기존 URL 재업로드(폴더 경로 동일) → 완전 스킵, duplicate 카운트', async () => {
     existingRows = [{ url: 'https://nextjs.org/', folder_hint: ['개발'] }]
 
     const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
 
     expect(json.duplicate).toBe(1)
     expect(json.imported).toBe(1) // example.com만 신규 저장
@@ -340,7 +408,8 @@ describe('POST /api/bookmarks/import', () => {
     existingRows = [{ url: 'https://nextjs.org/', folder_hint: ['옛폴더'] }]
 
     const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
 
     expect(json.duplicate).toBe(1)
     expect(updateSpy).toHaveBeenCalledWith({ folder_hint: ['개발'] })
@@ -349,7 +418,8 @@ describe('POST /api/bookmarks/import', () => {
 
   it('배치 내부 동일 URL, 폴더 경로 다름 → 마지막 등장 채택, 1회만 upsert, duplicate 카운트', async () => {
     const res = await POST(makeReq(makeFile(DUPLICATE_DIFFERENT_FOLDER_HTML)))
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
 
     expect(json.duplicate).toBe(1)
     expect(insertSpy).toHaveBeenCalledTimes(1)
@@ -358,7 +428,8 @@ describe('POST /api/bookmarks/import', () => {
 
   it('배치 내부 동일 URL, 폴더 경로 같음 → 1회만 upsert, duplicate 카운트', async () => {
     const res = await POST(makeReq(makeFile(DUPLICATE_SAME_FOLDER_HTML)))
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
 
     expect(json.duplicate).toBe(1)
     expect(insertSpy).toHaveBeenCalledTimes(1)
@@ -369,7 +440,8 @@ describe('POST /api/bookmarks/import', () => {
 
     const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
     expect(res.status).toBe(200)
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
 
     expect(json.imported).toBe(2)
     expect(json.duplicate).toBe(0)
@@ -390,7 +462,8 @@ describe('POST /api/bookmarks/import', () => {
 
     const res = await POST(makeReq(makeFile(html)))
     expect(res.status).toBe(200)
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
 
     // 청크1의 example.com/0만 duplicate로 잡힘 — 청크2는 조회 실패로 기존 여부를 알 수 없어 전부 신규 처리
     expect(json.duplicate).toBe(1)
@@ -409,7 +482,8 @@ describe('POST /api/bookmarks/import', () => {
 
     const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
     expect(res.status).toBe(200)
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
 
     expect(json.duplicate).toBe(1)
     expect(json.failed).toBe(0)
@@ -423,7 +497,8 @@ describe('POST /api/bookmarks/import', () => {
 
     const res = await POST(makeReq(makeFile(COMBINED_DUPLICATE_HTML)))
     expect(res.status).toBe(200)
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
 
     // dedupeBatch의 배치 내부 중복 1건 + 분류 루프의 DB 매치 1건 = 2건
     expect(json.duplicate).toBe(2)
@@ -444,7 +519,8 @@ describe('POST /api/bookmarks/import', () => {
     existingRows = [{ url: 'https://nested.com/', folder_hint: ['개발', '백엔드'] }]
 
     const res = await POST(makeReq(makeFile(NESTED_FOLDER_HTML)))
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
 
     expect(json.duplicate).toBe(1)
     expect(updateSpy).toHaveBeenCalledTimes(1)
@@ -457,11 +533,61 @@ describe('POST /api/bookmarks/import', () => {
     existingRows = [{ url: 'https://nested.com/', folder_hint: ['개발', '프론트엔드'] }]
 
     const res = await POST(makeReq(makeFile(NESTED_FOLDER_HTML)))
-    const json = await res.json()
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
 
     expect(json.duplicate).toBe(1)
     expect(json.imported).toBe(0)
     expect(updateSpy).not.toHaveBeenCalled()
     expect(generateTags).not.toHaveBeenCalled()
+  })
+
+  // ------ SSE progress 이벤트 신규 테스트 ------
+
+  it('progress 이벤트 — 항목 수만큼 발생, done 누적값 단조증가, 마지막 이벤트 done===total', async () => {
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const events = await readAllEvents(res)
+    const progressEvents = events.filter((e): e is ProgressEvent => e.type === 'progress')
+
+    // SAMPLE_HTML은 신규 URL 2건 — 각 항목 종결마다 이벤트 1건씩, 총 2건
+    expect(progressEvents).toHaveLength(2)
+
+    for (let i = 1; i < progressEvents.length; i++) {
+      expect(progressEvents[i].done).toBeGreaterThan(progressEvents[i - 1].done)
+    }
+
+    const last = progressEvents[progressEvents.length - 1]
+    expect(last.done).toBe(last.total)
+    expect(last.total).toBe(2)
+  })
+
+  it('progress 이벤트 — 완전 스킵 중복 항목도 즉시 이벤트 발생(AI 호출 없이도 진행률 반영)', async () => {
+    existingRows = [{ url: 'https://nextjs.org/', folder_hint: ['개발'] }]
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const events = await readAllEvents(res)
+    const progressEvents = events.filter((e): e is ProgressEvent => e.type === 'progress')
+
+    // nextjs.org(완전 스킵) + example.com(신규 처리) = 2건의 progress 이벤트
+    expect(progressEvents).toHaveLength(2)
+    const finalProgress = progressEvents[progressEvents.length - 1]
+    expect(finalProgress.done).toBe(2)
+    expect(finalProgress.total).toBe(2)
+    expect(finalProgress.duplicate).toBe(1)
+    expect(finalProgress.imported).toBe(1)
+  })
+
+  it('스트림 처리 중 예상 못한 예외 → error 이벤트 전송 후 종료 (done 이벤트 없음)', async () => {
+    existingLookupShouldThrow = true
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    expect(res.status).toBe(200) // 스트림 자체는 정상 시작 — 에러는 이벤트로 전달됨
+    const events = await readAllEvents(res)
+
+    const errorEvent = events.find((e): e is ErrorEvent => e.type === 'error')
+    expect(errorEvent).toBeDefined()
+    expect(errorEvent?.message).toBe('boom')
+
+    const doneEvent = events.find((e) => e.type === 'done')
+    expect(doneEvent).toBeUndefined()
   })
 })
