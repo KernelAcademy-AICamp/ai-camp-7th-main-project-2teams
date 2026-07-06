@@ -18,6 +18,9 @@ export const bookmarkCreateSchema = bookmarkSchema.extend({
 export const searchSchema = z.object({
   query: z.string().min(1).max(50),
   category: z.string().min(1).optional(),
+  // A58: 태그·즐겨찾기 필터 — 둘 다 optional, 미지정 시 기존 전체 검색 동작 유지.
+  tag: z.string().min(1).optional(),
+  is_favorite: z.boolean().optional(),
 })
 
 export const favoriteSchema = z.object({

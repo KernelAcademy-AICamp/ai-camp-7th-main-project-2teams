@@ -35,6 +35,10 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     categoryId = cat.id
   }
 
+  // A58: 사이드바 태그/즐겨찾기 필터를 검색에도 적용. 미지정 시 null → 기존 전체 검색과 동일.
+  const tags = parsed.data.tag ? [parsed.data.tag] : null
+  const isFavorite = parsed.data.is_favorite ?? null
+
   const { data, error } = await supabase.rpc('match_bookmarks', {
     query_embedding: queryEmbedding,
     query_text: parsed.data.query,
@@ -43,6 +47,8 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     p_user_id: user.id,
     p_category_id: categoryId,
     p_uncategorized: uncategorized,
+    p_tags: tags,
+    p_is_favorite: isFavorite,
   })
 
   if (error) {
