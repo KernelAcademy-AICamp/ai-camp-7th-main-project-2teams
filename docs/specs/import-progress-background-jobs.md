@@ -1,6 +1,6 @@
 # 북마크 임포트 — 백그라운드 job + Redis 진행률 (미구현, 향후 옵션)
 
-> 상태: **미구현**. 지금은 SSE 스트리밍(`docs/specs/import-progress-sse.md`)으로 진행 중. 대량 임포트가 실제로 자주 발생하거나 `maxDuration`(300s) 타임아웃이 실측되면 이 문서 기준으로 전환 검토.
+> 상태: **미구현**. 지금은 SSE 스트리밍(`docs/superpowers/specs/2026-07-06-import-progress-sse-design.md`)으로 진행 중. 대량 임포트가 실제로 자주 발생하거나 `maxDuration`(300s) 타임아웃이 실측되면 이 문서 기준으로 전환 검토.
 
 ## 배경
 
@@ -66,7 +66,7 @@ key: job:{jobId}   (Hash, TTL 3600s)
 ## 전환 기준
 
 - 대량 임포트(>300건)가 실사용에서 반복적으로 발생하거나, `maxDuration` 타임아웃이 실측되면 이 방식으로 전환.
-- 그전까지는 SSE(`docs/specs/import-progress-sse.md`)로 충분 — 요청 하나 안에서 진행률만 보여주는 것으로 UX 개선.
+- 그전까지는 SSE(`docs/superpowers/specs/2026-07-06-import-progress-sse-design.md`)로 충분 — 요청 하나 안에서 진행률만 보여주는 것으로 UX 개선.
 
 ## 남은 결정 사항 (구현 시 확정 필요)
 
