@@ -81,7 +81,7 @@ describe('fetchImportBookmarks', () => {
   })
 
   it('성공 응답: done 이벤트 값을 ImportResult로 반환', async () => {
-    const expected = { imported: 5, failed: 2, skipped: 1, duplicate: 3 }
+    const expected = { imported: 5, failed: 2, skipped: 1, duplicate: 3, failedItems: [] }
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       body: makeSSEBody([{ type: 'done', ...expected }]),
@@ -89,6 +89,34 @@ describe('fetchImportBookmarks', () => {
 
     const result = await fetchImportBookmarks(new FormData())
     expect(result).toEqual(expected)
+  })
+
+  it('A61: done 이벤트의 failedItems를 ImportResult에 그대로 전달', async () => {
+    const failedItems = [
+      { url: 'https://broken.com/', reason: '임베딩 생성 실패' },
+      { url: 'https://fail.com/', reason: '저장 실패' },
+    ]
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      body: makeSSEBody([
+        { type: 'done', imported: 1, failed: 2, skipped: 0, duplicate: 0, failedItems },
+      ]),
+    })
+
+    const result = await fetchImportBookmarks(new FormData())
+    expect(result.failedItems).toEqual(failedItems)
+  })
+
+  it('A61: failedItems가 빈 배열인 경우도 그대로 전달', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      body: makeSSEBody([
+        { type: 'done', imported: 2, failed: 0, skipped: 0, duplicate: 0, failedItems: [] },
+      ]),
+    })
+
+    const result = await fetchImportBookmarks(new FormData())
+    expect(result.failedItems).toEqual([])
   })
 
   it('400 응답 (JSON error 없음) → HTML 파일 타입 fallback 메시지 throw', async () => {
@@ -148,7 +176,7 @@ describe('fetchImportBookmarks', () => {
       { type: 'progress', total: 2, done: 1, imported: 1, duplicate: 0, failed: 0, skipped: 0 },
       { type: 'progress', total: 2, done: 2, imported: 2, duplicate: 0, failed: 0, skipped: 0 },
     ]
-    const doneEvent = { type: 'done', imported: 2, failed: 0, skipped: 0, duplicate: 0 }
+    const doneEvent = { type: 'done', imported: 2, failed: 0, skipped: 0, duplicate: 0, failedItems: [] }
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       body: makeSSEBody([...progressEvents, doneEvent]),
@@ -160,7 +188,7 @@ describe('fetchImportBookmarks', () => {
     expect(onProgress).toHaveBeenCalledTimes(2)
     expect(onProgress).toHaveBeenNthCalledWith(1, progressEvents[0])
     expect(onProgress).toHaveBeenNthCalledWith(2, progressEvents[1])
-    expect(result).toEqual({ imported: 2, failed: 0, skipped: 0, duplicate: 0 })
+    expect(result).toEqual({ imported: 2, failed: 0, skipped: 0, duplicate: 0, failedItems: [] })
   })
 
   it('error 이벤트 수신 시 해당 메시지로 reject', async () => {

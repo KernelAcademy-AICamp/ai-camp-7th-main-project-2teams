@@ -5,6 +5,8 @@ export interface ImportResult {
   failed: number
   skipped: number
   duplicate: number
+  /** A61: 실패 URL·사유 상세 목록 — done 이벤트에서만 전달(진행률 이벤트에는 없음) */
+  failedItems: { url: string; reason: string }[]
 }
 
 export interface ImportProgress {
@@ -84,8 +86,8 @@ export async function fetchImportBookmarks(
       } else if (event.type === 'error') {
         throw new Error(event.message)
       } else if (event.type === 'done') {
-        const { imported, failed, skipped, duplicate } = event
-        return { imported, failed, skipped, duplicate }
+        const { imported, failed, skipped, duplicate, failedItems } = event
+        return { imported, failed, skipped, duplicate, failedItems }
       }
     }
   }
