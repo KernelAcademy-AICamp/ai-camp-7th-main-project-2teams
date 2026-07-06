@@ -38,7 +38,10 @@ function makeSaveCurrentTab({ supabase, chromeMock, fetchMock, WEB_APP_URL }) {
       }),
     })
 
-    if (!res.ok) return { error: `HTTP ${res.status}` }
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      return { error: json.error || `HTTP ${res.status}`, duplicate: json.duplicate === true }
+    }
     return res.json()
   }
 }
@@ -106,18 +109,40 @@ describe('saveCurrentTab', () => {
     expect(result).toEqual({ error: 'no active tab' })
   })
 
-  it('API 500 → error 반환', async () => {
+  it('API 500 → error 반환 (응답 바디 파싱 실패 시 상태코드 기반 메시지 폴백)', async () => {
     supabase.auth.getSession.mockResolvedValue({
       data: { session: { access_token: 'tok' } },
     })
     chromeMock.tabs.query.mockResolvedValue([{ id: 1, url: 'https://x.com', title: 'X' }])
     chromeMock.scripting.executeScript.mockResolvedValue([{ result: { title: 'X', content: '' } }])
-    fetchMock.mockResolvedValue({ ok: false, status: 500 })
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: () => Promise.reject(new Error('no body')),
+    })
 
     const save = makeSaveCurrentTab({ supabase, chromeMock, fetchMock, WEB_APP_URL: '' })
     const result = await save()
 
-    expect(result).toEqual({ error: 'HTTP 500' })
+    expect(result).toEqual({ error: 'HTTP 500', duplicate: false })
+  })
+
+  it('API 409 중복 응답 → 서버 한국어 메시지 + duplicate:true 그대로 반환 (A59)', async () => {
+    supabase.auth.getSession.mockResolvedValue({
+      data: { session: { access_token: 'tok' } },
+    })
+    chromeMock.tabs.query.mockResolvedValue([{ id: 1, url: 'https://dup.com', title: 'DUP' }])
+    chromeMock.scripting.executeScript.mockResolvedValue([{ result: { title: 'DUP', content: '' } }])
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: () => Promise.resolve({ error: '이미 저장된 북마크입니다.', duplicate: true }),
+    })
+
+    const save = makeSaveCurrentTab({ supabase, chromeMock, fetchMock, WEB_APP_URL: '' })
+    const result = await save()
+
+    expect(result).toEqual({ error: '이미 저장된 북마크입니다.', duplicate: true })
   })
 
   it('executeScript 주입 불가(chrome:// 등) → content 빈 문자열 + tab.title 폴백', async () => {
