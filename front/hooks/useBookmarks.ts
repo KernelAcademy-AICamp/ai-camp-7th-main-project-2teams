@@ -4,6 +4,7 @@ export interface Bookmark {
   id: string
   title: string
   url: string
+  description?: string | null
   tags: string[]
   category_id: string | null
   is_favorite: boolean
