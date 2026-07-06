@@ -2,6 +2,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient } from '@tanstack/react-query'
 import { fetchImportBookmarks, formatFileSize } from '../useImportBookmarks'
 
+// SSE 이벤트 배열을 fetch 응답의 body(ReadableStream 유사 객체)로 변환 — 테스트용
+function makeSSEBody(events: Array<Record<string, unknown>>) {
+  const chunks = events.map((e) => `data: ${JSON.stringify(e)}\n\n`)
+  const encoder = new TextEncoder()
+  let i = 0
+  return {
+    getReader: () => ({
+      read: async () => {
+        if (i >= chunks.length) return { done: true, value: undefined }
+        const value = encoder.encode(chunks[i])
+        i++
+        return { done: false, value }
+      },
+    }),
+  }
+}
+
 // ----------------------------------------------------------------
 // (1) formatFileSize — 순수 함수 단위 테스트
 // ----------------------------------------------------------------
@@ -34,7 +51,7 @@ describe('fetchImportBookmarks', () => {
   it('POST /api/bookmarks/import 를 FormData body로 호출', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ imported: 3, failed: 0, skipped: 1 }),
+      body: makeSSEBody([{ type: 'done', imported: 3, failed: 0, skipped: 1, duplicate: 0 }]),
     })
 
     const formData = new FormData()
@@ -51,7 +68,7 @@ describe('fetchImportBookmarks', () => {
   it('Content-Type 헤더를 수동 설정하지 않음 (브라우저가 자동 설정)', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ imported: 1, failed: 0, skipped: 0 }),
+      body: makeSSEBody([{ type: 'done', imported: 1, failed: 0, skipped: 0, duplicate: 0 }]),
     })
 
     const formData = new FormData()
@@ -63,11 +80,11 @@ describe('fetchImportBookmarks', () => {
     expect(headers?.['Content-Type']).toBeUndefined()
   })
 
-  it('성공 응답: { imported, failed, skipped } 반환', async () => {
-    const expected = { imported: 5, failed: 2, skipped: 1 }
+  it('성공 응답: done 이벤트 값을 ImportResult로 반환', async () => {
+    const expected = { imported: 5, failed: 2, skipped: 1, duplicate: 3 }
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => expected,
+      body: makeSSEBody([{ type: 'done', ...expected }]),
     })
 
     const result = await fetchImportBookmarks(new FormData())
@@ -124,6 +141,46 @@ describe('fetchImportBookmarks', () => {
     })
 
     await expect(fetchImportBookmarks(new FormData())).rejects.toThrow('업로드 실패 (500)')
+  })
+
+  it('progress 이벤트마다 onProgress 콜백 호출, 최종 resolve 값은 done 이벤트', async () => {
+    const progressEvents = [
+      { type: 'progress', total: 2, done: 1, imported: 1, duplicate: 0, failed: 0, skipped: 0 },
+      { type: 'progress', total: 2, done: 2, imported: 2, duplicate: 0, failed: 0, skipped: 0 },
+    ]
+    const doneEvent = { type: 'done', imported: 2, failed: 0, skipped: 0, duplicate: 0 }
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      body: makeSSEBody([...progressEvents, doneEvent]),
+    })
+
+    const onProgress = vi.fn()
+    const result = await fetchImportBookmarks(new FormData(), onProgress)
+
+    expect(onProgress).toHaveBeenCalledTimes(2)
+    expect(onProgress).toHaveBeenNthCalledWith(1, progressEvents[0])
+    expect(onProgress).toHaveBeenNthCalledWith(2, progressEvents[1])
+    expect(result).toEqual({ imported: 2, failed: 0, skipped: 0, duplicate: 0 })
+  })
+
+  it('error 이벤트 수신 시 해당 메시지로 reject', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      body: makeSSEBody([{ type: 'error', message: '문제 발생' }]),
+    })
+
+    await expect(fetchImportBookmarks(new FormData())).rejects.toThrow('문제 발생')
+  })
+
+  it('done/error 이벤트 없이 스트림 종료 → 연결 끊김 에러 throw', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      body: makeSSEBody([]),
+    })
+
+    await expect(fetchImportBookmarks(new FormData())).rejects.toThrow(
+      '업로드 중 연결이 끊겼습니다. 다시 시도해주세요.',
+    )
   })
 })
 
