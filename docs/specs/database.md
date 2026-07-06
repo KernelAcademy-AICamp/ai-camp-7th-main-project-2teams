@@ -106,11 +106,22 @@ CREATE POLICY "categories_delete"
 
 ---
 
-## RPC 함수 — match_bookmarks (A7)
+## RPC 함수 — match_bookmarks (A7, A54 하이브리드 병합)
+
+벡터 코사인 유사도 + pg_trgm 트라이그램 유사도를 RRF(Reciprocal Rank Fusion)로 병합.
+순수 벡터 검색은 의미 유사도만 보므로 정확 단어 매칭에 약함 — 트라이그램으로 키워드 매칭을 보강.
+한글은 형태소 분석 없는 tsvector('simple' config)보다 트라이그램 부분 문자열 매칭이 더 적합해 선택.
 
 ```sql
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE INDEX IF NOT EXISTS bookmarks_title_trgm_idx
+  ON bookmarks
+  USING gin (title gin_trgm_ops);
+
 CREATE OR REPLACE FUNCTION match_bookmarks(
   query_embedding vector(1536),
+  query_text      text,
   match_threshold float,
   match_count     int,
   p_user_id       uuid
@@ -128,25 +139,38 @@ RETURNS TABLE (
 LANGUAGE sql STABLE
 SET search_path = public
 AS $$
-  SELECT
-    id,
-    title,
-    url,
-    tags,
-    category_id,
-    is_favorite,
-    created_at,
-    1 - (embedding <=> query_embedding) AS similarity
-  FROM bookmarks
-  WHERE
-    user_id = p_user_id
-    AND 1 - (embedding <=> query_embedding) >= match_threshold
-  ORDER BY embedding <=> query_embedding
+  WITH vector_matches AS (
+    SELECT id, 1 - (embedding <=> query_embedding) AS vec_sim,
+           row_number() OVER (ORDER BY embedding <=> query_embedding) AS vec_rank
+    FROM bookmarks
+    WHERE user_id = p_user_id
+      AND 1 - (embedding <=> query_embedding) >= match_threshold
+  ),
+  trgm_matches AS (
+    SELECT id, row_number() OVER (ORDER BY similarity(title, query_text) DESC) AS trgm_rank
+    FROM bookmarks
+    WHERE user_id = p_user_id AND title % query_text
+  ),
+  combined AS (
+    SELECT
+      COALESCE(v.id, t.id) AS id,
+      COALESCE(1.0 / (60 + v.vec_rank), 0) + COALESCE(1.0 / (60 + t.trgm_rank), 0) AS rrf_score,
+      v.vec_sim
+    FROM vector_matches v
+    FULL OUTER JOIN trgm_matches t ON v.id = t.id
+  )
+  SELECT b.id, b.title, b.url, b.tags, b.category_id, b.is_favorite, b.created_at,
+         COALESCE(c.vec_sim, 0) AS similarity
+  FROM combined c
+  JOIN bookmarks b ON b.id = c.id
+  ORDER BY c.rrf_score DESC
   LIMIT match_count;
 $$;
 ```
 
-> `<=>` = cosine distance 연산자. `embedding` 컬럼은 반환하지 않음.
+> `<=>` = cosine distance 연산자. `%` = pg_trgm 유사도 연산자(기본 threshold 0.3). `embedding` 컬럼은 반환하지 않음.
+> 정렬 기준은 RRF 점수, 응답 `similarity` 필드는 벡터 코사인 유사도 값(트라이그램 전용 매칭 시 0).
+> 전체 구현: `supabase/migrations/0009_hybrid_search.sql`.
 
 ---
 

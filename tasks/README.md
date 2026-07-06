@@ -185,7 +185,7 @@ A17 (Extension 셋업)
 
 - [x] **A36 비대칭 임베딩 + threshold 0.5 하드코딩** (`app/api/search/route.ts`): 저장 doc=title+content(김) vs 쿼리=짧은 자연어 → cosine 낮아 recall 누락 가능. 운영 데이터로 threshold 튜닝.
 - [x] **A37 빈 content 약한 벡터**: `logger.warn('[weak-vector]')` 로 모니터링 추가. content 없으면 title 단독 임베딩. PR #54.
-- [ ] **A54 자연어 검색 하이브리드 (pgvector + FTS)**: 순수 벡터는 정확 단어 매칭 취약 → Postgres tsvector와 RRF 병합. GraphRAG 도입 안 함(북마크=단일 홉 시맨틱 검색, 서버리스·content 미저장 제약과 충돌, 2026-07 판단).
+- [x] **A54 자연어 검색 하이브리드 (pgvector + pg_trgm)**: 순수 벡터는 정확 단어 매칭 취약 → 한글 부분 문자열 매칭에 tsvector보다 적합한 pg_trgm과 RRF 병합. `match_bookmarks` RPC 재작성(`supabase/migrations/0009_hybrid_search.sql`), route.ts에 `query_text` 파라미터 추가. GraphRAG 도입 안 함(북마크=단일 홉 시맨틱 검색, 서버리스·content 미저장 제약과 충돌, 2026-07 판단).
 - [ ] **A55 검색 메타데이터 필터**: `match_bookmarks`에 tags/category/is_favorite 필터 파라미터 추가. 이미 있는 메타데이터 결합 = 공짜 정확도.
 
 ### 태깅 품질 (튜닝)
