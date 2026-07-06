@@ -49,6 +49,40 @@ describe('POST /api/search', () => {
       p_user_id: 'u1',
       p_category_id: null,
       p_uncategorized: false,
+      p_tags: null,
+      p_is_favorite: null,
+    })
+  })
+
+  // A58: 태그·즐겨찾기 필터 — 지정 없으면 기존 동작(둘 다 null) 100% 유지.
+  it('tag 미지정 시 p_tags: null 전달 (회귀 방지)', async () => {
+    await POST(req({ query: 'x' }))
+    expect(rpc.mock.calls[0][1]).toMatchObject({ p_tags: null, p_is_favorite: null })
+  })
+
+  it('tag 지정 시 RPC에 p_tags: [tag] 전달 (A58)', async () => {
+    await POST(req({ query: 'x', tag: '리액트' }))
+    expect(rpc.mock.calls[0][1]).toMatchObject({ p_tags: ['리액트'], p_is_favorite: null })
+  })
+
+  it('is_favorite: true 지정 시 RPC에 p_is_favorite: true 전달 (A58)', async () => {
+    await POST(req({ query: 'x', is_favorite: true }))
+    expect(rpc.mock.calls[0][1]).toMatchObject({ p_tags: null, p_is_favorite: true })
+  })
+
+  it('tag + is_favorite 복합 필터 동시 전달 (A58, "즐겨찾기 중 리액트" 케이스)', async () => {
+    await POST(req({ query: '리액트', tag: '리액트', is_favorite: true }))
+    expect(rpc.mock.calls[0][1]).toMatchObject({ p_tags: ['리액트'], p_is_favorite: true })
+  })
+
+  it('category + tag + is_favorite 모두 지정해도 각 필터 정확히 전달 (복합 필터 회귀 방지)', async () => {
+    categorySingle.mockResolvedValue({ data: { id: 'cat1' }, error: null })
+    await POST(req({ query: 'x', category: 'AI/ML', tag: '리액트', is_favorite: true }))
+    expect(rpc.mock.calls[0][1]).toMatchObject({
+      p_category_id: 'cat1',
+      p_uncategorized: false,
+      p_tags: ['리액트'],
+      p_is_favorite: true,
     })
   })
 

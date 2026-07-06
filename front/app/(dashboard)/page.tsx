@@ -114,9 +114,15 @@ function DashboardContent() {
   const handleSearch = useCallback(
     (query: string) => {
       setSearchQuery(query);
-      search({ query, category: category ?? undefined });
+      // A58: 사이드바 태그/즐겨찾기 필터가 걸린 상태에서 검색해도 그대로 유지되도록 전달.
+      search({
+        query,
+        category: category ?? undefined,
+        tag: tag ?? undefined,
+        is_favorite: tab === "favorites" ? true : undefined,
+      });
     },
-    [search, setSearchQuery, category],
+    [search, setSearchQuery, category, tag, tab],
   );
 
   const handleClear = useCallback(() => setSearchQuery(""), [setSearchQuery]);
