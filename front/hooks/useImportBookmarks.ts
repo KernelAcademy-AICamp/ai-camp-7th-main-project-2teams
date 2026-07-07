@@ -54,7 +54,7 @@ export async function fetchImportBookmarks(
     // 413 외(400 포함): 서버 JSON error 우선, 없으면 상태별 fallback
     let message =
       res.status === 400
-        ? 'HTML 파일(.html)만 업로드할 수 있습니다.'
+        ? 'HTML(.html) 또는 CSV(.csv) 파일만 업로드할 수 있습니다.'
         : `업로드 실패 (${res.status})`
     try {
       const json = await res.json()

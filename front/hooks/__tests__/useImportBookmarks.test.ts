@@ -127,7 +127,7 @@ describe('fetchImportBookmarks', () => {
     })
 
     await expect(fetchImportBookmarks(new FormData())).rejects.toThrow(
-      'HTML 파일(.html)만 업로드할 수 있습니다.'
+      'HTML(.html) 또는 CSV(.csv) 파일만 업로드할 수 있습니다.'
     )
   })
 

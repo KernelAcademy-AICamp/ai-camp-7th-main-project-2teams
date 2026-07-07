@@ -5,6 +5,7 @@ import { withAuth } from '@/lib/auth'
 import { generateTags, createEmbedding } from '@/lib/ai'
 import { normalizeTags, extractTopCategory, resolveTopCategory } from '@/lib/tag-alias'
 import { parseNetscapeBookmarks, type ParsedBookmark } from '@/lib/parseNetscapeBookmarks'
+import { parseKakaoChat } from '@/lib/parseKakaoChat'
 import { normalizeUrl } from '@/lib/normalizeUrl'
 import { fetchMeta } from '@/lib/fetchMeta'
 
@@ -23,14 +24,24 @@ const EXISTING_LOOKUP_CHUNK = 200
 const FOLDER_UPDATE_CHUNK = 20
 
 // file 필드 존재 + 타입 검증 (400). 크기는 별도 413 처리.
+// HTML(Netscape 북마크) 또는 CSV(카카오톡 채팅 내보내기) 둘 다 허용.
 const fileSchema = z.object({
   file: z
     .instanceof(File, { message: '파일 필드가 없습니다' })
     .refine(
-      (f) => f.type === 'text/html' || f.name.endsWith('.html'),
-      { message: 'HTML 파일만 허용됩니다' },
+      (f) =>
+        f.type === 'text/html' ||
+        f.name.endsWith('.html') ||
+        f.type === 'text/csv' ||
+        f.name.endsWith('.csv'),
+      { message: 'HTML 또는 CSV 파일만 허용됩니다' },
     ),
 })
+
+// 확장자/MIME으로 HTML(Netscape 북마크) vs CSV(카카오톡 채팅) 판별
+function isCsvFile(file: File): boolean {
+  return file.type === 'text/csv' || file.name.endsWith('.csv')
+}
 
 type CandidateBookmark = ParsedBookmark & { url: string }
 
@@ -112,8 +123,8 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     )
   }
 
-  const html = await file.text()
-  const allBookmarks = parseNetscapeBookmarks(html)
+  const text = await file.text()
+  const allBookmarks = isCsvFile(file) ? parseKakaoChat(text) : parseNetscapeBookmarks(text)
 
   // 0건은 처리할 것도, 스트리밍할 것도 없으므로 즉시 JSON 응답 (스트림 진입 안 함)
   if (allBookmarks.length === 0) {
