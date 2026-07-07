@@ -542,7 +542,7 @@ front/
 │   │   ├── OnboardingContent.tsx  # 스텝 UI + 노출 제어
 │   │   └── onboardingUtils.ts     # STEPS·상태 유틸
 │   ├── welcome/page.tsx           # A39 — 랜딩 페이지 (미인증 진입점)
-│   ├── login/page.tsx             # A4 — Google OAuth 버튼만
+│   ├── login/page.tsx             # A4 — Google OAuth 버튼, A63 — 카카오 OAuth 버튼 추가
 │   ├── auth/callback/route.ts     # A4 — OAuth 콜백 핸들러
 │   ├── privacy/page.tsx           # A12
 │   ├── terms/page.tsx             # A13
