@@ -57,4 +57,4 @@ npm run test:e2e:authed
 ## 미커버 (후속)
 
 - 저장→검색 루프: 웹앱엔 북마크 추가 UI 없음(익스텐션 전용). 검색 e2e는 setup에서 직접 시드 후 추가 가능.
-- 로그인 UI 자체: Google OAuth는 CI 자동화 불가 → 세션 주입으로 대체.
+- 로그인 UI 자체: Google/Kakao OAuth는 CI 자동화 불가 → 세션 주입으로 대체.

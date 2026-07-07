@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 export function Sidebar() {
   const [categoryOpen, setCategoryOpen] = useState(true);
   const [email, setEmail] = useState<string | null>(null);
+  const [emailLoaded, setEmailLoaded] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -41,7 +42,10 @@ export function Sidebar() {
   useEffect(() => {
     createClient()
       .auth.getUser()
-      .then(({ data: { user } }) => setEmail(user?.email ?? null));
+      .then(({ data: { user } }) => {
+        setEmail(user?.email ?? null);
+        setEmailLoaded(true);
+      });
   }, []);
 
   // 팝업 외부 클릭 시 닫기
@@ -274,7 +278,9 @@ export function Sidebar() {
               </svg>
             </span>
             {/* 이메일 */}
-            <span className="min-w-0 truncate font-mono text-xs text-text-secondary">{email ?? "로딩 중..."}</span>
+            <span className="min-w-0 truncate font-mono text-xs text-text-secondary">
+              {!emailLoaded ? "로딩 중..." : (email ?? "이메일 미제공 (카카오)")}
+            </span>
           </button>
 
           {/* 설정 바로가기 */}

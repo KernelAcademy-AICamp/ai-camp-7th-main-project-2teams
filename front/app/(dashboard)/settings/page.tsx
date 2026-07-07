@@ -16,6 +16,7 @@ interface AccountBookmark {
 export default function SettingsPage() {
   const router = useRouter()
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [userEmailLoaded, setUserEmailLoaded] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -24,6 +25,7 @@ export default function SettingsPage() {
   useEffect(() => {
     createClient().auth.getUser().then(({ data }) => {
       setUserEmail(data.user?.email ?? null)
+      setUserEmailLoaded(true)
     })
   }, [])
 
@@ -80,7 +82,7 @@ export default function SettingsPage() {
       <section className="mb-8 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">계정</h2>
         <p className="text-sm text-gray-700 dark:text-gray-300">
-          {userEmail ?? '불러오는 중...'}
+          {!userEmailLoaded ? '불러오는 중...' : (userEmail ?? '이메일 미제공 (카카오)')}
         </p>
       </section>
 

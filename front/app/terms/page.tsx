@@ -21,7 +21,7 @@ export default function TermsPage() {
       <section className="mb-8">
         <h2 className="mb-3 text-xl font-semibold">2. 이용 자격</h2>
         <p className="text-sm leading-relaxed">
-          Google 계정을 통한 OAuth 인증으로 서비스를 이용할 수 있습니다.
+          Google 또는 Kakao 계정을 통한 OAuth 인증으로 서비스를 이용할 수 있습니다.
           이용자는 본 약관에 동의함으로써 서비스 이용 자격을 갖습니다.
         </p>
       </section>
