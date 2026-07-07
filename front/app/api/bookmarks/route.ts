@@ -27,8 +27,8 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  let { title, content } = parsed.data
-  const { folder_hint } = parsed.data
+  let title = parsed.data.title
+  const { content, folder_hint } = parsed.data
   // 중복 방지: 정규화된 canonical URL로 저장 (trailing slash·fragment·트래킹파라미터 흡수)
   const url = normalizeUrl(parsed.data.url)
 

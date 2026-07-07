@@ -91,8 +91,9 @@ function foldersEqual(a: string[] | null, b: string[] | null): boolean {
 }
 
 // FormData 'file' 필드로 Netscape 북마크 HTML을 받아 배치 저장.
-// A52: 각 URL을 fetchMeta로 조회해 description 확보 → 태깅·임베딩 입력 보강.
-//      description은 태깅/임베딩 스코프 내에서만 사용 후 파기 — DB 저장·로그 금지(프라이버시).
+// A52: 각 URL을 fetchMeta로 조회해 description(카드 표시용)·content(임베딩 입력, 2000자) 확보.
+//      description은 DB 저장(기본값). content(본문 텍스트)는 태깅/임베딩 스코프 내에서만
+//      사용 후 파기 — DB 저장·로그 금지(프라이버시).
 // 중복 URL(DB 기존·배치 내부)은 AI 호출 전에 걸러냄 — 완전 스킵하거나 folder_hint만 갱신.
 // 파일 검증(400/413)과 빈 파싱(0건) 경로는 즉시 JSON 응답. 실제 처리 단계는 SSE 스트림으로
 // 항목이 종결 처리될 때마다 progress 이벤트 전송, 마지막에 done 이벤트로 최종 결과 전달.
@@ -219,20 +220,25 @@ export const POST = withAuth(async (req, { user, supabase }) => {
           await Promise.all(
             chunk.map(async ({ title, url, folder_hint, tags: htmlTags, category_name }) => {
               try {
-                // A52: URL 메타 조회 → description 확보(태깅 굶김 해소). fetchMeta는 throw 안 함(실패=빈 값),
-                // 내부 5s 타임아웃. description은 아래 태깅·임베딩 입력으로만 쓰고 저장·로그하지 않음.
+                // A52: URL 메타 조회 → description(카드 표시용)·content(임베딩 입력) 확보.
+                // fetchMeta는 throw 안 함(실패=빈 값), 내부 5s 타임아웃.
                 // ponytail: 항목당 최대 5s(죽은 URL) 추가 — 청크 동시성(CHUNK_SIZE)이 상한. 대량+저속 URL로
                 //           maxDuration(300s) 압박 시 백그라운드 큐로 승격(현재는 인라인으로 충분).
                 const meta = await fetchMeta(url)
                 const description = meta.description || undefined
+                // 임베딩 입력 — description(짧은 요약)이 아니라 content(본문 포함, 2000자 상한) 사용.
+                // 태깅·임베딩 스코프 내에서만 사용 후 파기 — DB 저장·로그 금지(프라이버시).
+                const embeddingContent = meta.content || undefined
 
                 // 자체 내보내기 HTML(TAGS 속성 포함)은 AI 재태깅 없이 그대로 복원 — 일반 브라우저
                 // 내보내기(TAGS 없음)만 기존처럼 generateTags 호출.
-                const tagsPromise = htmlTags ? Promise.resolve(htmlTags) : generateTags({ title, url, description })
+                const tagsPromise = htmlTags
+                  ? Promise.resolve(htmlTags)
+                  : generateTags({ title, url, description: embeddingContent })
 
                 const [tagsResult, embeddingResult] = await Promise.allSettled([
                   tagsPromise,
-                  createEmbedding(description ? `${title}\n${description}` : title),
+                  createEmbedding(embeddingContent ? `${title}\n${embeddingContent}` : title),
                 ])
 
                 // 임베딩 실패 → 검색 불가 북마크 → 해당 항목만 실패 처리, 전체 중단 금지
@@ -275,6 +281,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
                     user_id: user.id,
                     title,
                     url,
+                    description: description ?? null,
                     tags,
                     category_id,
                     // 루트 항목(빈 배열)은 null 저장 — A5 패턴과 통일
