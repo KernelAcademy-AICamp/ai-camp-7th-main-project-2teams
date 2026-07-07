@@ -143,7 +143,7 @@ export function Sidebar() {
               aria-pressed={tab === t.id}
               onClick={() => handleTabClick(t.id)}
               className={[
-                "flex-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors break-keep",
+                "flex-1 cursor-pointer rounded-md px-1.5 py-1 text-xs font-medium transition-colors break-keep",
                 tab === t.id ? "bg-white text-brand shadow-sm" : "text-text-secondary hover:text-text-primary",
               ].join(" ")}
             >
@@ -157,7 +157,7 @@ export function Sidebar() {
       <section className="overflow-x-hidden overflow-y-auto">
         <button
           onClick={() => setCategoryOpen((o) => !o)}
-          className="mb-2 flex w-full items-center justify-between"
+          className="mb-2 flex w-full cursor-pointer items-center justify-between"
           aria-expanded={categoryOpen}
         >
           <h2 className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
@@ -184,7 +184,7 @@ export function Sidebar() {
                   onClick={handleAll}
                   aria-pressed={isAllActive}
                   className={[
-                    "w-full rounded-md border-l-4 px-3 py-1.5 text-left text-sm font-medium transition-colors",
+                    "w-full cursor-pointer rounded-md border-l-4 px-3 py-1.5 text-left text-sm font-medium transition-colors",
                     isAllActive
                       ? "border-brand bg-accent text-brand"
                       : "border-transparent text-text-secondary hover:bg-slate-100",
@@ -203,7 +203,7 @@ export function Sidebar() {
                     onClick={() => handleCategory(name)}
                     aria-pressed={category === name}
                     className={[
-                      "flex w-full items-center gap-1.5 rounded-md border-l-4 px-3 py-1.5 text-left text-sm transition-colors",
+                      "flex w-full cursor-pointer items-center gap-1.5 rounded-md border-l-4 px-3 py-1.5 text-left text-sm transition-colors",
                       category === name
                         ? "border-brand bg-accent font-medium text-brand"
                         : "border-transparent text-text-secondary hover:bg-slate-100",
@@ -262,7 +262,7 @@ export function Sidebar() {
               <li>
                 <button
                   onClick={handleSignOut}
-                  className="flex w-full items-center gap-1.5 px-3 py-2 text-sm text-text-primary hover:bg-slate-50"
+                  className="flex w-full cursor-pointer items-center gap-1.5 px-3 py-2 text-sm text-text-primary hover:bg-slate-50"
                 >
                   <span className="text-text-secondary">›</span>
                   로그아웃
@@ -276,7 +276,7 @@ export function Sidebar() {
         <div className="flex items-center gap-2 rounded-lg border border-line bg-white/60 p-2">
           <button
             onClick={() => setPopupOpen((o) => !o)}
-            className="flex min-w-0 flex-1 items-center gap-2"
+            className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
             aria-expanded={popupOpen}
             aria-haspopup="true"
           >
@@ -331,7 +331,7 @@ function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps
             onClick={() => setOpen((o) => !o)}
             aria-label={open ? "접기" : "펼치기"}
             aria-expanded={open}
-            className="shrink-0 px-0.5 text-xs text-text-secondary hover:text-text-primary"
+            className="shrink-0 cursor-pointer px-0.5 text-xs text-text-secondary hover:text-text-primary"
           >
             <span className={open ? "inline-block" : "inline-block -rotate-90"}>▾</span>
           </button>
@@ -342,7 +342,7 @@ function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps
           onClick={() => onSelect(node.name)}
           aria-pressed={active}
           className={[
-            "flex flex-1 items-center gap-1.5 rounded-md border-l-4 px-2 py-1.5 text-left text-sm transition-colors",
+            "flex flex-1 cursor-pointer items-center gap-1.5 rounded-md border-l-4 px-2 py-1.5 text-left text-sm transition-colors",
             active
               ? "border-brand bg-accent font-medium text-brand"
               : "border-transparent text-text-secondary hover:bg-slate-100",

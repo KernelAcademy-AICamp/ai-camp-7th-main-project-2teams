@@ -5,6 +5,7 @@ import { Globe } from "lucide-react";
 import { useDebounceValue } from "usehooks-ts";
 import { useAddBookmark } from "@/hooks/useAddBookmark";
 import { Favicon } from "@/components/Favicon";
+import { cn } from "@/lib/utils";
 
 function isValidUrl(value: string) {
   try {
@@ -158,10 +159,11 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
     <>
       <button
         onClick={() => setOpen(true)}
-        className={
+        className={cn(
           triggerClassName ??
-          "gradient-brand rounded-lg px-3 py-1.5 text-sm font-medium text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px"
-        }
+            "gradient-brand rounded-lg px-3 py-1.5 text-sm font-medium text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px",
+          "cursor-pointer",
+        )}
       >
         + 북마크 추가
       </button>
@@ -181,7 +183,7 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                 <button
                   onClick={handleClose}
                   aria-label="닫기"
-                  className="text-text-secondary hover:text-text-primary text-xl leading-none"
+                  className="cursor-pointer text-text-secondary hover:text-text-primary text-xl leading-none"
                 >
                   ✕
                 </button>
@@ -198,13 +200,13 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                         reset();
                         setUrl("");
                       }}
-                      className="rounded-lg border border-line px-4 py-2 text-sm text-text-primary hover:bg-slate-50"
+                      className="cursor-pointer rounded-lg border border-line px-4 py-2 text-sm text-text-primary hover:bg-slate-50"
                     >
                       계속 추가
                     </button>
                     <button
                       onClick={handleClose}
-                      className="gradient-brand rounded-lg px-4 py-2 text-sm text-white transition-transform hover:-translate-y-px"
+                      className="gradient-brand cursor-pointer rounded-lg px-4 py-2 text-sm text-white transition-transform hover:-translate-y-px"
                     >
                       닫기
                     </button>
@@ -288,14 +290,14 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                       type="button"
                       onClick={handleClose}
                       disabled={isPending}
-                      className="flex-1 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-slate-50"
+                      className="flex-1 cursor-pointer rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-slate-50 disabled:cursor-not-allowed"
                     >
                       닫기
                     </button>
                     <button
                       type="submit"
                       disabled={isPending}
-                      className="gradient-brand flex flex-1 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px disabled:opacity-60"
+                      className="gradient-brand flex flex-1 cursor-pointer items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isPending ? (
                         <span className="flex items-center gap-1.5">

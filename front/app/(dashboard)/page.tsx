@@ -195,14 +195,14 @@ function DashboardContent() {
             <p className="text-gray-500 dark:text-gray-400">북마크를 불러오는 중 오류가 발생했습니다.</p>
             <button
               onClick={() => refetch()}
-              className="gradient-brand mt-3 rounded-[11px] px-4 py-2 text-sm text-white transition-transform hover:-translate-y-px"
+              className="gradient-brand mt-3 cursor-pointer rounded-[11px] px-4 py-2 text-sm text-white transition-transform hover:-translate-y-px"
             >
               다시 시도
             </button>
           </div>
         )}
 
-        {!isPending && items.length === 0 && (
+        {!isPending && !isBookmarkError && items.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
             {isSearching ? (
               isSearchError && !isSearchPending ? (
@@ -297,7 +297,7 @@ function DashboardContent() {
                 <p className="text-sm text-red-500">더 불러오지 못했습니다.</p>
                 <button
                   onClick={() => fetchNextPage()}
-                  className="rounded-[11px] border border-gray-200 px-3 py-1.5 text-xs text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="cursor-pointer rounded-[11px] border border-gray-200 px-3 py-1.5 text-xs text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                 >
                   다시 시도
                 </button>
