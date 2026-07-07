@@ -134,9 +134,26 @@ export function useUpdateBookmark() {
       }
     },
 
+    onSuccess: ({ bookmark }, { id }) => {
+      // category_id 등 낙관적으로 못 채운 필드를 서버 응답으로 직접 patch — 전체 리스트 refetch 없이 동기화
+      const cachedEntries = queryClient.getQueriesData<InfiniteData<BookmarksPage>>({
+        queryKey: ['bookmarks'],
+      })
+      for (const [queryKey, data] of cachedEntries) {
+        if (!data) continue
+        const updated: InfiniteData<BookmarksPage> = {
+          ...data,
+          pages: data.pages.map((page) => ({
+            ...page,
+            bookmarks: page.bookmarks.map((b) => (b.id === id ? { ...b, ...bookmark } : b)),
+          })),
+        }
+        queryClient.setQueryData(queryKey, updated)
+      }
+    },
+
     onSettled: () => {
-      // 성공·실패 무관하게 서버 상태로 최종 동기화 (category_id 등 낙관적으로 못 채운 필드 포함)
-      queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+      // 즐겨찾기 탭 카테고리 목록만 즉시 갱신 (staleTime 60s 대기 없이 반영)
       queryClient.invalidateQueries({ queryKey: ['categories'] })
     },
   })

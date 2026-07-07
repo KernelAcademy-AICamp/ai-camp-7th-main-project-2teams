@@ -97,9 +97,8 @@ export function useToggleFavorite() {
     },
 
     onSettled: () => {
-      // 성공·실패 무관하게 서버 상태로 최종 동기화
-      queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
-      // 즐겨찾기 탭 카테고리 목록도 즉시 갱신 (staleTime 60s 대기 없이 반영)
+      // bookmarks는 onMutate 낙관적 업데이트로 이미 정확 — 재조회 불필요 (전체 리스트 refetch 방지)
+      // 즐겨찾기 탭 카테고리 목록만 즉시 갱신 (staleTime 60s 대기 없이 반영)
       queryClient.invalidateQueries({ queryKey: ['categories'] })
     },
   })
