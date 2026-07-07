@@ -19,7 +19,7 @@ interface BookmarksFilters {
   tag?: string
 }
 
-interface BookmarksPage {
+export interface BookmarksPage {
   bookmarks: Bookmark[]
   total: number
 }
