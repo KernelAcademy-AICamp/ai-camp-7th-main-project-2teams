@@ -11,11 +11,10 @@ import { buildFolderTree, type FolderNode } from "@/lib/folderTree";
 import { UNCATEGORIZED_LABEL } from "@/lib/tag-alias";
 import { SidebarSkeleton } from "@/components/SidebarSkeleton";
 import { createClient } from "@/lib/supabase/client";
+import { useUserStore } from "@/store/userStore";
 
 export function Sidebar() {
   const [categoryOpen, setCategoryOpen] = useState(true);
-  const [email, setEmail] = useState<string | null>(null);
-  const [emailLoaded, setEmailLoaded] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -39,14 +38,17 @@ export function Sidebar() {
 
   const { data: categoriesData, isPending: categoriesPending } = useCategories(tab);
 
+  // fetchUser는 zustand 스토어에서 캐시/inflight 공유 — 대시보드 페이지와 중복 호출되지 않음
+  const fetchUser = useUserStore((s) => s.fetchUser);
+  const [email, setEmail] = useState<string | null>(null);
+  const [emailLoaded, setEmailLoaded] = useState(false);
+
   useEffect(() => {
-    createClient()
-      .auth.getUser()
-      .then(({ data: { user } }) => {
-        setEmail(user?.email ?? null);
-        setEmailLoaded(true);
-      });
-  }, []);
+    fetchUser().then((user) => {
+      setEmail(user?.email ?? null);
+      setEmailLoaded(true);
+    });
+  }, [fetchUser]);
 
   // 팝업 외부 클릭 시 닫기
   useEffect(() => {
