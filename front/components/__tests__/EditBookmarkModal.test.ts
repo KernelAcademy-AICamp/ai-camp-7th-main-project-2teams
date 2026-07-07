@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { toFormState, addTag, removeTag, buildUpdatePayload } from '../EditBookmarkModal'
+import { toFormState, addTag, removeTag, buildUpdatePayload, isTagCommitKey } from '../EditBookmarkModal'
 
 // A60: 카드 수정 모달 — 순수 로직만 테스트(렌더 테스트는 프로젝트 관례상 제외, AddBookmarkModal.test.ts 참고)
 describe('toFormState', () => {
@@ -42,6 +42,24 @@ describe('addTag', () => {
   it('최대 10개 초과 시 추가하지 않음', () => {
     const tags = Array.from({ length: 10 }, (_, i) => `tag${i}`)
     expect(addTag(tags, '새태그')).toEqual(tags)
+  })
+})
+
+describe('isTagCommitKey', () => {
+  it('Enter, isComposing=false → 커밋', () => {
+    expect(isTagCommitKey('Enter', false)).toBe(true)
+  })
+
+  it('쉼표, isComposing=false → 커밋', () => {
+    expect(isTagCommitKey(',', false)).toBe(true)
+  })
+
+  it('한글 IME 조합 확정 Enter(isComposing=true) → 커밋 안 함 (중복 추가 버그 회귀 방지)', () => {
+    expect(isTagCommitKey('Enter', true)).toBe(false)
+  })
+
+  it('Enter/쉼표가 아닌 키는 커밋 안 함', () => {
+    expect(isTagCommitKey('a', false)).toBe(false)
   })
 })
 

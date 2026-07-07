@@ -40,6 +40,16 @@ export function removeTag(tags: string[], tag: string): string[] {
   return tags.filter((t) => t !== tag);
 }
 
+/**
+ * Enter/,로 태그 커밋할지 판단 — 테스트 가능하도록 export.
+ * 한글 등 IME 조합 확정 Enter는 keydown이 두 번 발생(조합 확정 + 실제 Enter)하는데,
+ * 조합 확정 이벤트(isComposing=true)까지 커밋 처리하면 태그가 중복 추가됨.
+ */
+export function isTagCommitKey(key: string, isComposing: boolean): boolean {
+  if (isComposing) return false;
+  return key === "Enter" || key === ",";
+}
+
 function arraysEqual(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((v, i) => v === b[i]);
 }
@@ -94,10 +104,9 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
   };
 
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
-      handleAddTag();
-    }
+    if (!isTagCommitKey(e.key, e.nativeEvent.isComposing)) return;
+    e.preventDefault();
+    handleAddTag();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
