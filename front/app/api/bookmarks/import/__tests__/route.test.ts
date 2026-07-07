@@ -322,6 +322,25 @@ describe('POST /api/bookmarks/import', () => {
     })
   })
 
+  it('안전하지 않은 thumbnailUrl(javascript:/data: 등)은 저장 시 null로 대체됨(SSRF 방어)', async () => {
+    fetchMeta.mockResolvedValue({
+      title: '',
+      description: '',
+      content: '',
+      thumbnailUrl: 'javascript:alert(1)',
+    })
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    await readAllEvents(res)
+
+    const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
+    calls.forEach((call) => {
+      expect(call[0].thumbnail_url).toBeNull()
+    })
+    // 원본 위험 문자열이 저장 페이로드에 그대로 남아있지 않아야 함
+    expect(JSON.stringify(calls)).not.toContain('javascript:alert')
+  })
+
   it('카카오 CSV placeholder(title===url) + fetchMeta 실제 title 존재 → upsert title이 fetchMeta title로 승격', async () => {
     // parseKakaoChat은 title에 url을 그대로 채워 넘김(placeholder) — 이미 정규화된 형태(https, 루트 아님,
     // 트래킹 파라미터 없음)의 URL을 써서 dedupeBatch의 normalizeUrl을 거쳐도 title===url 비교가 유지되게 한다.

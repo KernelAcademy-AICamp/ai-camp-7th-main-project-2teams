@@ -8,6 +8,7 @@ import { parseNetscapeBookmarks, type ParsedBookmark } from '@/lib/parseNetscape
 import { parseKakaoChat } from '@/lib/parseKakaoChat'
 import { normalizeUrl } from '@/lib/normalizeUrl'
 import { fetchMeta } from '@/lib/fetchMeta'
+import { isSafeHttpUrl } from '@/lib/ssrf'
 
 // 대량 임포트 중 OpenAI 호출이 누적되므로 Vercel Pro 최대값(300s) 지정
 export const maxDuration = 300
@@ -292,7 +293,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
                     // 루트 항목(빈 배열)은 null 저장 — A5 패턴과 통일
                     folder_hint: folder_hint.length > 0 ? folder_hint : null,
                     embedding,
-                    thumbnail_url: meta.thumbnailUrl || null,
+                    thumbnail_url: isSafeHttpUrl(meta.thumbnailUrl) ? meta.thumbnailUrl : null,
                   },
                   { onConflict: 'user_id, url', ignoreDuplicates: true },
                 )
