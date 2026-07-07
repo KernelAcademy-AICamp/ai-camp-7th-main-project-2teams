@@ -113,8 +113,9 @@ export const POST = withAuth(async (req, { user, supabase }) => {
 
 // 목록 조회 + 필터. RLS로 본인 데이터만. embedding 컬럼 제외.
 // A60: description 포함 — 카드 수정 모달에서 기존 설명 프리필용.
+// category:categories(name) — 카드 수정 모달에서 현재 카테고리 default 선택용 (category_id → 이름 조인).
 const LIST_COLUMNS =
-  'id, url, title, description, tags, category_id, folder_hint, is_favorite, created_at'
+  'id, url, title, description, tags, category_id, category:categories(name), folder_hint, is_favorite, created_at'
 
 export const GET = withAuth(async (req, { supabase }) => {
   const parsed = getQuerySchema.safeParse(
@@ -160,5 +161,11 @@ export const GET = withAuth(async (req, { supabase }) => {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ bookmarks: data, total: count ?? 0 })
+  // Supabase 임베드는 category: { name } 중첩 객체로 반환 → 평탄화해 category: string | null로 노출
+  const bookmarks = (data ?? []).map((b) => {
+    const { category, ...rest } = b as typeof b & { category: { name: string } | null }
+    return { ...rest, category: category?.name ?? null }
+  })
+
+  return NextResponse.json({ bookmarks, total: count ?? 0 })
 })

@@ -3,18 +3,23 @@ import { toFormState, addTag, removeTag, buildUpdatePayload, isTagCommitKey } fr
 
 // A60: 카드 수정 모달 — 순수 로직만 테스트(렌더 테스트는 프로젝트 관례상 제외, AddBookmarkModal.test.ts 참고)
 describe('toFormState', () => {
-  it('bookmark.tags를 복사, category는 빈 문자열("변경 안 함"), description은 원본 유지', () => {
-    const form = toFormState({ tags: ['개발', 'React'], description: '메모' })
-    expect(form).toEqual({ tags: ['개발', 'React'], category: '', description: '메모' })
+  it('bookmark.tags를 복사, category는 현재 소속 카테고리로 프리필, description은 원본 유지', () => {
+    const form = toFormState({ tags: ['개발', 'React'], description: '메모', category: '개발' })
+    expect(form).toEqual({ tags: ['개발', 'React'], category: '개발', description: '메모' })
+  })
+
+  it('category가 null(미분류)이면 빈 문자열로 프리필', () => {
+    const form = toFormState({ tags: [], description: null, category: null })
+    expect(form.category).toBe('')
   })
 
   it('description이 null이면 빈 문자열로 변환 (textarea 제어 컴포넌트용)', () => {
-    const form = toFormState({ tags: [], description: null })
+    const form = toFormState({ tags: [], description: null, category: null })
     expect(form.description).toBe('')
   })
 
   it('원본 tags 배열과 별개 참조 (불변성)', () => {
-    const original = { tags: ['개발'], description: null }
+    const original = { tags: ['개발'], description: null, category: null }
     const form = toFormState(original)
     form.tags.push('추가됨')
     expect(original.tags).toEqual(['개발'])
@@ -78,44 +83,54 @@ describe('removeTag', () => {
 })
 
 describe('buildUpdatePayload', () => {
-  const bookmark = { tags: ['개발'], description: '기존 메모' }
+  const bookmark = { tags: ['개발'], description: '기존 메모', category: '개발' }
 
   it('아무 것도 안 바뀌면 null (불필요한 요청 방지)', () => {
-    const form = { tags: ['개발'], category: '', description: '기존 메모' }
+    const form = { tags: ['개발'], category: '개발', description: '기존 메모' }
     expect(buildUpdatePayload(bookmark, form)).toBeNull()
   })
 
   it('tags만 변경 → tags만 payload에 포함', () => {
-    const form = { tags: ['개발', 'React'], category: '', description: '기존 메모' }
+    const form = { tags: ['개발', 'React'], category: '개발', description: '기존 메모' }
     expect(buildUpdatePayload(bookmark, form)).toEqual({ tags: ['개발', 'React'] })
   })
 
-  it('category 선택 시 (변경 안 함이 아니면) 항상 payload에 포함', () => {
+  it('현재 카테고리와 다른 값 선택 → payload에 포함', () => {
     const form = { tags: ['개발'], category: '디자인', description: '기존 메모' }
     expect(buildUpdatePayload(bookmark, form)).toEqual({ category: '디자인' })
   })
 
+  it('프리필된 현재 카테고리 그대로면(안 바뀜) payload 미포함', () => {
+    const form = { tags: ['개발'], category: '개발', description: '기존 메모' }
+    expect(buildUpdatePayload(bookmark, form)).toBeNull()
+  })
+
+  it('미분류(빈 값) 선택은 전송하지 않음 (서버 미지원 값)', () => {
+    const form = { tags: ['개발'], category: '', description: '기존 메모' }
+    expect(buildUpdatePayload(bookmark, form)).toBeNull()
+  })
+
   it('description 변경 → description만 포함', () => {
-    const form = { tags: ['개발'], category: '', description: '새 메모' }
+    const form = { tags: ['개발'], category: '개발', description: '새 메모' }
     expect(buildUpdatePayload(bookmark, form)).toEqual({ description: '새 메모' })
   })
 
   it('description을 빈 문자열로 바꾸면 null로 변환해서 전송 (삭제)', () => {
-    const form = { tags: ['개발'], category: '', description: '' }
+    const form = { tags: ['개발'], category: '개발', description: '' }
     expect(buildUpdatePayload(bookmark, form)).toEqual({ description: null })
   })
 
   it('여러 필드 동시 변경 → 모두 payload에 포함', () => {
-    const form = { tags: ['백엔드'], category: '개발', description: '수정됨' }
+    const form = { tags: ['백엔드'], category: '쇼핑', description: '수정됨' }
     expect(buildUpdatePayload(bookmark, form)).toEqual({
       tags: ['백엔드'],
-      category: '개발',
+      category: '쇼핑',
       description: '수정됨',
     })
   })
 
   it('원본 description이 null이고 폼도 빈 문자열이면 변경 없음 취급', () => {
-    const noDescBookmark = { tags: [], description: null }
+    const noDescBookmark = { tags: [], description: null, category: null }
     const form = { tags: [], category: '', description: '' }
     expect(buildUpdatePayload(noDescBookmark, form)).toBeNull()
   })

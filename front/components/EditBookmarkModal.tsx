@@ -14,16 +14,18 @@ const MAX_DESCRIPTION_LENGTH = 2000;
 
 export interface EditFormState {
   tags: string[];
-  /** '' = 카테고리 변경 안 함 */
+  /** 현재 소속 카테고리로 프리필. '' = 미분류(카테고리 없음) */
   category: string;
   description: string;
 }
 
 /** bookmark → 폼 초기 상태 변환 — 테스트 가능하도록 export */
-export function toFormState(bookmark: Pick<Bookmark, "tags" | "description">): EditFormState {
+export function toFormState(
+  bookmark: Pick<Bookmark, "tags" | "description" | "category">
+): EditFormState {
   return {
     tags: [...bookmark.tags],
-    category: "",
+    category: bookmark.category ?? "",
     description: bookmark.description ?? "",
   };
 }
@@ -60,13 +62,15 @@ function arraysEqual(a: string[], b: string[]): boolean {
  * 테스트 가능하도록 export.
  */
 export function buildUpdatePayload(
-  bookmark: Pick<Bookmark, "tags" | "description">,
+  bookmark: Pick<Bookmark, "tags" | "description" | "category">,
   form: EditFormState
 ): UpdateBookmarkFields | null {
   const payload: UpdateBookmarkFields = {};
 
   if (!arraysEqual(form.tags, bookmark.tags)) payload.tags = form.tags;
-  if (form.category !== "") payload.category = form.category;
+  // 미분류(빈 값) 선택은 전송 안 함(서버가 빈 카테고리 미지원) — 실제로 값이 바뀐 경우만 전송
+  const currentCategory = bookmark.category ?? "";
+  if (form.category !== "" && form.category !== currentCategory) payload.category = form.category;
 
   const currentDescription = bookmark.description ?? "";
   if (form.description !== currentDescription) {
@@ -200,7 +204,7 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
                 disabled={isPending}
                 className="w-full rounded-lg border border-line px-3 py-2 text-sm text-text-primary outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
               >
-                <option value="">변경 안 함</option>
+                <option value="">미분류</option>
                 {CATEGORY_OPTIONS.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
