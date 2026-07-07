@@ -323,3 +323,60 @@ describe('fetchMeta — 긴 script/style content 누출 방지 (회귀)', () => 
     expect(meta.content).toContain('실제 본문')
   })
 })
+
+describe('fetchMeta — 닫는 태그 경계 미검증으로 인한 content 누출 (회귀)', () => {
+  it('<style> content 안의 "</stylesheet-marker>" 부분 문자열에 조기 매치하지 않고 실제 </style>까지 스캔', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>t</title>' +
+          '<style>.a{x:"</stylesheet-marker>"} .b{color:red} REAL_UNIQUE_LEAK_MARKER </style>' +
+          '<body>실제 본문</body>',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).not.toContain('REAL_UNIQUE_LEAK_MARKER')
+    expect(meta.content).toContain('실제 본문')
+  })
+
+  it('<script> content 안의 "</scriptFOO>" 부분 문자열에 조기 매치하지 않고 실제 </script>까지 스캔', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>t</title>' +
+          '<script>var s = "</scriptFOO>"; REAL_UNIQUE_LEAK_MARKER_2(); </script>' +
+          '<body>실제 본문</body>',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).not.toContain('REAL_UNIQUE_LEAK_MARKER_2')
+    expect(meta.content).toContain('실제 본문')
+  })
+
+  it('여는 태그 직후 실제 닫는 태그(위양성 없음)인 정상 케이스도 그대로 동작', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text: '<title>t</title><script></script><style></style><body>실제 본문</body>',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).toBe('실제 본문')
+  })
+
+  it('닫는 태그 앞에 위양성("</scriptX")이 수천 번 반복돼도 빠르게 처리됨(searchFrom 전진, 백트래킹 없음)', async () => {
+    const falsePositives = '</scriptX'.repeat(5000) // 진짜 닫는 태그가 아닌 부분 문자열 반복
+    const text = `<title>t</title><script>${falsePositives}END_MARKER</script><body>실제 본문</body>`
+    global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: true, text }))
+
+    const start = Date.now()
+    const meta = await fetchMeta('https://example.com')
+    const elapsed = Date.now() - start
+
+    expect(elapsed).toBeLessThan(500)
+    expect(meta.content).not.toContain('END_MARKER')
+    expect(meta.content).toContain('실제 본문')
+  })
+})

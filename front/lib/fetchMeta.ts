@@ -108,12 +108,34 @@ function extractMetaContent(html: string, ...patterns: RegExp[]): string {
 // 여는 태그의 속성 구간 스캔 상한 — 정규식 백트래킹 폭발을 막기 위한 경계(ReDoS 방지).
 const MAX_TAG_ATTR_SCAN = 200
 
+// "</태그이름" 부분 문자열 매치 뒤에 실제 태그 경계(>, /, 공백, 문자열 끝)가 오는지 검증해
+// 진짜 닫는 태그만 찾는다. HTML 스펙의 "appropriate end tag" 매칭 규칙과 동일한 취지 —
+// script/style content 안에 "</scriptFOO>"처럼 우연히 겹치는 부분 문자열이 있어도
+// 위양성으로 조기 종료되지 않도록 함(내용 누출 방지). searchFrom을 계속 전진시키므로
+// 위양성이 여러 번 있어도 전체 스캔은 선형(O(n))으로 유지되고 백트래킹은 없음.
+function findClosingTag(text: string, tagName: string): { start: number; tagEnd: number } | null {
+  const lower = text.toLowerCase()
+  const needle = `</${tagName}`
+  let searchFrom = 0
+  for (;;) {
+    const idx = lower.indexOf(needle, searchFrom)
+    if (idx === -1) return null
+    const boundaryChar = lower[idx + needle.length]
+    const isValidBoundary =
+      boundaryChar === undefined || boundaryChar === '>' || boundaryChar === '/' || /\s/.test(boundaryChar)
+    if (isValidBoundary) {
+      const tagEnd = text.indexOf('>', idx)
+      return { start: idx, tagEnd: tagEnd === -1 ? text.length : tagEnd }
+    }
+    searchFrom = idx + needle.length // 위양성(예: </scriptFOO>) — 계속 다음 위치부터 탐색
+  }
+}
+
 // title/script/style처럼 "여는 태그 ~ 닫는 태그" 사이 내용을 통째로 제거할 때 쓰는 태그.
 // 정규식 lazy quantifier([\s\S]*?) 대신 indexOf 기반 수동 스캔을 사용 — 백트래킹 자체가 없어
 // 태그 content 길이에 무관하게(2KB 넘는 실제 JSON-LD/GTM 스니펫 등) ReDoS 없이 안전하게 처리.
 function stripTagBlock(html: string, tagName: string): string {
   const openTagRe = new RegExp(`<${tagName}\\b[^<>]{0,${MAX_TAG_ATTR_SCAN}}>`, 'i')
-  const closeTagNeedle = `</${tagName}`
 
   let result = ''
   let rest = html
@@ -126,13 +148,12 @@ function stripTagBlock(html: string, tagName: string): string {
     result += rest.slice(0, openMatch.index)
 
     const afterOpen = rest.slice(openMatch.index + openMatch[0].length)
-    const closeIdx = afterOpen.toLowerCase().indexOf(closeTagNeedle)
-    if (closeIdx === -1) {
+    const closeTag = findClosingTag(afterOpen, tagName)
+    if (!closeTag) {
       // 닫는 태그가 끝까지 없음 — 이후 내용을 전부 버림(스크립트/스타일 원문 누출 방지).
       break
     }
-    const closeTagEnd = afterOpen.indexOf('>', closeIdx)
-    rest = closeTagEnd === -1 ? '' : afterOpen.slice(closeTagEnd + 1)
+    rest = closeTag.tagEnd === afterOpen.length ? '' : afterOpen.slice(closeTag.tagEnd + 1)
   }
   return result
 }
