@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { Bookmark } from './useBookmarks'
+import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import type { BookmarksPage } from './useBookmarks'
 
 /** DELETE /api/bookmarks/:id 호출 — 테스트 가능하도록 export */
 export async function fetchDeleteBookmark(id: string): Promise<{ success: true }> {
@@ -15,15 +15,18 @@ export async function fetchDeleteBookmark(id: string): Promise<{ success: true }
  * 테스트 가능하도록 export — 실제 queryClient 없이 순수 로직 검증.
  */
 export function applyOptimisticDelete(
-  old: { bookmarks: Bookmark[]; total: number } | undefined,
+  old: InfiniteData<BookmarksPage> | undefined,
   id: string
-): { bookmarks: Bookmark[]; total: number } | undefined {
+): InfiniteData<BookmarksPage> | undefined {
   if (!old) return old
-  const filtered = old.bookmarks.filter((b) => b.id !== id)
-  const removed = old.bookmarks.length - filtered.length
+  const found = old.pages.some((page) => page.bookmarks.some((b) => b.id === id))
+  if (!found) return old
   return {
-    bookmarks: filtered,
-    total: Math.max(0, old.total - removed),
+    ...old,
+    pages: old.pages.map((page) => ({
+      bookmarks: page.bookmarks.filter((b) => b.id !== id),
+      total: Math.max(0, page.total - 1),
+    })),
   }
 }
 
@@ -38,10 +41,9 @@ export function useDeleteBookmark() {
       await queryClient.cancelQueries({ queryKey: ['bookmarks'] })
 
       // 롤백용 현재 캐시 스냅샷 저장
-      const previousData = queryClient.getQueriesData<{
-        bookmarks: Bookmark[]
-        total: number
-      }>({ queryKey: ['bookmarks'] })
+      const previousData = queryClient.getQueriesData<InfiniteData<BookmarksPage>>({
+        queryKey: ['bookmarks'],
+      })
 
       // 각 ['bookmarks', filters] 캐시에서 해당 북마크 제거
       for (const [queryKey, data] of previousData) {
