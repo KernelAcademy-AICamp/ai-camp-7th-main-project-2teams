@@ -105,9 +105,15 @@ describe('buildUpdatePayload', () => {
     expect(buildUpdatePayload(bookmark, form)).toBeNull()
   })
 
-  it('미분류(빈 값) 선택은 전송하지 않음 (서버 미지원 값)', () => {
+  it('미분류(빈 값) 선택 시 category: null 전송 (카테고리 해제, 회귀 방지)', () => {
     const form = { tags: ['개발'], category: '', description: '기존 메모' }
-    expect(buildUpdatePayload(bookmark, form)).toBeNull()
+    expect(buildUpdatePayload(bookmark, form)).toEqual({ category: null })
+  })
+
+  it('원본이 이미 미분류이고 폼도 미분류면 변경 없음 취급', () => {
+    const unassignedBookmark = { tags: ['개발'], description: '기존 메모', category: null }
+    const form = { tags: ['개발'], category: '', description: '기존 메모' }
+    expect(buildUpdatePayload(unassignedBookmark, form)).toBeNull()
   })
 
   it('description 변경 → description만 포함', () => {

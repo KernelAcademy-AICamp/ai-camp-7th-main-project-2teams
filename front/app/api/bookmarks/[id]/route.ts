@@ -91,11 +91,16 @@ export const PATCH = withAuth<{ params: Promise<{ id: string }> }>(
     if (description !== undefined) updatePayload.description = description
 
     if (category !== undefined) {
-      const resolution = await resolveCategoryId(ctx.supabase, ctx.user.id, category)
-      if (!resolution.ok) {
-        return NextResponse.json({ error: resolution.error }, { status: resolution.status })
+      if (category === null) {
+        // 미분류로 변경 — 카테고리 해제
+        updatePayload.category_id = null
+      } else {
+        const resolution = await resolveCategoryId(ctx.supabase, ctx.user.id, category)
+        if (!resolution.ok) {
+          return NextResponse.json({ error: resolution.error }, { status: resolution.status })
+        }
+        updatePayload.category_id = resolution.categoryId
       }
-      updatePayload.category_id = resolution.categoryId
     }
 
     const { data, error } = await ctx.supabase

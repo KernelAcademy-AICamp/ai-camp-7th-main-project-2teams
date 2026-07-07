@@ -156,6 +156,7 @@ function DashboardContent() {
   // isFetchingNextPage(다음 페이지 로드)는 별도 하단 스피너로 표시하므로 여기서 제외.
   const isRefetching = !isSearching && !isBookmarkPending && isBookmarkFetching && !isFetchingNextPage;
   const allBookmarks = useMemo(() => bookmarkData?.pages.flatMap((p) => p.bookmarks) ?? [], [bookmarkData]);
+  const totalCount = bookmarkData?.pages[0]?.total;
   const items = useMemo(
     () => (isSearching ? searchVisibleResults : allBookmarks),
     [isSearching, searchVisibleResults, allBookmarks],
@@ -241,7 +242,14 @@ function DashboardContent() {
 
         {!isPending && items.length > 0 && (
           <>
-            <BookmarkToolbar />
+            <div className="flex items-center justify-between">
+              {!isSearching && typeof totalCount === "number" ? (
+                <p className="text-sm text-text-secondary">총 {totalCount}개</p>
+              ) : (
+                <span />
+              )}
+              <BookmarkToolbar />
+            </div>
             <div className="relative">
               {isRefetching && (
                 <div
