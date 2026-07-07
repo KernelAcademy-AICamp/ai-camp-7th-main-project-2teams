@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeTags, extractTopCategory, CATEGORY_ALIAS, TAG_ALIAS } from '../tag-alias'
+import {
+  normalizeTags,
+  extractTopCategory,
+  resolveTopCategory,
+  CATEGORY_ALIAS,
+  TAG_ALIAS,
+} from '../tag-alias'
 
 // normalizeTags는 TAG_ALIAS를 먼저 조회 → 같은 키가 양쪽에 있으면 CATEGORY_ALIAS가 영구 무효화됨.
 describe('alias 키 충돌 방지', () => {
@@ -71,5 +77,25 @@ describe('extractTopCategory', () => {
 
   it('빈 배열', () => {
     expect(extractTopCategory([])).toEqual({ category: null, midTags: [] })
+  })
+})
+
+// A60: PATCH /api/bookmarks/:id 카테고리 수정 시 사용자 입력 유효성 검증용.
+describe('resolveTopCategory', () => {
+  it('표준 대분류명은 그대로 반환', () => {
+    expect(resolveTopCategory('개발')).toBe('개발')
+  })
+
+  it('alias 입력은 표준 대분류명으로 정규화', () => {
+    expect(resolveTopCategory('dev')).toBe('개발')
+    expect(resolveTopCategory('AI')).toBe('AI/ML')
+  })
+
+  it('고정 13개 대분류 외 입력은 null', () => {
+    expect(resolveTopCategory('존재하지않는카테고리')).toBeNull()
+  })
+
+  it('중분류·소분류 등 대분류가 아닌 값은 null', () => {
+    expect(resolveTopCategory('프론트엔드')).toBeNull()
   })
 })

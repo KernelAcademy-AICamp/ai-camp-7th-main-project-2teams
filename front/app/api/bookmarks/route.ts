@@ -112,8 +112,9 @@ export const POST = withAuth(async (req, { user, supabase }) => {
 })
 
 // 목록 조회 + 필터. RLS로 본인 데이터만. embedding 컬럼 제외.
+// A60: description 포함 — 카드 수정 모달에서 기존 설명 프리필용.
 const LIST_COLUMNS =
-  'id, url, title, tags, category_id, folder_hint, is_favorite, created_at'
+  'id, url, title, description, tags, category_id, folder_hint, is_favorite, created_at'
 
 export const GET = withAuth(async (req, { supabase }) => {
   const parsed = getQuerySchema.safeParse(

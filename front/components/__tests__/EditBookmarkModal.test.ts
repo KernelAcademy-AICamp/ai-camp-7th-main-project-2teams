@@ -1,0 +1,104 @@
+import { describe, it, expect } from 'vitest'
+import { toFormState, addTag, removeTag, buildUpdatePayload } from '../EditBookmarkModal'
+
+// A60: 카드 수정 모달 — 순수 로직만 테스트(렌더 테스트는 프로젝트 관례상 제외, AddBookmarkModal.test.ts 참고)
+describe('toFormState', () => {
+  it('bookmark.tags를 복사, category는 빈 문자열("변경 안 함"), description은 원본 유지', () => {
+    const form = toFormState({ tags: ['개발', 'React'], description: '메모' })
+    expect(form).toEqual({ tags: ['개발', 'React'], category: '', description: '메모' })
+  })
+
+  it('description이 null이면 빈 문자열로 변환 (textarea 제어 컴포넌트용)', () => {
+    const form = toFormState({ tags: [], description: null })
+    expect(form.description).toBe('')
+  })
+
+  it('원본 tags 배열과 별개 참조 (불변성)', () => {
+    const original = { tags: ['개발'], description: null }
+    const form = toFormState(original)
+    form.tags.push('추가됨')
+    expect(original.tags).toEqual(['개발'])
+  })
+})
+
+describe('addTag', () => {
+  it('새 태그 추가', () => {
+    expect(addTag(['개발'], 'React')).toEqual(['개발', 'React'])
+  })
+
+  it('앞뒤 공백 제거 후 추가', () => {
+    expect(addTag([], '  React  ')).toEqual(['React'])
+  })
+
+  it('빈 문자열/공백만 입력 시 변경 없음', () => {
+    expect(addTag(['개발'], '   ')).toEqual(['개발'])
+    expect(addTag(['개발'], '')).toEqual(['개발'])
+  })
+
+  it('중복 태그는 추가하지 않음', () => {
+    expect(addTag(['개발', 'React'], 'React')).toEqual(['개발', 'React'])
+  })
+
+  it('최대 10개 초과 시 추가하지 않음', () => {
+    const tags = Array.from({ length: 10 }, (_, i) => `tag${i}`)
+    expect(addTag(tags, '새태그')).toEqual(tags)
+  })
+})
+
+describe('removeTag', () => {
+  it('지정 태그만 제거', () => {
+    expect(removeTag(['개발', 'React', 'AI/ML'], 'React')).toEqual(['개발', 'AI/ML'])
+  })
+
+  it('존재하지 않는 태그 제거 시도 시 변경 없음', () => {
+    expect(removeTag(['개발'], '없는태그')).toEqual(['개발'])
+  })
+
+  it('빈 배열에서 제거해도 에러 없이 빈 배열 반환', () => {
+    expect(removeTag([], 'x')).toEqual([])
+  })
+})
+
+describe('buildUpdatePayload', () => {
+  const bookmark = { tags: ['개발'], description: '기존 메모' }
+
+  it('아무 것도 안 바뀌면 null (불필요한 요청 방지)', () => {
+    const form = { tags: ['개발'], category: '', description: '기존 메모' }
+    expect(buildUpdatePayload(bookmark, form)).toBeNull()
+  })
+
+  it('tags만 변경 → tags만 payload에 포함', () => {
+    const form = { tags: ['개발', 'React'], category: '', description: '기존 메모' }
+    expect(buildUpdatePayload(bookmark, form)).toEqual({ tags: ['개발', 'React'] })
+  })
+
+  it('category 선택 시 (변경 안 함이 아니면) 항상 payload에 포함', () => {
+    const form = { tags: ['개발'], category: '디자인', description: '기존 메모' }
+    expect(buildUpdatePayload(bookmark, form)).toEqual({ category: '디자인' })
+  })
+
+  it('description 변경 → description만 포함', () => {
+    const form = { tags: ['개발'], category: '', description: '새 메모' }
+    expect(buildUpdatePayload(bookmark, form)).toEqual({ description: '새 메모' })
+  })
+
+  it('description을 빈 문자열로 바꾸면 null로 변환해서 전송 (삭제)', () => {
+    const form = { tags: ['개발'], category: '', description: '' }
+    expect(buildUpdatePayload(bookmark, form)).toEqual({ description: null })
+  })
+
+  it('여러 필드 동시 변경 → 모두 payload에 포함', () => {
+    const form = { tags: ['백엔드'], category: '개발', description: '수정됨' }
+    expect(buildUpdatePayload(bookmark, form)).toEqual({
+      tags: ['백엔드'],
+      category: '개발',
+      description: '수정됨',
+    })
+  })
+
+  it('원본 description이 null이고 폼도 빈 문자열이면 변경 없음 취급', () => {
+    const noDescBookmark = { tags: [], description: null }
+    const form = { tags: [], category: '', description: '' }
+    expect(buildUpdatePayload(noDescBookmark, form)).toBeNull()
+  })
+})
