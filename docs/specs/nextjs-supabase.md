@@ -393,13 +393,21 @@ export function createClient() {
 
 ---
 
-## Middleware (`middleware.ts`)
+## Proxy (`proxy.ts`, 구 middleware.ts)
+
+Next.js 16에서 `middleware` 파일 규칙 deprecated. `front/proxy.ts`에 `export function proxy()`로 작성한다 (마이그레이션: `npx @next/codemod@canary middleware-to-proxy .`).
 
 ```typescript
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+const PUBLIC_PATHS = ['/login', '/auth', '/privacy', '/terms', '/goodbye', '/welcome']
+
+export function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some(p => pathname.startsWith(p))
+}
+
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -427,11 +435,8 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
-  const isPublic = ['/login', '/auth', '/privacy', '/terms', '/goodbye', '/welcome'].some(
-    p => pathname.startsWith(p)
-  )
 
-  if (!user && !isPublic) {
+  if (!user && !isPublicPath(pathname)) {
     return NextResponse.redirect(new URL('/welcome', request.url))
   }
 
@@ -513,7 +518,7 @@ front/
 │   │   ├── import/
 │   │   │   └── page.tsx          # 파일 임포트 WEB-14 (A30)
 │   │   ├── settings/
-│   │   │   └── page.tsx          # 회원 탈퇴 UI (A16)
+│   │   │   └── page.tsx          # 회원 탈퇴 UI (A16) + JSON/HTML 내보내기
 │   │   └── layout.tsx            # 헤더 + 사이드바
 │   ├── api/
 │   │   ├── bookmarks/
@@ -531,7 +536,7 @@ front/
 │   │   ├── search/
 │   │   │   └── route.ts          # POST(A7)
 │   │   └── account/
-│   │       └── route.ts          # DELETE(A14) + GET(A15)
+│   │       └── route.ts          # DELETE(A14) + GET(A15, category:categories(name) join)
 │   ├── onboarding/                # A26 — 온보딩 별도 페이지 (MVP)
 │   │   ├── page.tsx
 │   │   ├── OnboardingContent.tsx  # 스텝 UI + 노출 제어
@@ -548,8 +553,10 @@ front/
 │   │   ├── client.ts
 │   │   └── admin.ts
 │   ├── auth.ts                    # withAuth HOF (A3)
-│   └── schemas.ts                 # bookmarkSchema, searchSchema, bookmarkUpdateSchema(A60: is_favorite/tags/category/description)
+│   ├── schemas.ts                 # bookmarkSchema, searchSchema, bookmarkUpdateSchema(A60: is_favorite/tags/category/description)
+│   ├── parseNetscapeBookmarks.ts  # HTML 임포트 파싱 (A29). 자체 내보내기분은 TAGS/DATA_CATEGORY 속성 복원
+│   └── formatNetscapeBookmarks.ts # 설정 페이지 HTML 내보내기 — TAGS/DATA_CATEGORY 포함, 재임포트 시 태그·카테고리 복원
 ├── store/
 │   └── filterStore.ts             # tab, category, folder, sortOrder, viewMode 등
-└── middleware.ts
+└── proxy.ts                        # 구 middleware.ts (Next.js 16)
 ```

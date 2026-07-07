@@ -683,6 +683,21 @@
         "A6"
       ],
       "testStrategy": "더미 데이터로 각 집계 수치 수기 검증. 비프리미엄 계정 접근 시 403 확인."
+    },
+    {
+      "id": "A65",
+      "title": "북마크 HTML 내보내기 + 자체 재임포트 왕복 복원",
+      "description": "GET /api/account(A15)가 JSON만 지원 — 브라우저 북마크로 가져오기 불가. 설정 페이지에 Netscape 포맷 HTML 내보내기 추가, 자체 내보내기분은 재임포트 시 태그·카테고리 그대로 복원.",
+      "details": "front/lib/formatNetscapeBookmarks.ts 신설 — 표준 Netscape 북마크 HTML + 비표준 TAGS(Firefox 준표준)·DATA_CATEGORY(완전 비표준) 속성으로 tags/category_name 인코딩. 설정 페이지(A16)에 JSON/HTML 내보내기 버튼 분리. GET /api/account는 category:categories(name) 조인 추가. parseNetscapeBookmarks.ts는 TAGS/DATA_CATEGORY 속성 파싱 추가(없으면 undefined=일반 브라우저 내보내기와 동일 취급). import route(A29)는 TAGS 존재 시 generateTags 재호출 없이 그대로 복원, DATA_CATEGORY는 resolveTopCategory로 유효성만 검증(13종 외=미분류).",
+      "priority": "medium",
+      "status": "done",
+      "dependencies": [
+        "A15",
+        "A16",
+        "A29",
+        "A60"
+      ],
+      "testStrategy": "내보내기 HTML을 동일 계정에 재임포트 → AI 재태깅 없이 태그·카테고리 원본 그대로 복원 확인. 일반 브라우저(Chrome) 내보내기 HTML은 기존처럼 generateTags 정상 호출 확인(회귀)."
     }
   ]
 }

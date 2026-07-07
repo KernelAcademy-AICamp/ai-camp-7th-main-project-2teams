@@ -198,4 +198,42 @@ describe('parseNetscapeBookmarks', () => {
       expect(result[1].url).toBe('https://single.com')
     })
   })
+
+  describe('TAGS·DATA_CATEGORY 속성 (자체 내보내기 복원용)', () => {
+    it('TAGS·DATA_CATEGORY 있으면 파싱', () => {
+      const html = `<DL><p>
+        <DT><A HREF="https://example.com" TAGS="프론트엔드,리액트" DATA_CATEGORY="개발">Title</A>
+      </DL><p>`
+      const result = parseNetscapeBookmarks(html)
+      expect(result[0].tags).toEqual(['프론트엔드', '리액트'])
+      expect(result[0].category_name).toBe('개발')
+    })
+
+    it('속성 없으면 undefined (일반 브라우저 내보내기 호환)', () => {
+      const html = `<DL><p>
+        <DT><A HREF="https://example.com" ADD_DATE="1">Title</A>
+      </DL><p>`
+      const result = parseNetscapeBookmarks(html)
+      expect(result[0].tags).toBeUndefined()
+      expect(result[0].category_name).toBeUndefined()
+    })
+
+    it('TAGS 빈 문자열이면 tags 필드 생략', () => {
+      const html = `<DL><p>
+        <DT><A HREF="https://example.com" TAGS="">Title</A>
+      </DL><p>`
+      const result = parseNetscapeBookmarks(html)
+      expect(result[0].tags).toBeUndefined()
+    })
+
+    it('속성 순서 무관 (HREF 뒤에 오지 않아도 파싱)', () => {
+      const html = `<DL><p>
+        <DT><A TAGS="백엔드" DATA_CATEGORY="개발" HREF="https://example.com">Title</A>
+      </DL><p>`
+      const result = parseNetscapeBookmarks(html)
+      expect(result[0].url).toBe('https://example.com')
+      expect(result[0].tags).toEqual(['백엔드'])
+      expect(result[0].category_name).toBe('개발')
+    })
+  })
 })

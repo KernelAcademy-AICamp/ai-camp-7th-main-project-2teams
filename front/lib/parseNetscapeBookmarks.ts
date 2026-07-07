@@ -3,6 +3,10 @@ export interface ParsedBookmark {
   url: string
   /** 상위 폴더명 배열 (루트 항목은 빈 배열) */
   folder_hint: string[]
+  /** 자체 내보내기 HTML의 TAGS 속성 복원 — 없으면 undefined(일반 브라우저 내보내기) */
+  tags?: string[]
+  /** 자체 내보내기 HTML의 DATA_CATEGORY 속성 복원 — 없으면 undefined */
+  category_name?: string
 }
 
 /** 무한 중첩 방어: 폴더 스택 최대 깊이 */
@@ -70,15 +74,14 @@ export function parseNetscapeBookmarks(html: string): ParsedBookmark[] {
   // match[1]: dl_open  — <DL ...>
   // match[2]: dl_close — </DL>
   // match[3]: folder   — <H3>폴더명</H3> 의 내용
-  // match[4]: href     — <A HREF="url"> 또는 <A HREF='url'> 의 URL
+  // match[4]: aattrs   — <A ...> 의 속성 전체 (href/TAGS/DATA_CATEGORY를 이후 개별 추출)
   // match[5]: atitle   — 위 A 태그의 텍스트
-  // href: 이중/단일 인용부호 모두 허용
   const TOKEN_RE =
-    /(<DL\b[^>]*>)|(<\/DL[^>]*>)|<DT[^>]*>\s*<H3[^>]*>([\s\S]*?)<\/H3>|<DT[^>]*>\s*<A\s[^>]*href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/A>/gi
+    /(<DL\b[^>]*>)|(<\/DL[^>]*>)|<DT[^>]*>\s*<H3[^>]*>([\s\S]*?)<\/H3>|<DT[^>]*>\s*<A\s+([^>]*)>([\s\S]*?)<\/A>/gi
 
   let match: RegExpExecArray | null
   while ((match = TOKEN_RE.exec(html)) !== null) {
-    const [, dl_open, dl_close, folder, href, atitle] = match
+    const [, dl_open, dl_close, folder, aattrs, atitle] = match
 
     if (dl_open !== undefined) {
       // DL 진입: 직전 H3 폴더명이 있으면 스택에 push
@@ -97,19 +100,32 @@ export function parseNetscapeBookmarks(html: string): ParsedBookmark[] {
     } else if (folder !== undefined) {
       // H3 폴더명 — cleanText 적용 후 다음 DL 진입 시 push
       pendingFolder = cleanText(folder)
-    } else if (href !== undefined) {
-      const url = href.trim()
+    } else if (aattrs !== undefined) {
+      const hrefMatch = /href\s*=\s*["']([^"']*)["']/i.exec(aattrs)
+      if (hrefMatch === null) continue
+      const url = hrefMatch[1].trim()
       // http/https 외 URL 스킵 (javascript:, data: 등 방어)
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         continue
       }
       // cleanText: 잔여 태그 제거 + 엔티티 디코드
       const title = cleanText(atitle ?? '') || url
+
+      // 자체 내보내기 전용 비표준 속성 — 없으면 undefined(일반 브라우저 내보내기와 동일 취급)
+      const tagsMatch = /\btags\s*=\s*["']([^"']*)["']/i.exec(aattrs)
+      const tags = tagsMatch
+        ? tagsMatch[1].split(',').map((t) => decodeHtmlEntities(t.trim())).filter(Boolean)
+        : undefined
+      const categoryMatch = /data_category\s*=\s*["']([^"']*)["']/i.exec(aattrs)
+      const category_name = categoryMatch ? decodeHtmlEntities(categoryMatch[1].trim()) : undefined
+
       results.push({
         title,
         url,
         // 기본 폴더 제외 — stack push/pop 대칭은 유지하고 결과에서만 필터
         folder_hint: folderStack.filter((f) => !isDefaultFolder(f)),
+        ...(tags !== undefined && tags.length > 0 ? { tags } : {}),
+        ...(category_name ? { category_name } : {}),
       })
     }
   }

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth'
 import { generateTags, createEmbedding } from '@/lib/ai'
-import { normalizeTags, extractTopCategory } from '@/lib/tag-alias'
+import { normalizeTags, extractTopCategory, resolveTopCategory } from '@/lib/tag-alias'
 import { parseNetscapeBookmarks, type ParsedBookmark } from '@/lib/parseNetscapeBookmarks'
 import { normalizeUrl } from '@/lib/normalizeUrl'
 import { fetchMeta } from '@/lib/fetchMeta'
@@ -206,7 +206,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
           const chunk = toProcess.slice(i, i + CHUNK_SIZE)
 
           await Promise.all(
-            chunk.map(async ({ title, url, folder_hint }) => {
+            chunk.map(async ({ title, url, folder_hint, tags: htmlTags, category_name }) => {
               try {
                 // A52: URL 메타 조회 → description 확보(태깅 굶김 해소). fetchMeta는 throw 안 함(실패=빈 값),
                 // 내부 5s 타임아웃. description은 아래 태깅·임베딩 입력으로만 쓰고 저장·로그하지 않음.
@@ -215,8 +215,12 @@ export const POST = withAuth(async (req, { user, supabase }) => {
                 const meta = await fetchMeta(url)
                 const description = meta.description || undefined
 
+                // 자체 내보내기 HTML(TAGS 속성 포함)은 AI 재태깅 없이 그대로 복원 — 일반 브라우저
+                // 내보내기(TAGS 없음)만 기존처럼 generateTags 호출.
+                const tagsPromise = htmlTags ? Promise.resolve(htmlTags) : generateTags({ title, url, description })
+
                 const [tagsResult, embeddingResult] = await Promise.allSettled([
-                  generateTags({ title, url, description }),
+                  tagsPromise,
                   createEmbedding(description ? `${title}\n${description}` : title),
                 ])
 
@@ -231,7 +235,11 @@ export const POST = withAuth(async (req, { user, supabase }) => {
                 // 태깅 실패는 빈 태그로 degrade.
                 // A5(단건)와 달리 임포트는 임베딩 실패 시에도 전체 중단하지 않고 해당 항목만 실패 처리.
                 const rawTags = tagsResult.status === 'fulfilled' ? tagsResult.value : []
-                const { category: top, midTags: tags } = extractTopCategory(normalizeTags(rawTags))
+                // DATA_CATEGORY 복원분은 이미 대분류/중분류가 분리돼 있으므로 extractTopCategory(재분리) 불필요 —
+                // resolveTopCategory로 유효성만 검증(별칭 매핑 포함, 13종 외 값은 null=미분류).
+                const { category: top, midTags: tags } = category_name
+                  ? { category: resolveTopCategory(category_name), midTags: normalizeTags(rawTags) }
+                  : extractTopCategory(normalizeTags(rawTags))
                 let category_id: string | null = null
                 if (top) {
                   if (categoryCache.has(top)) {
