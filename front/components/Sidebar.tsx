@@ -85,9 +85,16 @@ export function Sidebar() {
     setTab(t);
     setCategory(null);
     setTag(null);
-    setFolder(t === "folders" ? (folders[0] ?? null) : null);
+    setFolder(t === "folders" ? (folderTree[0]?.name ?? null) : null);
     setSearchQuery("");
   };
+
+  // 내 폴더 탭 진입 시(탭 클릭 경유 안 한 새로고침·직접 진입 포함) 첫 줄 기본 선택
+  useEffect(() => {
+    if (tab === "folders" && folder === null && folderTree.length > 0) {
+      setFolder(folderTree[0].name);
+    }
+  }, [tab, folder, folderTree, setFolder]);
 
   const handleAll = () => {
     setCategory(null);
