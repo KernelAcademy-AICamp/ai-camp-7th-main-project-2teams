@@ -22,6 +22,7 @@ describe('fetchMeta — YouTube oEmbed', () => {
       title: '영상 제목',
       description: 'ZeroCho TV 채널',
       thumbnailUrl: '',
+      content: 'ZeroCho TV 채널',
     })
     // oEmbed 엔드포인트 호출 확인
     expect((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toContain('/oembed')
@@ -71,7 +72,12 @@ describe('fetchMeta — YouTube oEmbed', () => {
         }),
       )
     const meta = await fetchMeta('https://www.youtube.com/channel/UCxxxx')
-    expect(meta).toEqual({ title: 'ZeroCho TV', description: '웹 개발 강의', thumbnailUrl: '' })
+    expect(meta).toEqual({
+      title: 'ZeroCho TV',
+      description: '웹 개발 강의',
+      thumbnailUrl: '',
+      content: '웹 개발 강의',
+    })
   })
 })
 
@@ -87,6 +93,7 @@ describe('fetchMeta — 일반 페이지', () => {
       title: '예시 페이지',
       description: '설명문',
       thumbnailUrl: '',
+      content: '설명문',
     })
   })
 
@@ -104,6 +111,7 @@ describe('fetchMeta — 일반 페이지', () => {
       title: '',
       description: '',
       thumbnailUrl: '',
+      content: '',
     })
   })
 
@@ -113,6 +121,7 @@ describe('fetchMeta — 일반 페이지', () => {
       title: '',
       description: '',
       thumbnailUrl: '',
+      content: '',
     })
   })
 
@@ -158,5 +167,67 @@ describe('fetchMeta — 일반 페이지', () => {
     )
     const meta = await fetchMeta('https://example.com')
     expect(meta.thumbnailUrl).toBe('')
+  })
+})
+
+describe('fetchMeta — content(임베딩용 본문 텍스트)', () => {
+  it('본문 텍스트를 포함한 content 반환, script/style 텍스트는 제외', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>t</title>' +
+          '<script>var x = "스크립트 텍스트";</script>' +
+          '<style>.a{color:red /* 스타일 텍스트 */}</style>' +
+          '<meta property="og:description" content="요약문">' +
+          '<body>실제 본문 내용입니다</body>',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).toBe('요약문\n실제 본문 내용입니다')
+    expect(meta.content).not.toContain('스크립트')
+    expect(meta.content).not.toContain('스타일')
+  })
+
+  it('본문이 2000자 초과하면 정확히 2000자로 자름', async () => {
+    const longBody = '가'.repeat(3000)
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({ ok: true, text: `<body>${longBody}</body>` }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).toHaveLength(2000)
+  })
+
+  it('og:description 없고 본문만 있으면 content = 본문 텍스트', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({ ok: true, text: '<body>본문만 있음</body>' }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).toBe('본문만 있음')
+  })
+
+  it('YouTube oEmbed 경로 → content = description(채널명)과 동일', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({ ok: true, json: { title: '영상 제목', author_name: 'ZeroCho TV' } }),
+    )
+    const meta = await fetchMeta('https://www.youtube.com/watch?v=abc')
+    expect(meta.content).toBe('ZeroCho TV 채널')
+    expect(meta.content).toBe(meta.description)
+  })
+})
+
+describe('fetchMeta — HTML 엔티티 디코드', () => {
+  it('title/description의 &amp; &quot; &#x2705; 등을 실제 문자로 디코드', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>A &amp; B &quot;test&quot;</title>' +
+          '<meta property="og:description" content="체크 &#x2705; 완료">',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.title).toBe('A & B "test"')
+    expect(meta.description).toBe('체크 ✅ 완료')
   })
 })
