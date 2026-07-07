@@ -183,8 +183,8 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
   if (view === "compact") {
     return (
       <>
-        <article className="group flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
-          <Favicon url={bookmark.url} boxClassName="h-6 w-6 rounded-md" />
+        <article className="group flex items-center gap-3 px-3 py-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+          <Favicon url={bookmark.url} boxClassName="h-5 w-5 rounded" />
           <a
             href={safeUrl(bookmark.url)}
             target="_blank"
@@ -196,7 +196,12 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
           <span className="hidden max-w-[160px] shrink-0 truncate font-mono text-xs text-gray-400 sm:inline dark:text-gray-500">
             {extractDomain(bookmark.url)}
           </span>
-          {bookmark.tags[0] && <span className={cn(TAG_CHIP, "hidden shrink-0 md:inline")}>{bookmark.tags[0]}</span>}
+          {bookmark.tags[0] && (
+            <span className="hidden shrink-0 truncate text-xs text-gray-400 md:inline dark:text-gray-500">
+              {bookmark.tags[0]}
+              {bookmark.tags.length > 1 && ` +${bookmark.tags.length - 1}`}
+            </span>
+          )}
           <div className="flex shrink-0 items-center gap-0.5">
             {favButton(14)}
             <span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
@@ -224,6 +229,9 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             >
               {bookmark.title}
             </a>
+            {bookmark.description && (
+              <p className="mt-0.5 line-clamp-1 text-xs text-gray-500 dark:text-gray-400">{bookmark.description}</p>
+            )}
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
               <span className="font-mono">{extractDomain(bookmark.url)}</span>
               {bookmark.tags.length > 0 && <span aria-hidden>·</span>}
