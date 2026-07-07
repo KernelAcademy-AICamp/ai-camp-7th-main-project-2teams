@@ -23,7 +23,7 @@ const SOURCE_CONFIG: Record<
   }
 > = {
   html: {
-    label: "브라우저 북마크 내보내기",
+    label: "브라우저 북마크 내보내기 (HTML)",
     accept: ".html,text/html",
     extension: ".html",
     fileLabel: "HTML",
@@ -33,7 +33,7 @@ const SOURCE_CONFIG: Record<
     parse: parseNetscapeBookmarks,
   },
   kakao: {
-    label: "카카오톡 대화 내보내기",
+    label: "카카오톡 대화 내보내기 (URL만 추출됩니다)",
     accept: ".csv,text/csv",
     extension: ".csv",
     fileLabel: "CSV",
