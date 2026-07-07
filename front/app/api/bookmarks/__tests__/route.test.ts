@@ -11,6 +11,10 @@ vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
 const { warnSpy } = vi.hoisted(() => ({ warnSpy: vi.fn() }))
 vi.mock('@/lib/logger', () => ({ logger: { warn: warnSpy, log: vi.fn(), error: vi.fn() } }))
 
+// fetchMeta 모킹 — 실네트워크 차단. 항상 호출되므로(이번 변경) 기본값 반환 필요.
+const { fetchMeta } = vi.hoisted(() => ({ fetchMeta: vi.fn() }))
+vi.mock('@/lib/fetchMeta', () => ({ fetchMeta }))
+
 // supabase 서버 클라이언트 모킹: auth + categories upsert + bookmarks 중복검사/insert
 const insertSpy = vi.fn()
 const selectArgSpy = vi.fn()
@@ -101,6 +105,8 @@ describe('POST /api/bookmarks', () => {
     createEmbedding.mockReset()
     generateTags.mockResolvedValue(['dev', 'frontend', 'Next.js'])
     createEmbedding.mockResolvedValue([0.1, 0.2, 0.3])
+    fetchMeta.mockReset()
+    fetchMeta.mockResolvedValue({ title: '', description: '', thumbnailUrl: '', content: '' })
   })
 
   it('content는 insert payload에 없음 (본문 미저장)', async () => {
@@ -199,5 +205,51 @@ describe('POST /api/bookmarks', () => {
   it('content 있으면 [weak-vector] 경고 없음', async () => {
     await POST(req({ title: 'T', url: 'https://a.com', content: '본문 있음' }))
     expect(warnSpy).not.toHaveBeenCalledWith('[weak-vector]', expect.anything())
+  })
+
+  it('description은 항상 fetchMeta 결과로 저장 (content 유무 무관)', async () => {
+    fetchMeta.mockResolvedValueOnce({
+      title: '',
+      description: '요약',
+      thumbnailUrl: '',
+      content: '',
+    })
+    await POST(req({ title: 'T', url: 'https://a.com', content: '본문 있음' }))
+    const payload = insertSpy.mock.calls[0][0]
+    expect(payload.description).toBe('요약')
+  })
+
+  it('익스텐션 content 있어도 thumbnail_url 채워짐 (기존 버그 수정)', async () => {
+    fetchMeta.mockResolvedValueOnce({
+      title: '',
+      description: '',
+      thumbnailUrl: 'https://a.com/thumb.jpg',
+      content: '',
+    })
+    await POST(req({ title: 'T', url: 'https://a.com', content: '본문 있음' }))
+    const payload = insertSpy.mock.calls[0][0]
+    expect(payload.thumbnail_url).toBe('https://a.com/thumb.jpg')
+  })
+
+  it('익스텐션 content 있으면 그 값이 임베딩 입력, meta.content는 무시', async () => {
+    fetchMeta.mockResolvedValueOnce({
+      title: '',
+      description: '',
+      thumbnailUrl: '',
+      content: '서버추출본문',
+    })
+    await POST(req({ title: 'T', url: 'https://a.com', content: '익스텐션본문' }))
+    expect(createEmbedding).toHaveBeenCalledWith('T\n익스텐션본문')
+  })
+
+  it('익스텐션 content 없으면 meta.content가 임베딩 입력으로 쓰임', async () => {
+    fetchMeta.mockResolvedValueOnce({
+      title: '',
+      description: '',
+      thumbnailUrl: '',
+      content: '서버추출본문',
+    })
+    await POST(req({ title: 'T', url: 'https://a.com' }))
+    expect(createEmbedding).toHaveBeenCalledWith('T\n서버추출본문')
   })
 })
