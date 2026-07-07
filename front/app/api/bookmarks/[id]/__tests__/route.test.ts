@@ -248,6 +248,14 @@ describe('PATCH /api/bookmarks/:id', () => {
     )
   })
 
+  it('카테고리를 null(미분류)로 변경 → upsert 없이 category_id: null 반영 (회귀 방지)', async () => {
+    updateResult = { data: { ...baseBookmarkRow(), category_id: null }, error: null }
+    const res = await PATCH(patchReq({ category: null }), { params })
+    expect(res.status).toBe(200)
+    expect(categoriesUpsertSpy).not.toHaveBeenCalled()
+    expect(bookmarksUpdateSpy.mock.calls[0][0]).toEqual({ category_id: null })
+  })
+
   it('유효하지 않은 카테고리 → 400, upsert/update 미호출', async () => {
     const res = await PATCH(patchReq({ category: '존재하지않는카테고리' }), { params })
     expect(res.status).toBe(400)

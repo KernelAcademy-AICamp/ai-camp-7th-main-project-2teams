@@ -4,8 +4,8 @@ import type { Bookmark, BookmarksPage } from './useBookmarks'
 
 export interface UpdateBookmarkFields {
   tags?: string[]
-  /** 대분류 이름(또는 alias) — 유효성 검증은 서버(tag-alias.ts 기준)에서 수행 */
-  category?: string
+  /** 대분류 이름(또는 alias) — 유효성 검증은 서버(tag-alias.ts 기준)에서 수행. null = 미분류로 해제 */
+  category?: string | null
   description?: string | null
 }
 
@@ -67,6 +67,7 @@ export function isFilterMismatch(
   if (!filters) return false
 
   if (filters.category && fields.category !== undefined) {
+    if (fields.category === null) return true
     const resolved = resolveTopCategory(fields.category)
     if (resolved !== filters.category) return true
   }

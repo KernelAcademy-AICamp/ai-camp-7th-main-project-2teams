@@ -31,7 +31,8 @@ export const bookmarkUpdateSchema = z
     is_favorite: z.boolean().optional(),
     tags: z.array(z.string().min(1).max(50)).max(10).optional(),
     // 대분류 이름(또는 alias) — 실제 유효성 검증은 tag-alias.ts 기준으로 라우트에서 수행.
-    category: z.string().min(1).max(50).optional(),
+    // null 허용 — 미분류로 변경(카테고리 해제) 용도.
+    category: z.string().min(1).max(50).nullable().optional(),
     // null 허용 — 기존 설명 삭제 용도.
     description: z.string().max(2000).nullable().optional(),
   })

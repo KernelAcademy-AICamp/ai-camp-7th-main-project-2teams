@@ -68,9 +68,9 @@ export function buildUpdatePayload(
   const payload: UpdateBookmarkFields = {};
 
   if (!arraysEqual(form.tags, bookmark.tags)) payload.tags = form.tags;
-  // 미분류(빈 값) 선택은 전송 안 함(서버가 빈 카테고리 미지원) — 실제로 값이 바뀐 경우만 전송
+  // 미분류(빈 값) 선택 시 null 전송(카테고리 해제) — 실제로 값이 바뀐 경우만 전송
   const currentCategory = bookmark.category ?? "";
-  if (form.category !== "" && form.category !== currentCategory) payload.category = form.category;
+  if (form.category !== currentCategory) payload.category = form.category === "" ? null : form.category;
 
   const currentDescription = bookmark.description ?? "";
   if (form.description !== currentDescription) {
