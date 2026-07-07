@@ -49,6 +49,25 @@ function parseCsvRows(text: string): string[][] {
 }
 
 const URL_RE = /https?:\/\/[^\s"]+/g
+// 문장부호가 URL 뒤에 바로 붙는 경우("링크 (https://a.com/x)." 등) 제거 대상 문자.
+const TRAILING_PUNCT_RE = /[.,!?;:'"”’)\]}]+$/
+
+/**
+ * 정규식이 함께 삼킨 문장부호를 제거한다. 같은 URL이 문장부호 유무로 다르게 잡히면
+ * 이후 중복 제거(dedupeBatch/DB lookup)가 서로 다른 문자열로 착각해 중복이 새어나간다.
+ * 단, "(disambiguation)"처럼 URL 자체에 포함된 괄호는 여는/닫는 개수를 비교해 보존한다.
+ */
+function stripTrailingPunctuation(url: string): string {
+  let result = url
+  while (TRAILING_PUNCT_RE.test(result)) {
+    const last = result[result.length - 1]
+    if (last === ')' && (result.match(/\(/g) ?? []).length >= (result.match(/\)/g) ?? []).length) {
+      break
+    }
+    result = result.replace(TRAILING_PUNCT_RE, (match) => match.slice(0, -1))
+  }
+  return result
+}
 
 /**
  * 카카오톡 채팅 내보내기 CSV(Date,User,Message)를 파싱해 Message 컬럼에 포함된
@@ -68,7 +87,9 @@ export function parseKakaoChat(csv: string): ParsedBookmark[] {
     if (!message) continue
     const urls = message.match(URL_RE)
     if (!urls) continue
-    for (const url of urls) {
+    for (const rawUrl of urls) {
+      const url = stripTrailingPunctuation(rawUrl)
+      if (!url) continue
       results.push({ title: url, url, folder_hint: [] })
     }
   }
