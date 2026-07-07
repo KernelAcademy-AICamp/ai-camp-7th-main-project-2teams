@@ -39,7 +39,7 @@ describe('POST /api/search', () => {
     expect(rpc).toHaveBeenCalledWith('match_bookmarks', {
       query_embedding: [0.1, 0.2],
       query_text: '머신러닝 입문',
-      match_count: 20,
+      match_count: 60,
       p_user_id: 'u1',
       p_category_id: null,
       p_uncategorized: false,
@@ -104,6 +104,19 @@ describe('POST /api/search', () => {
     const res = await POST(req({ query: 'x' }))
     const json = await res.json()
     expect(json.results).toEqual([{ id: 'bm1', similarity: 0.8 }])
+  })
+
+  // A62: 클라이언트 사이드 페이지네이션(useSearch visibleCount)이 top-60 전체를 슬라이스할 수 있도록
+  // 서버가 20개로 자르지 않고 top-60까지 그대로 반환해야 한다.
+  it('RPC가 60개 넘게 반환해도 top-60까지 results에 포함 (top-20 절단 회귀 방지, A62)', async () => {
+    const rows = Array.from({ length: 80 }, (_, i) => ({ id: `bm${i}`, similarity: 1 - i * 0.001 }))
+    rpc.mockResolvedValue({ data: rows, error: null })
+
+    const res = await POST(req({ query: 'x' }))
+    const json = await res.json()
+
+    expect(json.results).toHaveLength(60)
+    expect(json.results[0]).toEqual({ id: 'bm0', similarity: 1 })
   })
 
   it('빈 쿼리 → 400, 임베딩 미호출', async () => {

@@ -1,4 +1,4 @@
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query'
 
 export interface Bookmark {
   id: string
@@ -19,18 +19,35 @@ interface BookmarksFilters {
   tag?: string
 }
 
+interface BookmarksPage {
+  bookmarks: Bookmark[]
+  total: number
+}
+
+// GET /api/bookmarks의 기존 limit 기본값(20)과 동일하게 유지 — 백엔드 계약 그대로 소비.
+const PAGE_SIZE = 20
+
+// A62: useQuery → useInfiniteQuery. GET /api/bookmarks는 이미 page/limit/total을 지원했으나
+// 프론트가 소비하지 않던 갭을 메운다(신규 backend 구현 아님).
 export function useBookmarks(filters: BookmarksFilters) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['bookmarks', filters],
-    queryFn: async (): Promise<{ bookmarks: Bookmark[]; total: number }> => {
+    queryFn: async ({ pageParam }): Promise<BookmarksPage> => {
       const params = new URLSearchParams(
         Object.fromEntries(
           Object.entries(filters).filter(([, v]) => v != null)
         ) as Record<string, string>
       )
+      params.set('page', String(pageParam))
+      params.set('limit', String(PAGE_SIZE))
       const res = await fetch(`/api/bookmarks?${params}`)
       if (!res.ok) throw new Error('Failed to fetch')
       return res.json()
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.flatMap((p) => p.bookmarks).length
+      return loaded < lastPage.total ? allPages.length + 1 : undefined
     },
     staleTime: 1000 * 60,
     gcTime: 1000 * 60 * 5,

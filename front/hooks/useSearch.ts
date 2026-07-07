@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { useCallback, useMemo, useState } from 'react'
 import type { Bookmark } from './useBookmarks'
 
 export interface SearchResult extends Bookmark {
@@ -29,8 +30,32 @@ export async function fetchSearch({
   return res.json()
 }
 
+// A62: 검색은 요청마다 OpenAI 임베딩 호출이 발생해 목록처럼 스크롤마다 서버 재호출하면
+// 비용·레이턴시가 커진다. 서버가 한 번에 top-60을 반환(match_count, app/api/search/route.ts)하면
+// 이후 스크롤은 이미 받은 배열 안에서 노출 개수만 늘린다 — 추가 네트워크 호출 없음.
+const SEARCH_PAGE_SIZE = 20
+
 export function useSearch() {
-  return useMutation({
+  const [visibleCount, setVisibleCount] = useState(SEARCH_PAGE_SIZE)
+
+  const mutation = useMutation({
     mutationFn: fetchSearch,
+    onSuccess: () => {
+      // 새 검색 결과가 도착할 때마다 리셋 — 이전 검색의 스크롤 진행이 다음 검색에 남지 않는다.
+      setVisibleCount(SEARCH_PAGE_SIZE)
+    },
   })
+
+  const results = mutation.data?.results
+  const allResults = useMemo(() => results ?? [], [results])
+  const visibleResults = useMemo(
+    () => allResults.slice(0, visibleCount),
+    [allResults, visibleCount],
+  )
+  const hasMore = visibleCount < allResults.length
+  const showMore = useCallback(() => {
+    setVisibleCount((count) => count + SEARCH_PAGE_SIZE)
+  }, [])
+
+  return { ...mutation, visibleResults, hasMore, showMore }
 }
