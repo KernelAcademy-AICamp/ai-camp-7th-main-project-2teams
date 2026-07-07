@@ -60,4 +60,38 @@ describe('parseKakaoChat', () => {
   it('Message 헤더 없으면 빈 배열 반환', () => {
     expect(parseKakaoChat('Date,User\n2023-09-15,철수')).toEqual([])
   })
+
+  it('URL 뒤에 붙은 문장부호를 제거해 같은 링크로 인식되게 한다', () => {
+    const csv = [
+      'Date,User,Message',
+      '2023-09-15 03:39:04,"김재균","링크 (https://a.com/x)."',
+      '2023-09-15 03:40:00,"박영희","이거 https://a.com/x, 봐봐"',
+      '2023-09-15 03:41:00,"이철수","https://a.com/x"',
+    ].join('\n')
+
+    const result = parseKakaoChat(csv)
+
+    expect(result).toEqual([
+      { title: 'https://a.com/x', url: 'https://a.com/x', folder_hint: [] },
+      { title: 'https://a.com/x', url: 'https://a.com/x', folder_hint: [] },
+      { title: 'https://a.com/x', url: 'https://a.com/x', folder_hint: [] },
+    ])
+  })
+
+  it('URL 자체에 포함된 괄호는 보존한다', () => {
+    const csv = [
+      'Date,User,Message',
+      '2023-09-15 03:39:04,"김재균","https://en.wikipedia.org/wiki/Cat_(disambiguation)"',
+    ].join('\n')
+
+    const result = parseKakaoChat(csv)
+
+    expect(result).toEqual([
+      {
+        title: 'https://en.wikipedia.org/wiki/Cat_(disambiguation)',
+        url: 'https://en.wikipedia.org/wiki/Cat_(disambiguation)',
+        folder_hint: [],
+      },
+    ])
+  })
 })

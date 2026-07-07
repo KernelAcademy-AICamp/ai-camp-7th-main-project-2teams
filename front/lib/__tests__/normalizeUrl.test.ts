@@ -43,4 +43,22 @@ describe('normalizeUrl', () => {
   it('파싱 불가 입력은 원문 반환 (schema가 이미 검증하지만 방어)', () => {
     expect(normalizeUrl('not a url')).toBe('not a url')
   })
+
+  it('http/https 차이는 동일 URL로 정규화', () => {
+    expect(normalizeUrl('http://ex.com/page')).toBe('https://ex.com/page')
+  })
+
+  it('www 유무 차이는 동일 URL로 정규화', () => {
+    expect(normalizeUrl('https://www.ex.com/page')).toBe('https://ex.com/page')
+    expect(normalizeUrl('http://www.ex.com/page')).toBe('https://ex.com/page')
+  })
+
+  it('유튜브 공유 트래킹 파라미터(si) 제거', () => {
+    expect(normalizeUrl('https://youtu.be/abc123?si=TqO5GL_F83SCGnCI')).toBe(
+      'https://youtu.be/abc123',
+    )
+    expect(normalizeUrl('https://youtube.com/watch?v=abc&si=xyz')).toBe(
+      'https://youtube.com/watch?v=abc',
+    )
+  })
 })

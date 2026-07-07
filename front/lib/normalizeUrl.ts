@@ -14,6 +14,7 @@ const TRACKING_PARAMS = new Set([
   'yclid',
   '_hsenc',
   '_hsmi',
+  'si', // 유튜브 공유 트래킹 id — 공유할 때마다 값이 달라 영상 식별과 무관
 ])
 
 // utm_* 계열은 접두어로 일괄 제거.
@@ -27,6 +28,9 @@ export function normalizeUrl(input: string): string {
   } catch {
     return input // schema(z.url)가 이미 검증 — 방어적 fallback
   }
+
+  u.protocol = 'https:' // http/https 차이는 동일 URL로 취급 — dedup 키 통일
+  if (u.hostname.startsWith('www.')) u.hostname = u.hostname.slice(4) // www 유무 차이 흡수
 
   u.hash = '' // fragment 제거
 
