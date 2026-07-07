@@ -26,6 +26,16 @@ describe('selectConfidentTags — confidence 임계값 필터', () => {
     expect(selectConfidentTags(null)).toEqual([])
     expect(selectConfidentTags({ tags: [{ tag: '개발' }] })).toEqual([]) // confidence 누락
   })
+
+  it('"0태그" 리터럴 태그는 confidence 무관하게 제거 (프롬프트 지시어 오염 방지)', () => {
+    const raw = {
+      tags: [
+        { tag: '0태그', confidence: 0.95 },
+        { tag: '개발', confidence: 0.9 },
+      ],
+    }
+    expect(selectConfidentTags(raw)).toEqual(['개발'])
+  })
 })
 
 // E2E_MOCK_OPENAI=1 시 실제 OpenAI 호출 없이 결정적 값 반환 검증.

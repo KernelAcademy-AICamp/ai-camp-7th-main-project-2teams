@@ -18,15 +18,17 @@ const getQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
 })
 
-// 저장 + AI 태깅 + 임베딩. content는 DB 저장·로그 금지. maskSensitive() 경유 필수 (lib/logger.ts), 응답에 embedding 미포함.
+// 저장 + AI 태깅 + 임베딩. content(본문)는 DB 저장·로그 금지 — 임베딩 계산 후 즉시 파기.
+// description(og:description)은 기본 저장(카드 표시·검색용) — content와는 별개 값.
+// maskSensitive() 경유 필수 (lib/logger.ts), 응답에 embedding 미포함.
 export const POST = withAuth(async (req, { user, supabase }) => {
   const parsed = bookmarkCreateSchema.safeParse(await req.json())
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  let { title, content } = parsed.data
-  const { folder_hint } = parsed.data
+  let title = parsed.data.title
+  const { content, folder_hint } = parsed.data
   // 중복 방지: 정규화된 canonical URL로 저장 (trailing slash·fragment·트래킹파라미터 흡수)
   const url = normalizeUrl(parsed.data.url)
 
@@ -45,24 +47,25 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     )
   }
 
-  // content 없으면 URL fetch → 실제 title·description·썸네일 추출 (단일 북마크 추가 경로)
-  let thumbnailUrl: string | null = null
-  if (!content.trim()) {
-    const meta = await fetchMeta(url)
-    if (meta.title) title = meta.title
-    if (meta.description) content = meta.description
-    if (isSafeHttpUrl(meta.thumbnailUrl)) thumbnailUrl = meta.thumbnailUrl
-  }
+  // description·thumbnail_url은 content 유무와 무관하게 항상 필요 → fetchMeta 항상 호출
+  // (기존: content 있으면 스킵 → thumbnail_url이 익스텐션 경로에서 항상 null이었던 버그 수정).
+  // title은 익스텐션이 이미 캡처했으면(content 있으면) document.title을 더 신뢰 — meta.title로 덮지 않음.
+  const hasExtensionContent = content.trim() !== ''
+  const meta = await fetchMeta(url)
+  if (!hasExtensionContent && meta.title) title = meta.title
+  const description = meta.description || null
+  const thumbnailUrl = isSafeHttpUrl(meta.thumbnailUrl) ? meta.thumbnailUrl : null
+  // 임베딩 입력 — 익스텐션 content(og:description+body, 2000자 상한) 우선, 없으면 서버 추출본으로 대체.
+  const embeddingContent = hasExtensionContent ? content : meta.content
 
-  // A37: PDF·chrome:// 등 content script 차단 시 content 없음 → embedding=title만(약한 벡터). 허용 degradation.
-  const hasContent = content.trim() !== ''
+  // A37: PDF·chrome:// 등 content script 차단 + 서버 추출도 실패 → embedding=title만(약한 벡터). 허용 degradation.
+  const hasContent = embeddingContent.trim() !== ''
   if (!hasContent) logger.warn('[weak-vector]', { url, title, user_id: user.id, reason: 'content 없음 — title 전용 임베딩' })
 
-  // 태깅 + 임베딩 병렬 실행 → 응답시간 단축. content는 이 스코프 안에서만 사용 후 파기.
-  // description에 content 전달 → 태깅 품질 확보(익스텐션이 수집한 본문 활용).
+  // 태깅 + 임베딩 병렬 실행 → 응답시간 단축. embeddingContent는 이 스코프 안에서만 사용 후 파기.
   const [tagsResult, embeddingResult] = await Promise.allSettled([
-    generateTags({ title, url, description: content }),
-    createEmbedding(hasContent ? `${title}\n${content}` : title),
+    generateTags({ title, url, description: embeddingContent }),
+    createEmbedding(hasContent ? `${title}\n${embeddingContent}` : title),
   ])
 
   // 임베딩 실패 = 검색 불가 → 검색 못 하는 북마크 저장 안 함(502).
@@ -91,6 +94,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
       user_id: user.id,
       title,
       url,
+      description,
       tags,
       category_id,
       folder_hint: folder_hint ?? null,
