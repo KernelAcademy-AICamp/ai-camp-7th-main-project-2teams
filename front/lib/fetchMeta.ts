@@ -111,21 +111,26 @@ const MAX_TAG_ATTR_SCAN = 200
 // "</태그이름" 부분 문자열 매치 뒤에 실제 태그 경계(>, /, 공백, 문자열 끝)가 오는지 검증해
 // 진짜 닫는 태그만 찾는다. HTML 스펙의 "appropriate end tag" 매칭 규칙과 동일한 취지 —
 // script/style content 안에 "</scriptFOO>"처럼 우연히 겹치는 부분 문자열이 있어도
-// 위양성으로 조기 종료되지 않도록 함(내용 누출 방지). searchFrom을 계속 전진시키므로
-// 위양성이 여러 번 있어도 전체 스캔은 선형(O(n))으로 유지되고 백트래킹은 없음.
-function findClosingTag(text: string, tagName: string): { start: number; tagEnd: number } | null {
-  const lower = text.toLowerCase()
+// 위양성으로 조기 종료되지 않도록 함(내용 누출 방지).
+// lowerHtml은 stripTagBlock에서 문서 전체를 단 한 번만 소문자화해 넘겨받은 것 — 매 호출마다
+// 재계산하지 않고, fromIndex도 매번 이전 탐색 지점 이후로만 전진하므로(뒤로 재탐색 없음)
+// stripTagBlock 전체 호출에 걸친 누적 비용이 문서 길이에 비례하는 선형(O(n))으로 유지된다.
+function findClosingTagIndex(
+  lowerHtml: string,
+  tagName: string,
+  fromIndex: number,
+): { closeStart: number; closeEnd: number } | null {
   const needle = `</${tagName}`
-  let searchFrom = 0
+  let searchFrom = fromIndex
   for (;;) {
-    const idx = lower.indexOf(needle, searchFrom)
+    const idx = lowerHtml.indexOf(needle, searchFrom)
     if (idx === -1) return null
-    const boundaryChar = lower[idx + needle.length]
+    const boundaryChar = lowerHtml[idx + needle.length]
     const isValidBoundary =
       boundaryChar === undefined || boundaryChar === '>' || boundaryChar === '/' || /\s/.test(boundaryChar)
     if (isValidBoundary) {
-      const tagEnd = text.indexOf('>', idx)
-      return { start: idx, tagEnd: tagEnd === -1 ? text.length : tagEnd }
+      const tagEnd = lowerHtml.indexOf('>', idx)
+      return { closeStart: idx, closeEnd: tagEnd === -1 ? lowerHtml.length : tagEnd }
     }
     searchFrom = idx + needle.length // 위양성(예: </scriptFOO>) — 계속 다음 위치부터 탐색
   }
@@ -134,26 +139,31 @@ function findClosingTag(text: string, tagName: string): { start: number; tagEnd:
 // title/script/style처럼 "여는 태그 ~ 닫는 태그" 사이 내용을 통째로 제거할 때 쓰는 태그.
 // 정규식 lazy quantifier([\s\S]*?) 대신 indexOf 기반 수동 스캔을 사용 — 백트래킹 자체가 없어
 // 태그 content 길이에 무관하게(2KB 넘는 실제 JSON-LD/GTM 스니펫 등) ReDoS 없이 안전하게 처리.
+// html 전체를 한 번만 toLowerCase()하고(반복 호출 금지 — 매 반복마다 남은 문자열을 다시
+// 소문자화하면 태그 개수에 비례해 실질 O(n²)가 됨, 800KB 유튜브 채널 캡 케이스에서 실측됨),
+// 원본 문자열은 결과 조립(slice)에만 쓰고 탐색은 전부 인덱스 기반으로 lowerHtml 위에서 수행한다.
 function stripTagBlock(html: string, tagName: string): string {
-  const openTagRe = new RegExp(`<${tagName}\\b[^<>]{0,${MAX_TAG_ATTR_SCAN}}>`, 'i')
+  const lowerHtml = html.toLowerCase()
+  const openTagRe = new RegExp(`<${tagName}\\b[^<>]{0,${MAX_TAG_ATTR_SCAN}}>`, 'gi')
 
   let result = ''
-  let rest = html
+  let cursor = 0
   for (;;) {
-    const openMatch = rest.match(openTagRe)
-    if (!openMatch || openMatch.index === undefined) {
-      result += rest
+    openTagRe.lastIndex = cursor
+    const openMatch = openTagRe.exec(html)
+    if (!openMatch) {
+      result += html.slice(cursor)
       break
     }
-    result += rest.slice(0, openMatch.index)
+    result += html.slice(cursor, openMatch.index)
+    const openEnd = openMatch.index + openMatch[0].length
 
-    const afterOpen = rest.slice(openMatch.index + openMatch[0].length)
-    const closeTag = findClosingTag(afterOpen, tagName)
+    const closeTag = findClosingTagIndex(lowerHtml, tagName, openEnd)
     if (!closeTag) {
       // 닫는 태그가 끝까지 없음 — 이후 내용을 전부 버림(스크립트/스타일 원문 누출 방지).
       break
     }
-    rest = closeTag.tagEnd === afterOpen.length ? '' : afterOpen.slice(closeTag.tagEnd + 1)
+    cursor = closeTag.closeEnd === lowerHtml.length ? lowerHtml.length : closeTag.closeEnd + 1
   }
   return result
 }
