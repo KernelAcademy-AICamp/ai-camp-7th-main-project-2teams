@@ -22,6 +22,7 @@ describe('fetchMeta — YouTube oEmbed', () => {
       title: '영상 제목',
       description: 'ZeroCho TV 채널',
       thumbnailUrl: '',
+      content: 'ZeroCho TV 채널',
     })
     // oEmbed 엔드포인트 호출 확인
     expect((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toContain('/oembed')
@@ -71,7 +72,12 @@ describe('fetchMeta — YouTube oEmbed', () => {
         }),
       )
     const meta = await fetchMeta('https://www.youtube.com/channel/UCxxxx')
-    expect(meta).toEqual({ title: 'ZeroCho TV', description: '웹 개발 강의', thumbnailUrl: '' })
+    expect(meta).toEqual({
+      title: 'ZeroCho TV',
+      description: '웹 개발 강의',
+      thumbnailUrl: '',
+      content: '웹 개발 강의',
+    })
   })
 })
 
@@ -87,6 +93,7 @@ describe('fetchMeta — 일반 페이지', () => {
       title: '예시 페이지',
       description: '설명문',
       thumbnailUrl: '',
+      content: '설명문',
     })
   })
 
@@ -104,6 +111,7 @@ describe('fetchMeta — 일반 페이지', () => {
       title: '',
       description: '',
       thumbnailUrl: '',
+      content: '',
     })
   })
 
@@ -113,6 +121,7 @@ describe('fetchMeta — 일반 페이지', () => {
       title: '',
       description: '',
       thumbnailUrl: '',
+      content: '',
     })
   })
 
@@ -158,5 +167,244 @@ describe('fetchMeta — 일반 페이지', () => {
     )
     const meta = await fetchMeta('https://example.com')
     expect(meta.thumbnailUrl).toBe('')
+  })
+})
+
+describe('fetchMeta — content(임베딩용 본문 텍스트)', () => {
+  it('본문 텍스트를 포함한 content 반환, script/style 텍스트는 제외', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>t</title>' +
+          '<script>var x = "스크립트 텍스트";</script>' +
+          '<style>.a{color:red /* 스타일 텍스트 */}</style>' +
+          '<meta property="og:description" content="요약문">' +
+          '<body>실제 본문 내용입니다</body>',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).toBe('요약문\n실제 본문 내용입니다')
+    expect(meta.content).not.toContain('스크립트')
+    expect(meta.content).not.toContain('스타일')
+  })
+
+  it('본문이 2000자 초과하면 정확히 2000자로 자름', async () => {
+    const longBody = '가'.repeat(3000)
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({ ok: true, text: `<body>${longBody}</body>` }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).toHaveLength(2000)
+  })
+
+  it('og:description 없고 본문만 있으면 content = 본문 텍스트', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({ ok: true, text: '<body>본문만 있음</body>' }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).toBe('본문만 있음')
+  })
+
+  it('YouTube oEmbed 경로 → content = description(채널명)과 동일', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({ ok: true, json: { title: '영상 제목', author_name: 'ZeroCho TV' } }),
+    )
+    const meta = await fetchMeta('https://www.youtube.com/watch?v=abc')
+    expect(meta.content).toBe('ZeroCho TV 채널')
+    expect(meta.content).toBe(meta.description)
+  })
+})
+
+describe('fetchMeta — HTML 엔티티 디코드', () => {
+  it('title/description의 &amp; &quot; &#x2705; 등을 실제 문자로 디코드', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>A &amp; B &quot;test&quot;</title>' +
+          '<meta property="og:description" content="체크 &#x2705; 완료">',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.title).toBe('A & B "test"')
+    expect(meta.description).toBe('체크 ✅ 완료')
+  })
+
+  it('범위 밖 숫자 문자 참조(&#99999999999;)가 있어도 RangeError 없이 나머지 title/description을 보존', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>정상 제목 &#99999999999; 뒷부분</title>' +
+          '<meta property="og:description" content="정상 설명 &#99999999999; 유지">',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    // String.fromCodePoint가 RangeError를 던지면 fetchMeta 전체가 catch로 무너져 전부 빈 문자열이 됨 —
+    // 그 회귀를 잡기 위해 나머지 유효한 텍스트가 그대로 보존되는지 확인.
+    expect(meta.title).toContain('정상 제목')
+    expect(meta.title).toContain('뒷부분')
+    expect(meta.description).toContain('정상 설명')
+    expect(meta.description).toContain('유지')
+  })
+
+  it('제어문자 숫자 참조(&#0; 등)는 title/description/content에서 제거됨', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>제목&#0;제목뒤</title>' +
+          '<meta property="og:description" content="설명&#7;앞&#27;뒤">' +
+          '<body>본문&#0;내용</body>',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    // NUL 등은 Postgres text 컬럼 삽입 시 오류를 유발하므로 결과에 남아있으면 안 됨.
+    expect(meta.title).not.toMatch(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/)
+    expect(meta.description).not.toMatch(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/)
+    expect(meta.content).not.toMatch(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/)
+    expect(meta.title).toBe('제목제목뒤')
+    expect(meta.description).toBe('설명앞뒤')
+  })
+})
+
+describe('fetchMeta — ReDoS 방어(태그 스트리핑 정규식)', () => {
+  it('50KB 연속 "<" 문자가 있어도 빠르게 처리됨(재앙적 백트래킹 없음)', async () => {
+    const adversarial = '<'.repeat(50_000)
+    global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: true, text: adversarial }))
+
+    const start = Date.now()
+    await fetchMeta('https://example.com')
+    const elapsed = Date.now() - start
+
+    expect(elapsed).toBeLessThan(500)
+  })
+
+  it('50KB 분량의 닫히지 않은 <script> 태그 반복이 있어도 빠르게 처리됨', async () => {
+    const adversarial = '<script>'.repeat(6250) // 8자 * 6250 = 50,000자, 닫는 </script> 없음
+    global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: true, text: adversarial }))
+
+    const start = Date.now()
+    await fetchMeta('https://example.com')
+    const elapsed = Date.now() - start
+
+    expect(elapsed).toBeLessThan(500)
+  })
+})
+
+describe('fetchMeta — 긴 script/style content 누출 방지 (회귀)', () => {
+  it('2000자 넘는 <script> 태그 content는 embedding content로 누출되지 않음', async () => {
+    // 실제 페이지의 __NEXT_DATA__/GTM 스니펫처럼 2KB를 넘는 인라인 스크립트를 흉내낸 케이스.
+    const marker = 'SCRIPT_MARKER_레도스수정후누출테스트'
+    const longScript = `var payload = "${marker}"; ` + 'x'.repeat(5000)
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text: `<title>t</title><script>${longScript}</script><body>실제 본문</body>`,
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).not.toContain(marker)
+    expect(meta.content).toContain('실제 본문')
+  })
+
+  it('2000자 넘는 <style> 태그 content는 embedding content로 누출되지 않음', async () => {
+    const marker = 'STYLE_MARKER_레도스수정후누출테스트'
+    const longStyle = `.a{content:"${marker}"} ` + 'y'.repeat(5000)
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text: `<title>t</title><style>${longStyle}</style><body>실제 본문</body>`,
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).not.toContain(marker)
+    expect(meta.content).toContain('실제 본문')
+  })
+})
+
+describe('fetchMeta — 닫는 태그 경계 미검증으로 인한 content 누출 (회귀)', () => {
+  it('<style> content 안의 "</stylesheet-marker>" 부분 문자열에 조기 매치하지 않고 실제 </style>까지 스캔', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>t</title>' +
+          '<style>.a{x:"</stylesheet-marker>"} .b{color:red} REAL_UNIQUE_LEAK_MARKER </style>' +
+          '<body>실제 본문</body>',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).not.toContain('REAL_UNIQUE_LEAK_MARKER')
+    expect(meta.content).toContain('실제 본문')
+  })
+
+  it('<script> content 안의 "</scriptFOO>" 부분 문자열에 조기 매치하지 않고 실제 </script>까지 스캔', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>t</title>' +
+          '<script>var s = "</scriptFOO>"; REAL_UNIQUE_LEAK_MARKER_2(); </script>' +
+          '<body>실제 본문</body>',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).not.toContain('REAL_UNIQUE_LEAK_MARKER_2')
+    expect(meta.content).toContain('실제 본문')
+  })
+
+  it('여는 태그 직후 실제 닫는 태그(위양성 없음)인 정상 케이스도 그대로 동작', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text: '<title>t</title><script></script><style></style><body>실제 본문</body>',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).toBe('실제 본문')
+  })
+
+  it('닫는 태그 앞에 위양성("</scriptX")이 수천 번 반복돼도 빠르게 처리됨(searchFrom 전진, 백트래킹 없음)', async () => {
+    const falsePositives = '</scriptX'.repeat(5000) // 진짜 닫는 태그가 아닌 부분 문자열 반복
+    const text = `<title>t</title><script>${falsePositives}END_MARKER</script><body>실제 본문</body>`
+    global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: true, text }))
+
+    const start = Date.now()
+    const meta = await fetchMeta('https://example.com')
+    const elapsed = Date.now() - start
+
+    expect(elapsed).toBeLessThan(500)
+    expect(meta.content).not.toContain('END_MARKER')
+    expect(meta.content).toContain('실제 본문')
+  })
+})
+
+describe('fetchMeta — 여는 태그 속성 200자 초과 시 content 통째 누출 (회귀)', () => {
+  it('<script> 여는 태그 속성이 200자를 넘어도 매치되어 content가 통째로 누출되지 않음', async () => {
+    const longAttr = 'data-' + 'x'.repeat(250) + '="1"'
+    const text =
+      '<title>t</title>' +
+      `<script ${longAttr}>var s = "SECRET_LEAK_MARKER_123";</script>` +
+      '<body>real body text</body>'
+    global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: true, text }))
+
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).not.toContain('SECRET_LEAK_MARKER_123')
+    expect(meta.content).toContain('real body text')
+  })
+
+  it('<style> 여는 태그 속성이 200자를 넘어도 매치되어 content가 통째로 누출되지 않음', async () => {
+    const longAttr = 'data-' + 'y'.repeat(250) + '="1"'
+    const text =
+      '<title>t</title>' +
+      `<style ${longAttr}>.a{content:"SECRET_STYLE_LEAK_MARKER_456"}</style>` +
+      '<body>real body text</body>'
+    global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: true, text }))
+
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).not.toContain('SECRET_STYLE_LEAK_MARKER_456')
+    expect(meta.content).toContain('real body text')
   })
 })
