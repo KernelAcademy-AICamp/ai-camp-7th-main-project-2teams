@@ -55,7 +55,7 @@ export function SearchBar({ onSearch, onClear, value, onChange }: SearchBarProps
         <button
           onClick={handleClear}
           aria-label="검색어 지우기"
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
+          className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-text-secondary hover:text-text-primary"
         >
           <X size={14} />
         </button>

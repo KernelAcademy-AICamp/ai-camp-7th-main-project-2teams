@@ -95,13 +95,13 @@ export default function SettingsPage() {
         <div className="flex gap-2">
           <button
             onClick={() => handleDownload('json')}
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             JSON으로 내보내기
           </button>
           <button
             onClick={() => handleDownload('html')}
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             HTML로 내보내기
           </button>
@@ -119,7 +119,7 @@ export default function SettingsPage() {
         )}
         <button
           onClick={() => setShowConfirm(true)}
-          className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
+          className="cursor-pointer rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
         >
           회원 탈퇴
         </button>
@@ -145,7 +145,7 @@ export default function SettingsPage() {
                   <p className="mb-2 font-medium">탈퇴 전 데이터를 내보내세요.</p>
                   <button
                     onClick={() => handleDownload('json')}
-                    className="rounded border border-amber-400 px-3 py-1 text-xs font-medium hover:bg-amber-100 dark:border-amber-600 dark:hover:bg-amber-900/40"
+                    className="cursor-pointer rounded border border-amber-400 px-3 py-1 text-xs font-medium hover:bg-amber-100 dark:border-amber-600 dark:hover:bg-amber-900/40"
                   >
                     데이터 내보내기 (JSON)
                   </button>
@@ -157,14 +157,14 @@ export default function SettingsPage() {
               <button
                 onClick={() => setShowConfirm(false)}
                 disabled={isDeleting}
-                className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-300"
+                className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300"
               >
                 취소
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50"
+                className="cursor-pointer rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isDeleting ? '처리 중...' : '탈퇴 확인'}
               </button>

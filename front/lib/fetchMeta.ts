@@ -26,25 +26,40 @@ function isYouTubeChannel(url: string): boolean {
 }
 
 // YouTube는 봇 UA에 동의 페이지를 주거나 SSR title이 없어 HTML 파싱이 불안정 →
-// oEmbed(공개 API, 키 불필요)로 영상 제목 + 채널명 확보. 채널 URL은 oEmbed 404 → null로 폴백(HTML 시도).
+// oEmbed(공개 API, 키 불필요)로 영상 제목 + 채널명 + 공식 썸네일 URL 확보. 채널 URL은 oEmbed 404 → null로 폴백(HTML 시도).
 async function fetchYouTubeOEmbed(
   url: string,
-): Promise<{ title: string; description: string } | null> {
+): Promise<{ title: string; description: string; thumbnailUrl: string } | null> {
   try {
     const res = await fetch(
       `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`,
       { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) },
     )
     if (!res.ok) return null
-    const data = (await res.json()) as { title?: string; author_name?: string }
+    const data = (await res.json()) as {
+      title?: string
+      author_name?: string
+      thumbnail_url?: string
+    }
     if (!data.title) return null
     return {
       title: data.title,
       description: data.author_name ? `${data.author_name} 채널` : '',
+      thumbnailUrl: data.thumbnail_url ?? '',
     }
   } catch {
     return null
   }
+}
+
+// og:image가 상대경로일 수 있어 page URL 기준으로 절대경로화. http/https 아니면 버림(data: 등 방지).
+function resolveImageUrl(raw: string, pageUrl: string): string {
+  if (!raw) return ''
+  try {
+    const resolved = new URL(raw, pageUrl)
+    if (resolved.protocol === 'http:' || resolved.protocol === 'https:') return resolved.href
+  } catch {}
+  return ''
 }
 
 // 여러 meta 태그 패턴을 순서대로 시도해 첫 content 값 반환 (속성 순서 무관 추출).
@@ -57,7 +72,9 @@ function extractMetaContent(html: string, ...patterns: RegExp[]): string {
   return ''
 }
 
-export async function fetchMeta(url: string): Promise<{ title: string; description: string }> {
+export async function fetchMeta(
+  url: string,
+): Promise<{ title: string; description: string; thumbnailUrl: string }> {
   // YouTube 영상: oEmbed 우선 (HTML 파싱보다 안정적). 채널 URL이면 null → HTML 폴백.
   if (isYouTube(url)) {
     const oembed = await fetchYouTubeOEmbed(url)
@@ -69,7 +86,7 @@ export async function fetchMeta(url: string): Promise<{ title: string; descripti
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BookmarkBot/1.0)' },
     })
-    if (!res.ok) return { title: '', description: '' }
+    if (!res.ok) return { title: '', description: '', thumbnailUrl: '' }
 
     // 유튜브 채널 메인은 head가 커서 캡 상향 (og:title이 50KB 밖)
     const cap = isYouTubeChannel(url) ? CHANNEL_MAX_HTML : MAX_HTML
@@ -92,8 +109,16 @@ export async function fetchMeta(url: string): Promise<{ title: string; descripti
       /<meta[^>]+name=["']twitter:description["'][^>]*>/i,
     )
 
-    return { title, description }
+    // og:image → twitter:image
+    const rawThumbnail = extractMetaContent(
+      html,
+      /<meta[^>]+property=["']og:image["'][^>]*>/i,
+      /<meta[^>]+name=["']twitter:image["'][^>]*>/i,
+    )
+    const thumbnailUrl = resolveImageUrl(rawThumbnail, url)
+
+    return { title, description, thumbnailUrl }
   } catch {
-    return { title: '', description: '' }
+    return { title: '', description: '', thumbnailUrl: '' }
   }
 }

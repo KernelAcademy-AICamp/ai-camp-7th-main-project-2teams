@@ -6,6 +6,7 @@ import { generateTags, createEmbedding } from '@/lib/ai'
 import { normalizeTags, extractTopCategory, UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
 import { fetchMeta } from '@/lib/fetchMeta'
+import { isSafeHttpUrl } from '@/lib/ssrf'
 import { normalizeUrl } from '@/lib/normalizeUrl'
 
 const getQuerySchema = z.object({
@@ -44,11 +45,13 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     )
   }
 
-  // content 없으면 URL fetch → 실제 title·description 추출 (단일 북마크 추가 경로)
+  // content 없으면 URL fetch → 실제 title·description·썸네일 추출 (단일 북마크 추가 경로)
+  let thumbnailUrl: string | null = null
   if (!content.trim()) {
     const meta = await fetchMeta(url)
     if (meta.title) title = meta.title
     if (meta.description) content = meta.description
+    if (isSafeHttpUrl(meta.thumbnailUrl)) thumbnailUrl = meta.thumbnailUrl
   }
 
   // A37: PDF·chrome:// 등 content script 차단 시 content 없음 → embedding=title만(약한 벡터). 허용 degradation.
@@ -91,10 +94,13 @@ export const POST = withAuth(async (req, { user, supabase }) => {
       tags,
       category_id,
       folder_hint: folder_hint ?? null,
+      thumbnail_url: thumbnailUrl,
       embedding,
     })
     // 명시 컬럼 — embedding 누출 방지
-    .select('id, url, title, tags, category_id, folder_hint, is_favorite, created_at')
+    .select(
+      'id, url, title, tags, category_id, folder_hint, is_favorite, thumbnail_url, created_at',
+    )
     .single()
 
   if (error) {
@@ -115,7 +121,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
 // A60: description 포함 — 카드 수정 모달에서 기존 설명 프리필용.
 // category:categories(name) — 카드 수정 모달에서 현재 카테고리 default 선택용 (category_id → 이름 조인).
 const LIST_COLUMNS =
-  'id, url, title, description, tags, category_id, category:categories(name), folder_hint, is_favorite, created_at'
+  'id, url, title, description, tags, category_id, category:categories(name), folder_hint, is_favorite, thumbnail_url, created_at'
 
 export const GET = withAuth(async (req, { supabase }) => {
   const parsed = getQuerySchema.safeParse(

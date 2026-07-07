@@ -157,7 +157,7 @@ export default function ImportPage() {
             <button
               onClick={(e) => { e.stopPropagation(); handleClearFile() }}
               aria-label="파일 선택 취소"
-              className="shrink-0 rounded p-1 text-[#94A3B8] hover:text-[#334155] dark:hover:text-gray-200"
+              className="shrink-0 cursor-pointer rounded p-1 text-[#94A3B8] hover:text-[#334155] dark:hover:text-gray-200"
             >
               <X className="h-4 w-4" />
             </button>
@@ -170,7 +170,7 @@ export default function ImportPage() {
         <button
           onClick={handleUpload}
           disabled={!file || isUploading}
-          className="gradient-brand mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+          className="gradient-brand mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
         >
           {isUploading ? (
             <>
@@ -276,13 +276,13 @@ export default function ImportPage() {
           <div className="mt-5 flex gap-2">
             <button
               onClick={handleReupload}
-              className="flex-1 rounded-xl border border-[#E2E8F0] bg-white px-4 py-2.5 text-sm font-semibold text-[#334155] transition-colors hover:bg-surface dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              className="flex-1 cursor-pointer rounded-xl border border-[#E2E8F0] bg-white px-4 py-2.5 text-sm font-semibold text-[#334155] transition-colors hover:bg-surface dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
             >
               다시 업로드
             </button>
             <button
               onClick={() => router.push('/')}
-              className="gradient-brand flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px"
+              className="gradient-brand flex-1 cursor-pointer rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px"
             >
               홈으로
             </button>
@@ -307,7 +307,7 @@ export default function ImportPage() {
           <button
             onClick={handleUpload}
             disabled={!file || isUploading}
-            className="mt-3 w-full rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-700 dark:bg-gray-900 dark:text-red-400 dark:hover:bg-red-950"
+            className="mt-3 w-full cursor-pointer rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-700 dark:bg-gray-900 dark:text-red-400 dark:hover:bg-red-950"
           >
             다시 시도
           </button>
