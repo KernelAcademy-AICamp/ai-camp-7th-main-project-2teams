@@ -15,7 +15,7 @@ import { InfiniteScrollTrigger } from "@/components/InfiniteScrollTrigger";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useSearch } from "@/hooks/useSearch";
 import { useFilterStore } from "@/store/filterStore";
-import { createClient } from "@/lib/supabase/client";
+import { useUserStore } from "@/store/userStore";
 import { getOnboardingKey, isOnboardingDone } from "@/lib/onboarding";
 import { parseFilterQuery, buildFilterQuery } from "@/lib/filterQuery";
 import { cn } from "@/lib/utils";
@@ -55,18 +55,20 @@ function DashboardContent() {
     })),
   );
 
+  const fetchUser = useUserStore((s) => s.fetchUser);
+
   // 신규 유저 온보딩 리다이렉트 — localStorage 기반 최소 체크 (A26)
   // isOnboardingDone이 손상된 값도 안전 처리(크래시 방지)
+  // fetchUser는 zustand 스토어에서 캐시/inflight 공유 — Sidebar와 중복 호출되지 않음
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    fetchUser().then((user) => {
       if (!user) return;
       const stored = localStorage.getItem(getOnboardingKey(user.id));
       if (!isOnboardingDone(stored)) {
         router.push("/onboarding");
       }
     });
-  }, [router]);
+  }, [fetchUser, router]);
 
   // searchParams 객체는 네비게이션에서 참조가 유지될 수 있어 의존성으로 부적합.
   // 쿼리 문자열로 의존해야 내용 변경마다 effect가 재실행된다.
@@ -156,6 +158,7 @@ function DashboardContent() {
   // isFetchingNextPage(다음 페이지 로드)는 별도 하단 스피너로 표시하므로 여기서 제외.
   const isRefetching = !isSearching && !isBookmarkPending && isBookmarkFetching && !isFetchingNextPage;
   const allBookmarks = useMemo(() => bookmarkData?.pages.flatMap((p) => p.bookmarks) ?? [], [bookmarkData]);
+  const totalCount = bookmarkData?.pages[0]?.total;
   const items = useMemo(
     () => (isSearching ? searchVisibleResults : allBookmarks),
     [isSearching, searchVisibleResults, allBookmarks],
@@ -180,7 +183,7 @@ function DashboardContent() {
         )}
 
         {isPending && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <BookmarkSkeleton key={i} />
             ))}
@@ -192,14 +195,14 @@ function DashboardContent() {
             <p className="text-gray-500 dark:text-gray-400">북마크를 불러오는 중 오류가 발생했습니다.</p>
             <button
               onClick={() => refetch()}
-              className="gradient-brand mt-3 rounded-[11px] px-4 py-2 text-sm text-white transition-transform hover:-translate-y-px"
+              className="gradient-brand mt-3 cursor-pointer rounded-[11px] px-4 py-2 text-sm text-white transition-transform hover:-translate-y-px"
             >
               다시 시도
             </button>
           </div>
         )}
 
-        {!isPending && items.length === 0 && (
+        {!isPending && !isBookmarkError && items.length === 0 && (
           <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
             {isSearching ? (
               isSearchError && !isSearchPending ? (
@@ -241,7 +244,14 @@ function DashboardContent() {
 
         {!isPending && items.length > 0 && (
           <>
-            <BookmarkToolbar />
+            <div className="flex items-center justify-between">
+              {!isSearching && typeof totalCount === "number" ? (
+                <p className="text-sm text-text-secondary">총 {totalCount}개</p>
+              ) : (
+                <span />
+              )}
+              <BookmarkToolbar />
+            </div>
             <div className="relative">
               {isRefetching && (
                 <div
@@ -256,7 +266,7 @@ function DashboardContent() {
               <div
                 className={cn(
                   viewMode === "grid"
-                    ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                    ? "grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
                     : viewMode === "compact"
                       ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900"
                       : "flex flex-col gap-3",
@@ -287,7 +297,7 @@ function DashboardContent() {
                 <p className="text-sm text-red-500">더 불러오지 못했습니다.</p>
                 <button
                   onClick={() => fetchNextPage()}
-                  className="rounded-[11px] border border-gray-200 px-3 py-1.5 text-xs text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="cursor-pointer rounded-[11px] border border-gray-200 px-3 py-1.5 text-xs text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
                 >
                   다시 시도
                 </button>
@@ -304,7 +314,7 @@ function DashboardFallback() {
   return (
     <>
       <div className="w-52 shrink-0" />
-      <div className="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid flex-1 grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <BookmarkSkeleton key={i} />
         ))}

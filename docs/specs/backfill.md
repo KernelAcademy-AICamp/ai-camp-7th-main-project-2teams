@@ -42,6 +42,14 @@
 - 전제: `supabase/migrations/0007_backup_before_url_normalize.sql` 먼저 적용
 - 실행: 기본 dry-run, `--apply` 플래그로 실제 반영. dedup 판단은 `lib/backfillUrlPlan.ts` 순수 함수(테스트 있음)에 위임
 
+### backfill-bookmark-thumbnail.ts
+
+- 위치: `front/scripts/backfill-bookmark-thumbnail.ts`
+- 대상: `thumbnail_url IS NULL`인 기존 북마크 (0017 마이그레이션은 컬럼만 추가, 과거 저장분은 전부 NULL)
+- 배경: 썸네일은 `POST /api/bookmarks`가 content 없을 때만 크롤링 → 과거 저장분·익스텐션 저장분(content 있음)은 누락
+- 방식: 대상 행의 url을 `fetchMeta()`로 재크롤링(og:image/YouTube 썸네일) → `isSafeHttpUrl`로 SSRF 재검증 → `thumbnail_url` 갱신. 못 찾으면 NULL 유지(재실행 가능)
+- 실행: 기본 dry-run, `--apply` 플래그로 실제 반영. 단순 추가 컬럼이라 백업 스냅샷 없이 `thumbnail_url = NULL` 재설정으로 되돌림 가능
+
 ## 신규 백필 추가 규칙
 
 새 백필 스킬(`.claude/skills/*backfill*/SKILL.md`)이나 스크립트(`front/scripts/backfill-*.ts`)를 추가하면

@@ -21,7 +21,7 @@ export function BookmarkToolbar() {
       {/* 정렬 토글 */}
       <button
         onClick={() => setSortOrder(sortOrder === 'latest' ? 'oldest' : 'latest')}
-        className="flex items-center gap-1.5 rounded-lg border border-brand/25 bg-accent px-2.5 py-1.5 text-xs font-medium text-brand transition-colors hover:bg-blue-100"
+        className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-brand/25 bg-accent px-2.5 py-1.5 text-xs font-medium text-brand transition-colors hover:bg-blue-100"
         aria-label="정렬 순서 전환"
       >
         <ArrowDownUp size={14} />
@@ -41,7 +41,7 @@ export function BookmarkToolbar() {
             aria-label={label}
             aria-pressed={viewMode === mode}
             className={[
-              'rounded p-1 transition-colors',
+              'cursor-pointer rounded p-1 transition-colors',
               viewMode === mode
                 ? 'bg-accent text-brand'
                 : 'text-text-secondary hover:text-text-primary',

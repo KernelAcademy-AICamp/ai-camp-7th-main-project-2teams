@@ -22,7 +22,7 @@ export function OnboardingGuideButton() {
       <button
         type="button"
         onClick={() => dialogRef.current?.showModal()}
-        className="text-sm font-medium text-white/85 transition-colors hover:text-white"
+        className="cursor-pointer text-sm font-medium text-white/85 transition-colors hover:text-white"
       >
         사용법
       </button>
@@ -41,7 +41,7 @@ export function OnboardingGuideButton() {
               type="button"
               onClick={() => dialogRef.current?.close()}
               aria-label="닫기"
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              className="cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
             >
               ✕
             </button>

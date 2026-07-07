@@ -11,11 +11,10 @@ import { buildFolderTree, type FolderNode } from "@/lib/folderTree";
 import { UNCATEGORIZED_LABEL } from "@/lib/tag-alias";
 import { SidebarSkeleton } from "@/components/SidebarSkeleton";
 import { createClient } from "@/lib/supabase/client";
+import { useUserStore } from "@/store/userStore";
 
 export function Sidebar() {
   const [categoryOpen, setCategoryOpen] = useState(true);
-  const [email, setEmail] = useState<string | null>(null);
-  const [emailLoaded, setEmailLoaded] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -39,14 +38,17 @@ export function Sidebar() {
 
   const { data: categoriesData, isPending: categoriesPending } = useCategories(tab);
 
+  // fetchUser는 zustand 스토어에서 캐시/inflight 공유 — 대시보드 페이지와 중복 호출되지 않음
+  const fetchUser = useUserStore((s) => s.fetchUser);
+  const [email, setEmail] = useState<string | null>(null);
+  const [emailLoaded, setEmailLoaded] = useState(false);
+
   useEffect(() => {
-    createClient()
-      .auth.getUser()
-      .then(({ data: { user } }) => {
-        setEmail(user?.email ?? null);
-        setEmailLoaded(true);
-      });
-  }, []);
+    fetchUser().then((user) => {
+      setEmail(user?.email ?? null);
+      setEmailLoaded(true);
+    });
+  }, [fetchUser]);
 
   // 팝업 외부 클릭 시 닫기
   useEffect(() => {
@@ -85,14 +87,22 @@ export function Sidebar() {
     setTab(t);
     setCategory(null);
     setTag(null);
-    setFolder(t === "folders" ? (folders[0] ?? null) : null);
+    setFolder(t === "folders" ? (folderTree[0]?.name ?? null) : null);
     setSearchQuery("");
   };
+
+  // 내 폴더 탭 진입 시(탭 클릭 경유 안 한 새로고침·직접 진입 포함) 첫 줄 기본 선택
+  useEffect(() => {
+    if (tab === "folders" && folder === null && folderTree.length > 0) {
+      setFolder(folderTree[0].name);
+    }
+  }, [tab, folder, folderTree, setFolder]);
 
   const handleAll = () => {
     setCategory(null);
     setTag(null);
     setFolder(null);
+    setSearchQuery("");
     // 탭 유지 — 홈 전체·즐겨찾기 전체 각각 독립 동작
   };
 
@@ -134,7 +144,7 @@ export function Sidebar() {
               aria-pressed={tab === t.id}
               onClick={() => handleTabClick(t.id)}
               className={[
-                "flex-1 rounded-md px-1.5 py-1 text-xs font-medium transition-colors break-keep",
+                "flex-1 cursor-pointer rounded-md px-1.5 py-1 text-xs font-medium transition-colors break-keep",
                 tab === t.id ? "bg-white text-brand shadow-sm" : "text-text-secondary hover:text-text-primary",
               ].join(" ")}
             >
@@ -148,7 +158,7 @@ export function Sidebar() {
       <section className="overflow-x-hidden overflow-y-auto">
         <button
           onClick={() => setCategoryOpen((o) => !o)}
-          className="mb-2 flex w-full items-center justify-between"
+          className="mb-2 flex w-full cursor-pointer items-center justify-between"
           aria-expanded={categoryOpen}
         >
           <h2 className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
@@ -175,7 +185,7 @@ export function Sidebar() {
                   onClick={handleAll}
                   aria-pressed={isAllActive}
                   className={[
-                    "w-full rounded-md border-l-4 px-3 py-1.5 text-left text-sm font-medium transition-colors",
+                    "w-full cursor-pointer rounded-md border-l-4 px-3 py-1.5 text-left text-sm font-medium transition-colors",
                     isAllActive
                       ? "border-brand bg-accent text-brand"
                       : "border-transparent text-text-secondary hover:bg-slate-100",
@@ -194,7 +204,7 @@ export function Sidebar() {
                     onClick={() => handleCategory(name)}
                     aria-pressed={category === name}
                     className={[
-                      "flex w-full items-center gap-1.5 rounded-md border-l-4 px-3 py-1.5 text-left text-sm transition-colors",
+                      "flex w-full cursor-pointer items-center gap-1.5 rounded-md border-l-4 px-3 py-1.5 text-left text-sm transition-colors",
                       category === name
                         ? "border-brand bg-accent font-medium text-brand"
                         : "border-transparent text-text-secondary hover:bg-slate-100",
@@ -253,7 +263,7 @@ export function Sidebar() {
               <li>
                 <button
                   onClick={handleSignOut}
-                  className="flex w-full items-center gap-1.5 px-3 py-2 text-sm text-text-primary hover:bg-slate-50"
+                  className="flex w-full cursor-pointer items-center gap-1.5 px-3 py-2 text-sm text-text-primary hover:bg-slate-50"
                 >
                   <span className="text-text-secondary">›</span>
                   로그아웃
@@ -267,7 +277,7 @@ export function Sidebar() {
         <div className="flex items-center gap-2 rounded-lg border border-line bg-white/60 p-2">
           <button
             onClick={() => setPopupOpen((o) => !o)}
-            className="flex min-w-0 flex-1 items-center gap-2"
+            className="flex min-w-0 flex-1 cursor-pointer items-center gap-2"
             aria-expanded={popupOpen}
             aria-haspopup="true"
           >
@@ -322,7 +332,7 @@ function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps
             onClick={() => setOpen((o) => !o)}
             aria-label={open ? "접기" : "펼치기"}
             aria-expanded={open}
-            className="shrink-0 px-0.5 text-xs text-text-secondary hover:text-text-primary"
+            className="shrink-0 cursor-pointer px-0.5 text-xs text-text-secondary hover:text-text-primary"
           >
             <span className={open ? "inline-block" : "inline-block -rotate-90"}>▾</span>
           </button>
@@ -333,7 +343,7 @@ function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps
           onClick={() => onSelect(node.name)}
           aria-pressed={active}
           className={[
-            "flex flex-1 items-center gap-1.5 rounded-md border-l-4 px-2 py-1.5 text-left text-sm transition-colors",
+            "flex flex-1 cursor-pointer items-center gap-1.5 rounded-md border-l-4 px-2 py-1.5 text-left text-sm transition-colors",
             active
               ? "border-brand bg-accent font-medium text-brand"
               : "border-transparent text-text-secondary hover:bg-slate-100",

@@ -68,9 +68,9 @@ export function buildUpdatePayload(
   const payload: UpdateBookmarkFields = {};
 
   if (!arraysEqual(form.tags, bookmark.tags)) payload.tags = form.tags;
-  // 미분류(빈 값) 선택은 전송 안 함(서버가 빈 카테고리 미지원) — 실제로 값이 바뀐 경우만 전송
+  // 미분류(빈 값) 선택 시 null 전송(카테고리 해제) — 실제로 값이 바뀐 경우만 전송
   const currentCategory = bookmark.category ?? "";
-  if (form.category !== "" && form.category !== currentCategory) payload.category = form.category;
+  if (form.category !== currentCategory) payload.category = form.category === "" ? null : form.category;
 
   const currentDescription = bookmark.description ?? "";
   if (form.description !== currentDescription) {
@@ -138,7 +138,7 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
             <button
               onClick={onClose}
               aria-label="닫기"
-              className="text-text-secondary hover:text-text-primary text-xl leading-none"
+              className="cursor-pointer text-text-secondary hover:text-text-primary text-xl leading-none"
             >
               ✕
             </button>
@@ -163,7 +163,7 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
                       type="button"
                       onClick={() => setForm({ ...form, tags: removeTag(form.tags, tag) })}
                       aria-label={`${tag} 태그 삭제`}
-                      className="hover:text-red-600"
+                      className="cursor-pointer hover:text-red-600"
                     >
                       <X size={12} />
                     </button>
@@ -185,7 +185,7 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
                   type="button"
                   onClick={handleAddTag}
                   disabled={isPending || form.tags.length >= MAX_TAGS}
-                  className="rounded-lg border border-line px-3 py-2 text-sm text-text-primary hover:bg-slate-50 disabled:opacity-50"
+                  className="cursor-pointer rounded-lg border border-line px-3 py-2 text-sm text-text-primary hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   추가
                 </button>
@@ -237,14 +237,14 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
                 type="button"
                 onClick={onClose}
                 disabled={isPending}
-                className="flex-1 rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-slate-50"
+                className="flex-1 cursor-pointer rounded-lg border border-line px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-slate-50 disabled:cursor-not-allowed"
               >
                 취소
               </button>
               <button
                 type="submit"
                 disabled={isPending}
-                className="gradient-brand flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px disabled:opacity-60"
+                className="gradient-brand flex-1 cursor-pointer rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isPending ? "저장 중..." : "저장"}
               </button>

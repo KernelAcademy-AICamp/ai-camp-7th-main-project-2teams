@@ -158,6 +158,11 @@ describe('isFilterMismatch', () => {
     expect(isFilterMismatch(filters, { tags: ['a'] })).toBe(false)
   })
 
+  it('category 필터 탭에서 미분류(null)로 변경하면 true (목록에서 제거 대상)', () => {
+    const filters = { category: '개발' }
+    expect(isFilterMismatch(filters, { category: null })).toBe(true)
+  })
+
   it('tag 필터에 변경 후 태그가 여전히 포함되면 false', () => {
     const filters = { tag: 'Next.js' }
     expect(isFilterMismatch(filters, { tags: ['Next.js', '리액트'] })).toBe(false)

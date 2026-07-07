@@ -58,14 +58,14 @@ export function OnboardingContent({ userId }: OnboardingContentProps) {
           <button
             type="button"
             onClick={handleComplete}
-            className="rounded-md bg-indigo-600 px-8 py-3 font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+            className="cursor-pointer rounded-md bg-indigo-600 px-8 py-3 font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
           >
             시작하기
           </button>
           <button
             type="button"
             onClick={handleComplete}
-            className="text-sm text-gray-400 underline-offset-2 hover:underline dark:text-gray-500"
+            className="cursor-pointer text-sm text-gray-400 underline-offset-2 hover:underline dark:text-gray-500"
           >
             건너뛰기
           </button>
