@@ -251,7 +251,7 @@ export const bookmarkUpdateSchema = z
   })
 
 export const importSchema = z.object({
-  // multipart/form-data — HTML 파일 업로드 (A29)
+  // multipart/form-data — HTML(브라우저 북마크) 또는 CSV(카카오톡 채팅 내보내기) 업로드 (A29)
   // Route Handler에서 req.formData()로 파싱
 })
 
@@ -526,7 +526,7 @@ front/
 │   │   │   ├── [id]/
 │   │   │   │   └── route.ts      # PATCH is_favorite(A27) + DELETE(카드 삭제)
 │   │   │   ├── import/
-│   │   │   │   └── route.ts      # POST — HTML 파싱 + 배치 태깅 (A29)
+│   │   │   │   └── route.ts      # POST — HTML/카카오톡 CSV 파싱 + 배치 태깅 (A29)
 │   │   │   ├── preview/
 │   │   │   │   └── route.ts      # POST — URL 메타 미리보기 (단건 추가 검증)
 │   │   │   ├── categories/
@@ -555,6 +555,7 @@ front/
 │   ├── auth.ts                    # withAuth HOF (A3)
 │   ├── schemas.ts                 # bookmarkSchema, searchSchema, bookmarkUpdateSchema(A60: is_favorite/tags/category/description)
 │   ├── parseNetscapeBookmarks.ts  # HTML 임포트 파싱 (A29). 자체 내보내기분은 TAGS/DATA_CATEGORY 속성 복원
+│   ├── parseKakaoChat.ts         # 카카오톡 채팅 내보내기 CSV(Date,User,Message) 파싱 — Message 내 URL만 추출, 대화 본문 미보관
 │   └── formatNetscapeBookmarks.ts # 설정 페이지 HTML 내보내기 — TAGS/DATA_CATEGORY 포함, 재임포트 시 태그·카테고리 복원
 ├── store/
 │   └── filterStore.ts             # tab, category, folder, sortOrder, viewMode 등

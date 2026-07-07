@@ -4,6 +4,18 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import ImportPage from '../page'
 
+// jsdom의 File/Blob은 표준 text()를 구현하지 않음(jsdom 한계 — 실제 브라우저는 전부 지원) → FileReader로 폴백
+if (typeof File.prototype.text !== 'function') {
+  File.prototype.text = function (this: File) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = () => reject(reader.error)
+      reader.readAsText(this)
+    })
+  }
+}
+
 // next/navigation useRouter — 페이지 내부에서 라우팅에만 쓰이므로 no-op 목으로 충분
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
@@ -36,6 +48,36 @@ function mockSuccessMutation(data: {
     reset: vi.fn(),
   })
 }
+
+function mockIdleMutation() {
+  useImportBookmarksMock.mockReturnValue({
+    status: 'idle',
+    data: undefined,
+    error: null,
+    mutate: vi.fn(),
+    reset: vi.fn(),
+  })
+}
+
+describe('ImportPage — 업로드 전 미리보기', () => {
+  beforeEach(() => {
+    useImportBookmarksMock.mockReset()
+    mockIdleMutation()
+  })
+
+  it('카카오톡 CSV 선택 시 추출될 URL 개수를 미리 보여준다', async () => {
+    render(<ImportPage />)
+
+    fireEvent.click(screen.getByText('카카오톡 대화 내보내기 (URL만 추출됩니다)'))
+
+    const input = screen.getByLabelText('CSV 파일 선택')
+    const csv = 'Date,User,Message\n2023-01-01,철수,"https://a.com"\n2023-01-02,영희,"잡담만 있음"'
+    const file = new File([csv], 'chat.csv', { type: 'text/csv' })
+    fireEvent.change(input, { target: { files: [file] } })
+
+    expect(await screen.findByText(/1개 URL 발견/)).toBeInTheDocument()
+  })
+})
 
 describe('ImportPage — A61 실패 항목 상세 리스트', () => {
   beforeEach(() => {
