@@ -230,4 +230,65 @@ describe('fetchMeta — HTML 엔티티 디코드', () => {
     expect(meta.title).toBe('A & B "test"')
     expect(meta.description).toBe('체크 ✅ 완료')
   })
+
+  it('범위 밖 숫자 문자 참조(&#99999999999;)가 있어도 RangeError 없이 나머지 title/description을 보존', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>정상 제목 &#99999999999; 뒷부분</title>' +
+          '<meta property="og:description" content="정상 설명 &#99999999999; 유지">',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    // String.fromCodePoint가 RangeError를 던지면 fetchMeta 전체가 catch로 무너져 전부 빈 문자열이 됨 —
+    // 그 회귀를 잡기 위해 나머지 유효한 텍스트가 그대로 보존되는지 확인.
+    expect(meta.title).toContain('정상 제목')
+    expect(meta.title).toContain('뒷부분')
+    expect(meta.description).toContain('정상 설명')
+    expect(meta.description).toContain('유지')
+  })
+
+  it('제어문자 숫자 참조(&#0; 등)는 title/description/content에서 제거됨', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>제목&#0;제목뒤</title>' +
+          '<meta property="og:description" content="설명&#7;앞&#27;뒤">' +
+          '<body>본문&#0;내용</body>',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    // NUL 등은 Postgres text 컬럼 삽입 시 오류를 유발하므로 결과에 남아있으면 안 됨.
+    expect(meta.title).not.toMatch(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/)
+    expect(meta.description).not.toMatch(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/)
+    expect(meta.content).not.toMatch(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/)
+    expect(meta.title).toBe('제목제목뒤')
+    expect(meta.description).toBe('설명앞뒤')
+  })
+})
+
+describe('fetchMeta — ReDoS 방어(태그 스트리핑 정규식)', () => {
+  it('50KB 연속 "<" 문자가 있어도 빠르게 처리됨(재앙적 백트래킹 없음)', async () => {
+    const adversarial = '<'.repeat(50_000)
+    global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: true, text: adversarial }))
+
+    const start = Date.now()
+    await fetchMeta('https://example.com')
+    const elapsed = Date.now() - start
+
+    expect(elapsed).toBeLessThan(500)
+  })
+
+  it('50KB 분량의 닫히지 않은 <script> 태그 반복이 있어도 빠르게 처리됨', async () => {
+    const adversarial = '<script>'.repeat(6250) // 8자 * 6250 = 50,000자, 닫는 </script> 없음
+    global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: true, text: adversarial }))
+
+    const start = Date.now()
+    await fetchMeta('https://example.com')
+    const elapsed = Date.now() - start
+
+    expect(elapsed).toBeLessThan(500)
+  })
 })

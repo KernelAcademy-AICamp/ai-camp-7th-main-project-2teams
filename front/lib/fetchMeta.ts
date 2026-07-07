@@ -68,6 +68,15 @@ function resolveImageUrl(raw: string, pageUrl: string): string {
 // 이름 있는 HTML 엔티티 — meta content 속성값에 그대로 남아있던 버그(&amp; 등 미디코딩) 방지.
 const NAMED_ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" }
 
+// 유효 유니코드 코드포인트 상한 — 이 값을 넘기면 String.fromCodePoint가 RangeError를 던짐.
+const MAX_CODE_POINT = 0x10ffff
+
+// C0 제어문자(개행류 제외) + DEL — 숫자 엔티티로 유입되면 Postgres text 컬럼 삽입(NUL 등) 실패 유발.
+function isStrippableControlCodePoint(codePoint: number): boolean {
+  if (codePoint === 0x09 || codePoint === 0x0a || codePoint === 0x0d) return false // \t \n \r는 유지
+  return (codePoint >= 0x00 && codePoint <= 0x1f) || codePoint === 0x7f
+}
+
 // &amp; &#39; &#x2705; 등 이름/숫자/16진 엔티티 참조를 실제 문자로 디코드.
 function decodeHtmlEntities(text: string): string {
   return text.replace(/&(#x[0-9a-fA-F]+|#[0-9]+|[a-zA-Z]+);/g, (match, body: string) => {
@@ -76,7 +85,11 @@ function decodeHtmlEntities(text: string): string {
         body[1] === 'x' || body[1] === 'X'
           ? parseInt(body.slice(2), 16)
           : parseInt(body.slice(1), 10)
-      return Number.isNaN(codePoint) ? match : String.fromCodePoint(codePoint)
+      // 범위 밖 코드포인트(예: &#99999999999;)는 String.fromCodePoint가 RangeError를 던져
+      // fetchMeta 전체 결과가 catch로 조용히 무너지므로 — 원문 그대로 보존.
+      if (Number.isNaN(codePoint) || codePoint < 0 || codePoint > MAX_CODE_POINT) return match
+      if (isStrippableControlCodePoint(codePoint)) return ''
+      return String.fromCodePoint(codePoint)
     }
     return NAMED_ENTITIES[body] ?? match
   })
@@ -92,15 +105,29 @@ function extractMetaContent(html: string, ...patterns: RegExp[]): string {
   return ''
 }
 
+// 태그 매칭 시 한 번에 스캔할 수 있는 최대 길이 — 무제한 [^>]+ / [\s\S]*? 는 닫는 char가 없는
+// 악성 입력(예: 50KB 연속 "<" 또는 닫히지 않는 <script> 반복)에서 재앙적 백트래킹(ReDoS)을 유발함.
+const MAX_TAG_ATTR_SCAN = 200
+const MAX_TAG_CONTENT_SCAN = 2000
+
 // 임베딩 입력용 "본문 텍스트" 추출 — <title>/<script>/<style> 제외한 나머지 텍스트.
 // 익스텐션의 document.body.innerText와 동등한 신호를 서버에서 재현(fetchMeta만 있는 경로 보강).
 function extractBodyText(html: string): string {
   const stripped = html
-    .replace(/<title[\s\S]*?<\/title>/gi, ' ')
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(
+      new RegExp(`<title[^>]{0,${MAX_TAG_ATTR_SCAN}}>[\\s\\S]{0,${MAX_TAG_CONTENT_SCAN}}?<\\/title>`, 'gi'),
+      ' ',
+    )
+    .replace(
+      new RegExp(`<script[^>]{0,${MAX_TAG_ATTR_SCAN}}>[\\s\\S]{0,${MAX_TAG_CONTENT_SCAN}}?<\\/script>`, 'gi'),
+      ' ',
+    )
+    .replace(
+      new RegExp(`<style[^>]{0,${MAX_TAG_ATTR_SCAN}}>[\\s\\S]{0,${MAX_TAG_CONTENT_SCAN}}?<\\/style>`, 'gi'),
+      ' ',
+    )
   const text = stripped
-    .replace(/<[^>]+>/g, ' ')
+    .replace(/<[^<>]{0,2000}>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
   return decodeHtmlEntities(text)
