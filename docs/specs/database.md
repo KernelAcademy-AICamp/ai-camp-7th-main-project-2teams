@@ -184,7 +184,11 @@ $$;
 > `<=>` = cosine distance 연산자. `%` = pg_trgm 유사도 연산자(기본 threshold 0.3). `embedding` 컬럼은 반환하지 않음.
 > 정렬 기준은 RRF 점수, 응답 `similarity` 필드는 벡터 코사인 유사도 값(트라이그램 전용 매칭 시 0).
 > `p_category_id`/`p_uncategorized` 미지정(기본값) 시 카테고리 필터 없음 — 기존 전체 검색과 동일.
-> 전체 구현: `supabase/migrations/0009_hybrid_search.sql`, `supabase/migrations/0010_search_category_filter.sql`.
+> A60 후속(0018): trgm 매칭 대상에 `description`(사용자 직접 입력) 추가 — title/tags에만 있던 키워드 검색 갭 해소.
+> 버그 수정(0019): RETURNS TABLE에 `description`/`thumbnail_url` 누락 — 검색 결과 카드에서 설명·썸네일 미표시 원인.
+> 전체 구현: `supabase/migrations/0009_hybrid_search.sql`, `supabase/migrations/0010_search_category_filter.sql`,
+> `0014_search_tags_favorite_filter.sql`, `0015_search_ranking_tags_favorite.sql`, `0018_search_description_trgm.sql`,
+> `0019_search_return_description_thumbnail.sql`.
 
 ---
 

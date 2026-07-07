@@ -102,6 +102,7 @@ export function Sidebar() {
     setCategory(null);
     setTag(null);
     setFolder(null);
+    setSearchQuery("");
     // 탭 유지 — 홈 전체·즐겨찾기 전체 각각 독립 동작
   };
 
