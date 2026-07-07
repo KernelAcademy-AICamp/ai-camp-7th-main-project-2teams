@@ -183,7 +183,7 @@ function DashboardContent() {
         )}
 
         {isPending && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 6 }).map((_, i) => (
               <BookmarkSkeleton key={i} />
             ))}
@@ -266,7 +266,7 @@ function DashboardContent() {
               <div
                 className={cn(
                   viewMode === "grid"
-                    ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                    ? "grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
                     : viewMode === "compact"
                       ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900"
                       : "flex flex-col gap-3",
@@ -314,7 +314,7 @@ function DashboardFallback() {
   return (
     <>
       <div className="w-52 shrink-0" />
-      <div className="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid flex-1 grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <BookmarkSkeleton key={i} />
         ))}
