@@ -34,6 +34,20 @@ function normalizeProtocol(value: string) {
   return /^https?:\/\//.test(value) ? value : `https://${value}`;
 }
 
+/**
+ * 저장 실패 에러 메시지 스타일 분기 — 테스트 가능하도록 export. (A59)
+ * 중복 북마크(duplicate: true)는 에러가 아닌 안내 톤, 그 외는 기존 destructive 톤 유지.
+ */
+export function getErrorMessageClassName(error: unknown): string {
+  const isDuplicate = Boolean(
+    error &&
+      typeof error === "object" &&
+      "duplicate" in error &&
+      (error as { duplicate?: boolean }).duplicate === true,
+  );
+  return isDuplicate ? "text-amber-600 dark:text-amber-400" : "text-destructive";
+}
+
 interface AddBookmarkModalProps {
   /** 트리거 버튼 클래스 오버라이드 — 상단바(흰 버튼)와 빈 상태(그라디언트) 컨텍스트 분리 */
   triggerClassName?: string;
@@ -263,7 +277,11 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                     )}
                   </div>
 
-                  {error && <p className="text-xs text-destructive">{(error as Error).message}</p>}
+                  {error && (
+                    <p className={`text-xs ${getErrorMessageClassName(error)}`}>
+                      {(error as Error).message}
+                    </p>
+                  )}
 
                   <div className="mt-1 flex gap-3">
                     <button

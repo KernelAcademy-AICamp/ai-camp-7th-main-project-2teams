@@ -24,6 +24,10 @@ let updateShouldError = false
 let existingLookupFailForUrl: string | null = null
 // 최상위 예외(error 이벤트) 테스트용 — in() 호출 자체가 throw
 let existingLookupShouldThrow = false
+// upsert 에러(DB 저장 실패) 테스트용 — failedItems에 '저장 실패' 고정 문구 매핑 확인
+let upsertShouldError = false
+// categories upsert 중 예외(그 외 예외 경로) 테스트용 — failedItems에 '처리 중 오류' 고정 문구 매핑 확인
+let categoryUpsertShouldThrow = false
 
 function makeSupabase(user: unknown) {
   return {
@@ -33,7 +37,12 @@ function makeSupabase(user: unknown) {
         return {
           upsert: () => ({
             select: () => ({
-              single: async () => ({ data: { id: 'cat-개발' }, error: null }),
+              single: async () => {
+                if (categoryUpsertShouldThrow) {
+                  throw new Error('category upsert boom')
+                }
+                return { data: { id: 'cat-개발' }, error: null }
+              },
             }),
           }),
           select: () => ({
@@ -68,6 +77,7 @@ function makeSupabase(user: unknown) {
         },
         upsert(payload: unknown) {
           insertSpy(payload)
+          if (upsertShouldError) return { error: { message: 'db constraint violation xyz' } }
           return { error: null }
         },
         update(payload: unknown) {
@@ -127,6 +137,7 @@ interface DoneEvent {
   failed: number
   skipped: number
   duplicate: number
+  failedItems: Array<{ url: string; reason: string }>
 }
 interface ErrorEvent {
   type: 'error'
@@ -231,6 +242,8 @@ describe('POST /api/bookmarks/import', () => {
     updateShouldError = false
     existingLookupFailForUrl = null
     existingLookupShouldThrow = false
+    upsertShouldError = false
+    categoryUpsertShouldThrow = false
     generateTags.mockResolvedValue(['개발', '프론트엔드'])
     createEmbedding.mockResolvedValue([0.1, 0.2])
     fetchMeta.mockResolvedValue({ title: '', description: '' })
@@ -303,6 +316,8 @@ describe('POST /api/bookmarks/import', () => {
     const json = await res.json()
     expect(json).toEqual({ imported: 0, failed: 0, skipped: 0, duplicate: 0 })
     expect(insertSpy).not.toHaveBeenCalled()
+    // 0건 응답 경로(스트림 진입 전)에는 애초에 failedItems 자체가 없음
+    expect(json).not.toHaveProperty('failedItems')
   })
 
   it('javascript: URL 스킵 — insert에 포함 안 됨', async () => {
@@ -337,6 +352,74 @@ describe('POST /api/bookmarks/import', () => {
     const json = readFinalResult(events)
     expect(json.failed).toBe(1)
     expect(json.imported).toBe(1)
+  })
+
+  // ------ A61: failedItems 신규 테스트 ------
+
+  it('임베딩 실패 항목 → failedItems에 { url, reason: 임베딩 생성 실패 } 기록, 성공 항목은 미포함', async () => {
+    createEmbedding
+      .mockRejectedValueOnce(new Error('rate limit'))
+      .mockResolvedValueOnce([0.1, 0.2])
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
+
+    expect(json.failedItems).toEqual([
+      { url: 'https://nextjs.org/', reason: '임베딩 생성 실패' },
+    ])
+    // 성공한 example.com은 failedItems에 없어야 함
+    expect(json.failedItems.some((i) => i.url === 'https://example.com/')).toBe(false)
+  })
+
+  it('DB upsert 에러 항목 → failedItems에 { url, reason: 저장 실패 } 기록, error.message 원문 미노출', async () => {
+    upsertShouldError = true
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
+
+    expect(json.failed).toBe(2)
+    expect(json.failedItems).toHaveLength(2)
+    json.failedItems.forEach((item) => {
+      expect(item.reason).toBe('저장 실패')
+    })
+    // DB 에러 원문(error.message)이 클라이언트 응답에 노출되면 안 됨
+    expect(JSON.stringify(events)).not.toContain('db constraint violation xyz')
+  })
+
+  it('그 외 예외(카테고리 upsert 실패 등) → failedItems에 { url, reason: 처리 중 오류 } 기록', async () => {
+    categoryUpsertShouldThrow = true
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
+
+    expect(json.failed).toBe(2)
+    expect(json.failedItems).toHaveLength(2)
+    json.failedItems.forEach((item) => {
+      expect(item.reason).toBe('처리 중 오류')
+    })
+  })
+
+  it('failedItems가 없는 정상 케이스 → done 이벤트에 failedItems: [] 포함', async () => {
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
+
+    expect(json.failedItems).toEqual([])
+  })
+
+  it('progress 이벤트에는 failedItems가 포함되지 않음(완료 시점에만 전달)', async () => {
+    createEmbedding.mockRejectedValueOnce(new Error('rate limit')).mockResolvedValueOnce([0.1, 0.2])
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    const events = await readAllEvents(res)
+    const progressEvents = events.filter((e) => e.type === 'progress')
+
+    progressEvents.forEach((e) => {
+      expect(e).not.toHaveProperty('failedItems')
+    })
   })
 
   it('응답에 embedding 미포함', async () => {

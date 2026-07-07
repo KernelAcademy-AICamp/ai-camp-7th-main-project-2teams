@@ -73,7 +73,11 @@ async function saveCurrentTab() {
     }),
   })
 
-  if (!res.ok) return { error: `HTTP ${res.status}` }
+  if (!res.ok) {
+    // 응답 바디를 파싱해 서버가 보낸 한국어 메시지·중복 플래그를 그대로 전달 (A59)
+    const json = await res.json().catch(() => ({}))
+    return { error: json.error || `HTTP ${res.status}`, duplicate: json.duplicate === true }
+  }
   return res.json()
 }
 

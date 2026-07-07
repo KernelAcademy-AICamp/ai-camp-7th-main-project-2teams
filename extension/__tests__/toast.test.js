@@ -14,6 +14,11 @@ function toastContent(state) {
     return { text: `오류: ${state.message}`, autoClose: true }
   }
 
+  // 중복 북마크(A59) — 에러가 아닌 안내 톤, 서버 메시지 그대로 노출
+  if (state.type === 'duplicate') {
+    return { text: state.message, autoClose: true }
+  }
+
   return { text: '', autoClose: false }
 }
 
@@ -48,5 +53,19 @@ describe('토스트 콘텐츠 로직', () => {
     const { text, autoClose } = toastContent({ type: 'error', message: 'HTTP 500' })
     expect(text).toBe('오류: HTTP 500')
     expect(autoClose).toBe(true)
+  })
+
+  it('duplicate → 서버 메시지 그대로 노출 + 자동 닫힘 (A59)', () => {
+    const { text, autoClose } = toastContent({
+      type: 'duplicate',
+      message: '이미 저장된 북마크입니다.',
+    })
+    expect(text).toBe('이미 저장된 북마크입니다.')
+    expect(autoClose).toBe(true)
+  })
+
+  it('duplicate → error와 달리 "오류:" 접두어 없이 노출', () => {
+    const { text } = toastContent({ type: 'duplicate', message: '이미 저장된 북마크입니다.' })
+    expect(text).not.toContain('오류:')
   })
 })

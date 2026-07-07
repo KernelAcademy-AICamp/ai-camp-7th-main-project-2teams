@@ -245,6 +245,34 @@ export default function ImportPage() {
               <strong className="font-mono">{mutation.data.failed}건</strong>
             </li>
           </ul>
+
+          {/* A61: 실패 항목 상세 리스트 — 접이식, 실패 건이 있을 때만 노출 */}
+          {mutation.data.failedItems.length > 0 && (
+            <details className="mt-4 rounded-xl border border-[#FECACA] bg-white px-4 py-3 dark:border-red-900 dark:bg-gray-900">
+              <summary className="cursor-pointer text-sm font-semibold text-[#DC2626] dark:text-red-400">
+                실패 항목 보기 ({mutation.data.failedItems.length})
+              </summary>
+              <ul className="mt-3 space-y-2 text-sm">
+                {mutation.data.failedItems.map((item, index) => (
+                  <li
+                    key={`${item.url}-${index}`}
+                    className="flex items-center justify-between gap-3 border-t border-[#FEE2E2] pt-2 first:border-t-0 first:pt-0 dark:border-red-950"
+                  >
+                    <span
+                      title={item.url}
+                      className="min-w-0 flex-1 truncate font-mono text-xs text-[#334155] dark:text-gray-300"
+                    >
+                      {item.url}
+                    </span>
+                    <span className="shrink-0 text-xs text-[#DC2626] dark:text-red-400">
+                      {item.reason}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+
           <div className="mt-5 flex gap-2">
             <button
               onClick={handleReupload}

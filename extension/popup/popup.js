@@ -36,6 +36,14 @@ function showToast(state) {
   if (state.type === 'error') {
     toastEl.textContent = `오류: ${state.message}`
     toastTimer = setTimeout(() => { toastEl.hidden = true }, 3000)
+    return
+  }
+
+  // 중복 북마크(A59) — 에러(빨강) 톤과 구분되는 안내 톤, 서버 메시지 그대로 노출
+  if (state.type === 'duplicate') {
+    toastEl.textContent = state.message
+    toastTimer = setTimeout(() => { toastEl.hidden = true }, 3000)
+    return
   }
 }
 
@@ -61,7 +69,9 @@ function renderAuth(session) {
       showToast({ type: 'loading' })
       chrome.runtime.sendMessage({ type: 'SAVE_BOOKMARK' }, (result) => {
         saveBtn.disabled = false
-        if (result?.error) {
+        if (result?.duplicate) {
+          showToast({ type: 'duplicate', message: result.error })
+        } else if (result?.error) {
           showToast({ type: 'error', message: result.error })
         } else {
           showToast({ type: 'success', bookmark: result?.bookmark })

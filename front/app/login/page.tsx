@@ -11,7 +11,7 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const fromExtension = searchParams.get('from') === 'extension'
 
-  // Google OAuth 전용 (CLAUDE.md). 이메일/비밀번호 로그인 없음.
+  // Google/Kakao OAuth (A63로 카카오 추가). 이메일/비밀번호 로그인 없음.
   const signInWithGoogle = async () => {
     const supabase = createClient()
     const callbackUrl = fromExtension
@@ -19,6 +19,18 @@ function LoginContent() {
       : `${location.origin}/auth/callback`
     await supabase.auth.signInWithOAuth({
       provider: 'google',
+      options: { redirectTo: callbackUrl },
+    })
+  }
+
+  // Google과 동일 패턴 — Supabase가 카카오를 네이티브 OAuth 프로바이더로 지원(A63)
+  const signInWithKakao = async () => {
+    const supabase = createClient()
+    const callbackUrl = fromExtension
+      ? `${location.origin}/auth/callback?from=extension`
+      : `${location.origin}/auth/callback`
+    await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
       options: { redirectTo: callbackUrl },
     })
   }
@@ -37,6 +49,13 @@ function LoginContent() {
           className="gradient-brand w-full rounded-xl px-6 py-3 font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px"
         >
           Google로 계속하기
+        </button>
+        <button
+          type="button"
+          onClick={signInWithKakao}
+          className="w-full rounded-xl bg-[#FEE500] px-6 py-3 font-semibold text-[#191919] shadow-[0_10px_20px_-6px_rgba(254,229,0,.5)] transition-transform hover:-translate-y-px"
+        >
+          카카오로 계속하기
         </button>
         <Link href="/welcome" className="text-sm text-gray-500 underline-offset-2 hover:underline dark:text-gray-400">
           서비스 소개 보기

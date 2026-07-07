@@ -11,6 +11,7 @@ import { ExtensionSync } from "@/components/ExtensionSync";
 import { SearchBar } from "@/components/SearchBar";
 import { Sidebar } from "@/components/Sidebar";
 import { BookmarkToolbar } from "@/components/BookmarkToolbar";
+import { InfiniteScrollTrigger } from "@/components/InfiniteScrollTrigger";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useSearch } from "@/hooks/useSearch";
 import { useFilterStore } from "@/store/filterStore";
@@ -101,6 +102,10 @@ function DashboardContent() {
     isFetching: isBookmarkFetching,
     isError: isBookmarkError,
     refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
   } = useBookmarks({
     category: category ?? undefined,
     folder: folder ?? undefined,
@@ -109,27 +114,52 @@ function DashboardContent() {
     tab: tab === "favorites" ? "favorites" : undefined,
   });
 
-  const { mutate: search, data: searchData, isPending: isSearchPending, isError: isSearchError } = useSearch();
+  const {
+    mutate: search,
+    isPending: isSearchPending,
+    isError: isSearchError,
+    visibleResults: searchVisibleResults,
+    hasMore: searchHasMore,
+    showMore: searchShowMore,
+  } = useSearch();
 
   const handleSearch = useCallback(
     (query: string) => {
       setSearchQuery(query);
-      search({ query, category: category ?? undefined });
+      // A58: 사이드바 태그/즐겨찾기 필터가 걸린 상태에서 검색해도 그대로 유지되도록 전달.
+      search({
+        query,
+        category: category ?? undefined,
+        tag: tag ?? undefined,
+        is_favorite: tab === "favorites" ? true : undefined,
+      });
     },
-    [search, setSearchQuery, category],
+    [search, setSearchQuery, category, tag, tab],
   );
 
   const handleClear = useCallback(() => setSearchQuery(""), [setSearchQuery]);
 
+  // A62: 검색은 클라이언트 슬라이스(showMore)라 재호출 없음, 목록은 서버 재호출(fetchNextPage).
+  const handleLoadMore = useCallback(() => {
+    if (isSearching) {
+      searchShowMore();
+    } else {
+      fetchNextPage();
+    }
+  }, [isSearching, searchShowMore, fetchNextPage]);
+
+  const loadMoreDisabled = isSearching ? !searchHasMore : !hasNextPage || isFetchingNextPage;
+
   const isPending = isSearching ? isSearchPending : isBookmarkPending;
   // keepPreviousData로 카테고리·폴더·태그 전환 시 isPending은 false로 유지된 채
   // 이전 목록이 그대로 보이는 동안 백그라운드 refetch만 진행됨 — 이 구간에서만 로딩 표시.
-  const isRefetching = !isSearching && !isBookmarkPending && isBookmarkFetching;
+  // isFetchingNextPage(다음 페이지 로드)는 별도 하단 스피너로 표시하므로 여기서 제외.
+  const isRefetching = !isSearching && !isBookmarkPending && isBookmarkFetching && !isFetchingNextPage;
+  const allBookmarks = useMemo(() => bookmarkData?.pages.flatMap((p) => p.bookmarks) ?? [], [bookmarkData]);
   const items = useMemo(
-    () => (isSearching ? (searchData?.results ?? []) : (bookmarkData?.bookmarks ?? [])),
-    [isSearching, searchData, bookmarkData],
+    () => (isSearching ? searchVisibleResults : allBookmarks),
+    [isSearching, searchVisibleResults, allBookmarks],
   );
-  const allBookmarks = bookmarkData?.bookmarks ?? [];
 
   // 정렬: created_at 기준 최신/오래된. ponytail: 현재 페이지 한정 클라 정렬, 페이지네이션 도입 시 서버 order로
   const sortedItems = useMemo(() => {
@@ -236,8 +266,33 @@ function DashboardContent() {
                 {sortedItems.map((item) => (
                   <BookmarkCard key={item.id} bookmark={item} view={viewMode} />
                 ))}
+                <InfiniteScrollTrigger onIntersect={handleLoadMore} disabled={loadMoreDisabled} />
               </div>
             </div>
+
+            {/* 목록 다음 페이지 로딩 — 검색은 네트워크 호출이 없어 스피너 불필요 */}
+            {!isSearching && isFetchingNextPage && (
+              <div
+                role="status"
+                className="flex items-center justify-center gap-2 py-4 text-xs text-gray-500 dark:text-gray-400"
+              >
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-brand dark:border-gray-600" />
+                더 불러오는 중
+              </div>
+            )}
+
+            {/* 목록 다음 페이지 실패 — 전체 화면 에러와 구분되는 하단 소형 에러, 이미 로드된 목록은 유지 */}
+            {!isSearching && isFetchNextPageError && (
+              <div className="flex flex-col items-center gap-2 py-4 text-center">
+                <p className="text-sm text-red-500">더 불러오지 못했습니다.</p>
+                <button
+                  onClick={() => fetchNextPage()}
+                  className="rounded-[11px] border border-gray-200 px-3 py-1.5 text-xs text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  다시 시도
+                </button>
+              </div>
+            )}
           </>
         )}
       </main>
