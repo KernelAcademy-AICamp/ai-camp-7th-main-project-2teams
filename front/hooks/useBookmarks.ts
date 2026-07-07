@@ -11,6 +11,8 @@ export interface Bookmark {
   category?: string | null
   is_favorite: boolean
   folder_hint: string[] | null
+  /** og:image/YouTube 썸네일 원본 URL — 직접 렌더링 금지, /api/thumbnail 프록시 경유 */
+  thumbnail_url?: string | null
   created_at: string
 }
 
