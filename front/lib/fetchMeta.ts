@@ -105,27 +105,45 @@ function extractMetaContent(html: string, ...patterns: RegExp[]): string {
   return ''
 }
 
-// 태그 매칭 시 한 번에 스캔할 수 있는 최대 길이 — 무제한 [^>]+ / [\s\S]*? 는 닫는 char가 없는
-// 악성 입력(예: 50KB 연속 "<" 또는 닫히지 않는 <script> 반복)에서 재앙적 백트래킹(ReDoS)을 유발함.
+// 여는 태그의 속성 구간 스캔 상한 — 정규식 백트래킹 폭발을 막기 위한 경계(ReDoS 방지).
 const MAX_TAG_ATTR_SCAN = 200
-const MAX_TAG_CONTENT_SCAN = 2000
+
+// title/script/style처럼 "여는 태그 ~ 닫는 태그" 사이 내용을 통째로 제거할 때 쓰는 태그.
+// 정규식 lazy quantifier([\s\S]*?) 대신 indexOf 기반 수동 스캔을 사용 — 백트래킹 자체가 없어
+// 태그 content 길이에 무관하게(2KB 넘는 실제 JSON-LD/GTM 스니펫 등) ReDoS 없이 안전하게 처리.
+function stripTagBlock(html: string, tagName: string): string {
+  const openTagRe = new RegExp(`<${tagName}\\b[^<>]{0,${MAX_TAG_ATTR_SCAN}}>`, 'i')
+  const closeTagNeedle = `</${tagName}`
+
+  let result = ''
+  let rest = html
+  for (;;) {
+    const openMatch = rest.match(openTagRe)
+    if (!openMatch || openMatch.index === undefined) {
+      result += rest
+      break
+    }
+    result += rest.slice(0, openMatch.index)
+
+    const afterOpen = rest.slice(openMatch.index + openMatch[0].length)
+    const closeIdx = afterOpen.toLowerCase().indexOf(closeTagNeedle)
+    if (closeIdx === -1) {
+      // 닫는 태그가 끝까지 없음 — 이후 내용을 전부 버림(스크립트/스타일 원문 누출 방지).
+      break
+    }
+    const closeTagEnd = afterOpen.indexOf('>', closeIdx)
+    rest = closeTagEnd === -1 ? '' : afterOpen.slice(closeTagEnd + 1)
+  }
+  return result
+}
 
 // 임베딩 입력용 "본문 텍스트" 추출 — <title>/<script>/<style> 제외한 나머지 텍스트.
 // 익스텐션의 document.body.innerText와 동등한 신호를 서버에서 재현(fetchMeta만 있는 경로 보강).
 function extractBodyText(html: string): string {
-  const stripped = html
-    .replace(
-      new RegExp(`<title[^>]{0,${MAX_TAG_ATTR_SCAN}}>[\\s\\S]{0,${MAX_TAG_CONTENT_SCAN}}?<\\/title>`, 'gi'),
-      ' ',
-    )
-    .replace(
-      new RegExp(`<script[^>]{0,${MAX_TAG_ATTR_SCAN}}>[\\s\\S]{0,${MAX_TAG_CONTENT_SCAN}}?<\\/script>`, 'gi'),
-      ' ',
-    )
-    .replace(
-      new RegExp(`<style[^>]{0,${MAX_TAG_ATTR_SCAN}}>[\\s\\S]{0,${MAX_TAG_CONTENT_SCAN}}?<\\/style>`, 'gi'),
-      ' ',
-    )
+  const withoutTitle = stripTagBlock(html, 'title')
+  const withoutScript = stripTagBlock(withoutTitle, 'script')
+  const stripped = stripTagBlock(withoutScript, 'style')
+
   const text = stripped
     .replace(/<[^<>]{0,2000}>/g, ' ')
     .replace(/\s+/g, ' ')

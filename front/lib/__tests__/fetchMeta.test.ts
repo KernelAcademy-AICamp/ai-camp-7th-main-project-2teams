@@ -292,3 +292,34 @@ describe('fetchMeta — ReDoS 방어(태그 스트리핑 정규식)', () => {
     expect(elapsed).toBeLessThan(500)
   })
 })
+
+describe('fetchMeta — 긴 script/style content 누출 방지 (회귀)', () => {
+  it('2000자 넘는 <script> 태그 content는 embedding content로 누출되지 않음', async () => {
+    // 실제 페이지의 __NEXT_DATA__/GTM 스니펫처럼 2KB를 넘는 인라인 스크립트를 흉내낸 케이스.
+    const marker = 'SCRIPT_MARKER_레도스수정후누출테스트'
+    const longScript = `var payload = "${marker}"; ` + 'x'.repeat(5000)
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text: `<title>t</title><script>${longScript}</script><body>실제 본문</body>`,
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).not.toContain(marker)
+    expect(meta.content).toContain('실제 본문')
+  })
+
+  it('2000자 넘는 <style> 태그 content는 embedding content로 누출되지 않음', async () => {
+    const marker = 'STYLE_MARKER_레도스수정후누출테스트'
+    const longStyle = `.a{content:"${marker}"} ` + 'y'.repeat(5000)
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text: `<title>t</title><style>${longStyle}</style><body>실제 본문</body>`,
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.content).not.toContain(marker)
+    expect(meta.content).toContain('실제 본문')
+  })
+})
