@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { QueryClient } from '@tanstack/react-query'
+import { QueryClient, type InfiniteData } from '@tanstack/react-query'
 import { fetchDeleteBookmark, applyOptimisticDelete } from '../useDeleteBookmark'
-import type { Bookmark } from '../useBookmarks'
+import type { Bookmark, BookmarksPage } from '../useBookmarks'
+
+// useBookmarks가 useInfiniteQuery라 캐시는 InfiniteData<BookmarksPage> — 페이지 1개짜리로 시드.
+const makeInfiniteData = (bookmarks: Bookmark[], total: number): InfiniteData<BookmarksPage> => ({
+  pages: [{ bookmarks, total }],
+  pageParams: [1],
+})
 
 const makeBookmark = (id: string): Bookmark => ({
   id,
@@ -62,28 +68,22 @@ describe('fetchDeleteBookmark', () => {
 // --- (2) applyOptimisticDelete 순수 함수 검증 ---
 describe('applyOptimisticDelete', () => {
   it('대상 id 북마크 제거 + total 감소', () => {
-    const old = {
-      bookmarks: [makeBookmark('1'), makeBookmark('2'), makeBookmark('3')],
-      total: 3,
-    }
+    const old = makeInfiniteData([makeBookmark('1'), makeBookmark('2'), makeBookmark('3')], 3)
 
     const result = applyOptimisticDelete(old, '2')
 
-    expect(result?.bookmarks).toHaveLength(2)
-    expect(result?.bookmarks.map((b) => b.id)).toEqual(['1', '3'])
-    expect(result?.total).toBe(2)
+    expect(result?.pages[0].bookmarks).toHaveLength(2)
+    expect(result?.pages[0].bookmarks.map((b) => b.id)).toEqual(['1', '3'])
+    expect(result?.pages[0].total).toBe(2)
   })
 
   it('존재하지 않는 id — 목록·total 변경 없음', () => {
-    const old = {
-      bookmarks: [makeBookmark('1'), makeBookmark('2')],
-      total: 2,
-    }
+    const old = makeInfiniteData([makeBookmark('1'), makeBookmark('2')], 2)
 
     const result = applyOptimisticDelete(old, 'does-not-exist')
 
-    expect(result?.bookmarks).toHaveLength(2)
-    expect(result?.total).toBe(2)
+    expect(result?.pages[0].bookmarks).toHaveLength(2)
+    expect(result?.pages[0].total).toBe(2)
   })
 
   it('old가 undefined이면 undefined 반환 (캐시 미스 처리)', () => {
@@ -91,26 +91,37 @@ describe('applyOptimisticDelete', () => {
   })
 
   it('단일 항목 삭제 후 total이 0 미만으로 내려가지 않음', () => {
-    const old = {
-      bookmarks: [makeBookmark('1')],
-      total: 1,
-    }
+    const old = makeInfiniteData([makeBookmark('1')], 1)
 
     const result = applyOptimisticDelete(old, '1')
 
-    expect(result?.bookmarks).toHaveLength(0)
-    expect(result?.total).toBe(0)
+    expect(result?.pages[0].bookmarks).toHaveLength(0)
+    expect(result?.pages[0].total).toBe(0)
   })
 
   it('비대상 북마크 불변성 유지 — 참조·값 보존', () => {
-    const old = {
-      bookmarks: [makeBookmark('1'), makeBookmark('2')],
-      total: 2,
-    }
+    const old = makeInfiniteData([makeBookmark('1'), makeBookmark('2')], 2)
 
     const result = applyOptimisticDelete(old, '1')
 
-    expect(result?.bookmarks[0]).toEqual(makeBookmark('2'))
+    expect(result?.pages[0].bookmarks[0]).toEqual(makeBookmark('2'))
+  })
+
+  it('여러 페이지 중 대상이 있는 페이지에서만 제거, 모든 페이지 total -1', () => {
+    const old: InfiniteData<BookmarksPage> = {
+      pages: [
+        { bookmarks: [makeBookmark('1'), makeBookmark('2')], total: 3 },
+        { bookmarks: [makeBookmark('3')], total: 3 },
+      ],
+      pageParams: [1, 2],
+    }
+
+    const result = applyOptimisticDelete(old, '3')
+
+    expect(result?.pages[0].bookmarks).toHaveLength(2)
+    expect(result?.pages[0].total).toBe(2)
+    expect(result?.pages[1].bookmarks).toHaveLength(0)
+    expect(result?.pages[1].total).toBe(2)
   })
 })
 
@@ -125,41 +136,33 @@ describe('낙관적 삭제 + 롤백 통합 (QueryClient)', () => {
   it('onMutate: 캐시에서 해당 북마크 즉시 제거', () => {
     const filters = { tab: undefined }
     const queryKey = ['bookmarks', filters]
-    queryClient.setQueryData(queryKey, {
-      bookmarks: [makeBookmark('1'), makeBookmark('2')],
-      total: 2,
-    })
+    queryClient.setQueryData(queryKey, makeInfiniteData([makeBookmark('1'), makeBookmark('2')], 2))
 
     // onMutate 로직 시뮬레이션
-    const previousData = queryClient.getQueriesData<{
-      bookmarks: Bookmark[]
-      total: number
-    }>({ queryKey: ['bookmarks'] })
+    const previousData = queryClient.getQueriesData<InfiniteData<BookmarksPage>>({
+      queryKey: ['bookmarks'],
+    })
 
     for (const [key, data] of previousData) {
       if (!data) continue
       queryClient.setQueryData(key, applyOptimisticDelete(data, '1') ?? data)
     }
 
-    const cached = queryClient.getQueryData<{ bookmarks: Bookmark[]; total: number }>(queryKey)
-    expect(cached?.bookmarks).toHaveLength(1)
-    expect(cached?.bookmarks[0].id).toBe('2')
-    expect(cached?.total).toBe(1)
+    const cached = queryClient.getQueryData<InfiniteData<BookmarksPage>>(queryKey)
+    expect(cached?.pages[0].bookmarks).toHaveLength(1)
+    expect(cached?.pages[0].bookmarks[0].id).toBe('2')
+    expect(cached?.pages[0].total).toBe(1)
   })
 
   it('onError: 스냅샷으로 캐시 복원 (롤백)', () => {
     const filters = { tab: undefined }
     const queryKey = ['bookmarks', filters]
-    queryClient.setQueryData(queryKey, {
-      bookmarks: [makeBookmark('1'), makeBookmark('2')],
-      total: 2,
-    })
+    queryClient.setQueryData(queryKey, makeInfiniteData([makeBookmark('1'), makeBookmark('2')], 2))
 
     // 스냅샷 저장
-    const previousData = queryClient.getQueriesData<{
-      bookmarks: Bookmark[]
-      total: number
-    }>({ queryKey: ['bookmarks'] })
+    const previousData = queryClient.getQueriesData<InfiniteData<BookmarksPage>>({
+      queryKey: ['bookmarks'],
+    })
 
     // 낙관적 삭제
     for (const [key, data] of previousData) {
@@ -169,7 +172,7 @@ describe('낙관적 삭제 + 롤백 통합 (QueryClient)', () => {
 
     // 낙관적 삭제 반영 확인
     expect(
-      queryClient.getQueryData<{ bookmarks: Bookmark[] }>(queryKey)?.bookmarks
+      queryClient.getQueryData<InfiniteData<BookmarksPage>>(queryKey)?.pages[0].bookmarks
     ).toHaveLength(1)
 
     // onError 롤백: 스냅샷 복원
@@ -177,39 +180,32 @@ describe('낙관적 삭제 + 롤백 통합 (QueryClient)', () => {
       queryClient.setQueryData(key, data)
     }
 
-    const restored = queryClient.getQueryData<{ bookmarks: Bookmark[]; total: number }>(queryKey)
-    expect(restored?.bookmarks).toHaveLength(2)
-    expect(restored?.total).toBe(2)
+    const restored = queryClient.getQueryData<InfiniteData<BookmarksPage>>(queryKey)
+    expect(restored?.pages[0].bookmarks).toHaveLength(2)
+    expect(restored?.pages[0].total).toBe(2)
   })
 
   it('여러 탭 캐시가 동시에 존재할 때 모두 제거됨', () => {
     const allKey = ['bookmarks', { tab: undefined }]
     const favKey = ['bookmarks', { tab: 'favorites' }]
 
-    queryClient.setQueryData(allKey, {
-      bookmarks: [makeBookmark('1'), makeBookmark('2')],
-      total: 2,
-    })
-    queryClient.setQueryData(favKey, {
-      bookmarks: [makeBookmark('1')],
-      total: 1,
-    })
+    queryClient.setQueryData(allKey, makeInfiniteData([makeBookmark('1'), makeBookmark('2')], 2))
+    queryClient.setQueryData(favKey, makeInfiniteData([makeBookmark('1')], 1))
 
-    const previousData = queryClient.getQueriesData<{
-      bookmarks: Bookmark[]
-      total: number
-    }>({ queryKey: ['bookmarks'] })
+    const previousData = queryClient.getQueriesData<InfiniteData<BookmarksPage>>({
+      queryKey: ['bookmarks'],
+    })
 
     for (const [key, data] of previousData) {
       if (!data) continue
       queryClient.setQueryData(key, applyOptimisticDelete(data, '1') ?? data)
     }
 
-    const allCached = queryClient.getQueryData<{ bookmarks: Bookmark[]; total: number }>(allKey)
-    const favCached = queryClient.getQueryData<{ bookmarks: Bookmark[]; total: number }>(favKey)
+    const allCached = queryClient.getQueryData<InfiniteData<BookmarksPage>>(allKey)
+    const favCached = queryClient.getQueryData<InfiniteData<BookmarksPage>>(favKey)
 
-    expect(allCached?.bookmarks).toHaveLength(1)
-    expect(favCached?.bookmarks).toHaveLength(0)
-    expect(favCached?.total).toBe(0)
+    expect(allCached?.pages[0].bookmarks).toHaveLength(1)
+    expect(favCached?.pages[0].bookmarks).toHaveLength(0)
+    expect(favCached?.pages[0].total).toBe(0)
   })
 })

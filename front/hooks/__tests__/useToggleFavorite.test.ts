@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { QueryClient } from '@tanstack/react-query'
+import { QueryClient, type InfiniteData } from '@tanstack/react-query'
 import { fetchToggleFavorite, applyOptimisticToggle } from '../useToggleFavorite'
-import type { Bookmark } from '../useBookmarks'
+import type { Bookmark, BookmarksPage } from '../useBookmarks'
+
+// useBookmarks가 useInfiniteQuery라 캐시는 InfiniteData<BookmarksPage> — 페이지 1개짜리로 시드.
+const makeInfiniteData = (bookmarks: Bookmark[], total: number): InfiniteData<BookmarksPage> => ({
+  pages: [{ bookmarks, total }],
+  pageParams: [1],
+})
 
 const makeBookmark = (id: string, is_favorite: boolean): Bookmark => ({
   id,
@@ -60,27 +66,21 @@ describe('fetchToggleFavorite', () => {
 // --- (2) applyOptimisticToggle 순수 함수 검증 ---
 describe('applyOptimisticToggle', () => {
   it('대상 북마크의 is_favorite 토글 — false → true', () => {
-    const old = {
-      bookmarks: [makeBookmark('1', false), makeBookmark('2', true)],
-      total: 2,
-    }
+    const old = makeInfiniteData([makeBookmark('1', false), makeBookmark('2', true)], 2)
 
     const result = applyOptimisticToggle(old, '1', true)
 
-    expect(result?.bookmarks[0].is_favorite).toBe(true)
-    expect(result?.bookmarks[1].is_favorite).toBe(true) // 비대상: 불변
+    expect(result?.pages[0].bookmarks[0].is_favorite).toBe(true)
+    expect(result?.pages[0].bookmarks[1].is_favorite).toBe(true) // 비대상: 불변
   })
 
   it('대상 북마크의 is_favorite 토글 — true → false', () => {
-    const old = {
-      bookmarks: [makeBookmark('1', true), makeBookmark('2', false)],
-      total: 2,
-    }
+    const old = makeInfiniteData([makeBookmark('1', true), makeBookmark('2', false)], 2)
 
     const result = applyOptimisticToggle(old, '1', false)
 
-    expect(result?.bookmarks[0].is_favorite).toBe(false)
-    expect(result?.bookmarks[1].is_favorite).toBe(false) // 비대상: 불변
+    expect(result?.pages[0].bookmarks[0].is_favorite).toBe(false)
+    expect(result?.pages[0].bookmarks[1].is_favorite).toBe(false) // 비대상: 불변
   })
 
   it('old가 undefined이면 undefined 반환 (캐시 미스 처리)', () => {
@@ -88,15 +88,27 @@ describe('applyOptimisticToggle', () => {
   })
 
   it('id와 일치하지 않는 북마크는 변경 없음', () => {
-    const old = {
-      bookmarks: [makeBookmark('1', false), makeBookmark('2', false)],
-      total: 2,
-    }
+    const old = makeInfiniteData([makeBookmark('1', false), makeBookmark('2', false)], 2)
 
     const result = applyOptimisticToggle(old, '1', true)
 
-    expect(result?.bookmarks[1].id).toBe('2')
-    expect(result?.bookmarks[1].is_favorite).toBe(false)
+    expect(result?.pages[0].bookmarks[1].id).toBe('2')
+    expect(result?.pages[0].bookmarks[1].is_favorite).toBe(false)
+  })
+
+  it('여러 페이지에 걸쳐 있어도 대상 페이지만 토글', () => {
+    const old: InfiniteData<BookmarksPage> = {
+      pages: [
+        { bookmarks: [makeBookmark('1', false)], total: 2 },
+        { bookmarks: [makeBookmark('2', false)], total: 2 },
+      ],
+      pageParams: [1, 2],
+    }
+
+    const result = applyOptimisticToggle(old, '2', true)
+
+    expect(result?.pages[0].bookmarks[0].is_favorite).toBe(false)
+    expect(result?.pages[1].bookmarks[0].is_favorite).toBe(true)
   })
 })
 
@@ -111,39 +123,31 @@ describe('낙관적 업데이트 + 롤백 통합 (QueryClient)', () => {
   it('onMutate: 일반 탭에서 캐시 is_favorite 업데이트', () => {
     const filters = { tab: undefined, category: undefined }
     const queryKey = ['bookmarks', filters]
-    queryClient.setQueryData(queryKey, {
-      bookmarks: [makeBookmark('1', false)],
-      total: 1,
-    })
+    queryClient.setQueryData(queryKey, makeInfiniteData([makeBookmark('1', false)], 1))
 
     // onMutate 로직 시뮬레이션 (실제 훅의 for-loop 패턴)
-    const previousData = queryClient.getQueriesData<{
-      bookmarks: Bookmark[]
-      total: number
-    }>({ queryKey: ['bookmarks'] })
+    const previousData = queryClient.getQueriesData<InfiniteData<BookmarksPage>>({
+      queryKey: ['bookmarks'],
+    })
 
     for (const [key, data] of previousData) {
       if (!data) continue
       queryClient.setQueryData(key, applyOptimisticToggle(data, '1', true) ?? data)
     }
 
-    const cached = queryClient.getQueryData<{ bookmarks: Bookmark[]; total: number }>(queryKey)
-    expect(cached?.bookmarks[0].is_favorite).toBe(true)
+    const cached = queryClient.getQueryData<InfiniteData<BookmarksPage>>(queryKey)
+    expect(cached?.pages[0].bookmarks[0].is_favorite).toBe(true)
   })
 
   it('onError: 스냅샷으로 캐시 복원 (롤백)', () => {
     const filters = { tab: undefined }
     const queryKey = ['bookmarks', filters]
-    queryClient.setQueryData(queryKey, {
-      bookmarks: [makeBookmark('1', false)],
-      total: 1,
-    })
+    queryClient.setQueryData(queryKey, makeInfiniteData([makeBookmark('1', false)], 1))
 
     // 스냅샷 저장
-    const previousData = queryClient.getQueriesData<{
-      bookmarks: Bookmark[]
-      total: number
-    }>({ queryKey: ['bookmarks'] })
+    const previousData = queryClient.getQueriesData<InfiniteData<BookmarksPage>>({
+      queryKey: ['bookmarks'],
+    })
 
     // 낙관적 업데이트
     for (const [key, data] of previousData) {
@@ -153,7 +157,8 @@ describe('낙관적 업데이트 + 롤백 통합 (QueryClient)', () => {
 
     // 낙관적 업데이트 반영 확인
     expect(
-      queryClient.getQueryData<{ bookmarks: Bookmark[] }>(queryKey)?.bookmarks[0].is_favorite
+      queryClient.getQueryData<InfiniteData<BookmarksPage>>(queryKey)?.pages[0].bookmarks[0]
+        .is_favorite
     ).toBe(true)
 
     // onError 롤백: 스냅샷 복원
@@ -161,21 +166,20 @@ describe('낙관적 업데이트 + 롤백 통합 (QueryClient)', () => {
       queryClient.setQueryData(key, data)
     }
 
-    const restored = queryClient.getQueryData<{ bookmarks: Bookmark[]; total: number }>(queryKey)
-    expect(restored?.bookmarks[0].is_favorite).toBe(false)
+    const restored = queryClient.getQueryData<InfiniteData<BookmarksPage>>(queryKey)
+    expect(restored?.pages[0].bookmarks[0].is_favorite).toBe(false)
   })
 
   it('[H-2] 즐겨찾기 탭에서 is_favorite:false → 아이템 즉시 제거', () => {
     const favQueryKey = ['bookmarks', { tab: 'favorites' }]
-    queryClient.setQueryData(favQueryKey, {
-      bookmarks: [makeBookmark('1', true), makeBookmark('2', true)],
-      total: 2,
-    })
+    queryClient.setQueryData(
+      favQueryKey,
+      makeInfiniteData([makeBookmark('1', true), makeBookmark('2', true)], 2)
+    )
 
-    const previousData = queryClient.getQueriesData<{
-      bookmarks: Bookmark[]
-      total: number
-    }>({ queryKey: ['bookmarks'] })
+    const previousData = queryClient.getQueriesData<InfiniteData<BookmarksPage>>({
+      queryKey: ['bookmarks'],
+    })
 
     // onMutate H-2 분기 시뮬레이션 (즐겨찾기 해제: is_favorite → false)
     const targetId = '1'
@@ -186,21 +190,26 @@ describe('낙관적 업데이트 + 롤백 통합 (QueryClient)', () => {
       const filters = key[1] as Record<string, string | undefined> | undefined
       const isInFavoritesTab = filters?.tab === 'favorites'
 
-      let updated: { bookmarks: Bookmark[]; total: number }
+      let updated: InfiniteData<BookmarksPage>
       if (isInFavoritesTab && !newIsFavorite) {
-        // 즐겨찾기 탭에서 해제 → 제거
-        const filtered = data.bookmarks.filter((b) => b.id !== targetId)
-        const removed = data.bookmarks.length - filtered.length
-        updated = { bookmarks: filtered, total: Math.max(0, data.total - removed) }
+        // 즐겨찾기 탭에서 해제 → 모든 페이지에서 제거
+        updated = {
+          ...data,
+          pages: data.pages.map((page) => {
+            const filtered = page.bookmarks.filter((b) => b.id !== targetId)
+            const removed = page.bookmarks.length - filtered.length
+            return { bookmarks: filtered, total: Math.max(0, page.total - removed) }
+          }),
+        }
       } else {
         updated = applyOptimisticToggle(data, targetId, newIsFavorite) ?? data
       }
       queryClient.setQueryData(key, updated)
     }
 
-    const cached = queryClient.getQueryData<{ bookmarks: Bookmark[]; total: number }>(favQueryKey)
-    expect(cached?.bookmarks).toHaveLength(1)
-    expect(cached?.bookmarks[0].id).toBe('2')
-    expect(cached?.total).toBe(1)
+    const cached = queryClient.getQueryData<InfiniteData<BookmarksPage>>(favQueryKey)
+    expect(cached?.pages[0].bookmarks).toHaveLength(1)
+    expect(cached?.pages[0].bookmarks[0].id).toBe('2')
+    expect(cached?.pages[0].total).toBe(1)
   })
 })
