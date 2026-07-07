@@ -19,6 +19,9 @@ interface BookmarkCardProps {
 /** AI 태그 칩 — Design.md: 작은 pill, 연한 블루 배경 + 블루 텍스트 */
 const TAG_CHIP = "rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-brand-strong";
 
+/** 그리드 카드 썸네일 위 hover 액션 버튼 — 즐겨찾기·외부링크·메뉴 크기 통일 (고정 박스 + 내부 중앙정렬) */
+const ACTION_CHIP = "inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black/50 backdrop-blur-sm";
+
 /** javascript: URL XSS 방어 — http/https만 허용 */
 export function safeUrl(url: string): string {
   try {
@@ -67,6 +70,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [thumbnailErrored, setThumbnailErrored] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 외부 클릭 시 메뉴 닫힘
@@ -100,8 +104,9 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
     setIsEditOpen(true);
   };
 
-  // 메뉴 버튼 + 드롭다운 — 일반/컴팩트 공유
-  const menu = (
+  // 메뉴 버튼 + 드롭다운 — 일반/컴팩트/그리드 공유. className으로 버튼 자체 크기 오버라이드 가능
+  // (그리드 오버레이에서 감싸는 배경 span 없이 버튼 자체가 칩 크기를 갖도록).
+  const menu = (buttonClassName?: string) => (
     <div ref={menuRef} className="relative flex items-center">
       <button
         onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -109,7 +114,10 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
         aria-haspopup="menu"
         aria-expanded={isMenuOpen}
         disabled={isDeletePending}
-        className="inline-flex items-center justify-center rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800"
+        className={cn(
+          "inline-flex cursor-pointer items-center justify-center rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800",
+          buttonClassName,
+        )}
       >
         <MoreVertical size={16} className="text-gray-400" />
       </button>
@@ -127,7 +135,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             role="menuitem"
             onClick={handleEditClick}
             className={cn(
-              "flex w-full items-center gap-2 px-3 py-2 text-sm text-text-primary",
+              "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-text-primary",
               "hover:bg-slate-50 dark:hover:bg-gray-700",
             )}
           >
@@ -138,7 +146,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             role="menuitem"
             onClick={handleDeleteClick}
             className={cn(
-              "flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600",
+              "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-red-600",
               "hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20",
             )}
           >
@@ -154,15 +162,18 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
     <EditBookmarkModal bookmark={bookmark} onClose={() => setIsEditOpen(false)} />
   );
 
-  // 즐겨찾기 토글 버튼 — 뷰 공통 (size만 다름)
-  const favButton = (size: number) => (
+  // 즐겨찾기 토글 버튼 — 뷰 공통 (size·className 오버라이드 가능)
+  const favButton = (size: number, buttonClassName?: string) => (
     <button
       onClick={handleToggleFavorite}
       aria-label={getFavoriteAriaLabel(bookmark.is_favorite)}
       aria-pressed={bookmark.is_favorite}
       aria-busy={isTogglePending}
       disabled={isTogglePending}
-      className="inline-flex shrink-0 items-center justify-center rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800"
+      className={cn(
+        "inline-flex shrink-0 cursor-pointer items-center justify-center rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800",
+        buttonClassName,
+      )}
     >
       <Star size={size} className={getFavoriteIconClass(bookmark.is_favorite)} />
     </button>
@@ -189,7 +200,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
           <div className="flex shrink-0 items-center gap-0.5">
             {favButton(14)}
             <span className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-              {menu}
+              {menu()}
             </span>
           </div>
         </article>
@@ -229,7 +240,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
           </div>
           <div className="flex shrink-0 items-center gap-1 self-start">
             {favButton(16)}
-            {menu}
+            {menu()}
           </div>
         </article>
         {editModal}
@@ -237,74 +248,86 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
     );
   }
 
-  // 그리드 뷰 — 세로 카드
+  // 그리드 뷰 — 미디어 카드 (썸네일 상단 + 다크 정보 패널)
   return (
     <>
-    <article
-      className={cn(
-        "group flex flex-col gap-3 rounded-xl border border-line bg-white p-4",
-        "shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-md",
-      )}
-    >
-      {/* 파비콘 + 제목 + 우측 액션 그룹 */}
-      <div className="flex items-center gap-3">
-        {/* 사이트 파비콘 (실패 시 그라디언트 이니셜 폴백) */}
-        <Favicon url={bookmark.url} />
-        <a
-          href={safeUrl(bookmark.url)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="line-clamp-1 min-w-0 flex-1 text-base font-semibold text-gray-900 hover:underline dark:text-gray-100"
-        >
-          {bookmark.title}
-        </a>
-        <div className="flex shrink-0 items-center gap-1">
-          {/* 즐겨찾기 버튼 */}
-          {favButton(16)}
+    <article className="group flex flex-col overflow-hidden rounded-2xl bg-gray-900 shadow-lg transition-shadow hover:shadow-2xl">
+      {/* 썸네일 — 없으면 파비콘 그라디언트 커버로 대체 */}
+      <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-gray-800">
+        {bookmark.thumbnail_url && !thumbnailErrored ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`/api/thumbnail?id=${bookmark.id}`}
+            alt=""
+            loading="lazy"
+            onError={() => setThumbnailErrored(true)}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="gradient-brand flex h-full w-full items-center justify-center">
+            <Favicon url={bookmark.url} boxClassName="h-12 w-12 rounded-xl" />
+          </div>
+        )}
 
-          {/* 외부 링크 버튼 */}
+        {/* 액션 오버레이 — hover/focus 시 노출 */}
+        <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          {favButton(14, cn(ACTION_CHIP, "text-white hover:bg-black/70 dark:hover:bg-black/70"))}
           <a
             href={safeUrl(bookmark.url)}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="새 탭에서 열기"
-            className="inline-flex shrink-0 items-center justify-center rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-brand dark:hover:bg-gray-800"
+            className={cn(ACTION_CHIP, "text-white transition-colors hover:bg-black/70")}
           >
-            <ExternalLink size={16} />
+            <ExternalLink size={14} />
           </a>
-
-          {/* 메뉴 버튼 + 드롭다운 */}
-          {menu}
+          {menu(cn(ACTION_CHIP, "text-white hover:bg-black/70 dark:hover:bg-black/70"))}
         </div>
       </div>
 
-      {/* 도메인 URL */}
-      <a
-        href={safeUrl(bookmark.url)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center gap-1 truncate font-mono text-xs text-gray-500 hover:text-brand dark:text-gray-400"
-      >
-        <ExternalLink size={12} className="shrink-0" />
-        <span className="truncate">{extractDomain(bookmark.url)}</span>
-      </a>
+      {/* 정보 패널 */}
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <a
+          href={safeUrl(bookmark.url)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="line-clamp-2 text-lg font-bold leading-snug text-white hover:underline"
+        >
+          {bookmark.title}
+        </a>
 
-      {/* 태그 뱃지 */}
-      {bookmark.tags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Tag size={12} className="shrink-0 text-gray-400" />
-          {bookmark.tags.map((tag) => (
-            <span key={tag} className={TAG_CHIP}>
-              {tag}
-            </span>
-          ))}
+        {/* AI 요약 설명 */}
+        {bookmark.description && (
+          <p className="line-clamp-2 text-sm text-gray-400">{bookmark.description}</p>
+        )}
+
+        {/* 도메인 URL */}
+        <a
+          href={safeUrl(bookmark.url)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="truncate text-sm font-medium text-brand hover:underline"
+        >
+          {extractDomain(bookmark.url)}
+        </a>
+
+        {/* 태그 뱃지 */}
+        {bookmark.tags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <Tag size={12} className="shrink-0 text-gray-500" />
+            {bookmark.tags.map((tag) => (
+              <span key={tag} className={TAG_CHIP}>
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* 저장일 */}
+        <div className="mt-auto flex items-center gap-1 border-t border-white/10 pt-2.5 font-mono text-xs text-gray-500">
+          <Calendar size={12} />
+          <time dateTime={bookmark.created_at}>{formatDate(bookmark.created_at)}</time>
         </div>
-      )}
-
-      {/* 저장일 — 상단 보더 위 모노 날짜 */}
-      <div className="mt-auto flex items-center gap-1 border-t border-gray-100 pt-2.5 font-mono text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
-        <Calendar size={12} />
-        <time dateTime={bookmark.created_at}>{formatDate(bookmark.created_at)}</time>
       </div>
     </article>
     {editModal}
