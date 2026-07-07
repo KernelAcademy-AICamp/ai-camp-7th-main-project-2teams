@@ -113,7 +113,8 @@ export const TAG_ALIAS: Record<string, string> = {
   파이썬: 'Python', 도커: 'Docker', 쿠버네티스: 'Kubernetes',
 }
 
-const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '콘텐츠', '브랜드', '게임', '라이프스타일', '여행', '금융'])
+// A60: PATCH 카테고리 수정 시 유효성 검증에도 사용 — export 필요.
+export const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '콘텐츠', '브랜드', '게임', '라이프스타일', '여행', '금융'])
 
 // 고정 13개 외 / 태깅 실패(tags=[]) → category_id null. UI·필터에서 이 라벨로 묶음.
 export const UNCATEGORIZED_LABEL = '미분류'
@@ -135,4 +136,11 @@ export function extractTopCategory(normalizedTags: string[]): {
     category: normalizedTags[idx],
     midTags: normalizedTags.filter((t) => !TOP_CATEGORIES.has(t)),
   }
+}
+
+// A60: 사용자가 PATCH로 직접 입력한 대분류명(별칭 포함)을 표준 대분류명으로 해석.
+// 고정 13개 외(alias 매핑 실패 포함)면 null — 라우트에서 400 처리.
+export function resolveTopCategory(input: string): string | null {
+  const resolved = CATEGORY_ALIAS[input] ?? input
+  return TOP_CATEGORIES.has(resolved) ? resolved : null
 }

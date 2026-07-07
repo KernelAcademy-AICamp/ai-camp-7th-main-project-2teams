@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { logger } from '@/lib/logger'
 
 // 유효 UUID — route가 id 형식(z.string().uuid())을 검증하므로 실제 형식 사용
 const ID = '550e8400-e29b-41d4-a716-446655440000'
@@ -6,30 +7,46 @@ const ID = '550e8400-e29b-41d4-a716-446655440000'
 // --- mock 결과 제어 ---
 let currentUser: unknown = { id: 'u1' }
 
-let updateResult: { data: unknown; error: unknown } = {
-  data: {
+function baseBookmarkRow() {
+  return {
     id: ID,
     url: 'https://a.com',
     title: 'T',
+    description: null,
     tags: [],
     category_id: null,
     folder_hint: null,
     is_favorite: true,
     created_at: '2024-01-01',
-  },
-  error: null,
+  }
 }
 
+// bookmarks 메인 update(.select().single()) 결과
+let updateResult: { data: unknown; error: unknown } = { data: baseBookmarkRow(), error: null }
+// bookmarks 두 번째 update(embedding, select 없이 await) 결과
+let embeddingUpdateResult: { error: unknown } = { error: null }
+// categories upsert(.select().single()) 결과
+let categoryUpsertResult: { data: unknown; error: unknown } = {
+  data: { id: 'cat-1' },
+  error: null,
+}
 let deleteResult: { error: unknown; count: number | null } = { error: null, count: 1 }
 
-const updateSpy = vi.fn()
+const bookmarksUpdateSpy = vi.fn()
+const categoriesUpsertSpy = vi.fn()
 const selectArgSpy = vi.fn()
 const deleteSpy = vi.fn()
 const eqSpy = vi.fn() // .eq(col, val) 인자 기록 — user_id 격리 검증용
 
-// update 체인: .eq().eq().select().single()
+vi.mock('@/lib/ai', () => ({
+  createEmbedding: vi.fn(async () => [0.1, 0.2, 0.3]),
+}))
+
+// bookmarks.update 체인: 메인 업데이트는 .eq().eq().select().single(),
+// embedding 전용 업데이트는 select 없이 .eq().eq() 후 바로 await(thenable).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function makeUpdateChain(): any {
+function makeBookmarksUpdateChain(payload: Record<string, unknown>): any {
+  const isEmbeddingUpdate = 'embedding' in payload
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chain: any = {
     eq(col: string, val: unknown) {
@@ -39,6 +56,19 @@ function makeUpdateChain(): any {
     select(cols: string) {
       selectArgSpy(cols)
       return { single: async () => updateResult }
+    },
+    then(
+      resolve: (v: typeof embeddingUpdateResult) => unknown,
+      reject?: (e: unknown) => unknown,
+    ) {
+      if (!isEmbeddingUpdate) {
+        // 메인 업데이트는 반드시 select().single()을 거쳐야 함 — 실수로 바로 await하면 실패시켜 조기 발견
+        return Promise.reject(new Error('메인 update는 select().single()을 호출해야 함')).then(
+          resolve,
+          reject,
+        )
+      }
+      return Promise.resolve(embeddingUpdateResult).then(resolve, reject)
     },
   }
   return chain
@@ -66,11 +96,24 @@ function makeDeleteChain(): any {
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: { getUser: async () => ({ data: { user: currentUser }, error: null }) },
-    from() {
+    from(table: string) {
+      if (table === 'categories') {
+        return {
+          upsert(payload: Record<string, unknown>, opts?: unknown) {
+            categoriesUpsertSpy(payload, opts)
+            return {
+              select(cols: string) {
+                selectArgSpy(cols)
+                return { single: async () => categoryUpsertResult }
+              },
+            }
+          },
+        }
+      }
       return {
         update(payload: Record<string, unknown>) {
-          updateSpy(payload)
-          return makeUpdateChain()
+          bookmarksUpdateSpy(payload)
+          return makeBookmarksUpdateChain(payload)
         },
         delete(opts?: unknown) {
           deleteSpy(opts)
@@ -82,6 +125,7 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 import { PATCH, DELETE } from '../route'
+import { createEmbedding } from '@/lib/ai'
 
 // Next.js 16: params는 Promise
 const params = Promise.resolve({ id: ID })
@@ -100,25 +144,17 @@ function deleteReq() {
 describe('PATCH /api/bookmarks/:id', () => {
   beforeEach(() => {
     currentUser = { id: 'u1' }
-    updateSpy.mockReset()
+    bookmarksUpdateSpy.mockReset()
+    categoriesUpsertSpy.mockReset()
     selectArgSpy.mockReset()
     eqSpy.mockReset()
-    updateResult = {
-      data: {
-        id: ID,
-        url: 'https://a.com',
-        title: 'T',
-        tags: [],
-        category_id: null,
-        folder_hint: null,
-        is_favorite: true,
-        created_at: '2024-01-01',
-      },
-      error: null,
-    }
+    vi.mocked(createEmbedding).mockClear()
+    updateResult = { data: baseBookmarkRow(), error: null }
+    embeddingUpdateResult = { error: null }
+    categoryUpsertResult = { data: { id: 'cat-1' }, error: null }
   })
 
-  it('정상 토글 → 200 + { bookmark }', async () => {
+  it('정상 토글 → 200 + { bookmark } (is_favorite 단독 — 기존 동작 유지)', async () => {
     const res = await PATCH(patchReq({ is_favorite: true }), { params })
     expect(res.status).toBe(200)
     const json = await res.json()
@@ -126,9 +162,9 @@ describe('PATCH /api/bookmarks/:id', () => {
     expect(json.bookmark.is_favorite).toBe(true)
   })
 
-  it('update payload에 요청한 is_favorite 값 전달 (false 토글)', async () => {
+  it('update payload에 요청한 is_favorite 값만 전달 (false 토글)', async () => {
     await PATCH(patchReq({ is_favorite: false }), { params })
-    expect(updateSpy.mock.calls[0][0]).toEqual({ is_favorite: false })
+    expect(bookmarksUpdateSpy.mock.calls[0][0]).toEqual({ is_favorite: false })
   })
 
   it('user_id로 사용자 격리 (eq 호출)', async () => {
@@ -146,7 +182,13 @@ describe('PATCH /api/bookmarks/:id', () => {
   it('잘못된 body (is_favorite 타입 오류) → 400, update 미호출', async () => {
     const res = await PATCH(patchReq({ is_favorite: 'yes' }), { params })
     expect(res.status).toBe(400)
-    expect(updateSpy).not.toHaveBeenCalled()
+    expect(bookmarksUpdateSpy).not.toHaveBeenCalled()
+  })
+
+  it('빈 body({}) → 400, update 미호출', async () => {
+    const res = await PATCH(patchReq({}), { params })
+    expect(res.status).toBe(400)
+    expect(bookmarksUpdateSpy).not.toHaveBeenCalled()
   })
 
   it('잘못된 id 형식 → 400, update 미호출', async () => {
@@ -154,7 +196,7 @@ describe('PATCH /api/bookmarks/:id', () => {
       params: Promise.resolve({ id: 'not-a-uuid' }),
     })
     expect(res.status).toBe(400)
-    expect(updateSpy).not.toHaveBeenCalled()
+    expect(bookmarksUpdateSpy).not.toHaveBeenCalled()
   })
 
   it('존재하지 않거나 타인 북마크 (PGRST116) → 404', async () => {
@@ -176,6 +218,116 @@ describe('PATCH /api/bookmarks/:id', () => {
     currentUser = null
     const res = await PATCH(patchReq({ is_favorite: true }), { params })
     expect(res.status).toBe(401)
+  })
+
+  it('태그만 변경 → update payload에 tags만 반영, 재임베딩 미호출', async () => {
+    updateResult = { data: { ...baseBookmarkRow(), tags: ['프론트엔드'] }, error: null }
+    const res = await PATCH(patchReq({ tags: ['프론트엔드'] }), { params })
+    expect(res.status).toBe(200)
+    expect(bookmarksUpdateSpy.mock.calls[0][0]).toEqual({ tags: ['프론트엔드'] })
+    expect(categoriesUpsertSpy).not.toHaveBeenCalled()
+    expect(createEmbedding).not.toHaveBeenCalled()
+  })
+
+  it('카테고리만 변경(유효한 대분류) → categories upsert 후 category_id 반영', async () => {
+    const res = await PATCH(patchReq({ category: '개발' }), { params })
+    expect(res.status).toBe(200)
+    expect(categoriesUpsertSpy).toHaveBeenCalledWith(
+      { name: '개발', user_id: 'u1' },
+      { onConflict: 'user_id,name' },
+    )
+    expect(bookmarksUpdateSpy.mock.calls[0][0]).toEqual({ category_id: 'cat-1' })
+    expect(createEmbedding).not.toHaveBeenCalled()
+  })
+
+  it('카테고리 alias 입력(dev)도 표준 대분류(개발)로 해석', async () => {
+    await PATCH(patchReq({ category: 'dev' }), { params })
+    expect(categoriesUpsertSpy).toHaveBeenCalledWith(
+      { name: '개발', user_id: 'u1' },
+      { onConflict: 'user_id,name' },
+    )
+  })
+
+  it('유효하지 않은 카테고리 → 400, upsert/update 미호출', async () => {
+    const res = await PATCH(patchReq({ category: '존재하지않는카테고리' }), { params })
+    expect(res.status).toBe(400)
+    expect(categoriesUpsertSpy).not.toHaveBeenCalled()
+    expect(bookmarksUpdateSpy).not.toHaveBeenCalled()
+  })
+
+  it('categories.upsert 실패 → 500, bookmarks update 미호출', async () => {
+    categoryUpsertResult = { data: null, error: { message: 'upsert failed' } }
+    const res = await PATCH(patchReq({ category: '개발' }), { params })
+    expect(res.status).toBe(500)
+    const json = await res.json()
+    expect(json.error).toBe('upsert failed')
+    expect(bookmarksUpdateSpy).not.toHaveBeenCalled()
+  })
+
+  it('description만 변경 → title+description으로 재임베딩 호출, embedding 컬럼 갱신', async () => {
+    updateResult = {
+      data: { ...baseBookmarkRow(), title: 'T', description: '새 설명' },
+      error: null,
+    }
+    const res = await PATCH(patchReq({ description: '새 설명' }), { params })
+    expect(res.status).toBe(200)
+    expect(bookmarksUpdateSpy.mock.calls[0][0]).toEqual({ description: '새 설명' })
+    expect(createEmbedding).toHaveBeenCalledWith('T\n새 설명')
+    // 두 번째 update 호출 — embedding 컬럼만 갱신
+    expect(bookmarksUpdateSpy.mock.calls[1][0]).toEqual({ embedding: [0.1, 0.2, 0.3] })
+  })
+
+  it('description을 null로 변경해도 파싱 성공 (설명 삭제)', async () => {
+    updateResult = { data: { ...baseBookmarkRow(), description: null }, error: null }
+    const res = await PATCH(patchReq({ description: null }), { params })
+    expect(res.status).toBe(200)
+    expect(bookmarksUpdateSpy.mock.calls[0][0]).toEqual({ description: null })
+    // description 없으면(null) title만으로 임베딩
+    expect(createEmbedding).toHaveBeenCalledWith('T')
+  })
+
+  it('여러 필드 동시 변경(tags+category+description) → 모두 반영', async () => {
+    updateResult = {
+      data: { ...baseBookmarkRow(), tags: ['백엔드'], category_id: 'cat-1', description: 'd' },
+      error: null,
+    }
+    const res = await PATCH(
+      patchReq({ tags: ['백엔드'], category: '개발', description: 'd' }),
+      { params },
+    )
+    expect(res.status).toBe(200)
+    expect(bookmarksUpdateSpy.mock.calls[0][0]).toEqual({
+      tags: ['백엔드'],
+      description: 'd',
+      category_id: 'cat-1',
+    })
+    expect(createEmbedding).toHaveBeenCalledWith('T\nd')
+  })
+
+  it('재임베딩 실패해도 필드 변경 응답은 200 유지 (best-effort degrade)', async () => {
+    vi.mocked(createEmbedding).mockRejectedValueOnce(new Error('openai down'))
+    updateResult = { data: { ...baseBookmarkRow(), description: '새 설명' }, error: null }
+    const res = await PATCH(patchReq({ description: '새 설명' }), { params })
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.bookmark.description).toBe('새 설명')
+  })
+
+  it('재임베딩 update 자체가 에러 반환해도 200 유지, logger.error 호출 (best-effort degrade)', async () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {})
+    embeddingUpdateResult = { error: { message: 'embedding update failed' } }
+    updateResult = { data: { ...baseBookmarkRow(), description: '새 설명' }, error: null }
+
+    const res = await PATCH(patchReq({ description: '새 설명' }), { params })
+
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.bookmark.description).toBe('새 설명')
+    expect(errorSpy).toHaveBeenCalledWith('[re-embed-fail]', {
+      id: ID,
+      message: 'embedding update failed',
+    })
+    errorSpy.mockRestore()
   })
 })
 
