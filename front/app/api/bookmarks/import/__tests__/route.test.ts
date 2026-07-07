@@ -305,6 +305,61 @@ describe('POST /api/bookmarks/import', () => {
     })
   })
 
+  it('fetchMeta thumbnailUrl이 upsert payload의 thumbnail_url로 저장됨', async () => {
+    fetchMeta.mockResolvedValue({
+      title: '',
+      description: '',
+      content: '',
+      thumbnailUrl: 'https://cdn.example.com/thumb.png',
+    })
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    await readAllEvents(res)
+
+    const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
+    calls.forEach((call) => {
+      expect(call[0].thumbnail_url).toBe('https://cdn.example.com/thumb.png')
+    })
+  })
+
+  it('카카오 CSV placeholder(title===url) + fetchMeta 실제 title 존재 → upsert title이 fetchMeta title로 승격', async () => {
+    // parseKakaoChat은 title에 url을 그대로 채워 넘김(placeholder) — 이미 정규화된 형태(https, 루트 아님,
+    // 트래킹 파라미터 없음)의 URL을 써서 dedupeBatch의 normalizeUrl을 거쳐도 title===url 비교가 유지되게 한다.
+    const csv = [
+      'Date,User,Message',
+      '2023-09-15 03:39:04,"김재균","https://kakao-import-test.com/article"',
+    ].join('\n')
+    fetchMeta.mockResolvedValue({
+      title: 'Kakao 실제 제목',
+      description: '',
+      content: '',
+    })
+
+    const res = await POST(makeReq(makeFile(csv, 'chat.csv')))
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
+    expect(json.imported).toBe(1)
+
+    const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
+    const inserted = calls.find((c) => c[0].url === 'https://kakao-import-test.com/article')
+    expect(inserted?.[0].title).toBe('Kakao 실제 제목')
+  })
+
+  it('HTML 임포트(title!==url) → fetchMeta title이 달라도 원래 파싱된 title 유지(승격 안 함)', async () => {
+    fetchMeta.mockResolvedValue({
+      title: 'Completely Different Meta Title',
+      description: '',
+      content: '',
+    })
+
+    const res = await POST(makeReq(makeFile(SAMPLE_HTML)))
+    await readAllEvents(res)
+
+    const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
+    const nextjsInsert = calls.find((c) => c[0].url === 'https://nextjs.org/')
+    expect(nextjsInsert?.[0].title).toBe('Next.js')
+  })
+
   it('A52: fetchMeta 빈 description → title 폴백 (description 미전달)', async () => {
     // 기본 목이 빈 메타 반환
     const res = await POST(makeReq(makeFile(SAMPLE_HTML)))

@@ -218,7 +218,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
           const chunk = toProcess.slice(i, i + CHUNK_SIZE)
 
           await Promise.all(
-            chunk.map(async ({ title, url, folder_hint, tags: htmlTags, category_name }) => {
+            chunk.map(async ({ title: parsedTitle, url, folder_hint, tags: htmlTags, category_name }) => {
               try {
                 // A52: URL 메타 조회 → description(카드 표시용)·content(임베딩 입력) 확보.
                 // fetchMeta는 throw 안 함(실패=빈 값), 내부 5s 타임아웃.
@@ -229,6 +229,11 @@ export const POST = withAuth(async (req, { user, supabase }) => {
                 // 임베딩 입력 — description(짧은 요약)이 아니라 content(본문 포함, 2000자 상한) 사용.
                 // 태깅·임베딩 스코프 내에서만 사용 후 파기 — DB 저장·로그 금지(프라이버시).
                 const embeddingContent = meta.content || undefined
+
+                // 카카오톡 CSV는 실제 title이 없어 parseKakaoChat이 title=url로 채워 넘김 —
+                // 그 placeholder를 여기서 fetchMeta 실제 title로 승격(단건 추가 경로와 동일 패턴).
+                // HTML 임포트는 원래 title이 이미 유의미하므로(=url인 경우만 예외) 그대로 유지.
+                const title = parsedTitle === url && meta.title ? meta.title : parsedTitle
 
                 // 자체 내보내기 HTML(TAGS 속성 포함)은 AI 재태깅 없이 그대로 복원 — 일반 브라우저
                 // 내보내기(TAGS 없음)만 기존처럼 generateTags 호출.
@@ -287,6 +292,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
                     // 루트 항목(빈 배열)은 null 저장 — A5 패턴과 통일
                     folder_hint: folder_hint.length > 0 ? folder_hint : null,
                     embedding,
+                    thumbnail_url: meta.thumbnailUrl || null,
                   },
                   { onConflict: 'user_id, url', ignoreDuplicates: true },
                 )
