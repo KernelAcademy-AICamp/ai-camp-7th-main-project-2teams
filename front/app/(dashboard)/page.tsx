@@ -15,7 +15,7 @@ import { InfiniteScrollTrigger } from "@/components/InfiniteScrollTrigger";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useSearch } from "@/hooks/useSearch";
 import { useFilterStore } from "@/store/filterStore";
-import { createClient } from "@/lib/supabase/client";
+import { useUserStore } from "@/store/userStore";
 import { getOnboardingKey, isOnboardingDone } from "@/lib/onboarding";
 import { parseFilterQuery, buildFilterQuery } from "@/lib/filterQuery";
 import { cn } from "@/lib/utils";
@@ -55,18 +55,20 @@ function DashboardContent() {
     })),
   );
 
+  const fetchUser = useUserStore((s) => s.fetchUser);
+
   // 신규 유저 온보딩 리다이렉트 — localStorage 기반 최소 체크 (A26)
   // isOnboardingDone이 손상된 값도 안전 처리(크래시 방지)
+  // fetchUser는 zustand 스토어에서 캐시/inflight 공유 — Sidebar와 중복 호출되지 않음
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    fetchUser().then((user) => {
       if (!user) return;
       const stored = localStorage.getItem(getOnboardingKey(user.id));
       if (!isOnboardingDone(stored)) {
         router.push("/onboarding");
       }
     });
-  }, [router]);
+  }, [fetchUser, router]);
 
   // searchParams 객체는 네비게이션에서 참조가 유지될 수 있어 의존성으로 부적합.
   // 쿼리 문자열로 의존해야 내용 변경마다 effect가 재실행된다.
