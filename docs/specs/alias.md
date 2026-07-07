@@ -44,13 +44,21 @@ export function normalizeTags(tags: string[]): string[] {
   return tags.map(t => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)
 }
 
-export function resolveTopCategory(tags: string[]): string | null {
-  const normalized = normalizeTags(tags)
-  return TOP_CATEGORIES.has(normalized[0]) ? normalized[0] : null
+// AI 태깅 직후: normalizeTags 거친 배열에서 대분류 토큰을 찾아 제거 — 나머지는 중분류(midTags)로 확정
+export function extractTopCategory(normalizedTags: string[]): { category: string | null; midTags: string[] } {
+  const idx = normalizedTags.findIndex(t => TOP_CATEGORIES.has(t))
+  if (idx === -1) return { category: null, midTags: normalizedTags }
+  return { category: normalizedTags[idx], midTags: normalizedTags.filter(t => !TOP_CATEGORIES.has(t)) }
+}
+
+// A60: 사용자가 PATCH로 직접 입력한 대분류명(별칭 포함)을 표준 대분류명으로 해석. 13종 외는 null(400 처리용)
+export function resolveTopCategory(input: string): string | null {
+  const resolved = CATEGORY_ALIAS[input] ?? input
+  return TOP_CATEGORIES.has(resolved) ? resolved : null
 }
 ```
 
-**사용 위치**: `app/api/bookmarks/route.ts` — AI 태깅 직후 적용.
+**사용 위치**: `extractTopCategory`는 `app/api/bookmarks/route.ts`(AI 태깅 직후) · `app/api/bookmarks/import/route.ts`(일반 브라우저 임포트분). `resolveTopCategory`는 `app/api/bookmarks/[id]/route.ts`(A60 PATCH 카테고리 수정) · import route(자체 내보내기 HTML의 DATA_CATEGORY 복원분 — 이미 대소분류 분리돼 있어 재분리 불필요, 유효성 검증만).
 
 ---
 

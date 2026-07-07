@@ -234,9 +234,21 @@ export const searchSchema = z.object({
   query: z.string().min(1).max(50),         // PRD: 검색창 최대 50자
 })
 
-export const favoriteSchema = z.object({
-  is_favorite: z.boolean(),                 // A27 즐겨찾기 토글
-})
+// A60: PATCH /api/bookmarks/:id 확장 — 즐겨찾기·태그·카테고리·설명 부분 수정.
+// 모든 필드 optional(부분 수정) + refine으로 빈 body(필드 0개) 400 처리.
+// is_favorite 단독 요청도 그대로 통과 — 기존 즐겨찾기 토글(A27) 하위 호환.
+export const bookmarkUpdateSchema = z
+  .object({
+    is_favorite: z.boolean().optional(),
+    tags: z.array(z.string().min(1).max(50)).max(10).optional(),
+    // 대분류 이름(또는 alias) — 실제 유효성 검증은 tag-alias.ts 기준으로 라우트에서 수행.
+    category: z.string().min(1).max(50).optional(),
+    // null 허용 — 기존 설명 삭제 용도.
+    description: z.string().max(2000).nullable().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: '변경할 필드를 최소 1개 이상 전달해야 합니다.',
+  })
 
 export const importSchema = z.object({
   // multipart/form-data — HTML 파일 업로드 (A29)
@@ -246,7 +258,7 @@ export const importSchema = z.object({
 export type BookmarkInput = z.infer<typeof bookmarkSchema>
 export type BookmarkCreateInput = z.infer<typeof bookmarkCreateSchema>
 export type SearchInput = z.infer<typeof searchSchema>
-export type FavoriteInput = z.infer<typeof favoriteSchema>
+export type BookmarkUpdateInput = z.infer<typeof bookmarkUpdateSchema>
 ```
 
 Route Handler에서 사용:
@@ -381,13 +393,21 @@ export function createClient() {
 
 ---
 
-## Middleware (`middleware.ts`)
+## Proxy (`proxy.ts`, 구 middleware.ts)
+
+Next.js 16에서 `middleware` 파일 규칙 deprecated. `front/proxy.ts`에 `export function proxy()`로 작성한다 (마이그레이션: `npx @next/codemod@canary middleware-to-proxy .`).
 
 ```typescript
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+const PUBLIC_PATHS = ['/login', '/auth', '/privacy', '/terms', '/goodbye', '/welcome']
+
+export function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some(p => pathname.startsWith(p))
+}
+
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -415,11 +435,8 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
-  const isPublic = ['/login', '/auth', '/privacy', '/terms', '/goodbye', '/welcome'].some(
-    p => pathname.startsWith(p)
-  )
 
-  if (!user && !isPublic) {
+  if (!user && !isPublicPath(pathname)) {
     return NextResponse.redirect(new URL('/welcome', request.url))
   }
 
@@ -501,7 +518,7 @@ front/
 │   │   ├── import/
 │   │   │   └── page.tsx          # 파일 임포트 WEB-14 (A30)
 │   │   ├── settings/
-│   │   │   └── page.tsx          # 회원 탈퇴 UI (A16)
+│   │   │   └── page.tsx          # 회원 탈퇴 UI (A16) + JSON/HTML 내보내기
 │   │   └── layout.tsx            # 헤더 + 사이드바
 │   ├── api/
 │   │   ├── bookmarks/
@@ -519,13 +536,13 @@ front/
 │   │   ├── search/
 │   │   │   └── route.ts          # POST(A7)
 │   │   └── account/
-│   │       └── route.ts          # DELETE(A14) + GET(A15)
+│   │       └── route.ts          # DELETE(A14) + GET(A15, category:categories(name) join)
 │   ├── onboarding/                # A26 — 온보딩 별도 페이지 (MVP)
 │   │   ├── page.tsx
 │   │   ├── OnboardingContent.tsx  # 스텝 UI + 노출 제어
 │   │   └── onboardingUtils.ts     # STEPS·상태 유틸
 │   ├── welcome/page.tsx           # A39 — 랜딩 페이지 (미인증 진입점)
-│   ├── login/page.tsx             # A4 — Google OAuth 버튼만
+│   ├── login/page.tsx             # A4 — Google OAuth 버튼, A63 — 카카오 OAuth 버튼 추가
 │   ├── auth/callback/route.ts     # A4 — OAuth 콜백 핸들러
 │   ├── privacy/page.tsx           # A12
 │   ├── terms/page.tsx             # A13
@@ -536,8 +553,10 @@ front/
 │   │   ├── client.ts
 │   │   └── admin.ts
 │   ├── auth.ts                    # withAuth HOF (A3)
-│   └── schemas.ts                 # bookmarkSchema, searchSchema, favoriteSchema
+│   ├── schemas.ts                 # bookmarkSchema, searchSchema, bookmarkUpdateSchema(A60: is_favorite/tags/category/description)
+│   ├── parseNetscapeBookmarks.ts  # HTML 임포트 파싱 (A29). 자체 내보내기분은 TAGS/DATA_CATEGORY 속성 복원
+│   └── formatNetscapeBookmarks.ts # 설정 페이지 HTML 내보내기 — TAGS/DATA_CATEGORY 포함, 재임포트 시 태그·카테고리 복원
 ├── store/
 │   └── filterStore.ts             # tab, category, folder, sortOrder, viewMode 등
-└── middleware.ts
+└── proxy.ts                        # 구 middleware.ts (Next.js 16)
 ```

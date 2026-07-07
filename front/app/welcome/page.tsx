@@ -52,7 +52,7 @@ export default async function WelcomePage() {
               href="/login"
               className="rounded-md bg-indigo-600 px-8 py-3 font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
             >
-              Google로 시작하기
+              시작하기
             </Link>
           )}
         </div>

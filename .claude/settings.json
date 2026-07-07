@@ -19,6 +19,18 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.claude/skills/*backfill*/SKILL.md|*front/scripts/backfill-*.ts) echo '[Hook] 신규 백필 감지: docs/specs/backfill.md에 위치/대상/배경/방식/실행법 항목 추가 필요' >&2 ;; esac",
+            "description": "신규 백필 스킬/스크립트 생성 시 docs/specs/backfill.md 갱신 리마인더"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {

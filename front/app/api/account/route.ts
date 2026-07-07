@@ -22,9 +22,10 @@ export const DELETE = withAuth(async (_req, { user }) => {
 // A15: 개인정보 열람 — 개보법 35조 열람권 대응
 export const GET = withAuth(async (_req, { supabase }) => {
   // embedding 제외, 전체 반환 (다운로드 용도 — 페이지네이션 없음)
+  // category:categories(name) — HTML(Netscape) 내보내기 시 DATA_CATEGORY 속성용 대분류명 확보
   const { data, error } = await supabase
     .from('bookmarks')
-    .select('id, title, url, tags, category_id, folder_hint, is_favorite, created_at')
+    .select('id, title, url, tags, category_id, category:categories(name), folder_hint, is_favorite, created_at')
     .order('created_at', { ascending: false })
 
   if (error) {

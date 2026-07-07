@@ -11,7 +11,7 @@ export default function PrivacyPage() {
       <section className="mb-8">
         <h2 className="mb-3 text-xl font-semibold">1. 수집하는 개인정보 항목</h2>
         <ul className="list-disc space-y-1 pl-5 text-sm leading-relaxed">
-          <li>이메일 주소 (Google OAuth 인증)</li>
+          <li>이메일 주소 (Google, Kakao OAuth 인증 — 카카오는 계정 설정에 따라 미제공될 수 있음)</li>
           <li>저장한 웹페이지 URL 및 제목</li>
           <li>AI 분류를 위한 태그 정보</li>
           <li>검색·추천을 위한 벡터 임베딩 (원문 복원 불가)</li>

@@ -673,4 +673,23 @@ describe('POST /api/bookmarks/import', () => {
     const doneEvent = events.find((e) => e.type === 'done')
     expect(doneEvent).toBeUndefined()
   })
+
+  it('A60: 자체 내보내기 HTML(TAGS·DATA_CATEGORY 포함)은 AI 재태깅 없이 그대로 복원', async () => {
+    const SELF_EXPORT_HTML = `<DL><p>
+      <DT><A HREF="https://nextjs.org" TAGS="프론트엔드" DATA_CATEGORY="개발">Next.js</A>
+    </DL><p>`
+
+    const res = await POST(makeReq(makeFile(SELF_EXPORT_HTML)))
+    const events = await readAllEvents(res)
+    const json = readFinalResult(events)
+    expect(json.imported).toBe(1)
+
+    // TAGS 속성이 있으므로 generateTags(AI 호출) 자체를 건너뛴다
+    expect(generateTags).not.toHaveBeenCalled()
+
+    const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
+    const inserted = calls.find((c) => c[0].url === 'https://nextjs.org/')
+    expect(inserted?.[0].tags).toEqual(['프론트엔드'])
+    expect(inserted?.[0].category_id).toBe('cat-개발')
+  })
 })

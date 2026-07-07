@@ -215,13 +215,14 @@ A17 (Extension 셋업)
 
 - [x] A58: 자연어 검색 + 태그/즐겨찾기 필터 조합 (high)
 - [x] A59: 중복 북마크 경고 UI (high)
-- [ ] A60: 태그/카테고리 사용자 직접 편집 + 카드 수정 (high)
+- [x] A60: 태그/카테고리 사용자 직접 편집 + 카드 수정 (high)
 - [x] A61: 파일 임포트 고도화 (medium)
 - [x] A62: 대량 북마크 페이지네이션 개선 (medium)
 - [x] A63: 카카오 소셜 로그인 (medium)
 - [ ] A64: 개인 북마크 대시보드 — 프리미엄 전용 (low)
+- [x] A65: 북마크 HTML 내보내기 + 자체 재임포트 왕복 복원 (medium)
 
-**진행률: 5 / 7 완료**
+**진행률: 7 / 8 완료**
 
 ### 태스크 상세
 
@@ -229,11 +230,12 @@ A17 (Extension 셋업)
 | --- | ------------------------------------------ | -------- | ------- | ------------------------------------------------------------- |
 | A58 | 검색 + 태그/즐겨찾기 필터 조합            | high     | done    | PR #177. match_bookmarks에 p_tags/p_is_favorite 추가.          |
 | A59 | 중복 북마크 경고 UI                       | high     | done    | PR #178. 안내 문구만(이동 링크 없음), 웹앱+익스텐션 둘 다.      |
-| A60 | 태그·카테고리 편집 + 카드 수정            | high     | pending | description 컬럼(0013 마이그레이션)만 추가된 상태. 편집 UI 없음. |
+| A60 | 태그·카테고리 편집 + 카드 수정            | high     | done    | PATCH /api/bookmarks/:id 확장(tags/category/description) + EditBookmarkModal 추가. description 변경 시 재임베딩, 카테고리 변경 시 낙관적 캐시 필터-불일치 제거. |
 | A61 | 파일 임포트 고도화                        | medium   | done    | PR #179. 실패 항목 상세 리스트(URL+사유)까지. 문제 보고는 스코프 제외. |
 | A62 | 대량 북마크 페이지네이션 개선             | medium   | done    | PR #182. 목록은 서버 페이지네이션(useInfiniteQuery), 검색은 top-60 클라이언트 슬라이스. |
 | A63 | 카카오 소셜 로그인                         | medium   | done    | PR #181. Supabase 네이티브 프로바이더 확인(커스텀 OIDC 아님), Google과 동일 패턴. 네이버 스코프 제외. |
 | A64 | 개인 북마크 대시보드 (프리미엄)           | low      | pending | 프리미엄 게이팅 인프라 부재. 스코프 최대.                      |
+| A65 | HTML 내보내기 + 자체 재임포트 왕복 복원   | medium   | done    | GET /api/account category 조인, formatNetscapeBookmarks.ts 신설(TAGS/DATA_CATEGORY 인코딩). parseNetscapeBookmarks.ts 왕복 파싱 추가. import route는 TAGS 있으면 재태깅 생략, DATA_CATEGORY는 resolveTopCategory로 검증만. |
 
 ### 의존 관계
 
@@ -245,6 +247,7 @@ A29 + A30 + A52 ────────── A61 (임포트 고도화)
 A6 + A9 ────────────────── A62 (페이지네이션) ┐
 A6 ──────────────────────────────────────────┴─ A64 (대시보드)
 A4 + A19 ────────────────── A63 (소셜 로그인)
+A15 + A16 + A29 + A60 ───── A65 (HTML 내보내기·재임포트 복원)
 ```
 
 ### 우선순위 순서 (구현 권장 순서)
