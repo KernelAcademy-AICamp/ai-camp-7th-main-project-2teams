@@ -7,6 +7,11 @@ import { expandSearchQuery } from '@/lib/search-alias'
 
 type SearchRow = Record<string, unknown> & { id: string; similarity: number }
 
+// A62: 검색은 클라이언트 사이드 페이지네이션(useSearch visibleCount)을 쓴다 — 스크롤마다
+// 재임베딩 비용을 내는 대신, 한 번에 top-60을 받아 이후 스크롤은 로컬 슬라이스만 늘린다.
+// 벡터 검색은 top-K 밖으로 갈수록 관련성이 급락하므로(A55) 무제한 대신 충분히 큰 고정 K로 마무리.
+const SEARCH_TOP_K = 60
+
 // 자연어 하이브리드 검색. match_bookmarks RPC가 벡터(cosine) + 트라이그램(pg_trgm) 유사도를
 // RRF로 병합 — 순수 벡터 검색의 정확 단어 매칭 취약점 보강(A54).
 // RPC가 embedding 컬럼을 반환하지 않음 — 응답 누출 방지.
@@ -46,7 +51,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
       return supabase.rpc('match_bookmarks', {
         query_embedding: embedding,
         query_text: q,
-        match_count: 20,
+        match_count: SEARCH_TOP_K,
         p_user_id: user.id,
         p_category_id: categoryId,
         p_uncategorized: uncategorized,
@@ -69,7 +74,9 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     }
   }
 
-  const results = [...merged.values()].sort((a, b) => b.similarity - a.similarity).slice(0, 20)
+  const results = [...merged.values()]
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, SEARCH_TOP_K)
 
   return NextResponse.json({ results })
 })

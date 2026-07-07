@@ -1,5 +1,9 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchSearch } from '../useSearch'
+import { createElement, type ReactNode } from 'react'
+import { renderHook, waitFor, act } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { fetchSearch, useSearch, type SearchResult } from '../useSearch'
 
 describe('fetchSearch', () => {
   beforeEach(() => vi.restoreAllMocks())
@@ -75,5 +79,117 @@ describe('fetchSearch — tag/is_favorite 필터 (A58)', () => {
         body: JSON.stringify({ query: '리액트', category: undefined, tag: undefined, is_favorite: undefined }),
       }),
     )
+  })
+})
+
+// A62: 검색은 top-60을 한 번에 받은 뒤 클라이언트에서만 슬라이스 — 추가 네트워크 호출 없음.
+describe('useSearch — visibleCount/showMore/hasMore (A62)', () => {
+  function createWrapper() {
+    const queryClient = new QueryClient({
+      defaultOptions: { mutations: { retry: false } },
+    })
+    return function Wrapper({ children }: { children: ReactNode }) {
+      return createElement(QueryClientProvider, { client: queryClient }, children)
+    }
+  }
+
+  const makeResults = (count: number): SearchResult[] =>
+    Array.from({ length: count }, (_, i) => ({
+      id: `bm-${i}`,
+      title: `북마크 ${i}`,
+      url: 'https://example.com',
+      tags: [],
+      category_id: null,
+      is_favorite: false,
+      folder_hint: null,
+      created_at: '2026-01-01T00:00:00Z',
+      similarity: 0.9,
+    }))
+
+  beforeEach(() => vi.restoreAllMocks())
+
+  it('결과가 20개 이하면 visibleResults에 전체 노출, hasMore: false', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ results: makeResults(10) }) })
+    const { result } = renderHook(() => useSearch(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.mutate({ query: '리액트' })
+    })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(result.current.visibleResults).toHaveLength(10)
+    expect(result.current.hasMore).toBe(false)
+  })
+
+  it('결과가 20개 초과면 초기 visibleResults는 20개로 슬라이스, hasMore: true', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ results: makeResults(60) }) })
+    const { result } = renderHook(() => useSearch(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.mutate({ query: '리액트' })
+    })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(result.current.visibleResults).toHaveLength(20)
+    expect(result.current.hasMore).toBe(true)
+  })
+
+  it('showMore 호출 시 visibleCount가 20씩 증가', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ results: makeResults(60) }) })
+    const { result } = renderHook(() => useSearch(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.mutate({ query: '리액트' })
+    })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    act(() => {
+      result.current.showMore()
+    })
+    await waitFor(() => expect(result.current.visibleResults).toHaveLength(40))
+
+    act(() => {
+      result.current.showMore()
+    })
+    await waitFor(() => expect(result.current.visibleResults).toHaveLength(60))
+    expect(result.current.hasMore).toBe(false)
+  })
+
+  it('빈 결과 → visibleResults 빈 배열, hasMore: false', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ results: [] }) })
+    const { result } = renderHook(() => useSearch(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.mutate({ query: '존재하지않음' })
+    })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(result.current.visibleResults).toEqual([])
+    expect(result.current.hasMore).toBe(false)
+  })
+
+  it('새 검색 실행 시 visibleCount가 초기값(20)으로 리셋', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ results: makeResults(60) }) })
+    const { result } = renderHook(() => useSearch(), { wrapper: createWrapper() })
+
+    act(() => {
+      result.current.mutate({ query: '리액트' })
+    })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    act(() => {
+      result.current.showMore()
+    })
+    await waitFor(() => expect(result.current.visibleResults).toHaveLength(40))
+
+    // 새 검색 실행 (다른 결과셋) — 이전 검색의 스크롤 진행이 남지 않아야 함
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ results: makeResults(15) }) })
+    act(() => {
+      result.current.mutate({ query: '뷰' })
+    })
+    await waitFor(() => expect(result.current.data?.results).toHaveLength(15))
+
+    expect(result.current.visibleResults).toHaveLength(15)
+    expect(result.current.hasMore).toBe(false)
   })
 })
