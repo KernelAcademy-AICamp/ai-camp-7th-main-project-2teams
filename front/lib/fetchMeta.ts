@@ -105,13 +105,42 @@ function extractMetaContent(html: string, ...patterns: RegExp[]): string {
   return ''
 }
 
-// 여는 태그의 속성 구간 스캔 상한 — 정규식 백트래킹 폭발을 막기 위한 경계(ReDoS 방지).
-const MAX_TAG_ATTR_SCAN = 200
+// 태그 이름 부분 문자열 매치 뒤에 오는 문자가 실제 태그 경계(>, /, 공백, 문자열 끝)인지 검사 —
+// "<scriptx>" · "</scriptFOO>" 같은 위양성 부분 문자열 매치를 걸러내는 데 여는/닫는 태그 탐색
+// 양쪽에서 공통으로 쓰인다.
+function isTagBoundaryChar(char: string | undefined): boolean {
+  return char === undefined || char === '>' || char === '/' || /\s/.test(char)
+}
 
-// "</태그이름" 부분 문자열 매치 뒤에 실제 태그 경계(>, /, 공백, 문자열 끝)가 오는지 검증해
-// 진짜 닫는 태그만 찾는다. HTML 스펙의 "appropriate end tag" 매칭 규칙과 동일한 취지 —
-// script/style content 안에 "</scriptFOO>"처럼 우연히 겹치는 부분 문자열이 있어도
-// 위양성으로 조기 종료되지 않도록 함(내용 누출 방지).
+// "<태그이름" 부분 문자열 매치 뒤에 실제 태그 경계가 오는지 검증해 진짜 여는 태그만 찾는다.
+// 과거엔 정규식 `<${tagName}\b[^<>]{0,200}>`로 속성 구간을 200자로 제한했으나, 실제 페이지에
+// 흔한 긴 속성(data-*, nonce+integrity+crossorigin 등)이 200자를 넘으면 매치가 아예 실패해
+// "태그 없음"으로 오판 → 남은 문서 전체(스크립트/스타일 원문 포함)가 그대로 누출되는 문제가
+// 있었다. findClosingTagIndex와 동일하게 indexOf 기반 무제한 스캔으로 교체 — 속성 길이 제한 없음.
+// fromIndex가 항상 이전 탐색 지점 이후로만 전진하므로(뒤로 재탐색 없음) 선형(O(n))을 유지한다.
+function findOpenTagIndex(
+  lowerHtml: string,
+  tagName: string,
+  fromIndex: number,
+): { start: number; end: number } | null {
+  const needle = `<${tagName}`
+  let searchFrom = fromIndex
+  for (;;) {
+    const idx = lowerHtml.indexOf(needle, searchFrom)
+    if (idx === -1) return null
+    if (isTagBoundaryChar(lowerHtml[idx + needle.length])) {
+      const tagEnd = lowerHtml.indexOf('>', idx)
+      if (tagEnd === -1) return null // 여는 태그를 닫는 '>'가 끝까지 없음 — 매치 없음으로 처리
+      return { start: idx, end: tagEnd + 1 }
+    }
+    searchFrom = idx + needle.length // 위양성(예: <scriptx>) — 계속 다음 위치부터 탐색
+  }
+}
+
+// "</태그이름" 부분 문자열 매치 뒤에 실제 태그 경계가 오는지 검증해 진짜 닫는 태그만 찾는다.
+// HTML 스펙의 "appropriate end tag" 매칭 규칙과 동일한 취지 — script/style content 안에
+// "</scriptFOO>"처럼 우연히 겹치는 부분 문자열이 있어도 위양성으로 조기 종료되지 않도록 함
+// (내용 누출 방지).
 // lowerHtml은 stripTagBlock에서 문서 전체를 단 한 번만 소문자화해 넘겨받은 것 — 매 호출마다
 // 재계산하지 않고, fromIndex도 매번 이전 탐색 지점 이후로만 전진하므로(뒤로 재탐색 없음)
 // stripTagBlock 전체 호출에 걸친 누적 비용이 문서 길이에 비례하는 선형(O(n))으로 유지된다.
@@ -125,10 +154,7 @@ function findClosingTagIndex(
   for (;;) {
     const idx = lowerHtml.indexOf(needle, searchFrom)
     if (idx === -1) return null
-    const boundaryChar = lowerHtml[idx + needle.length]
-    const isValidBoundary =
-      boundaryChar === undefined || boundaryChar === '>' || boundaryChar === '/' || /\s/.test(boundaryChar)
-    if (isValidBoundary) {
+    if (isTagBoundaryChar(lowerHtml[idx + needle.length])) {
       const tagEnd = lowerHtml.indexOf('>', idx)
       return { closeStart: idx, closeEnd: tagEnd === -1 ? lowerHtml.length : tagEnd }
     }
@@ -144,21 +170,18 @@ function findClosingTagIndex(
 // 원본 문자열은 결과 조립(slice)에만 쓰고 탐색은 전부 인덱스 기반으로 lowerHtml 위에서 수행한다.
 function stripTagBlock(html: string, tagName: string): string {
   const lowerHtml = html.toLowerCase()
-  const openTagRe = new RegExp(`<${tagName}\\b[^<>]{0,${MAX_TAG_ATTR_SCAN}}>`, 'gi')
 
   let result = ''
   let cursor = 0
   for (;;) {
-    openTagRe.lastIndex = cursor
-    const openMatch = openTagRe.exec(html)
-    if (!openMatch) {
+    const openTag = findOpenTagIndex(lowerHtml, tagName, cursor)
+    if (!openTag) {
       result += html.slice(cursor)
       break
     }
-    result += html.slice(cursor, openMatch.index)
-    const openEnd = openMatch.index + openMatch[0].length
+    result += html.slice(cursor, openTag.start)
 
-    const closeTag = findClosingTagIndex(lowerHtml, tagName, openEnd)
+    const closeTag = findClosingTagIndex(lowerHtml, tagName, openTag.end)
     if (!closeTag) {
       // 닫는 태그가 끝까지 없음 — 이후 내용을 전부 버림(스크립트/스타일 원문 누출 방지).
       break
