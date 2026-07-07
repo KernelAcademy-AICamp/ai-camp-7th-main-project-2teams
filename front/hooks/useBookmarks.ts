@@ -7,6 +7,8 @@ export interface Bookmark {
   description?: string | null
   tags: string[]
   category_id: string | null
+  /** category_id → 이름 조인 (GET /api/bookmarks만 제공) — 카드 수정 모달 카테고리 default 선택용 */
+  category?: string | null
   is_favorite: boolean
   folder_hint: string[] | null
   created_at: string

@@ -93,8 +93,19 @@ describe('GET /api/bookmarks', () => {
   it('{ bookmarks, total } 반환', async () => {
     const res = await GET(req())
     const json = await res.json()
-    expect(json.bookmarks).toEqual([{ id: 'bm1', title: 'T' }])
+    expect(json.bookmarks).toEqual([{ id: 'bm1', title: 'T', category: null }])
     expect(json.total).toBe(1)
+  })
+
+  it('category:categories(name) 임베드를 category: string으로 평탄화 (카드 수정 모달 프리필용)', async () => {
+    bookmarksBuilder = makeBuilder({
+      data: [{ id: 'bm1', title: 'T', category: { name: '개발' } }],
+      count: 1,
+      error: null,
+    })
+    const res = await GET(req())
+    const json = await res.json()
+    expect(json.bookmarks).toEqual([{ id: 'bm1', title: 'T', category: '개발' }])
   })
 
   it('tab=favorites → is_favorite eq true', async () => {
