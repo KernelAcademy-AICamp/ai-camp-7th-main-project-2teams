@@ -245,9 +245,9 @@
     },
     {
       "id": "A29",
-      "title": "POST /api/bookmarks/import — 파일 임포트 API",
-      "description": "브라우저 HTML 북마크 파일 파싱 + 배치 AI 태깅 저장. folder_hint 원본 보존.",
-      "details": "app/api/bookmarks/import/route.ts. withAuth() 적용. 입력: 브라우저 export HTML(netscape-bookmark) 파싱 → { title, url, folder_hint }[] 추출. 각 항목 배치 태깅(generateTags) + 임베딩(createEmbedding) 후 일괄 insert. folder_hint는 원본 폴더 경로 보존(A31용). content 없음(제목·URL만) → 본문 미저장. 처리량 제한·부분 실패 처리. 현재 501 스텁.",
+      "title": "POST /api/bookmarks/import — 파일 임포트 API (HTML + 카카오톡 CSV)",
+      "description": "브라우저 HTML 북마크 파일 또는 카카오톡 채팅 내보내기 CSV 파싱 + 배치 AI 태깅 저장. folder_hint 원본 보존.",
+      "details": "app/api/bookmarks/import/route.ts. withAuth() 적용. 입력: 브라우저 export HTML(netscape-bookmark) → { title, url, folder_hint }[] 추출, 또는 카카오톡 채팅 내보내기 CSV(Date,User,Message) → parseKakaoChat.ts가 Message 내 URL만 추출(대화 본문 미보관). 각 항목 배치 태깅(generateTags) + 임베딩(createEmbedding) 후 일괄 insert. folder_hint는 HTML 경로만 보존(A31용), CSV는 folder_hint 없음. content 없음(제목·URL만) → 본문 미저장. 처리량 제한·부분 실패 처리.",
       "priority": "high",
       "status": "done",
       "dependencies": [

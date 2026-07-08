@@ -39,7 +39,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 - [x] A26: 온보딩 페이지 (/onboarding)
 - [x] A27: PATCH /api/bookmarks/:id — 즐겨찾기 토글 API
 - [x] A28: 즐겨찾기 UI
-- [x] A29: POST /api/bookmarks/import — 파일 임포트 API
+- [x] A29: POST /api/bookmarks/import — 파일 임포트 API (HTML + 카카오톡 CSV)
 - [x] A30: 파일 임포트 UI
 - [x] A31: 사이드바 내 폴더 탭
 - [x] A39: 랜딩 페이지 (/welcome) + 온보딩 가이드 헤더 버튼
@@ -89,7 +89,7 @@ tasks/README.md        # 이 파일 (진행 현황 포함)
 | A26 | 온보딩 페이지 (/onboarding)                               | high     | 기능   | 수정 |
 | A27 | PATCH /api/bookmarks/:id — 즐겨찾기 토글 API             | medium   | 기능   | 신규 |
 | A28 | 즐겨찾기 UI (카드 버튼 + 사이드바 탭 연동)               | medium   | 기능   | 신규 |
-| A29 | POST /api/bookmarks/import — 파일 임포트 API              | high     | 기능   | 신규 |
+| A29 | POST /api/bookmarks/import — 파일 임포트 API (HTML + 카카오톡 CSV) | high     | 기능   | 신규 |
 | A30 | 파일 임포트 UI                                            | high     | 기능   | 신규 |
 | A31 | 사이드바 내 폴더 탭 (folder_hint 기반)                   | medium   | 기능   | 신규 |
 | A39 | 랜딩 페이지 (/welcome) + 온보딩 가이드 헤더 버튼         | medium   | 기능   | 신규 |
