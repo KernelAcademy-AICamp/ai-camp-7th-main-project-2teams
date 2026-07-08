@@ -519,7 +519,7 @@ front/
 │   │   ├── import/
 │   │   │   └── page.tsx          # 파일 임포트 WEB-14 (A30)
 │   │   ├── settings/
-│   │   │   └── page.tsx          # 회원 탈퇴 UI (A16) + JSON/HTML 내보내기
+│   │   │   └── page.tsx          # 회원 탈퇴 UI (A16) + JSON/HTML/CSV 내보내기
 │   │   └── layout.tsx            # 헤더 + 사이드바
 │   ├── api/
 │   │   ├── bookmarks/
@@ -557,7 +557,8 @@ front/
 │   ├── schemas.ts                 # bookmarkSchema, searchSchema, bookmarkUpdateSchema(A60: is_favorite/tags/category/description)
 │   ├── parseNetscapeBookmarks.ts  # HTML 임포트 파싱 (A29). 자체 내보내기분은 TAGS/DATA_CATEGORY 속성 복원
 │   ├── parseKakaoChat.ts         # 카카오톡 채팅 내보내기 CSV(Date,User,Message) 파싱 — Message 내 URL만 추출, 대화 본문 미보관
-│   └── formatNetscapeBookmarks.ts # 설정 페이지 HTML 내보내기 — TAGS/DATA_CATEGORY 포함, 재임포트 시 태그·카테고리 복원
+│   ├── formatNetscapeBookmarks.ts # 설정 페이지 HTML 내보내기 — TAGS/DATA_CATEGORY 포함, 재임포트 시 태그·카테고리 복원
+│   └── formatKakaoChatCsv.ts     # 설정 페이지 CSV 내보내기 — 카카오톡 내보내기와 동일 포맷(Date,User,Message)으로 직렬화, parseKakaoChat으로 재임포트 가능
 ├── store/
 │   └── filterStore.ts             # tab, category, folder, sortOrder, viewMode 등
 └── proxy.ts                        # 구 middleware.ts (Next.js 16)

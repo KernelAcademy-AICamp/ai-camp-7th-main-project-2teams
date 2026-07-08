@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatNetscapeBookmarks, type ExportBookmark } from '@/lib/formatNetscapeBookmarks'
+import { formatKakaoChatCsv } from '@/lib/formatKakaoChatCsv'
 
 interface AccountBookmark {
   title: string
@@ -11,6 +12,7 @@ interface AccountBookmark {
   tags: string[]
   category: { name: string } | null
   folder_hint: string[] | null
+  created_at: string
 }
 
 export default function SettingsPage() {
@@ -38,14 +40,14 @@ export default function SettingsPage() {
     URL.revokeObjectURL(url)
   }
 
-  const handleDownload = async (format: 'json' | 'html') => {
+  const handleDownload = async (format: 'json' | 'html' | 'csv') => {
     const res = await fetch('/api/account')
     if (!res.ok) { setError('데이터 내보내기에 실패했습니다.'); return }
     const json = await res.json()
 
     if (format === 'json') {
       downloadBlob(new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' }), 'bookmarks.json')
-    } else {
+    } else if (format === 'html') {
       // 브라우저 북마크 가져오기 호환(Netscape 포맷) + 자체 재임포트 시 TAGS/DATA_CATEGORY로 복원
       const bookmarks: ExportBookmark[] = (json.bookmarks as AccountBookmark[]).map((b) => ({
         title: b.title,
@@ -55,6 +57,14 @@ export default function SettingsPage() {
         folder_hint: b.folder_hint,
       }))
       downloadBlob(new Blob([formatNetscapeBookmarks(bookmarks)], { type: 'text/html' }), 'bookmarks.html')
+    } else {
+      // 카카오톡 채팅 내보내기(Date,User,Message)와 동일 포맷 — parseKakaoChat으로 재임포트 가능
+      const bookmarks = (json.bookmarks as AccountBookmark[]).map((b) => ({
+        title: b.title,
+        url: b.url,
+        created_at: b.created_at,
+      }))
+      downloadBlob(new Blob([formatKakaoChatCsv(bookmarks)], { type: 'text/csv' }), 'bookmarks.csv')
     }
     setExportDone(true)
   }
@@ -104,6 +114,12 @@ export default function SettingsPage() {
             className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             HTML로 내보내기
+          </button>
+          <button
+            onClick={() => handleDownload('csv')}
+            className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            CSV로 내보내기
           </button>
         </div>
       </section>
