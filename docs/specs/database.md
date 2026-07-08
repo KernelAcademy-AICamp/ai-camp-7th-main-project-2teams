@@ -33,6 +33,7 @@ CREATE TABLE bookmarks (
   category_id UUID        REFERENCES categories(id),   -- tags[0] 매핑, null = 미분류
   folder_hint TEXT[],                                   -- 크롬 폴더 경로 (파일 임포트 시 원본 경로 보존)
   is_favorite BOOLEAN     NOT NULL DEFAULT false,       -- 즐겨찾기 토글 (A27)
+  is_dead     BOOLEAN     NOT NULL DEFAULT false,       -- 저장 시점 404/410 감지 (마이그레이션 0021)
   embedding   vector(1536),                              -- text-embedding-3-small (A51 bge-m3 롤백, 마이그레이션 0006)
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );

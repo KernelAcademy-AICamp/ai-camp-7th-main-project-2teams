@@ -94,6 +94,7 @@ interface Bookmark {
   tags: string[]
   category_id: string | null
   is_favorite: boolean
+  is_dead: boolean                // 저장 시점 404/410 감지 — 카드에 "링크 끊김" 배지(비차단)
   folder_hint: string[] | null   // 파일 임포트 시 원본 폴더 경로, 익스텐션 저장은 null
   created_at: string
 }

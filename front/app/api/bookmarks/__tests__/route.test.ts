@@ -12,8 +12,12 @@ const { warnSpy } = vi.hoisted(() => ({ warnSpy: vi.fn() }))
 vi.mock('@/lib/logger', () => ({ logger: { warn: warnSpy, log: vi.fn(), error: vi.fn() } }))
 
 // fetchMeta 모킹 — 실네트워크 차단. 항상 호출되므로(이번 변경) 기본값 반환 필요.
+// isDeadStatus는 순수 함수라 실제 구현 그대로 사용(별도 모킹 불필요).
 const { fetchMeta } = vi.hoisted(() => ({ fetchMeta: vi.fn() }))
-vi.mock('@/lib/fetchMeta', () => ({ fetchMeta }))
+vi.mock('@/lib/fetchMeta', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/fetchMeta')>()
+  return { ...actual, fetchMeta }
+})
 
 // supabase 서버 클라이언트 모킹: auth + categories upsert + bookmarks 중복검사/insert
 const insertSpy = vi.fn()

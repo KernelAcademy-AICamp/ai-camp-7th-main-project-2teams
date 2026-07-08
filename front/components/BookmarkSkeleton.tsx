@@ -1,10 +1,42 @@
-// BookmarkCard 그리드 뷰(다크 미디어 카드)와 동일한 구조 — 썸네일 상단 + 다크 정보 패널.
-export function BookmarkSkeleton() {
+interface BookmarkSkeletonProps {
+  view?: "grid" | "list" | "compact"
+}
+
+// BookmarkCard 3종 뷰(그리드/리스트/컴팩트)와 동일한 구조·border-radius 유지 — 뷰 전환 시 스켈레톤도 같이 바뀜.
+export function BookmarkSkeleton({ view = "grid" }: BookmarkSkeletonProps) {
+  if (view === "compact") {
+    return (
+      <div role="status" aria-label="북마크 로딩 중" className="flex items-center gap-3 px-3 py-2">
+        <span className="sr-only">로딩 중...</span>
+        <div className="h-5 w-5 shrink-0 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+        <div className="h-4 flex-1 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+        <div className="hidden h-3 w-20 shrink-0 animate-pulse rounded bg-gray-200 sm:block dark:bg-gray-700" />
+      </div>
+    )
+  }
+
+  if (view === "list") {
+    return (
+      <div
+        role="status"
+        aria-label="북마크 로딩 중"
+        className="flex items-center gap-4 rounded-md border border-line bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
+      >
+        <span className="sr-only">로딩 중...</span>
+        <div className="h-12 w-12 shrink-0 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="h-3 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div
       role="status"
       aria-label="북마크 로딩 중"
-      className="flex flex-col overflow-hidden rounded-2xl bg-gray-900 shadow-lg"
+      className="flex flex-col overflow-hidden rounded-md bg-gray-900 shadow-lg"
     >
       <span className="sr-only">로딩 중...</span>
       {/* 썸네일 */}

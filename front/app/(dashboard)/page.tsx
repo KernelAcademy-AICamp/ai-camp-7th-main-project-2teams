@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, Suspense } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
+import { ArrowUp } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { AddBookmarkModal } from "@/components/AddBookmarkModal";
 import { BookmarkCard } from "@/components/BookmarkCard";
@@ -24,6 +25,9 @@ function DashboardContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const mainRef = useRef<HTMLElement>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const {
     category,
@@ -95,6 +99,19 @@ function DashboardContent() {
     const qs = buildFilterQuery({ category, folder, tag, tab, fromExtension });
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }, [category, folder, tag, tab, router, pathname, fromExtension]);
+
+  // 카테고리 변경 시 이전 스크롤 위치 잔류 방지 — 목록 최상단으로 리셋
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [category]);
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
+    setShowScrollTop(e.currentTarget.scrollTop > 400);
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const isSearching = searchQuery.trim().length > 0;
 
@@ -176,16 +193,38 @@ function DashboardContent() {
       {fromExtension && <ExtensionSync />}
       <Sidebar />
 
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 px-4 py-8 overflow-y-auto">
+      <main
+        ref={mainRef}
+        onScroll={handleScroll}
+        className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 px-4 py-8 overflow-y-auto"
+      >
+        {showScrollTop && (
+          <button
+            type="button"
+            onClick={scrollToTop}
+            aria-label="맨 위로 이동"
+            className="fixed bottom-6 right-6 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-orange-600"
+          >
+            <ArrowUp className="h-5 w-5" />
+          </button>
+        )}
         {/* 북마크가 하나도 없으면 검색 의미 없음 → 검색바 숨김 (검색 중에는 유지) */}
         {(allBookmarks.length > 0 || isSearching) && (
           <SearchBar onSearch={handleSearch} onClear={handleClear} value={searchQuery} onChange={setSearchQuery} />
         )}
 
         {isPending && (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          <div
+            className={cn(
+              viewMode === "grid"
+                ? "grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
+                : viewMode === "compact"
+                  ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-md border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900"
+                  : "flex flex-col gap-3",
+            )}
+          >
             {Array.from({ length: 6 }).map((_, i) => (
-              <BookmarkSkeleton key={i} />
+              <BookmarkSkeleton key={i} view={viewMode} />
             ))}
           </div>
         )}

@@ -102,6 +102,7 @@ describe('useSearch — visibleCount/showMore/hasMore (A62)', () => {
       category_id: null,
       is_favorite: false,
       folder_hint: null,
+      is_dead: false,
       created_at: '2026-01-01T00:00:00Z',
       similarity: 0.9,
     }))

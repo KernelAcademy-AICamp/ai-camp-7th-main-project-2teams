@@ -20,9 +20,7 @@ export interface EditFormState {
 }
 
 /** bookmark → 폼 초기 상태 변환 — 테스트 가능하도록 export */
-export function toFormState(
-  bookmark: Pick<Bookmark, "tags" | "description" | "category">
-): EditFormState {
+export function toFormState(bookmark: Pick<Bookmark, "tags" | "description" | "category">): EditFormState {
   return {
     tags: [...bookmark.tags],
     category: bookmark.category ?? "",
@@ -63,7 +61,7 @@ function arraysEqual(a: string[], b: string[]): boolean {
  */
 export function buildUpdatePayload(
   bookmark: Pick<Bookmark, "tags" | "description" | "category">,
-  form: EditFormState
+  form: EditFormState,
 ): UpdateBookmarkFields | null {
   const payload: UpdateBookmarkFields = {};
 
@@ -225,7 +223,7 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
                 maxLength={MAX_DESCRIPTION_LENGTH}
                 rows={3}
                 disabled={isPending}
-                placeholder="이 북마크에 대한 메모를 남겨보세요."
+                placeholder={`이 북마크에 대한 메모를 남겨보세요.\n나중에 검색할 때도 유용해요.`}
                 className="w-full resize-none rounded-lg border border-line px-3 py-2 text-sm text-text-primary outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
               />
             </div>

@@ -13,6 +13,8 @@ export interface Bookmark {
   folder_hint: string[] | null
   /** og:image/YouTube 썸네일 원본 URL — 직접 렌더링 금지, /api/thumbnail 프록시 경유 */
   thumbnail_url?: string | null
+  /** 저장 시점 404/410 감지 결과 — true면 카드에 "링크 끊김" 배지 표시(비차단) */
+  is_dead: boolean
   created_at: string
 }
 
