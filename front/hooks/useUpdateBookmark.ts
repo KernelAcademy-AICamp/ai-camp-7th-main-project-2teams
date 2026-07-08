@@ -28,9 +28,10 @@ export async function fetchUpdateBookmark(
 }
 
 /**
- * onMutate에서 사용하는 캐시 변환 함수 (tags·description 즉시 반영).
+ * onMutate에서 사용하는 캐시 변환 함수 (tags·description·category 표시명 즉시 반영).
  * 테스트 가능하도록 export — 실제 queryClient 없이 순수 로직 검증.
- * category_id는 서버가 upsert로 새로 발급한 값이라 낙관적으로 알 수 없음 — onSettled invalidate로 동기화.
+ * category_id(서버 upsert로 새로 발급하는 uuid)는 낙관적으로 알 수 없어 그대로 두고
+ * onSuccess에서 서버 응답으로 채운다 — 카드에 표시되는 category 이름은 입력값으로 바로 알 수 있으므로 여기서 반영.
  */
 export function applyOptimisticUpdate(
   old: InfiniteData<BookmarksPage> | undefined,
@@ -48,6 +49,9 @@ export function applyOptimisticUpdate(
           ...b,
           ...(fields.tags !== undefined ? { tags: fields.tags } : {}),
           ...(fields.description !== undefined ? { description: fields.description } : {}),
+          ...(fields.category !== undefined
+            ? { category: fields.category ? resolveTopCategory(fields.category) : null }
+            : {}),
         }
       }),
     })),
