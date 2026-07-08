@@ -1,6 +1,9 @@
+import { extractYoutubeId } from './youtube'
+
 // URL 표준 정규화 — 중복 북마크 방지용 canonical 형태.
 // (user_id, url) unique 제약(A35)은 바이트 동일 문자열만 잡으므로,
 // insert 전 이 함수로 정규화해 trailing slash·fragment·트래킹파라미터·쿼리순서 차이를 흡수한다.
+// youtu.be와 youtube.com/watch?v=는 같은 영상이어도 문자열이 달라 별개 북마크로 저장되던 문제 → canonical 통일.
 
 // 의미 없는 추적용 쿼리 파라미터 — 페이지 식별에 무관해 제거해도 안전.
 const TRACKING_PARAMS = new Set([
@@ -31,6 +34,9 @@ export function normalizeUrl(input: string): string {
 
   u.protocol = 'https:' // http/https 차이는 동일 URL로 취급 — dedup 키 통일
   if (u.hostname.startsWith('www.')) u.hostname = u.hostname.slice(4) // www 유무 차이 흡수
+
+  const videoId = extractYoutubeId(u.toString())
+  if (videoId) return `https://youtube.com/watch?v=${videoId}`
 
   u.hash = '' // fragment 제거
 

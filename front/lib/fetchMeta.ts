@@ -95,6 +95,15 @@ function decodeHtmlEntities(text: string): string {
   })
 }
 
+// 플레이스홀더·에러 페이지가 흔히 내놓는 무의미한 title — 그대로 저장하면 목록/검색에서 식별 불가.
+// 다음 후보(og:title → twitter:title → 빈 값→클라 호스트명 폴백)로 넘어가도록 빈 값 취급한다.
+const JUNK_TITLE_RE =
+  /^(untitled( document)?|new tab|no title|document|index|error\.?|4\d\d (forbidden|not found)|access denied|attention required!?|just a moment\.{0,3}|object not found!?)$/i
+
+export function isJunkTitle(title: string): boolean {
+  return JUNK_TITLE_RE.test(title.trim())
+}
+
 // 여러 meta 태그 패턴을 순서대로 시도해 첫 content 값 반환 (속성 순서 무관 추출). 엔티티 디코드 포함.
 function extractMetaContent(html: string, ...patterns: RegExp[]): string {
   for (const tagRe of patterns) {
@@ -234,15 +243,12 @@ export async function fetchMeta(url: string): Promise<{
     const cap = isYouTubeChannel(url) ? CHANNEL_MAX_HTML : MAX_HTML
     const html = (await res.text()).slice(0, cap)
 
-    // <title> 우선, 없으면 og:title → twitter:title
+    // <title> 우선, 없거나 무의미(Untitled 등)하면 og:title → twitter:title 순서로 대체
     const rawTitle = html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim()
-    const title = rawTitle
-      ? decodeHtmlEntities(rawTitle)
-      : extractMetaContent(
-          html,
-          /<meta[^>]+property=["']og:title["'][^>]*>/i,
-          /<meta[^>]+name=["']twitter:title["'][^>]*>/i,
-        )
+    const titleTag = rawTitle ? decodeHtmlEntities(rawTitle) : ''
+    const ogTitle = extractMetaContent(html, /<meta[^>]+property=["']og:title["'][^>]*>/i)
+    const twitterTitle = extractMetaContent(html, /<meta[^>]+name=["']twitter:title["'][^>]*>/i)
+    const title = [titleTag, ogTitle, twitterTitle].find((t) => t && !isJunkTitle(t)) ?? ''
 
     // og:description → meta[name=description] → twitter:description
     const description = extractMetaContent(
