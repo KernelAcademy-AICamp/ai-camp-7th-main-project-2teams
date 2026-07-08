@@ -61,4 +61,11 @@ describe('normalizeUrl', () => {
       'https://youtube.com/watch?v=abc',
     )
   })
+
+  it('youtu.be와 youtube.com/watch?v=는 같은 영상이면 동일 canonical로 dedup', () => {
+    const canonical = 'https://youtube.com/watch?v=dQw4w9WgXcQ'
+    expect(normalizeUrl('https://youtu.be/dQw4w9WgXcQ')).toBe(canonical)
+    expect(normalizeUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10s')).toBe(canonical)
+    expect(normalizeUrl('https://m.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(canonical)
+  })
 })

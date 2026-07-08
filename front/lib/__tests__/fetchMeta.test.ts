@@ -105,6 +105,39 @@ describe('fetchMeta — 일반 페이지', () => {
     expect(meta.title).toBe('트위터 제목')
   })
 
+  it('<title>이 "Untitled" 등 무의미하면 og:title로 대체', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text: '<title>Untitled</title><meta property="og:title" content="실제 제목">',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.title).toBe('실제 제목')
+  })
+
+  it('<title>·og:title 둘 다 무의미하면 twitter:title로 대체', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({
+        ok: true,
+        text:
+          '<title>403 Forbidden</title>' +
+          '<meta property="og:title" content="Just a moment...">' +
+          '<meta name="twitter:title" content="실제 제목">',
+      }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.title).toBe('실제 제목')
+  })
+
+  it('모든 title 후보가 무의미하면 빈 값(클라 호스트명 폴백에 위임)', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      mockResponse({ ok: true, text: '<title>New Tab</title>' }),
+    )
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.title).toBe('')
+  })
+
   it('응답 실패(!ok) → 빈 값', async () => {
     global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: false, status: 500 }))
     expect(await fetchMeta('https://example.com')).toEqual({

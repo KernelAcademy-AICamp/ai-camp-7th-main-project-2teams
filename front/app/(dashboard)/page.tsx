@@ -268,7 +268,7 @@ function DashboardContent() {
                   viewMode === "grid"
                     ? "grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
                     : viewMode === "compact"
-                      ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900"
+                      ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-md border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900"
                       : "flex flex-col gap-3",
                   isRefetching && "opacity-50 transition-opacity duration-200",
                 )}
