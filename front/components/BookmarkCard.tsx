@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { Star, ExternalLink, Tag, Calendar, MoreVertical, Trash2, Pencil } from "lucide-react";
+import { Star, ExternalLink, Tag, Shapes, Calendar, MoreVertical, Trash2, Pencil } from "lucide-react";
 import { useOnClickOutside } from "usehooks-ts";
 import { cn } from "@/lib/utils";
 import type { Bookmark } from "@/hooks/useBookmarks";
@@ -17,7 +17,13 @@ interface BookmarkCardProps {
 }
 
 /** AI 태그 칩 — Design.md: 작은 pill, 연한 블루 배경 + 블루 텍스트 */
-const TAG_CHIP = "rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-brand-strong";
+const TAG_CHIP = "rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-brand-strong";
+
+/** 카테고리 배지 — TAG_CHIP(채워진 블루 pill)과 색상·형태 구분: 보라 톤 + outline(테두리만). 아이콘은 Shapes(분류) — 사이드바 "폴더" 기능과 혼동 방지 위해 Folder 아이콘 회피 */
+const CATEGORY_CHIP_LIST =
+  "inline-flex items-center gap-1 rounded-md border border-violet-300 bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-600 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-300";
+const CATEGORY_CHIP_GRID =
+  "inline-flex items-center gap-1 rounded-md border border-violet-400/50 bg-black/50 px-2 py-0.5 text-xs font-medium text-violet-300 backdrop-blur-sm";
 
 /** 그리드 카드 썸네일 위 hover 액션 버튼 — 즐겨찾기·외부링크·메뉴 크기 통일 (고정 박스 + 내부 중앙정렬) */
 const ACTION_CHIP = "inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black/50 backdrop-blur-sm";
@@ -158,9 +164,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
     </div>
   );
 
-  const editModal = isEditOpen && (
-    <EditBookmarkModal bookmark={bookmark} onClose={() => setIsEditOpen(false)} />
-  );
+  const editModal = isEditOpen && <EditBookmarkModal bookmark={bookmark} onClose={() => setIsEditOpen(false)} />;
 
   // 즐겨찾기 토글 버튼 — 뷰 공통 (size·className 오버라이드 가능)
   const favButton = (size: number, buttonClassName?: string) => (
@@ -218,7 +222,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
   if (view === "list") {
     return (
       <>
-        <article className="group flex items-center gap-4 rounded-xl border border-line bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-md">
+        <article className="group flex items-center gap-4 rounded-md border border-line bg-white p-4 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-md">
           <Favicon url={bookmark.url} boxClassName="h-12 w-12 rounded-xl" />
           <div className="min-w-0 flex-1">
             <a
@@ -234,6 +238,15 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             )}
             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
               <span className="font-mono">{extractDomain(bookmark.url)}</span>
+              {bookmark.category && (
+                <>
+                  <span aria-hidden>·</span>
+                  <span className={CATEGORY_CHIP_LIST}>
+                    <Shapes size={10} />
+                    {bookmark.category}
+                  </span>
+                </>
+              )}
               {bookmark.tags.length > 0 && <span aria-hidden>·</span>}
               {bookmark.tags.map((tag) => (
                 <span key={tag} className={TAG_CHIP}>
@@ -259,86 +272,94 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
   // 그리드 뷰 — 미디어 카드 (썸네일 상단 + 다크 정보 패널)
   return (
     <>
-    <article className="group flex flex-col overflow-hidden rounded-2xl bg-gray-900 shadow-lg transition-shadow hover:shadow-2xl">
-      {/* 썸네일 — 없으면 파비콘 그라디언트 커버로 대체 */}
-      <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-gray-800">
-        {bookmark.thumbnail_url && !thumbnailErrored ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={`/api/thumbnail?id=${bookmark.id}`}
-            alt=""
-            loading="lazy"
-            onError={() => setThumbnailErrored(true)}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="gradient-brand flex h-full w-full items-center justify-center">
-            <Favicon url={bookmark.url} boxClassName="h-12 w-12 rounded-xl" />
-          </div>
-        )}
+      <article className="group flex flex-col overflow-hidden rounded-md bg-gray-900 shadow-lg transition-shadow hover:shadow-2xl">
+        {/* 썸네일 — 없으면 파비콘 그라디언트 커버로 대체 */}
+        <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-gray-800">
+          {bookmark.thumbnail_url && !thumbnailErrored ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`/api/thumbnail?id=${bookmark.id}`}
+              alt=""
+              loading="lazy"
+              onError={() => setThumbnailErrored(true)}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="gradient-brand flex h-full w-full items-center justify-center">
+              <Favicon url={bookmark.url} boxClassName="h-12 w-12 rounded-xl" />
+            </div>
+          )}
 
-        {/* 액션 오버레이 — hover/focus 시 노출 */}
-        <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-          {favButton(14, cn(ACTION_CHIP, "text-white hover:bg-black/70 dark:hover:bg-black/70"))}
+          {/* 카테고리 배지 — 썸네일 좌상단, 항상 노출 (액션 오버레이와 달리 hover 불필요) */}
+          {bookmark.category && (
+            <div className="absolute left-2 top-2">
+              <span className={CATEGORY_CHIP_GRID}>
+                <Shapes size={10} />
+                {bookmark.category}
+              </span>
+            </div>
+          )}
+
+          {/* 액션 오버레이 — hover/focus 시 노출 */}
+          <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+            {favButton(14, cn(ACTION_CHIP, "text-white hover:bg-black/70 dark:hover:bg-black/70"))}
+            <a
+              href={safeUrl(bookmark.url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="새 탭에서 열기"
+              className={cn(ACTION_CHIP, "text-white transition-colors hover:bg-black/70")}
+            >
+              <ExternalLink size={14} />
+            </a>
+            {menu(cn(ACTION_CHIP, "text-white hover:bg-black/70 dark:hover:bg-black/70"))}
+          </div>
+        </div>
+
+        {/* 정보 패널 */}
+        <div className="flex flex-1 flex-col gap-2 p-4">
           <a
             href={safeUrl(bookmark.url)}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="새 탭에서 열기"
-            className={cn(ACTION_CHIP, "text-white transition-colors hover:bg-black/70")}
+            className="line-clamp-2 text-lg font-bold leading-snug text-white hover:underline"
           >
-            <ExternalLink size={14} />
+            {bookmark.title}
           </a>
-          {menu(cn(ACTION_CHIP, "text-white hover:bg-black/70 dark:hover:bg-black/70"))}
-        </div>
-      </div>
 
-      {/* 정보 패널 */}
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <a
-          href={safeUrl(bookmark.url)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="line-clamp-2 text-lg font-bold leading-snug text-white hover:underline"
-        >
-          {bookmark.title}
-        </a>
+          {/* AI 요약 설명 */}
+          {bookmark.description && <p className="line-clamp-2 text-sm text-gray-400">{bookmark.description}</p>}
 
-        {/* AI 요약 설명 */}
-        {bookmark.description && (
-          <p className="line-clamp-2 text-sm text-gray-400">{bookmark.description}</p>
-        )}
+          {/* 도메인 URL */}
+          <a
+            href={safeUrl(bookmark.url)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="truncate text-sm font-medium text-brand hover:underline"
+          >
+            {extractDomain(bookmark.url)}
+          </a>
 
-        {/* 도메인 URL */}
-        <a
-          href={safeUrl(bookmark.url)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="truncate text-sm font-medium text-brand hover:underline"
-        >
-          {extractDomain(bookmark.url)}
-        </a>
+          {/* 태그 뱃지 */}
+          {bookmark.tags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <Tag size={12} className="shrink-0 text-gray-500" />
+              {bookmark.tags.map((tag) => (
+                <span key={tag} className={TAG_CHIP}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
 
-        {/* 태그 뱃지 */}
-        {bookmark.tags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            <Tag size={12} className="shrink-0 text-gray-500" />
-            {bookmark.tags.map((tag) => (
-              <span key={tag} className={TAG_CHIP}>
-                {tag}
-              </span>
-            ))}
+          {/* 저장일 */}
+          <div className="mt-auto flex items-center gap-1 border-t border-white/10 pt-2.5 font-mono text-xs text-gray-500">
+            <Calendar size={12} />
+            <time dateTime={bookmark.created_at}>{formatDate(bookmark.created_at)}</time>
           </div>
-        )}
-
-        {/* 저장일 */}
-        <div className="mt-auto flex items-center gap-1 border-t border-white/10 pt-2.5 font-mono text-xs text-gray-500">
-          <Calendar size={12} />
-          <time dateTime={bookmark.created_at}>{formatDate(bookmark.created_at)}</time>
         </div>
-      </div>
-    </article>
-    {editModal}
+      </article>
+      {editModal}
     </>
   );
 }
