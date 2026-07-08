@@ -3,7 +3,9 @@
  *
  * 배경: is_dead는 신규 저장 시점부터만 기록됨(POST /api/bookmarks) — 기존 저장분은 이 스크립트로 소급 반영.
  * fetchMeta() 전체 재호출은 title/description/content까지 다시 파싱해 무겁고 불필요 →
- * 상태 코드만 확인하는 경량 체크(HEAD 우선, 405/501이면 GET 폴백)를 별도로 사용.
+ * 상태 코드만 확인하는 경량 체크를 별도로 사용.
+ * HEAD 우선/GET 폴백 방식은 폐기 — figma.com 등 일부 사이트가 HEAD엔 404, GET엔 200(로그인 리다이렉트)을
+ * 반환해 오탐(false dead)을 냈음. GET 단독으로 통일(fetchMeta.ts도 GET만 사용 — 판정 일관성).
  *
  * 실행:
  *   set -a; . ./.env; set +a
@@ -37,25 +39,17 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 
 type Row = { id: string; url: string; is_dead: boolean }
 
-// fetchMeta.ts 전체 재호출(HTML 파싱) 없이 상태 코드만 가볍게 확인.
-// HEAD 우선 — 405(Method Not Allowed)/501(Not Implemented)이면 HEAD 미지원 서버로 보고 GET 폴백.
+// fetchMeta.ts 전체 재호출(HTML 파싱) 없이 상태 코드만 가볍게 확인. GET 단독 — HEAD는 일부 사이트에서
+// GET과 다른(부정확한) 상태코드를 줘 오탐을 낼 수 있음(회귀 확인됨: figma.com).
 async function checkStatus(url: string): Promise<number | null> {
   try {
-    const headRes = await fetch(url, {
-      method: 'HEAD',
-      redirect: 'follow',
-      signal: AbortSignal.timeout(CHECK_TIMEOUT_MS),
-      headers: { 'User-Agent': USER_AGENT },
-    })
-    if (headRes.status !== 405 && headRes.status !== 501) return headRes.status
-
-    const getRes = await fetch(url, {
+    const res = await fetch(url, {
       method: 'GET',
       redirect: 'follow',
       signal: AbortSignal.timeout(CHECK_TIMEOUT_MS),
       headers: { 'User-Agent': USER_AGENT },
     })
-    return getRes.status
+    return res.status
   } catch {
     return null
   }
