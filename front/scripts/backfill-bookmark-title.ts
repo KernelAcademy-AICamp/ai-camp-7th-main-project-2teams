@@ -5,17 +5,28 @@
  * 수정 전 저장분은 title 컬럼에 url 문자열이 그대로 들어가 있음.
  * 배경 2: fetchMeta의 junk-title 필터(isJunkTitle) 도입 전 저장분은 "Untitled"/"403 Forbidden" 등이
  * title 컬럼에 그대로 남아있음.
+ * 배경 3: title 플레이스홀더는 정규화 전(raw href, si=/fbclid=/igsh=/utm_* 등 트래킹 파라미터 포함) 값으로
+ * 저장되는데 url 컬럼은 normalizeUrl()로 정규화되어 트래킹 파라미터가 빠짐 — 그 결과 title !== url이 되어
+ * 기존 "title === url 정확 일치" 조건으로는 못 잡던 케이스가 90건 있었음. title이 http(s)://로 시작하면
+ * (정규화 여부와 무관하게) 플레이스홀더로 간주하도록 조건 완화.
  *
  * 실행:
  *   set -a; . ./.env; set +a
  *   npx tsx scripts/backfill-bookmark-title.ts            # DRY-RUN(기본) — 계획만 출력
  *   npx tsx scripts/backfill-bookmark-title.ts --apply     # 실제 반영
  *
- * 동작: title = url 이거나 junk title인 행만 대상으로 fetchMeta()를 재호출해 실제 title 확보 후 갱신.
- * OpenAI 호출 없음(재태깅·재임베딩 안 함) — title 컬럼만 교체. 못 찾으면 건너뜀(재실행 가능).
+ * 동작: title이 URL 형태(placeholder)이거나 junk title인 행만 대상으로 fetchMeta()를 재호출해
+ * 실제 title 확보 후 갱신. OpenAI 호출 없음(재태깅·재임베딩 안 함) — title 컬럼만 교체.
+ * 못 찾으면 건너뜀(재실행 가능).
  */
 import { createClient } from '@supabase/supabase-js'
 import { fetchMeta, isJunkTitle } from '../lib/fetchMeta'
+
+// title이 정규화 전 raw href 그대로 저장된 placeholder인지 판별 — url 컬럼과 정확히 같지 않아도
+// http(s)://로 시작하면 "실제 title이 아니라 URL 문자열"로 간주.
+function isUrlLikeTitle(title: string): boolean {
+  return /^https?:\/\//i.test(title.trim())
+}
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -47,7 +58,7 @@ async function fetchTargetRows(): Promise<Row[]> {
     if (error) throw new Error(`조회 실패: ${error.message}`)
     if (!data || data.length === 0) break
     for (const row of data as Array<{ id: string; url: string; title: string }>) {
-      if (row.title === row.url || isJunkTitle(row.title)) rows.push({ id: row.id, url: row.url })
+      if (isUrlLikeTitle(row.title) || isJunkTitle(row.title)) rows.push({ id: row.id, url: row.url })
     }
     if (data.length < PAGE_SIZE) break
   }
@@ -56,7 +67,7 @@ async function fetchTargetRows(): Promise<Row[]> {
 
 async function main(): Promise<void> {
   const rows = await fetchTargetRows()
-  console.log(`대상(title=url): ${rows.length}행 · ${APPLY ? '적용' : 'DRY-RUN'}`)
+  console.log(`대상(title=URL 형태/junk): ${rows.length}행 · ${APPLY ? '적용' : 'DRY-RUN'}`)
 
   let found = 0
   let skipped = 0
