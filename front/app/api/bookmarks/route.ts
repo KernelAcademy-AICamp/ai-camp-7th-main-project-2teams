@@ -5,7 +5,7 @@ import { bookmarkCreateSchema } from '@/lib/schemas'
 import { generateTags, createEmbedding } from '@/lib/ai'
 import { normalizeTags, extractTopCategory, UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
-import { fetchMeta } from '@/lib/fetchMeta'
+import { fetchMeta, isDeadStatus } from '@/lib/fetchMeta'
 import { isSafeHttpUrl } from '@/lib/ssrf'
 import { normalizeUrl } from '@/lib/normalizeUrl'
 
@@ -55,6 +55,8 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   if (!hasExtensionContent && meta.title) title = meta.title
   const description = meta.description || null
   const thumbnailUrl = isSafeHttpUrl(meta.thumbnailUrl) ? meta.thumbnailUrl : null
+  // 404/410만 죽은 링크로 판정 — 카드에 비차단 경고 배지 표시용
+  const isDead = isDeadStatus(meta.httpStatus)
   // 임베딩 입력 — 익스텐션 content(og:description+body, 2000자 상한) 우선, 없으면 서버 추출본으로 대체.
   const embeddingContent = hasExtensionContent ? content : meta.content
 
@@ -99,11 +101,12 @@ export const POST = withAuth(async (req, { user, supabase }) => {
       category_id,
       folder_hint: folder_hint ?? null,
       thumbnail_url: thumbnailUrl,
+      is_dead: isDead,
       embedding,
     })
     // 명시 컬럼 — embedding 누출 방지
     .select(
-      'id, url, title, tags, category_id, folder_hint, is_favorite, thumbnail_url, created_at',
+      'id, url, title, tags, category_id, folder_hint, is_favorite, thumbnail_url, is_dead, created_at',
     )
     .single()
 
@@ -125,7 +128,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
 // A60: description 포함 — 카드 수정 모달에서 기존 설명 프리필용.
 // category:categories(name) — 카드 수정 모달에서 현재 카테고리 default 선택용 (category_id → 이름 조인).
 const LIST_COLUMNS =
-  'id, url, title, description, tags, category_id, category:categories(name), folder_hint, is_favorite, thumbnail_url, created_at'
+  'id, url, title, description, tags, category_id, category:categories(name), folder_hint, is_favorite, thumbnail_url, is_dead, created_at'
 
 export const GET = withAuth(async (req, { supabase }) => {
   const parsed = getQuerySchema.safeParse(

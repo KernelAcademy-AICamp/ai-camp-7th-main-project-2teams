@@ -1,7 +1,8 @@
 // 서버사이드 전용 — 외부 URL에서 title/description/content 추출. content 없는 단일 북마크 추가 시 사용.
 
 const FETCH_TIMEOUT_MS = 5000
-const MAX_HTML = 50_000 // <head> 파싱에 충분, 대용량 바디 방지
+// behance.net처럼 <title>이 무거운 프리로드 스크립트 뒤(~69KB 지점)에 있는 SPA 셸 페이지가 있어 상향.
+const MAX_HTML = 200_000
 // YouTube 채널 메인 페이지는 <title>/og:title이 ~630KB 지점에 있어 기본 캡으론 누락 → 상향.
 const CHANNEL_MAX_HTML = 800_000
 // 임베딩 입력용 본문 텍스트 상한 — extension/background/index.js의 동일 규칙과 값 일치.
@@ -102,6 +103,11 @@ const JUNK_TITLE_RE =
 
 export function isJunkTitle(title: string): boolean {
   return JUNK_TITLE_RE.test(title.trim())
+}
+
+// 404/410만 "명백히 사라진 링크"로 취급 — 403(차단)·429·5xx·timeout(null)은 사이트가 살아있을 수 있어 제외.
+export function isDeadStatus(status: number | null): boolean {
+  return status === 404 || status === 410
 }
 
 // 여러 meta 태그 패턴을 순서대로 시도해 첫 content 값 반환 (속성 순서 무관 추출). 엔티티 디코드 포함.
@@ -224,12 +230,14 @@ export async function fetchMeta(url: string): Promise<{
   description: string
   thumbnailUrl: string
   content: string
+  httpStatus: number | null
 }> {
   // YouTube 영상: oEmbed 우선 (HTML 파싱보다 안정적). 채널 URL이면 null → HTML 폴백.
   if (isYouTube(url)) {
     const oembed = await fetchYouTubeOEmbed(url)
     // oEmbed는 body HTML이 없음 — description(채널명)을 content로 대체해 임베딩 품질 유지.
-    if (oembed) return { ...oembed, content: oembed.description }
+    // oEmbed는 실제 페이지 status가 아니라 httpStatus는 null(oEmbed 실패 시엔 아래 HTML 폴백에서 실제 status 확보).
+    if (oembed) return { ...oembed, content: oembed.description, httpStatus: null }
   }
 
   try {
@@ -237,7 +245,9 @@ export async function fetchMeta(url: string): Promise<{
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; BookmarkBot/1.0)' },
     })
-    if (!res.ok) return { title: '', description: '', thumbnailUrl: '', content: '' }
+    if (!res.ok) {
+      return { title: '', description: '', thumbnailUrl: '', content: '', httpStatus: res.status }
+    }
 
     // 유튜브 채널 메인은 head가 커서 캡 상향 (og:title이 50KB 밖)
     const cap = isYouTubeChannel(url) ? CHANNEL_MAX_HTML : MAX_HTML
@@ -268,8 +278,9 @@ export async function fetchMeta(url: string): Promise<{
 
     const content = buildContent(description, extractBodyText(html))
 
-    return { title, description, thumbnailUrl, content }
+    return { title, description, thumbnailUrl, content, httpStatus: res.status }
   } catch {
-    return { title: '', description: '', thumbnailUrl: '', content: '' }
+    // 네트워크 에러/타임아웃 — 상태 코드 자체를 알 수 없어 null(dead 판정 대상에서 제외).
+    return { title: '', description: '', thumbnailUrl: '', content: '', httpStatus: null }
   }
 }

@@ -18,6 +18,7 @@ const makeBookmark = (id: string, overrides: Partial<Bookmark> = {}): Bookmark =
   category_id: null,
   is_favorite: false,
   folder_hint: null,
+  is_dead: false,
   created_at: '2026-01-01T00:00:00Z',
   ...overrides,
 })

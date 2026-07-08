@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { fetchMeta } from '../fetchMeta'
+import { fetchMeta, isDeadStatus } from '../fetchMeta'
 
 afterEach(() => vi.restoreAllMocks())
 
@@ -23,6 +23,7 @@ describe('fetchMeta — YouTube oEmbed', () => {
       description: 'ZeroCho TV 채널',
       thumbnailUrl: '',
       content: 'ZeroCho TV 채널',
+      httpStatus: null,
     })
     // oEmbed 엔드포인트 호출 확인
     expect((global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toContain('/oembed')
@@ -77,6 +78,7 @@ describe('fetchMeta — YouTube oEmbed', () => {
       description: '웹 개발 강의',
       thumbnailUrl: '',
       content: '웹 개발 강의',
+      httpStatus: 200,
     })
   })
 })
@@ -94,6 +96,7 @@ describe('fetchMeta — 일반 페이지', () => {
       description: '설명문',
       thumbnailUrl: '',
       content: '설명문',
+      httpStatus: 200,
     })
   })
 
@@ -138,23 +141,25 @@ describe('fetchMeta — 일반 페이지', () => {
     expect(meta.title).toBe('')
   })
 
-  it('응답 실패(!ok) → 빈 값', async () => {
+  it('응답 실패(!ok) → 빈 값 + httpStatus 보존', async () => {
     global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: false, status: 500 }))
     expect(await fetchMeta('https://example.com')).toEqual({
       title: '',
       description: '',
       thumbnailUrl: '',
       content: '',
+      httpStatus: 500,
     })
   })
 
-  it('fetch 예외 → 빈 값', async () => {
+  it('fetch 예외 → 빈 값, httpStatus는 null(상태 코드 알 수 없음)', async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error('network'))
     expect(await fetchMeta('https://example.com')).toEqual({
       title: '',
       description: '',
       thumbnailUrl: '',
       content: '',
+      httpStatus: null,
     })
   })
 
@@ -439,5 +444,34 @@ describe('fetchMeta — 여는 태그 속성 200자 초과 시 content 통째 �
     const meta = await fetchMeta('https://example.com')
     expect(meta.content).not.toContain('SECRET_STYLE_LEAK_MARKER_456')
     expect(meta.content).toContain('real body text')
+  })
+})
+
+describe('fetchMeta — httpStatus / isDeadStatus (죽은 링크 감지)', () => {
+  it('404 응답 → httpStatus: 404', async () => {
+    global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: false, status: 404 }))
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.httpStatus).toBe(404)
+  })
+
+  it('410 응답 → httpStatus: 410', async () => {
+    global.fetch = vi.fn().mockResolvedValue(mockResponse({ ok: false, status: 410 }))
+    const meta = await fetchMeta('https://example.com')
+    expect(meta.httpStatus).toBe(410)
+  })
+
+  it('isDeadStatus(404), isDeadStatus(410) → true', () => {
+    expect(isDeadStatus(404)).toBe(true)
+    expect(isDeadStatus(410)).toBe(true)
+  })
+
+  it('isDeadStatus(403), isDeadStatus(429), isDeadStatus(500) → false (사이트는 살아있을 수 있음)', () => {
+    expect(isDeadStatus(403)).toBe(false)
+    expect(isDeadStatus(429)).toBe(false)
+    expect(isDeadStatus(500)).toBe(false)
+  })
+
+  it('isDeadStatus(null) → false (네트워크 에러·타임아웃은 판단 불가, dead 아님)', () => {
+    expect(isDeadStatus(null)).toBe(false)
   })
 })

@@ -1,5 +1,5 @@
 import { withAuth } from '@/lib/auth'
-import { fetchMeta } from '@/lib/fetchMeta'
+import { fetchMeta, isDeadStatus } from '@/lib/fetchMeta'
 import { isSafeHttpUrl } from '@/lib/ssrf'
 import { z } from 'zod'
 
@@ -22,5 +22,6 @@ export const GET = withAuth(async (req) => {
     title: meta.title,
     description: meta.description,
     thumbnailUrl: meta.thumbnailUrl,
+    dead: isDeadStatus(meta.httpStatus),
   })
 })
