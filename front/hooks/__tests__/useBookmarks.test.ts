@@ -23,6 +23,7 @@ const makeBookmarks = (count: number, offset = 0): Bookmark[] =>
     category_id: null,
     is_favorite: false,
     folder_hint: null,
+    is_dead: false,
     created_at: '2026-01-01T00:00:00Z',
   }))
 

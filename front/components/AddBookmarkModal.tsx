@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Globe } from "lucide-react";
+import { AlertTriangle, Globe } from "lucide-react";
 import { useDebounceValue } from "usehooks-ts";
 import { useAddBookmark } from "@/hooks/useAddBookmark";
 import { Favicon } from "@/components/Favicon";
@@ -59,7 +59,7 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
   const [url, setUrl] = useState("");
   const [urlError, setUrlError] = useState("");
   // 검증 완료된 메타데이터 — 현재 입력 URL과 일치할 때만 완성본으로 사용
-  const [meta, setMeta] = useState<{ url: string; title: string } | null>(null);
+  const [meta, setMeta] = useState<{ url: string; title: string; dead: boolean } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   // 검증 요청 순번 — 늦게 도착한 이전 요청 결과 무시(레이스 방지)
   const reqIdRef = useRef(0);
@@ -110,14 +110,18 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
     const id = ++reqIdRef.current;
     fetch(`/api/bookmarks/preview?url=${encodeURIComponent(debouncedUrl)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d: { title?: string }) => {
+      .then((d: { title?: string; dead?: boolean }) => {
         if (id !== reqIdRef.current) return;
-        setMeta({ url: debouncedUrl, title: (d.title ?? "").trim() || extractTitle(debouncedUrl) });
+        setMeta({
+          url: debouncedUrl,
+          title: (d.title ?? "").trim() || extractTitle(debouncedUrl),
+          dead: d.dead === true,
+        });
       })
       .catch(() => {
         if (id !== reqIdRef.current) return;
-        // 조회 실패해도 유효 URL — 도메인으로 폴백 표시
-        setMeta({ url: debouncedUrl, title: extractTitle(debouncedUrl) });
+        // 조회 실패해도 유효 URL — 도메인으로 폴백 표시. 네트워크 오류라 dead 여부 판단 불가 → false(과다 경고 방지)
+        setMeta({ url: debouncedUrl, title: extractTitle(debouncedUrl), dead: false });
       });
   }, [debouncedUrl]);
 
@@ -260,12 +264,20 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                       </div>
                     ) : previewDone ? (
                       // 완성본
-                      <div className="flex items-center gap-3">
-                        <Favicon url={withProtocol} key={withProtocol} />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-text-primary">{meta.title}</p>
-                          <p className="truncate font-mono text-xs text-text-secondary">{withProtocol}</p>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-3">
+                          <Favicon url={withProtocol} key={withProtocol} />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-text-primary">{meta.title}</p>
+                            <p className="truncate font-mono text-xs text-text-secondary">{withProtocol}</p>
+                          </div>
                         </div>
+                        {meta.dead && (
+                          <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                            <AlertTriangle size={12} aria-hidden />
+                            이 링크는 더 이상 존재하지 않는 것 같아요. 그래도 저장할 수 있어요.
+                          </p>
+                        )}
                       </div>
                     ) : (
                       // 검증 중 스켈레톤

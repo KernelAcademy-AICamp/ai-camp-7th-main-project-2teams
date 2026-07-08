@@ -50,6 +50,14 @@
 - 방식: 대상 행의 url을 `fetchMeta()`로 재크롤링(og:image/YouTube 썸네일) → `isSafeHttpUrl`로 SSRF 재검증 → `thumbnail_url` 갱신. 못 찾으면 NULL 유지(재실행 가능)
 - 실행: 기본 dry-run, `--apply` 플래그로 실제 반영. 단순 추가 컬럼이라 백업 스냅샷 없이 `thumbnail_url = NULL` 재설정으로 되돌림 가능
 
+### backfill-dead-link.ts
+
+- 위치: `front/scripts/backfill-dead-link.ts`
+- 대상: 전체 `bookmarks` (필터 없음)
+- 배경: `is_dead`는 신규 저장 시점(`POST /api/bookmarks`)부터만 기록됨 — 기존 저장분은 전부 `false`로 시작해 실제 죽은 링크 여부가 반영 안 됨
+- 방식: `fetchMeta()` 전체 재호출 대신 상태 코드만 가볍게 확인(HEAD 우선, 405/501이면 GET 폴백) → `isDeadStatus()`(404/410만 dead)로 판정 → 값이 바뀌는 행만 갱신
+- 실행: 기본 dry-run, `--apply` 플래그로 실제 반영. 재실행 시 이미 반영된 행은 건너뜀(idempotent)
+
 ## 신규 백필 추가 규칙
 
 새 백필 스킬(`.claude/skills/*backfill*/SKILL.md`)이나 스크립트(`front/scripts/backfill-*.ts`)를 추가하면

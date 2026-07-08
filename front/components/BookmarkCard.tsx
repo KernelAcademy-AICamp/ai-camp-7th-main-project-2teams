@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { Star, ExternalLink, Tag, Shapes, Calendar, MoreVertical, Trash2, Pencil } from "lucide-react";
+import { AlertTriangle, Star, ExternalLink, Tag, Shapes, Calendar, MoreVertical, Trash2, Pencil } from "lucide-react";
 import { useOnClickOutside } from "usehooks-ts";
 import { cn } from "@/lib/utils";
 import type { Bookmark } from "@/hooks/useBookmarks";
@@ -23,7 +23,13 @@ const TAG_CHIP = "rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-bran
 const CATEGORY_CHIP_LIST =
   "inline-flex items-center gap-1 rounded-md border border-violet-300 bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-600 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-300";
 const CATEGORY_CHIP_GRID =
-  "inline-flex items-center gap-1 rounded-md border border-violet-400/50 bg-black/50 px-2 py-0.5 text-xs font-medium text-violet-300 backdrop-blur-sm";
+  "inline-flex h-8 items-center gap-1 rounded-lg border border-violet-400 bg-black/70 px-2.5 text-xs font-semibold text-violet-200 backdrop-blur-sm";
+
+/** 죽은 링크(404/410) 경고 배지 — 카테고리 칩과 동일 outline 패턴, 앰버 톤(AddBookmarkModal 경고와 색상 통일) */
+const DEAD_CHIP_LIST =
+  "inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-400";
+const DEAD_CHIP_GRID =
+  "inline-flex items-center gap-1 rounded-md border border-amber-400/50 bg-black/50 px-2 py-0.5 text-xs font-medium text-amber-300 backdrop-blur-sm";
 
 /** 그리드 카드 썸네일 위 hover 액션 버튼 — 즐겨찾기·외부링크·메뉴 크기 통일 (고정 박스 + 내부 중앙정렬) */
 const ACTION_CHIP = "inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black/50 backdrop-blur-sm";
@@ -200,6 +206,13 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
           <span className="hidden max-w-[160px] shrink-0 truncate font-mono text-xs text-gray-400 sm:inline dark:text-gray-500">
             {extractDomain(bookmark.url)}
           </span>
+          {bookmark.is_dead && (
+            <AlertTriangle
+              size={12}
+              className="hidden shrink-0 text-amber-500 sm:inline"
+              aria-label="링크 끊김 의심"
+            />
+          )}
           {bookmark.tags[0] && (
             <span className="hidden shrink-0 truncate text-xs text-gray-400 md:inline dark:text-gray-500">
               {bookmark.tags[0]}
@@ -244,6 +257,15 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
                   <span className={CATEGORY_CHIP_LIST}>
                     <Shapes size={10} />
                     {bookmark.category}
+                  </span>
+                </>
+              )}
+              {bookmark.is_dead && (
+                <>
+                  <span aria-hidden>·</span>
+                  <span className={DEAD_CHIP_LIST}>
+                    <AlertTriangle size={10} />
+                    링크 끊김
                   </span>
                 </>
               )}
@@ -296,6 +318,16 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
               <span className={CATEGORY_CHIP_GRID}>
                 <Shapes size={10} />
                 {bookmark.category}
+              </span>
+            </div>
+          )}
+
+          {/* 죽은 링크 경고 배지 — 카테고리 배지가 있으면 그 아래로 쌓음 */}
+          {bookmark.is_dead && (
+            <div className={cn("absolute left-2", bookmark.category ? "top-11" : "top-2")}>
+              <span className={DEAD_CHIP_GRID}>
+                <AlertTriangle size={10} />
+                링크 끊김
               </span>
             </div>
           )}
