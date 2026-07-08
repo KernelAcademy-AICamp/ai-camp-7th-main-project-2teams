@@ -1,19 +1,21 @@
 /**
- * 카카오톡 CSV 임포트로 title=url placeholder가 박힌 북마크의 title 백필 (일회성 ops 스크립트).
+ * title=url placeholder 및 "Untitled"류 무의미 title 북마크의 title 백필 (일회성 ops 스크립트).
  *
- * 배경: import/route.ts가 fetchMeta(url)로 실제 title을 조회하고도 버리던 버그(수정됨) —
+ * 배경 1: import/route.ts가 fetchMeta(url)로 실제 title을 조회하고도 버리던 버그(수정됨) —
  * 수정 전 저장분은 title 컬럼에 url 문자열이 그대로 들어가 있음.
+ * 배경 2: fetchMeta의 junk-title 필터(isJunkTitle) 도입 전 저장분은 "Untitled"/"403 Forbidden" 등이
+ * title 컬럼에 그대로 남아있음.
  *
  * 실행:
  *   set -a; . ./.env; set +a
  *   npx tsx scripts/backfill-bookmark-title.ts            # DRY-RUN(기본) — 계획만 출력
  *   npx tsx scripts/backfill-bookmark-title.ts --apply     # 실제 반영
  *
- * 동작: title = url인 행만 대상으로 fetchMeta()를 재호출해 실제 title 확보 후 갱신.
+ * 동작: title = url 이거나 junk title인 행만 대상으로 fetchMeta()를 재호출해 실제 title 확보 후 갱신.
  * OpenAI 호출 없음(재태깅·재임베딩 안 함) — title 컬럼만 교체. 못 찾으면 건너뜀(재실행 가능).
  */
 import { createClient } from '@supabase/supabase-js'
-import { fetchMeta } from '../lib/fetchMeta'
+import { fetchMeta, isJunkTitle } from '../lib/fetchMeta'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -33,7 +35,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 
 type Row = { id: string; url: string }
 
-// title = url인 행만 페이지네이션으로 수집 — 이미 실제 title이 있는 행은 건드리지 않음.
+// title = url이거나 junk title인 행만 페이지네이션으로 수집 — 그 외 실제 title 있는 행은 건드리지 않음.
 async function fetchTargetRows(): Promise<Row[]> {
   const rows: Row[] = []
   for (let from = 0; ; from += PAGE_SIZE) {
@@ -45,7 +47,7 @@ async function fetchTargetRows(): Promise<Row[]> {
     if (error) throw new Error(`조회 실패: ${error.message}`)
     if (!data || data.length === 0) break
     for (const row of data as Array<{ id: string; url: string; title: string }>) {
-      if (row.title === row.url) rows.push({ id: row.id, url: row.url })
+      if (row.title === row.url || isJunkTitle(row.title)) rows.push({ id: row.id, url: row.url })
     }
     if (data.length < PAGE_SIZE) break
   }
