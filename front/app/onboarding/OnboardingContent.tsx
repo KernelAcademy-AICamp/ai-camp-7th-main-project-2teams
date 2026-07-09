@@ -33,8 +33,8 @@ export function OnboardingContent({ userId }: OnboardingContentProps) {
       {/* 헤더 — 대시보드 레이아웃과 동일한 톤 */}
       <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <div className="mx-auto flex h-14 max-w-4xl items-center px-4">
-          <span className="text-lg font-bold tracking-tight text-indigo-600 dark:text-indigo-400">
-            Bookmarker
+          <span className="text-lg font-bold tracking-tight text-brand">
+            Mowaba
           </span>
         </div>
       </header>

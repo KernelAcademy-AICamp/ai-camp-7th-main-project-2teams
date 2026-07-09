@@ -1,5 +1,5 @@
 export const metadata = {
-  title: '탈퇴 완료 | Bookmarker',
+  title: '탈퇴 완료 | Mowaba',
 }
 
 export default function GoodbyePage() {
