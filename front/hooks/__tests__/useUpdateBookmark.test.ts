@@ -93,6 +93,30 @@ describe('applyOptimisticUpdate', () => {
     expect(result?.pages[0].bookmarks[0].category_id).toBeNull()
   })
 
+  it('[HIGH] category 변경 시 카드 표시용 category 이름은 즉시 반영 (refetch 없이)', () => {
+    const old = makeInfiniteData([makeBookmark('1', { category: '디자인' })], 1)
+
+    const result = applyOptimisticUpdate(old, '1', { category: '개발' })
+
+    expect(result?.pages[0].bookmarks[0].category).toBe('개발')
+  })
+
+  it('category를 null(미분류)로 변경 시 category 이름도 즉시 null로 반영', () => {
+    const old = makeInfiniteData([makeBookmark('1', { category: '개발' })], 1)
+
+    const result = applyOptimisticUpdate(old, '1', { category: null })
+
+    expect(result?.pages[0].bookmarks[0].category).toBeNull()
+  })
+
+  it('category alias 입력 시 표준명으로 정규화해서 즉시 반영', () => {
+    const old = makeInfiniteData([makeBookmark('1', { category: null })], 1)
+
+    const result = applyOptimisticUpdate(old, '1', { category: 'dev' })
+
+    expect(result?.pages[0].bookmarks[0].category).toBe('개발')
+  })
+
   it('존재하지 않는 id — 변경 없음', () => {
     const old = makeInfiniteData([makeBookmark('1')], 1)
 
