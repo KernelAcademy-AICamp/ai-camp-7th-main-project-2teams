@@ -86,18 +86,18 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-lg py-8">
-      <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">설정</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">설정</h1>
 
       {/* 계정 정보 */}
-      <section className="mb-8 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+      <section className="mb-8 rounded-lg border border-gray-200 bg-white p-6">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gray-400">계정</h2>
-        <p className="text-sm text-gray-700 dark:text-gray-300">
+        <p className="text-sm text-gray-700">
           {!userEmailLoaded ? '불러오는 중...' : (userEmail ?? '이메일 미제공 (카카오)')}
         </p>
       </section>
 
       {/* 데이터 내보내기 */}
-      <section className="mb-8 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+      <section className="mb-8 rounded-lg border border-gray-200 bg-white p-6">
         <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-gray-400">내 데이터</h2>
         <p className="mb-4 text-sm text-gray-500">
           저장된 북마크 전체를 내보냅니다. HTML은 브라우저 북마크 가져오기와 호환되며, 다시 가져오기 시 태그·카테고리가 그대로 복원됩니다.
@@ -105,19 +105,19 @@ export default function SettingsPage() {
         <div className="flex gap-2">
           <button
             onClick={() => handleDownload('json')}
-            className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
             JSON으로 내보내기
           </button>
           <button
             onClick={() => handleDownload('html')}
-            className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
             HTML로 내보내기
           </button>
           <button
             onClick={() => handleDownload('csv')}
-            className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
           >
             CSV로 내보내기
           </button>
@@ -125,11 +125,11 @@ export default function SettingsPage() {
       </section>
 
       {/* 회원 탈퇴 */}
-      <section className="rounded-lg border border-red-200 bg-white p-6 dark:border-red-900/40 dark:bg-gray-900">
+      <section className="rounded-lg border border-red-200 bg-white p-6">
         <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-red-400">위험 구역</h2>
         <p className="mb-4 text-sm text-gray-500">탈퇴 시 모든 북마크가 즉시 파기됩니다.</p>
         {error && (
-          <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+          <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
             {error}
           </p>
         )}
@@ -144,8 +144,8 @@ export default function SettingsPage() {
       {/* 확인 모달 */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
-            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-semibold text-gray-900">
               정말 탈퇴하시겠습니까?
             </h3>
             <p className="mb-4 text-sm text-gray-500">
@@ -153,7 +153,7 @@ export default function SettingsPage() {
             </p>
 
             {/* 데이터 내보내기 유도 */}
-            <div className={`mb-5 rounded-md p-3 text-sm ${exportDone ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'}`}>
+            <div className={`mb-5 rounded-md p-3 text-sm ${exportDone ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
               {exportDone ? (
                 '✓ 데이터를 내보냈습니다.'
               ) : (
@@ -161,7 +161,7 @@ export default function SettingsPage() {
                   <p className="mb-2 font-medium">탈퇴 전 데이터를 내보내세요.</p>
                   <button
                     onClick={() => handleDownload('json')}
-                    className="cursor-pointer rounded border border-amber-400 px-3 py-1 text-xs font-medium hover:bg-amber-100 dark:border-amber-600 dark:hover:bg-amber-900/40"
+                    className="cursor-pointer rounded border border-amber-400 px-3 py-1 text-xs font-medium hover:bg-amber-100"
                   >
                     데이터 내보내기 (JSON)
                   </button>
@@ -173,7 +173,7 @@ export default function SettingsPage() {
               <button
                 onClick={() => setShowConfirm(false)}
                 disabled={isDeleting}
-                className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300"
+                className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 취소
               </button>

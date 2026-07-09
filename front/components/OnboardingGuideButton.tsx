@@ -32,16 +32,16 @@ export function OnboardingGuideButton() {
         onClick={handleBackdropClick}
         className="m-auto w-[min(56rem,90vw)] rounded-xl bg-transparent p-0 backdrop:bg-black/40"
       >
-        <div className="rounded-xl bg-white p-6 dark:bg-gray-900">
+        <div className="rounded-xl bg-white p-6">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            <h2 className="text-xl font-bold text-gray-900">
               사용법 안내
             </h2>
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
               aria-label="닫기"
-              className="cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              className="cursor-pointer text-gray-400 hover:text-gray-600"
             >
               ✕
             </button>

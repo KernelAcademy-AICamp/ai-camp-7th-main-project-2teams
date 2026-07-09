@@ -21,13 +21,13 @@ const TAG_CHIP = "rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-bran
 
 /** 카테고리 배지 — TAG_CHIP(채워진 블루 pill)과 색상·형태 구분: 보라 톤 + outline(테두리만). 아이콘은 Shapes(분류) — 사이드바 "폴더" 기능과 혼동 방지 위해 Folder 아이콘 회피 */
 const CATEGORY_CHIP_LIST =
-  "inline-flex items-center gap-1 rounded-md border border-violet-300 bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-600 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-300";
+  "inline-flex items-center gap-1 rounded-md border border-violet-300 bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-600";
 const CATEGORY_CHIP_GRID =
   "inline-flex h-8 items-center gap-1 rounded-lg border border-violet-400 bg-black/70 px-2.5 text-xs font-semibold text-violet-200 backdrop-blur-sm";
 
 /** 죽은 링크(404/410) 경고 배지 — 카테고리 칩과 동일 outline 패턴, 앰버 톤(AddBookmarkModal 경고와 색상 통일) */
 const DEAD_CHIP_LIST =
-  "inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-400";
+  "inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600";
 const DEAD_CHIP_GRID =
   "inline-flex items-center gap-1 rounded-md border border-amber-400/50 bg-black/50 px-2 py-0.5 text-xs font-medium text-amber-300 backdrop-blur-sm";
 
@@ -66,7 +66,7 @@ export function getFavoriteAriaLabel(isFavorite: boolean): string {
 
 /** 즐겨찾기 상태별 Star 아이콘 CSS 클래스 — 테스트 가능하도록 export */
 export function getFavoriteIconClass(isFavorite: boolean): string {
-  return isFavorite ? "fill-yellow-400 text-yellow-400" : "text-gray-300 dark:text-gray-600";
+  return isFavorite ? "fill-yellow-400 text-yellow-400" : "text-gray-300";
 }
 
 /** 삭제 확인 메시지 — 테스트 가능하도록 export */
@@ -127,7 +127,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
         aria-expanded={isMenuOpen}
         disabled={isDeletePending}
         className={cn(
-          "inline-flex cursor-pointer items-center justify-center rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800",
+          "inline-flex cursor-pointer items-center justify-center rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50",
           buttonClassName,
         )}
       >
@@ -140,7 +140,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
           aria-label="북마크 작업 메뉴"
           className={cn(
             "absolute right-0 top-full z-10 mt-1 min-w-[120px] rounded-lg border border-gray-200",
-            "bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800",
+            "bg-white py-1 shadow-lg",
           )}
         >
           <button
@@ -148,7 +148,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             onClick={handleEditClick}
             className={cn(
               "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-text-primary",
-              "hover:bg-slate-50 dark:hover:bg-gray-700",
+              "hover:bg-slate-50",
             )}
           >
             <Pencil size={14} />
@@ -159,7 +159,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             onClick={handleDeleteClick}
             className={cn(
               "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-red-600",
-              "hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20",
+              "hover:bg-red-50",
             )}
           >
             <Trash2 size={14} />
@@ -181,7 +181,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
       aria-busy={isTogglePending}
       disabled={isTogglePending}
       className={cn(
-        "inline-flex shrink-0 cursor-pointer items-center justify-center rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-800",
+        "inline-flex shrink-0 cursor-pointer items-center justify-center rounded p-0.5 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50",
         buttonClassName,
       )}
     >
@@ -193,17 +193,17 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
   if (view === "compact") {
     return (
       <>
-        <article className="group flex items-center gap-3 px-3 py-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+        <article className="group flex items-center gap-3 px-3 py-2 transition-colors hover:bg-gray-50">
           <Favicon url={bookmark.url} boxClassName="h-5 w-5 rounded" />
           <a
             href={safeUrl(bookmark.url)}
             target="_blank"
             rel="noopener noreferrer"
-            className="min-w-0 flex-1 truncate text-sm font-medium text-gray-800 hover:underline dark:text-gray-100"
+            className="min-w-0 flex-1 truncate text-sm font-medium text-gray-800 hover:underline"
           >
             {bookmark.title}
           </a>
-          <span className="hidden max-w-[160px] shrink-0 truncate font-mono text-xs text-gray-400 sm:inline dark:text-gray-500">
+          <span className="hidden max-w-[160px] shrink-0 truncate font-mono text-xs text-gray-400 sm:inline">
             {extractDomain(bookmark.url)}
           </span>
           {bookmark.is_dead && (
@@ -214,7 +214,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             />
           )}
           {bookmark.tags[0] && (
-            <span className="hidden shrink-0 truncate text-xs text-gray-400 md:inline dark:text-gray-500">
+            <span className="hidden shrink-0 truncate text-xs text-gray-400 md:inline">
               {bookmark.tags[0]}
               {bookmark.tags.length > 1 && ` +${bookmark.tags.length - 1}`}
             </span>
@@ -242,14 +242,14 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
               href={safeUrl(bookmark.url)}
               target="_blank"
               rel="noopener noreferrer"
-              className="line-clamp-1 block text-base font-semibold text-gray-900 hover:underline dark:text-gray-100"
+              className="line-clamp-1 block text-base font-semibold text-gray-900 hover:underline"
             >
               {bookmark.title}
             </a>
             {bookmark.description && (
-              <p className="mt-0.5 line-clamp-1 text-xs text-gray-500 dark:text-gray-400">{bookmark.description}</p>
+              <p className="mt-0.5 line-clamp-1 text-xs text-gray-500">{bookmark.description}</p>
             )}
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400">
               <span className="font-mono">{extractDomain(bookmark.url)}</span>
               {bookmark.category && (
                 <>
@@ -334,7 +334,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
 
           {/* 액션 오버레이 — hover/focus 시 노출 */}
           <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-            {favButton(14, cn(ACTION_CHIP, "text-white hover:bg-black/70 dark:hover:bg-black/70"))}
+            {favButton(14, cn(ACTION_CHIP, "text-white hover:bg-black/70"))}
             <a
               href={safeUrl(bookmark.url)}
               target="_blank"
@@ -344,7 +344,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             >
               <ExternalLink size={14} />
             </a>
-            {menu(cn(ACTION_CHIP, "text-white hover:bg-black/70 dark:hover:bg-black/70"))}
+            {menu(cn(ACTION_CHIP, "text-white hover:bg-black/70"))}
           </div>
         </div>
 

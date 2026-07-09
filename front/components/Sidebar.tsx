@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Folder } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useFilterStore } from "@/store/filterStore";
 import { useFolders } from "@/hooks/useFolders";
@@ -211,7 +212,7 @@ export function Sidebar() {
                     ].join(" ")}
                   >
                     {/* 카테고리 컬러코딩 도트 (Design.md 7×7 라운드 스퀘어) */}
-                    <span className="h-[7px] w-[7px] shrink-0 rounded-[2px]" style={{ backgroundColor: "#64748B" }} />
+                    <span className="h-[7px] w-[7px] shrink-0 rounded-[2px] bg-text-secondary" />
                     {name}
                   </button>
                 </li>
@@ -349,7 +350,7 @@ function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps
               : "border-transparent text-text-secondary hover:bg-slate-100",
           ].join(" ")}
         >
-          <span className="text-xs text-text-secondary">📁</span>
+          <Folder size={12} className="shrink-0 text-text-secondary" />
           {node.name}
         </button>
       </div>

@@ -17,8 +17,8 @@ export default async function WelcomePage() {
   } = await supabase.auth.getUser()
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+    <div className="min-h-screen bg-surface">
+      <header className="border-b border-line bg-white/80 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-4xl items-center px-4">
           <span className="text-lg font-bold tracking-tight text-brand">
             Mowaba
@@ -28,10 +28,10 @@ export default async function WelcomePage() {
 
       <main className="mx-auto max-w-4xl px-4 py-12">
         <div className="mb-10 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-3xl font-bold tracking-tight text-ink">
             저장한 북마크를 AI가 자동으로 정리합니다
           </h1>
-          <p className="mt-2 text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-text-secondary">
             태그·카테고리 자동 분류, 자연어 검색까지 한 번에.
           </p>
         </div>
@@ -43,14 +43,14 @@ export default async function WelcomePage() {
           {user ? (
             <Link
               href="/"
-              className="rounded-md bg-indigo-600 px-8 py-3 font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+              className="gradient-brand rounded-xl px-8 py-3 font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px"
             >
               대시보드로 이동
             </Link>
           ) : (
             <Link
               href="/login"
-              className="rounded-md bg-indigo-600 px-8 py-3 font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+              className="gradient-brand rounded-xl px-8 py-3 font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px"
             >
               시작하기
             </Link>

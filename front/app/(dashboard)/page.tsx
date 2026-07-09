@@ -203,7 +203,7 @@ function DashboardContent() {
             type="button"
             onClick={scrollToTop}
             aria-label="맨 위로 이동"
-            className="fixed bottom-6 right-6 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-white shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-orange-600"
+            className="gradient-brand fixed bottom-6 right-6 z-20 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:-translate-y-0.5"
           >
             <ArrowUp className="h-5 w-5" />
           </button>
@@ -219,7 +219,7 @@ function DashboardContent() {
               viewMode === "grid"
                 ? "grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
                 : viewMode === "compact"
-                  ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-md border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900"
+                  ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-md border border-gray-200 bg-white"
                   : "flex flex-col gap-3",
             )}
           >
@@ -231,7 +231,7 @@ function DashboardContent() {
 
         {!isPending && isBookmarkError && !isSearching && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="text-gray-500 dark:text-gray-400">북마크를 불러오는 중 오류가 발생했습니다.</p>
+            <p className="text-gray-500">북마크를 불러오는 중 오류가 발생했습니다.</p>
             <button
               onClick={() => refetch()}
               className="gradient-brand mt-3 cursor-pointer rounded-[11px] px-4 py-2 text-sm text-white transition-transform hover:-translate-y-px"
@@ -249,29 +249,29 @@ function DashboardContent() {
                 <p className="text-sm text-red-500">검색 중 오류가 발생했습니다. 다시 시도해 주세요.</p>
               ) : (
                 <>
-                  <p className="text-lg font-medium text-gray-700 dark:text-gray-300">검색 결과가 없습니다</p>
-                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">다른 검색어로 시도해 보세요.</p>
+                  <p className="text-lg font-medium text-gray-700">검색 결과가 없습니다</p>
+                  <p className="mt-2 text-sm text-gray-500">다른 검색어로 시도해 보세요.</p>
                 </>
               )
             ) : tab === "favorites" ? (
               // 즐겨찾기 탭은 북마크는 있으나 즐겨찾기만 없는 상태 — 추가/업로드 CTA 부적절
               <>
-                <p className="text-lg font-medium text-gray-700 dark:text-gray-300">즐겨찾기한 북마크가 없습니다</p>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-lg font-medium text-gray-700">즐겨찾기한 북마크가 없습니다</p>
+                <p className="mt-2 text-sm text-gray-500">
                   북마크 카드의 별표를 눌러 즐겨찾기에 추가하세요.
                 </p>
               </>
             ) : (
               <>
-                <p className="text-lg font-medium text-gray-700 dark:text-gray-300">저장된 북마크가 없습니다</p>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-lg font-medium text-gray-700">저장된 북마크가 없습니다</p>
+                <p className="mt-2 text-sm text-gray-500">
                   북마크를 추가하거나 파일을 업로드해 시작하세요.
                 </p>
                 <div className="mt-6 flex items-center gap-3">
                   <AddBookmarkModal />
                   <Link
                     href="/import"
-                    className="rounded-[11px] border border-blue-200 bg-[#EFF6FF] px-4 py-2 text-sm font-medium text-brand transition-colors hover:bg-[#DBEAFE] dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-300"
+                    className="rounded-[11px] border border-blue-200 bg-[#EFF6FF] px-4 py-2 text-sm font-medium text-brand transition-colors hover:bg-[#DBEAFE]"
                   >
                     파일 업로드
                   </Link>
@@ -296,9 +296,9 @@ function DashboardContent() {
                 <div
                   role="status"
                   aria-label="목록 갱신 중"
-                  className="absolute right-0 top-0 z-10 flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-xs text-gray-500 shadow-sm backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/90 dark:text-gray-400"
+                  className="absolute right-0 top-0 z-10 flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-xs text-gray-500 shadow-sm backdrop-blur-sm"
                 >
-                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-brand dark:border-gray-600" />
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-brand" />
                   불러오는 중
                 </div>
               )}
@@ -307,7 +307,7 @@ function DashboardContent() {
                   viewMode === "grid"
                     ? "grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
                     : viewMode === "compact"
-                      ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-md border border-gray-200 bg-white dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900"
+                      ? "flex flex-col divide-y divide-gray-100 overflow-hidden rounded-md border border-gray-200 bg-white"
                       : "flex flex-col gap-3",
                   isRefetching && "opacity-50 transition-opacity duration-200",
                 )}
@@ -323,9 +323,9 @@ function DashboardContent() {
             {!isSearching && isFetchingNextPage && (
               <div
                 role="status"
-                className="flex items-center justify-center gap-2 py-4 text-xs text-gray-500 dark:text-gray-400"
+                className="flex items-center justify-center gap-2 py-4 text-xs text-gray-500"
               >
-                <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-brand dark:border-gray-600" />
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-brand" />
                 더 불러오는 중
               </div>
             )}
@@ -336,7 +336,7 @@ function DashboardContent() {
                 <p className="text-sm text-red-500">더 불러오지 못했습니다.</p>
                 <button
                   onClick={() => fetchNextPage()}
-                  className="cursor-pointer rounded-[11px] border border-gray-200 px-3 py-1.5 text-xs text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="cursor-pointer rounded-[11px] border border-gray-200 px-3 py-1.5 text-xs text-gray-600 transition-colors hover:bg-gray-50"
                 >
                   다시 시도
                 </button>

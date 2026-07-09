@@ -5,7 +5,7 @@ import { getErrorMessageClassName } from '../AddBookmarkModal'
 describe('getErrorMessageClassName', () => {
   it('duplicate 에러 → 안내(앰버) 톤 클래스', () => {
     const err = Object.assign(new Error('이미 저장된 북마크입니다.'), { duplicate: true })
-    expect(getErrorMessageClassName(err)).toBe('text-amber-600 dark:text-amber-400')
+    expect(getErrorMessageClassName(err)).toBe('text-amber-600')
   })
 
   it('일반 에러 → destructive(빨강) 클래스', () => {

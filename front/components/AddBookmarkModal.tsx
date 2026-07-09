@@ -46,7 +46,7 @@ export function getErrorMessageClassName(error: unknown): string {
       "duplicate" in error &&
       (error as { duplicate?: boolean }).duplicate === true,
   );
-  return isDuplicate ? "text-amber-600 dark:text-amber-400" : "text-destructive";
+  return isDuplicate ? "text-amber-600" : "text-destructive";
 }
 
 interface AddBookmarkModalProps {
@@ -222,7 +222,7 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                     <label
                       hidden
                       htmlFor="bookmark-url"
-                      className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      className="mb-1.5 block text-sm font-medium text-gray-700"
                     >
                       URL 입력 필드
                     </label>
@@ -273,7 +273,7 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                           </div>
                         </div>
                         {meta.dead && (
-                          <p className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                          <p className="flex items-center gap-1 text-xs text-amber-600">
                             <AlertTriangle size={12} aria-hidden />
                             이 링크는 더 이상 존재하지 않는 것 같아요. 그래도 저장할 수 있어요.
                           </p>
