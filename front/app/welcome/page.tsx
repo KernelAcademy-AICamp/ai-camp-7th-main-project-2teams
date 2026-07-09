@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ServiceFeatures } from '@/components/ServiceFeatures'
 
 export const metadata = {
-  title: 'Bookmarker — AI 북마크 관리',
+  title: 'Mowaba — AI 북마크 관리',
 }
 
 /**
@@ -21,7 +21,7 @@ export default async function WelcomePage() {
       <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <div className="mx-auto flex h-14 max-w-4xl items-center px-4">
           <span className="text-lg font-bold tracking-tight text-brand">
-            Bookmarker
+            Mowaba
           </span>
         </div>
       </header>

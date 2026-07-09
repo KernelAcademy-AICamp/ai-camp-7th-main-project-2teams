@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { OnboardingContent } from './OnboardingContent'
 
 export const metadata = {
-  title: '시작하기 | Bookmarker',
+  title: '시작하기 | Mowaba',
 }
 
 /**

@@ -12,7 +12,7 @@ export function ExtensionSync() {
       .then(({ data }) => {
         if (!data.session) return
         window.postMessage(
-          { type: 'BOOKMARKER_SESSION_UPDATED', session: data.session },
+          { type: 'MOWABA_SESSION_UPDATED', session: data.session },
           window.location.origin
         )
       })

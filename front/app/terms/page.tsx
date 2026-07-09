@@ -1,5 +1,5 @@
 export const metadata = {
-  title: '이용약관 | Bookmarker',
+  title: '이용약관 | Mowaba',
 }
 
 export default function TermsPage() {
@@ -11,7 +11,7 @@ export default function TermsPage() {
       <section className="mb-8">
         <h2 className="mb-3 text-xl font-semibold">1. 서비스 범위</h2>
         <p className="text-sm leading-relaxed">
-          Bookmarker(이하 &ldquo;서비스&rdquo;)는 사용자가 저장한 웹페이지 URL·제목을 기반으로
+          Mowaba(이하 &ldquo;서비스&rdquo;)는 사용자가 저장한 웹페이지 URL·제목을 기반으로
           AI 자동 태깅, 벡터 유사도 검색 기능을 제공합니다.
           웹페이지 본문은 AI 처리 목적으로만 사용되며 데이터베이스에 저장되지 않습니다.
           서비스는 Chrome Extension과 웹 애플리케이션으로 구성됩니다.

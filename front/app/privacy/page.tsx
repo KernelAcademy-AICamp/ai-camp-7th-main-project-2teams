@@ -1,5 +1,5 @@
 export const metadata = {
-  title: '개인정보처리방침 | Bookmarker',
+  title: '개인정보처리방침 | Mowaba',
 }
 
 export default function PrivacyPage() {
@@ -102,7 +102,7 @@ export default function PrivacyPage() {
         <h2 className="mb-3 text-xl font-semibold">7. 개인정보 보호책임자</h2>
         <p className="text-sm leading-relaxed">
           성명: AI Camp 7기 2팀<br />
-          이메일: privacy@bookmarker.example.com
+          이메일: privacy@mowaba.example.com
         </p>
       </section>
 
