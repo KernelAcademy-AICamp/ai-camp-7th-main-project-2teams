@@ -41,7 +41,7 @@ export function Favicon({ url, boxClassName = 'h-9 w-9 rounded-lg' }: FaviconPro
 
   return (
     <span
-      className={`flex shrink-0 items-center justify-center overflow-hidden border border-gray-200 bg-white dark:border-gray-700 ${boxClassName}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden border border-gray-200 bg-white ${boxClassName}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

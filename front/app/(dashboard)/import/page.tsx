@@ -144,11 +144,11 @@ export default function ImportPage() {
 
   return (
     <main className="flex w-full flex-1 flex-col items-center justify-center px-6">
-      <div className="w-full max-w-xl rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-[0_24px_48px_-28px_rgba(15,23,42,.30)] dark:border-gray-800 dark:bg-gray-900">
-        <h1 className="mb-2 text-[25px] font-extrabold tracking-tight text-[#0F172A] dark:text-gray-100">
+      <div className="w-full max-w-xl rounded-2xl border border-[#E2E8F0] bg-white p-8 shadow-[0_24px_48px_-28px_rgba(15,23,42,.30)]">
+        <h1 className="mb-2 text-[25px] font-extrabold tracking-tight text-[#0F172A]">
           파일 업로드
         </h1>
-        <p className="mb-8 text-sm text-[#64748B] dark:text-gray-400">파일을 업로드하면 AI가 자동으로 분류합니다.</p>
+        <p className="mb-8 text-sm text-[#64748B]">파일을 업로드하면 AI가 자동으로 분류합니다.</p>
 
         {/* 소스 선택 — 브라우저 북마크(HTML) vs 카카오톡 대화(CSV) */}
         {!isSuccess && (
@@ -164,8 +164,8 @@ export default function ImportPage() {
                 className={[
                   "cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 text-center",
                   source === key
-                    ? "border-[#4A90E2] bg-[#EFF6FF] text-[#2D6FD1] dark:border-teal-500 dark:bg-teal-950 dark:text-teal-200"
-                    : "border-[#E2E8F0] bg-white text-[#334155] hover:border-[#93C5FD] dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-teal-600",
+                    ? "border-[#4A90E2] bg-[#EFF6FF] text-[#2D6FD1]"
+                    : "border-[#E2E8F0] bg-white text-[#334155] hover:border-[#93C5FD]",
                 ].join(" ")}
               >
                 {SOURCE_CONFIG[key].label}
@@ -193,19 +193,19 @@ export default function ImportPage() {
             className={[
               "flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-12 transition-colors",
               isUploading
-                ? "cursor-not-allowed border-[#E2E8F0] bg-surface dark:border-gray-800 dark:bg-gray-900"
+                ? "cursor-not-allowed border-[#E2E8F0] bg-surface"
                 : isDragging
-                  ? "cursor-pointer border-[#4A90E2] bg-[#EFF6FF] dark:border-teal-500 dark:bg-teal-950"
-                  : "cursor-pointer border-[#CBD5E1] bg-white hover:border-[#93C5FD] hover:bg-[#EFF6FF] dark:border-gray-700 dark:bg-gray-900 dark:hover:border-teal-600 dark:hover:bg-gray-800",
+                  ? "cursor-pointer border-[#4A90E2] bg-[#EFF6FF]"
+                  : "cursor-pointer border-[#CBD5E1] bg-white hover:border-[#93C5FD] hover:bg-[#EFF6FF]",
             ].join(" ")}
           >
             <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl gradient-brand shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)]">
               <Upload className="h-7 w-7 text-white" />
             </div>
-            <p className="text-sm font-semibold text-[#334155] dark:text-gray-300">
+            <p className="text-sm font-semibold text-[#334155]">
               {SOURCE_CONFIG[source].extension} 파일을 드래그하거나 클릭해서 선택
             </p>
-            <p className="mt-1 font-mono text-xs text-[#94A3B8] dark:text-gray-500">{SOURCE_CONFIG[source].hint}</p>
+            <p className="mt-1 font-mono text-xs text-[#94A3B8]">{SOURCE_CONFIG[source].hint}</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -220,18 +220,18 @@ export default function ImportPage() {
 
         {/* 파일 타입 오류 메시지 */}
         {fileTypeError && (
-          <p role="alert" className="mt-2 text-sm text-[#DC2626] dark:text-red-400">
+          <p role="alert" className="mt-2 text-sm text-[#DC2626]">
             {fileTypeError}
           </p>
         )}
 
         {/* 선택된 파일 정보 */}
         {file && !isSuccess && (
-          <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-3 dark:border-teal-800 dark:bg-teal-950/40">
-            <FileText className="h-5 w-5 shrink-0 text-[#2D6FD1] dark:text-teal-400" />
+          <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-3">
+            <FileText className="h-5 w-5 shrink-0 text-[#2D6FD1]" />
             <div className="min-w-0 flex-1">
-              <p className="truncate font-mono text-sm font-medium text-[#0F172A] dark:text-gray-200">{file.name}</p>
-              <p className="font-mono text-xs text-[#64748B] dark:text-gray-400">
+              <p className="truncate font-mono text-sm font-medium text-[#0F172A]">{file.name}</p>
+              <p className="font-mono text-xs text-[#64748B]">
                 {formatFileSize(file.size)}
                 {previewCount !== null && ` · ${previewCount}개 ${SOURCE_CONFIG[source].previewUnit} 발견`}
               </p>
@@ -243,7 +243,7 @@ export default function ImportPage() {
                   handleClearFile();
                 }}
                 aria-label="파일 선택 취소"
-                className="shrink-0 cursor-pointer rounded p-1 text-[#94A3B8] hover:text-[#334155] dark:hover:text-gray-200"
+                className="shrink-0 cursor-pointer rounded p-1 text-[#94A3B8] hover:text-[#334155]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -275,13 +275,13 @@ export default function ImportPage() {
         {/* 업로드 진행률 프로그레스바 */}
         {isUploading && progress && (
           <div className="mt-4">
-            <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-[#64748B] dark:text-gray-400">
+            <div className="mb-1.5 flex items-center justify-between text-xs font-medium text-[#64748B]">
               <span>처리 중…</span>
               <span className="font-mono">
                 {progress.done} / {progress.total}건
               </span>
             </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-[#E2E8F0] dark:bg-gray-800">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
               <div
                 className="h-full rounded-full gradient-brand transition-all duration-300"
                 style={{
@@ -294,20 +294,20 @@ export default function ImportPage() {
 
         {/* 성공 결과 — 틸 계열(Design.md 원칙 5: 초록 대신 브랜드 그라디언트) */}
         {isSuccess && mutation.data && (
-          <div className="rounded-2xl border border-[#BFDBFE] bg-[#EFF6FF] p-6 dark:border-teal-800 dark:bg-teal-950/40">
+          <div className="rounded-2xl border border-[#BFDBFE] bg-[#EFF6FF] p-6">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full gradient-brand shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)]">
                 <CheckCircle className="h-5 w-5 text-white" />
               </div>
-              <p className="text-lg font-extrabold text-[#2D6FD1] dark:text-teal-200">업로드 완료</p>
+              <p className="text-lg font-extrabold text-[#2D6FD1]">업로드 완료</p>
             </div>
-            <ul className="space-y-2 text-sm text-[#334155] dark:text-teal-100">
+            <ul className="space-y-2 text-sm text-[#334155]">
               <li className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <span className="h-[7px] w-[7px] rounded-sm bg-[#2D6FD1]" />
                   가져오기 성공
                 </span>
-                <strong className="font-mono text-[#2D6FD1] dark:text-teal-300">{mutation.data.imported}건</strong>
+                <strong className="font-mono text-[#2D6FD1]">{mutation.data.imported}건</strong>
               </li>
               <li className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
@@ -334,23 +334,23 @@ export default function ImportPage() {
 
             {/* A61: 실패 항목 상세 리스트 — 접이식, 실패 건이 있을 때만 노출 */}
             {mutation.data.failedItems.length > 0 && (
-              <details className="mt-4 rounded-xl border border-[#FECACA] bg-white px-4 py-3 dark:border-red-900 dark:bg-gray-900">
-                <summary className="cursor-pointer text-sm font-semibold text-[#DC2626] dark:text-red-400">
+              <details className="mt-4 rounded-xl border border-[#FECACA] bg-white px-4 py-3">
+                <summary className="cursor-pointer text-sm font-semibold text-[#DC2626]">
                   실패 항목 보기 ({mutation.data.failedItems.length})
                 </summary>
                 <ul className="mt-3 space-y-2 text-sm">
                   {mutation.data.failedItems.map((item, index) => (
                     <li
                       key={`${item.url}-${index}`}
-                      className="flex items-center justify-between gap-3 border-t border-[#FEE2E2] pt-2 first:border-t-0 first:pt-0 dark:border-red-950"
+                      className="flex items-center justify-between gap-3 border-t border-[#FEE2E2] pt-2 first:border-t-0 first:pt-0"
                     >
                       <span
                         title={item.url}
-                        className="min-w-0 flex-1 truncate font-mono text-xs text-[#334155] dark:text-gray-300"
+                        className="min-w-0 flex-1 truncate font-mono text-xs text-[#334155]"
                       >
                         {item.url}
                       </span>
-                      <span className="shrink-0 text-xs text-[#DC2626] dark:text-red-400">{item.reason}</span>
+                      <span className="shrink-0 text-xs text-[#DC2626]">{item.reason}</span>
                     </li>
                   ))}
                 </ul>
@@ -360,7 +360,7 @@ export default function ImportPage() {
             <div className="mt-5 flex gap-2">
               <button
                 onClick={handleReupload}
-                className="flex-1 cursor-pointer rounded-xl border border-[#E2E8F0] bg-white px-4 py-2.5 text-sm font-semibold text-[#334155] transition-colors hover:bg-surface dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                className="flex-1 cursor-pointer rounded-xl border border-[#E2E8F0] bg-white px-4 py-2.5 text-sm font-semibold text-[#334155] transition-colors hover:bg-surface"
               >
                 다시 업로드
               </button>
@@ -376,12 +376,12 @@ export default function ImportPage() {
 
         {/* 에러 결과 */}
         {isError && (
-          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
             <div className="flex items-start gap-2">
-              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#DC2626] dark:text-red-400" />
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#DC2626]" />
               <div className="flex-1">
-                <p className="font-semibold text-red-800 dark:text-red-200">업로드 실패</p>
-                <p className="mt-1 text-sm text-[#DC2626] dark:text-red-400">
+                <p className="font-semibold text-red-800">업로드 실패</p>
+                <p className="mt-1 text-sm text-[#DC2626]">
                   {mutation.error instanceof Error ? mutation.error.message : "알 수 없는 오류가 발생했습니다."}
                 </p>
               </div>
@@ -389,7 +389,7 @@ export default function ImportPage() {
             <button
               onClick={handleUpload}
               disabled={!file || isUploading}
-              className="mt-3 w-full cursor-pointer rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-700 dark:bg-gray-900 dark:text-red-400 dark:hover:bg-red-950"
+              className="mt-3 w-full cursor-pointer rounded-xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               다시 시도
             </button>
