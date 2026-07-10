@@ -75,21 +75,21 @@ export function ServiceFeatures() {
         </div>
       </div>
 
-      <div className="mb-5 inline-flex gap-1 rounded-full bg-surface p-1" role="group" aria-label="온보딩 방법 선택">
+      <div className="mb-5 flex w-full gap-1 rounded-full bg-surface p-1 sm:inline-flex sm:w-auto" role="group" aria-label="온보딩 방법 선택">
         {TRACK_TABS.map((tab) => (
           <button
             key={tab.key}
             type="button"
             aria-pressed={track === tab.key}
             onClick={() => setTrack(tab.key)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2 ${
+            className={`flex flex-1 flex-col items-center gap-1 rounded-2xl px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2 sm:flex-none sm:flex-row sm:gap-0 sm:rounded-full ${
               track === tab.key
                 ? 'bg-white text-ink shadow-sm'
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
-            {tab.label}
-            <span className="ml-1.5 rounded-full bg-mint-soft px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-ink uppercase">
+            <span>{tab.label}</span>
+            <span className="rounded-full bg-mint-soft px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-ink uppercase sm:ml-1.5">
               {tab.badge}
             </span>
           </button>
