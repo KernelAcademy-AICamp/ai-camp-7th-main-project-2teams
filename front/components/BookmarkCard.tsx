@@ -207,12 +207,9 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             {extractDomain(bookmark.url)}
           </span>
           {bookmark.is_dead && (
-            <AlertTriangle
-              size={12}
-              className="hidden shrink-0 text-amber-500 sm:inline"
-              aria-label="링크 끊김 의심"
-              title="링크 끊김 의심"
-            />
+            <span className="hidden shrink-0 sm:inline" title="링크 끊김 의심">
+              <AlertTriangle size={12} className="text-amber-500" aria-label="링크 끊김 의심" />
+            </span>
           )}
           {bookmark.category && (
             <span className={cn(CATEGORY_CHIP_LIST, "hidden shrink-0 md:inline-flex")}>
