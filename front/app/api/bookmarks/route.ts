@@ -121,7 +121,8 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ bookmark: data }, { status: 201 })
+  // category(대분류명)는 이미 위에서 계산된 top 재사용 — 추가 조인 불필요
+  return NextResponse.json({ bookmark: { ...data, category: top } }, { status: 201 })
 })
 
 // 목록 조회 + 필터. RLS로 본인 데이터만. embedding 컬럼 제외.
