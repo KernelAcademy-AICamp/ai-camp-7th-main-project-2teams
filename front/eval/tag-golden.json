@@ -3,235 +3,378 @@
     "url": "https://react.dev/reference/react/useEffect",
     "title": "useEffect – React",
     "description": "useEffect is a React Hook that lets you synchronize a component with an external system.",
-    "gold": ["개발", "프론트엔드", "React"]
+    "gold": [
+      "개발",
+      "프론트엔드",
+      "React"
+    ]
   },
   {
     "url": "https://nextjs.org/blog/next-15-caching",
     "title": "Next.js 캐싱 전략",
     "description": "Next.js의 캐싱 메커니즘과 최적화 가이드",
-    "gold": ["개발", "프론트엔드", "Next.js"]
+    "gold": [
+      "개발",
+      "프론트엔드",
+      "Next.js"
+    ]
   },
   {
     "url": "https://www.postgresql.org/docs/current/index.html",
     "title": "PostgreSQL Documentation",
     "description": "The official PostgreSQL manual covering SQL, administration and internals.",
-    "gold": ["개발", "데이터베이스", "PostgreSQL"]
+    "gold": [
+      "개발",
+      "데이터베이스",
+      "PostgreSQL"
+    ]
   },
   {
     "url": "https://tailwindcss.com/docs/installation",
     "title": "Installation - Tailwind CSS",
     "description": "Get started with Tailwind CSS utility-first framework.",
-    "gold": ["개발", "프론트엔드", "Tailwind"]
+    "gold": [
+      "개발",
+      "프론트엔드",
+      "Tailwind"
+    ]
   },
   {
     "url": "https://vercel.com/docs/deployments",
     "title": "Deployments - Vercel",
     "description": "How to deploy and configure applications on Vercel.",
-    "gold": ["개발", "인프라", "Vercel"]
+    "gold": [
+      "개발",
+      "인프라",
+      "Vercel"
+    ]
   },
   {
     "url": "https://docs.djangoproject.com/en/5.0/intro/tutorial01/",
     "title": "Writing your first Django app",
     "description": "Django 공식 튜토리얼 — 모델·뷰·URL 라우팅.",
-    "gold": ["개발", "백엔드", "Django"]
+    "gold": [
+      "개발",
+      "백엔드",
+      "Django"
+    ]
   },
   {
     "url": "https://docs.docker.com/get-started/",
     "title": "Get started - Docker Docs",
     "description": "Learn how to containerize applications with Docker.",
-    "gold": ["개발", "인프라", "Docker"]
+    "gold": [
+      "개발",
+      "인프라",
+      "Docker"
+    ]
   },
   {
     "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise",
     "title": "Promise - JavaScript | MDN",
     "description": "The Promise object represents the eventual completion of an asynchronous operation.",
-    "gold": ["개발", "프론트엔드", "JavaScript"]
+    "gold": [
+      "개발",
+      "프론트엔드",
+      "JavaScript"
+    ]
   },
   {
     "url": "https://kubernetes.io/docs/concepts/",
     "title": "Concepts - Kubernetes",
     "description": "Kubernetes 핵심 개념 — Pod, Service, Deployment.",
-    "gold": ["개발", "인프라", "Kubernetes"]
+    "gold": [
+      "개발",
+      "인프라",
+      "Kubernetes"
+    ]
   },
   {
     "url": "https://docs.stripe.com/api",
     "title": "Stripe API Reference",
     "description": "Complete reference for the Stripe payments API.",
-    "gold": ["개발", "백엔드", "Stripe"]
+    "gold": [
+      "개발",
+      "백엔드",
+      "Stripe"
+    ]
   },
   {
     "url": "https://arxiv.org/abs/2004.04906",
     "title": "Dense Passage Retrieval for Open-Domain Question Answering",
     "description": "We show that retrieval can be practically implemented using dense representations alone for open-domain QA.",
-    "gold": ["AI/ML", "RAG", "논문"]
+    "gold": [
+      "AI/ML",
+      "RAG",
+      "논문"
+    ]
   },
   {
     "url": "https://docs.anthropic.com/en/api/messages",
     "title": "Messages - Anthropic API",
     "description": "Create a message with Claude models via the Anthropic API.",
-    "gold": ["AI/ML", "LLM", "공식문서"]
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "공식문서"
+    ]
   },
   {
     "url": "https://huggingface.co/mistralai/Mistral-7B-v0.1",
     "title": "mistralai/Mistral-7B-v0.1 · Hugging Face",
     "description": "Mistral 7B large language model model card and weights.",
-    "gold": ["AI/ML", "LLM"]
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
   },
   {
     "url": "https://python.langchain.com/docs/introduction/",
     "title": "Introduction | LangChain",
     "description": "LangChain은 LLM 애플리케이션 개발 프레임워크입니다.",
-    "gold": ["AI/ML", "LLM", "LangChain"]
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "LangChain"
+    ]
   },
   {
     "url": "https://mlflow.org/docs/latest/index.html",
     "title": "MLflow Documentation",
     "description": "An open source platform for the machine learning lifecycle.",
-    "gold": ["AI/ML", "MLOps", "MLflow"]
+    "gold": [
+      "AI/ML",
+      "MLOps",
+      "MLflow"
+    ]
   },
   {
     "url": "https://docs.opencv.org/4.x/d9/df8/tutorial_root.html",
     "title": "OpenCV Tutorials",
     "description": "이미지 처리·컴퓨터 비전 라이브러리 OpenCV 튜토리얼.",
-    "gold": ["AI/ML", "컴퓨터비전", "OpenCV"]
+    "gold": [
+      "AI/ML",
+      "컴퓨터비전",
+      "OpenCV"
+    ]
   },
   {
     "url": "https://arxiv.org/abs/2010.11929",
     "title": "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale",
     "description": "Vision Transformer (ViT) applies the transformer architecture directly to image patches.",
-    "gold": ["AI/ML", "컴퓨터비전", "논문"]
+    "gold": [
+      "AI/ML",
+      "컴퓨터비전",
+      "논문"
+    ]
   },
   {
     "url": "https://www.figma.com/community/file/components",
     "title": "Figma 컴포넌트 라이브러리",
     "description": "재사용 가능한 UI 컴포넌트 시스템 구축 가이드",
-    "gold": ["디자인", "UI/UX", "Figma"]
+    "gold": [
+      "디자인",
+      "UI/UX",
+      "Figma"
+    ]
   },
   {
     "url": "https://www.framer.com/",
     "title": "Framer — The website builder loved by designers",
     "description": "디자이너를 위한 노코드 웹사이트 빌더.",
-    "gold": ["디자인", "UI/UX", "Framer"]
+    "gold": [
+      "디자인",
+      "UI/UX",
+      "Framer"
+    ]
   },
   {
     "url": "https://dribbble.com/shots",
     "title": "Popular Design Shots - Dribbble",
     "description": "디자이너 포트폴리오·UI 디자인 갤러리.",
-    "gold": ["디자인", "UI/UX"]
+    "gold": [
+      "디자인",
+      "UI/UX"
+    ]
   },
   {
     "url": "https://www.linkedin.com/jobs/",
     "title": "Jobs | LinkedIn",
     "description": "채용 공고 검색 및 지원.",
-    "gold": ["비즈니스", "커리어"]
+    "gold": [
+      "비즈니스",
+      "커리어"
+    ]
   },
   {
     "url": "https://www.ycombinator.com/library",
     "title": "Startup Library | Y Combinator",
     "description": "창업·스타트업 운영 노하우 아티클 모음.",
-    "gold": ["비즈니스", "스타트업"]
+    "gold": [
+      "비즈니스",
+      "스타트업"
+    ]
   },
   {
     "url": "https://www.notion.so/product",
     "title": "Notion - 올인원 협업 워크스페이스",
     "description": "문서·위키·프로젝트 관리 협업 도구.",
-    "gold": ["브랜드", "마케팅", "Notion"]
+    "gold": [
+      "브랜드",
+      "마케팅",
+      "Notion"
+    ]
   },
   {
     "url": "https://www.udemy.com/course/100-days-of-code/",
     "title": "100 Days of Code: Python Bootcamp",
     "description": "파이썬 입문부터 실전까지 100일 코딩 강의.",
-    "gold": ["학습", "강의", "Python"]
+    "gold": [
+      "학습",
+      "강의",
+      "Python"
+    ]
   },
   {
     "url": "https://www.coursera.org/learn/machine-learning",
     "title": "Machine Learning | Coursera",
     "description": "Andrew Ng의 머신러닝 입문 강의.",
-    "gold": ["학습", "강의"]
+    "gold": [
+      "학습",
+      "강의"
+    ]
   },
   {
     "url": "https://www.khanacademy.org/math",
     "title": "Math | Khan Academy",
     "description": "무료 수학 강의 — 기초부터 미적분까지.",
-    "gold": ["학습", "강의"]
+    "gold": [
+      "학습",
+      "강의"
+    ]
   },
   {
     "url": "https://electronics.sony.com/headphones/wh-1000xm5",
     "title": "Sony WH-1000XM5 무선 노이즈 캔슬링 헤드폰",
     "description": "업계 최고 수준 노이즈 캔슬링 무선 헤드폰 구매",
-    "gold": ["쇼핑", "전자기기"]
+    "gold": [
+      "쇼핑",
+      "전자기기"
+    ]
   },
   {
     "url": "https://www.samsung.com/sec/buds/galaxy-buds3-pro/",
     "title": "갤럭시 버즈3 프로 구매 - 삼성전자",
     "description": "무선 이어버드 갤럭시 버즈3 프로 제품 구매 페이지.",
-    "gold": ["쇼핑", "전자기기"]
+    "gold": [
+      "쇼핑",
+      "전자기기"
+    ]
   },
   {
     "url": "https://stackoverflow.com/questions/11227809",
     "title": "Why is processing a sorted array faster than an unsorted array? - Stack Overflow",
     "description": "프로그래밍 질문과 답변 커뮤니티.",
-    "gold": ["커뮤니티", "Q&A", "Stack Overflow"]
+    "gold": [
+      "커뮤니티",
+      "Q&A",
+      "Stack Overflow"
+    ]
   },
   {
     "url": "https://news.ycombinator.com/",
     "title": "Hacker News",
     "description": "기술·스타트업 뉴스 토론 커뮤니티.",
-    "gold": ["커뮤니티", "포럼"]
+    "gold": [
+      "커뮤니티",
+      "포럼"
+    ]
   },
   {
     "url": "https://discord.com/invite/reactiflux",
     "title": "Reactiflux Discord 커뮤니티",
     "description": "React 개발자 실시간 채팅 커뮤니티.",
-    "gold": ["커뮤니티", "소셜미디어", "Discord"]
+    "gold": [
+      "커뮤니티",
+      "소셜미디어",
+      "Discord"
+    ]
   },
   {
     "url": "https://www.adidas.com/us/impossible-is-nothing",
     "title": "Impossible Is Nothing - adidas 캠페인",
     "description": "아디다스 브랜드 캠페인·브랜드스토리.",
-    "gold": ["브랜드", "마케팅", "Adidas"]
+    "gold": [
+      "브랜드",
+      "마케팅",
+      "Adidas"
+    ]
   },
   {
     "url": "https://www.coca-cola.com/us/en",
     "title": "Coca-Cola® | 브랜드 캠페인",
     "description": "코카콜라 브랜드 스토리와 마케팅 캠페인.",
-    "gold": ["브랜드", "마케팅"]
+    "gold": [
+      "브랜드",
+      "마케팅"
+    ]
   },
   {
     "url": "https://news.airbnb.com/about-us/",
     "title": "About Us - Airbnb Newsroom",
     "description": "Airbnb 기업·브랜드 소개.",
-    "gold": ["브랜드", "기업", "Airbnb"]
+    "gold": [
+      "브랜드",
+      "기업",
+      "Airbnb"
+    ]
   },
   {
     "url": "https://www.inven.co.kr/board/lol/4625",
     "title": "리그 오브 레전드 시즌14 정글 공략 - 인벤",
     "description": "LoL 정글러 챔피언 공략과 룬 세팅 가이드.",
-    "gold": ["게임", "공략", "리그 오브 레전드"]
+    "gold": [
+      "게임",
+      "공략",
+      "리그 오브 레전드"
+    ]
   },
   {
     "url": "https://www.nintendo.com/us/store/products/the-legend-of-zelda-tears-of-the-kingdom/",
     "title": "The Legend of Zelda: Tears of the Kingdom 리뷰",
     "description": "젤다의 전설 신작 게임 리뷰와 평가.",
-    "gold": ["게임", "리뷰", "젤다의 전설"]
+    "gold": [
+      "게임",
+      "리뷰",
+      "젤다의 전설"
+    ]
   },
   {
     "url": "https://lol.inven.co.kr/lck",
     "title": "2024 LCK 스프링 결승 일정 - 인벤",
     "description": "리그 오브 레전드 e스포츠 LCK 대회 일정과 중계.",
-    "gold": ["게임", "e스포츠"]
+    "gold": [
+      "게임",
+      "e스포츠"
+    ]
   },
   {
     "url": "https://www.inven.co.kr/",
     "title": "인벤 - 게임 그 이상을 추구하다",
     "description": "게임 뉴스·공략·커뮤니티 포털",
-    "gold": ["게임"]
+    "gold": [
+      "게임"
+    ]
   },
   {
     "url": "https://devkim.tistory.com/123",
     "title": "Next.js App Router 정리 - 개발 블로그",
     "description": "Next.js 서버 컴포넌트와 라우팅 정리",
-    "gold": ["개발", "프론트엔드", "Next.js"]
+    "gold": [
+      "개발",
+      "프론트엔드",
+      "Next.js"
+    ]
   },
   {
     "url": "https://github.com/login",
@@ -249,91 +392,142 @@
     "url": "https://heroicons.com/",
     "title": "Heroicons",
     "description": "Tailwind 제작팀이 만든 무료 SVG 아이콘 세트.",
-    "gold": ["디자인"]
+    "gold": [
+      "디자인"
+    ]
   },
   {
     "url": "https://m3.material.io/",
     "title": "Material Design 3",
     "description": "구글의 디자인 시스템 가이드라인 — 컴포넌트·색상·타이포.",
-    "gold": ["디자인", "UI/UX", "Material Design"]
+    "gold": [
+      "디자인",
+      "UI/UX",
+      "Material Design"
+    ]
   },
   {
     "url": "https://unsplash.com/",
     "title": "Unsplash — 무료 고화질 이미지",
     "description": "상업적으로 이용 가능한 무료 스톡 사진 라이브러리.",
-    "gold": ["디자인"]
+    "gold": [
+      "디자인"
+    ]
   },
   {
     "url": "https://mobbin.com/browse/ios/apps",
     "title": "Mobbin — 모바일 UI 패턴 레퍼런스",
     "description": "실제 앱의 화면·플로우를 모은 UI/UX 디자인 레퍼런스.",
-    "gold": ["디자인", "UI/UX", "Mobbin"]
+    "gold": [
+      "디자인",
+      "UI/UX",
+      "Mobbin"
+    ]
   },
   {
     "url": "https://www.jobkorea.co.kr/",
     "title": "잡코리아 | 구인구직·채용 정보 플랫폼",
     "description": "기업 채용 공고 검색과 이력서 등록 취업 플랫폼.",
-    "gold": ["비즈니스", "커리어"]
+    "gold": [
+      "비즈니스",
+      "커리어"
+    ]
   },
   {
     "url": "https://www.appsflyer.com/ko/glossary/cpc/",
     "title": "CPC (클릭당 비용)란? | AppsFlyer 용어집",
     "description": "퍼포먼스 마케팅 핵심 지표 CPC의 정의와 활용.",
-    "gold": ["비즈니스", "마케팅", "CPC"]
+    "gold": [
+      "비즈니스",
+      "마케팅",
+      "CPC"
+    ]
   },
   {
     "url": "https://maily.so/productlab/posts/0319ee08",
     "title": "100개 유니콘 기업이 초기 유저를 확보한 방법",
     "description": "스타트업의 초기 사용자 확보 전략 사례 분석.",
-    "gold": ["비즈니스", "스타트업"]
+    "gold": [
+      "비즈니스",
+      "스타트업"
+    ]
   },
   {
     "url": "https://www.pinterest.co.kr/",
     "title": "Pinterest",
     "description": "이미지 기반 아이디어 수집·공유 소셜 플랫폼.",
-    "gold": ["커뮤니티", "소셜미디어", "Pinterest"]
+    "gold": [
+      "커뮤니티",
+      "소셜미디어",
+      "Pinterest"
+    ]
   },
   {
     "url": "https://disquiet.io/",
     "title": "Disquiet — 메이커 커뮤니티",
     "description": "프로덕트 메이커들이 제품을 공유하고 토론하는 커뮤니티.",
-    "gold": ["커뮤니티", "포럼", "Disquiet"]
+    "gold": [
+      "커뮤니티",
+      "포럼",
+      "Disquiet"
+    ]
   },
   {
     "url": "https://careerly.co.kr/",
     "title": "커리어리 | 직장인 소셜 커뮤니티",
     "description": "현직자들이 인사이트를 나누는 피드형 소셜 커뮤니티.",
-    "gold": ["커뮤니티", "소셜미디어", "커리어리"]
+    "gold": [
+      "커뮤니티",
+      "소셜미디어",
+      "커리어리"
+    ]
   },
   {
     "url": "https://www.portorocha.com/",
     "title": "PORTO ROCHA — Branding Studio",
     "description": "뉴욕 기반 브랜딩·아이덴티티 디자인 스튜디오 공식 홈페이지.",
-    "gold": ["브랜드", "마케팅", "PORTO ROCHA"]
+    "gold": [
+      "브랜드",
+      "마케팅",
+      "PORTO ROCHA"
+    ]
   },
   {
     "url": "http://huskyfox.com/",
     "title": "HuskyFox",
     "description": "브랜드 아이덴티티 디자인 스튜디오 공식 홈페이지.",
-    "gold": ["브랜드", "마케팅", "HuskyFox"]
+    "gold": [
+      "브랜드",
+      "마케팅",
+      "HuskyFox"
+    ]
   },
   {
     "url": "https://bizschool.naver.com/",
     "title": "네이버 비즈니스 스쿨",
     "description": "소상공인·마케팅 실무 온라인 강의 플랫폼.",
-    "gold": ["학습", "강의"]
+    "gold": [
+      "학습",
+      "강의"
+    ]
   },
   {
     "url": "https://www.musinsa.com/",
     "title": "무신사 — 온라인 패션 스토어",
     "description": "의류·신발·액세서리를 판매하는 온라인 쇼핑몰.",
-    "gold": ["쇼핑"]
+    "gold": [
+      "쇼핑"
+    ]
   },
   {
     "url": "https://www.perplexity.ai/",
     "title": "Perplexity",
     "description": "출처를 함께 제공하는 AI 검색·대화 어시스턴트.",
-    "gold": ["AI/ML", "LLM", "Perplexity"]
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "Perplexity"
+    ]
   },
   {
     "url": "https://accounts.google.com/signin",
@@ -351,103 +545,158 @@
     "url": "https://www.10000recipe.com/recipe/6912345",
     "title": "토마토 파스타 만들기 - 만개의레시피",
     "description": "집에서 간단하게 만드는 토마토 파스타 레시피.",
-    "gold": ["라이프스타일", "요리"]
+    "gold": [
+      "라이프스타일",
+      "요리"
+    ]
   },
   {
     "url": "https://ohou.se/contents/12345",
     "title": "6평 원룸 인테리어 꾸미기 - 오늘의집",
     "description": "좁은 원룸 공간 활용 인테리어 아이디어.",
-    "gold": ["라이프스타일", "인테리어"]
+    "gold": [
+      "라이프스타일",
+      "인테리어"
+    ]
   },
   {
     "url": "https://post.naver.com/parenting/98765",
     "title": "신생아 수면교육 언제부터 시작할까",
     "description": "초보 부모를 위한 아기 수면 루틴 가이드.",
-    "gold": ["라이프스타일", "육아"]
+    "gold": [
+      "라이프스타일",
+      "육아"
+    ]
   },
   {
     "url": "https://blog.example.com/home-training-routine",
     "title": "맨몸 홈트레이닝 4주 루틴",
     "description": "기구 없이 집에서 하는 전신 운동 루틴.",
-    "gold": ["라이프스타일", "운동"]
+    "gold": [
+      "라이프스타일",
+      "운동"
+    ]
   },
   {
     "url": "https://ev.or.kr/charging-stations",
     "title": "전기차 충전소 위치 및 요금 안내",
     "description": "전국 전기차 급속 충전소 찾기와 충전 요금.",
-    "gold": ["라이프스타일", "자동차"]
+    "gold": [
+      "라이프스타일",
+      "자동차"
+    ]
   },
   {
     "url": "https://www.goodchoice.kr/product/jeju",
     "title": "제주 호텔 예약 - 여기어때",
     "description": "제주 숙소 객실 요금 비교 및 예약.",
-    "gold": ["여행", "숙소"]
+    "gold": [
+      "여행",
+      "숙소"
+    ]
   },
   {
     "url": "https://www.skyscanner.co.kr/routes/icn/cju",
     "title": "서울-제주 항공권 최저가 비교",
     "description": "원하는 날짜의 국내선 항공권 검색.",
-    "gold": ["여행", "항공"]
+    "gold": [
+      "여행",
+      "항공"
+    ]
   },
   {
     "url": "https://blog.example.com/jeju-2night-3days",
     "title": "제주도 2박 3일 여행 코스 추천",
     "description": "제주 동부 관광 명소와 일정 정리.",
-    "gold": ["여행", "관광"]
+    "gold": [
+      "여행",
+      "관광"
+    ]
   },
   {
     "url": "https://land.naver.com/article/55667788",
     "title": "신촌 전세 매물 - 네이버부동산",
     "description": "전월세 매물 시세와 조건 비교.",
-    "gold": ["금융", "부동산"]
+    "gold": [
+      "금융",
+      "부동산"
+    ]
   },
   {
     "url": "https://finance.naver.com/marketindex/",
     "title": "환율 - 네이버페이 증권",
     "description": "오늘의 원/달러 환율 시세 조회.",
-    "gold": ["금융", "투자"]
+    "gold": [
+      "금융",
+      "투자"
+    ]
   },
   {
     "url": "https://www.tossbank.com/product/insurance",
     "title": "실손의료보험 비교 가입",
     "description": "실손보험 보장 내용과 보험료 비교.",
-    "gold": ["금융", "보험"]
+    "gold": [
+      "금융",
+      "보험"
+    ]
   },
   {
     "url": "https://www.youtube.com/watch?v=dev-react-hooks",
     "title": "React useState 15분 완성 - 코딩 튜토리얼",
     "description": "React useState 훅 사용법을 예제로 설명하는 단발 강좌.",
-    "gold": ["개발", "프론트엔드", "React"]
+    "gold": [
+      "개발",
+      "프론트엔드",
+      "React"
+    ]
   },
   {
     "url": "https://www.youtube.com/playlist?list=nextjs-course",
     "title": "Next.js 풀스택 완주반 (30강 커리큘럼)",
     "description": "입문부터 배포까지 순서대로 배우는 Next.js 강의 시리즈.",
-    "gold": ["학습", "강의", "Next.js"]
+    "gold": [
+      "학습",
+      "강의",
+      "Next.js"
+    ]
   },
   {
     "url": "https://www.youtube.com/watch?v=lol-jungle-guide",
     "title": "정글 갱킹 루트 완벽 정리 - LoL 공략",
     "description": "리그 오브 레전드 정글러 동선과 갱킹 타이밍 공략.",
-    "gold": ["게임", "공략", "리그 오브 레전드"]
+    "gold": [
+      "게임",
+      "공략",
+      "리그 오브 레전드"
+    ]
   },
   {
     "url": "https://www.youtube.com/watch?v=tomato-pasta",
     "title": "10분 토마토 파스타 만들기",
     "description": "집에서 간단히 만드는 토마토 파스타 레시피 영상.",
-    "gold": ["라이프스타일", "요리"]
+    "gold": [
+      "라이프스타일",
+      "요리"
+    ]
   },
   {
     "url": "https://www.youtube.com/watch?v=home-workout-abs",
     "title": "복근 홈트 10분 루틴",
     "description": "기구 없이 집에서 하는 복부 운동 루틴.",
-    "gold": ["라이프스타일", "운동"]
+    "gold": [
+      "라이프스타일",
+      "운동"
+    ]
   },
   {
     "url": "https://www.youtube.com/watch?v=etf-explained",
     "title": "ETF 초보 가이드 - 분산투자의 기본",
     "description": "ETF 개념과 장기 분산투자 전략 설명.",
-    "gold": ["금융", "투자", "ETF"]
+    "gold": [
+      "금융",
+      "투자",
+      "ETF"
+    ]
   },
   {
     "url": "https://www.youtube.com/watch?v=official-mv-2024",
@@ -471,139 +720,215 @@
     "url": "https://jwt.io/introduction",
     "title": "JWT 소개 - jwt.io",
     "description": "JSON Web Token 구조와 인증 토큰 검증 흐름 설명.",
-    "gold": ["개발", "보안", "JWT"]
+    "gold": [
+      "개발",
+      "보안",
+      "JWT"
+    ]
   },
   {
     "url": "https://reactnative.dev/docs/getting-started",
     "title": "Getting Started - React Native",
     "description": "React Native로 네이티브 모바일 앱 개발 시작하기.",
-    "gold": ["개발", "모바일", "React Native"]
+    "gold": [
+      "개발",
+      "모바일",
+      "React Native"
+    ]
   },
   {
     "url": "https://github.com/sindresorhus/awesome",
     "title": "sindresorhus/awesome — 큐레이션 리스트",
     "description": "주제별 오픈소스 프로젝트를 모은 awesome 리스트 저장소.",
-    "gold": ["개발", "오픈소스"]
+    "gold": [
+      "개발",
+      "오픈소스"
+    ]
   },
   {
     "url": "https://pandas.pydata.org/docs/user_guide/index.html",
     "title": "User Guide - pandas documentation",
     "description": "pandas 데이터프레임 조작·집계·분석 가이드.",
-    "gold": ["AI/ML", "데이터분석", "Pandas"]
+    "gold": [
+      "AI/ML",
+      "데이터분석",
+      "Pandas"
+    ]
   },
   {
     "url": "https://noonnu.cc/",
     "title": "눈누 — 상업용 무료 한글폰트",
     "description": "상업적으로 이용 가능한 무료 한글 글꼴 모음.",
-    "gold": ["디자인", "그래픽", "폰트"]
+    "gold": [
+      "디자인",
+      "그래픽",
+      "폰트"
+    ]
   },
   {
     "url": "https://blog.example.com/logo-design-principles",
     "title": "좋은 로고 디자인의 7가지 원칙",
     "description": "브랜드 아이덴티티를 담는 로고 디자인 기본 원칙.",
-    "gold": ["디자인", "브랜딩", "로고"]
+    "gold": [
+      "디자인",
+      "브랜딩",
+      "로고"
+    ]
   },
   {
     "url": "https://blog.example.com/how-to-write-prd",
     "title": "PM을 위한 PRD 작성 가이드",
     "description": "제품 요구사항 문서(PRD) 구조와 작성 방법.",
-    "gold": ["비즈니스", "기획", "PRD"]
+    "gold": [
+      "비즈니스",
+      "기획",
+      "PRD"
+    ]
   },
   {
     "url": "https://martinfowler.com/books/refactoring.html",
     "title": "Refactoring - Martin Fowler",
     "description": "리팩터링 기술서 소개와 목차.",
-    "gold": ["학습", "책"]
+    "gold": [
+      "학습",
+      "책"
+    ]
   },
   {
     "url": "https://www.q-net.or.kr/crf005.do?id=processing",
     "title": "정보처리기사 시험 안내 - 큐넷",
     "description": "정보처리기사 응시 자격과 시험 일정 안내.",
-    "gold": ["학습", "자격증", "정보처리기사"]
+    "gold": [
+      "학습",
+      "자격증",
+      "정보처리기사"
+    ]
   },
   {
     "url": "https://www.adobe.com/kr/creativecloud/plans.html",
     "title": "Creative Cloud 요금제 구매 - Adobe",
     "description": "포토샵·일러스트레이터 구독 요금제 구매 페이지.",
-    "gold": ["쇼핑", "소프트웨어"]
+    "gold": [
+      "쇼핑",
+      "소프트웨어"
+    ]
   },
   {
     "url": "https://www.musinsa.com/products/3948210",
     "title": "오버핏 코튼 후드 티셔츠 - 무신사",
     "description": "남녀공용 오버핏 후드 티셔츠 상품 구매 페이지.",
-    "gold": ["쇼핑", "패션"]
+    "gold": [
+      "쇼핑",
+      "패션"
+    ]
   },
   {
     "url": "https://www.kurly.com/goods/1000456",
     "title": "유기농 방울토마토 500g - 마켓컬리",
     "description": "산지직송 유기농 방울토마토 식료품 구매.",
-    "gold": ["쇼핑", "식품"]
+    "gold": [
+      "쇼핑",
+      "식품"
+    ]
   },
   {
     "url": "https://www.ikea.com/kr/ko/p/markus-office-chair",
     "title": "MARKUS 사무용 의자 - 이케아",
     "description": "장시간 착석에 적합한 사무용 의자 구매.",
-    "gold": ["쇼핑", "기타용품"]
+    "gold": [
+      "쇼핑",
+      "기타용품"
+    ]
   },
   {
     "url": "https://playvalorant.com/ko-kr/news/game-updates/",
     "title": "발로란트 패치노트 8.11",
     "description": "요원 밸런스 조정과 버그 수정 업데이트 내역.",
-    "gold": ["게임", "뉴스"]
+    "gold": [
+      "게임",
+      "뉴스"
+    ]
   },
   {
     "url": "https://blog.example.com/sleep-hygiene",
     "title": "잠 잘 자는 법 — 수면 위생 7가지",
     "description": "숙면을 돕는 생활 습관과 수면 환경 가이드.",
-    "gold": ["라이프스타일", "건강"]
+    "gold": [
+      "라이프스타일",
+      "건강"
+    ]
   },
   {
     "url": "https://blog.example.com/mangwon-matjip",
     "title": "망원동 로컬 맛집 5곳 추천",
     "description": "망원동 현지인이 자주 가는 식당과 카페 정리.",
-    "gold": ["여행", "맛집"]
+    "gold": [
+      "여행",
+      "맛집"
+    ]
   },
   {
     "url": "https://www.hometax.go.kr/yearend/guide",
     "title": "연말정산 간소화 서비스 이용 안내 - 홈택스",
     "description": "연말정산 소득·세액공제 자료 조회 방법.",
-    "gold": ["금융", "세금"]
+    "gold": [
+      "금융",
+      "세금"
+    ]
   },
   {
     "url": "https://www.youtube.com/@frongt",
     "title": "프롱트 frongt - YouTube",
     "description": "프론트엔드 개발자를 위한 실무 강의. React·Next.js·TypeScript 중심 채널.",
-    "gold": ["개발", "프론트엔드"]
+    "gold": [
+      "개발",
+      "프론트엔드"
+    ]
   },
   {
     "url": "https://www.youtube.com/@nomadcoders",
     "title": "노마드 코더 Nomad Coders - YouTube",
     "description": "웹·앱 풀스택 개발을 클론코딩으로 배우는 프로그래밍 강의 채널.",
-    "gold": ["개발"]
+    "gold": [
+      "개발"
+    ]
   },
   {
     "url": "https://www.youtube.com/@haemukja",
     "title": "해먹남녀 - YouTube",
     "description": "집에서 쉽게 따라 하는 자취 요리 레시피 채널.",
-    "gold": ["라이프스타일", "요리"]
+    "gold": [
+      "라이프스타일",
+      "요리"
+    ]
   },
   {
     "url": "https://www.youtube.com/@lolguide",
     "title": "롤 공략소 - YouTube",
     "description": "리그 오브 레전드 챔피언 공략과 티어별 운영법을 다루는 채널.",
-    "gold": ["게임", "공략", "리그 오브 레전드"]
+    "gold": [
+      "게임",
+      "공략",
+      "리그 오브 레전드"
+    ]
   },
   {
     "url": "https://www.youtube.com/@moneytalk",
     "title": "머니토크 - YouTube",
     "description": "주식·ETF 투자 전략과 시장 분석을 다루는 재테크 채널.",
-    "gold": ["금융", "투자"]
+    "gold": [
+      "금융",
+      "투자"
+    ]
   },
   {
     "url": "https://www.youtube.com/@uxdesignlab",
     "title": "UX 디자인 랩 - YouTube",
     "description": "실무 UI/UX 디자인과 Figma 활용법을 소개하는 채널.",
-    "gold": ["디자인", "UI/UX"]
+    "gold": [
+      "디자인",
+      "UI/UX"
+    ]
   },
   {
     "url": "https://www.youtube.com/@iu.official",
@@ -657,66 +982,931 @@
     "url": "https://toss.tech/",
     "title": "토스 기술 블로그, 토스 테크",
     "description": "토스 개발팀의 프론트엔드·백엔드·인프라 기술 아티클 모음.",
-    "gold": ["개발"]
+    "gold": [
+      "개발"
+    ]
   },
   {
     "url": "https://techblog.woowahan.com/",
     "title": "우아한형제들 기술블로그",
     "description": "배달의민족 개발자들이 쓰는 서버·프론트엔드 기술 블로그.",
-    "gold": ["개발"]
+    "gold": [
+      "개발"
+    ]
   },
   {
     "url": "https://uppity.co.kr/",
     "title": "뉴스레터 어피티",
     "description": "2030을 위한 경제·금융 소식을 쉽게 풀어주는 구독 뉴스레터.",
-    "gold": ["콘텐츠", "뉴스레터"]
+    "gold": [
+      "콘텐츠",
+      "뉴스레터"
+    ]
   },
   {
     "url": "https://feedly.com/",
     "title": "Feedly - RSS Reader",
     "description": "여러 사이트의 글을 한곳에서 구독·정리하는 RSS 큐레이션 리더.",
-    "gold": ["콘텐츠", "큐레이션"]
+    "gold": [
+      "콘텐츠",
+      "큐레이션"
+    ]
   },
   {
     "url": "https://yozm.wishket.com/magazine",
     "title": "요즘 사람들의 IT 매거진, 요즘IT",
     "description": "IT 업계 트렌드·일하는 방식을 다루는 종합 매거진.",
-    "gold": ["콘텐츠", "블로그"]
+    "gold": [
+      "콘텐츠",
+      "블로그"
+    ]
   },
   {
     "url": "https://brunch.co.kr/@blckschrl/62",
     "title": "iOS & Android UI 차이",
     "description": "모바일 플랫폼별 UI 가이드라인 차이를 정리한 디자인 아티클.",
-    "gold": ["디자인", "UI/UX"]
+    "gold": [
+      "디자인",
+      "UI/UX"
+    ]
   },
   {
     "url": "https://claude.ai/",
     "title": "Claude",
     "description": "",
-    "gold": ["AI/ML", "LLM"]
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
   },
   {
     "url": "https://gemini.google.com/app",
     "title": "Gemini",
     "description": "",
-    "gold": ["AI/ML", "LLM"]
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
   },
   {
     "url": "https://kosis.kr/",
     "title": "KOSIS 국가통계포털",
     "description": "",
-    "gold": ["비즈니스", "데이터"]
+    "gold": [
+      "비즈니스",
+      "데이터"
+    ]
   },
   {
     "url": "https://www.behance.net/",
     "title": "https://www.behance.net/",
     "description": "",
-    "gold": ["디자인"]
+    "gold": [
+      "디자인"
+    ]
   },
   {
     "url": "https://www.saramin.co.kr/",
     "title": "사람인",
     "description": "",
-    "gold": ["비즈니스", "커리어"]
+    "gold": [
+      "비즈니스",
+      "커리어"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=j7s_B2alnoM",
+    "title": "비개발자가 한 달 동안 풀스택으로 개발하면서 배운 것",
+    "description": "",
+    "gold": [
+      "개발",
+      "강의",
+      "풀스택"
+    ]
+  },
+  {
+    "url": "https://docs.google.com/spreadsheets/d/1tNgu4jz58bqj4sbQrh-2r7rYUT5xtXyxn4hdhVdzQ98/edit?gid=0",
+    "title": "콘텐츠 내용 최종 - Google Sheets",
+    "description": "",
+    "gold": [
+      "학습",
+      "강의",
+      "Google Sheets"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=UUNgWvVoT4E",
+    "title": "NotebookLM을 CLI로 쓴다고? 카파시 LLM위키 + 옵시디언으로 AI 지식창고 자동 구축 완벽 튜토리얼",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://wonism.github.io/",
+    "title": "I'm Wonism!",
+    "description": "",
+    "gold": [
+      "콘텐츠",
+      "블로그"
+    ]
+  },
+  {
+    "url": "https://app.creatify.ai/home",
+    "title": "Creatify - 탈퇴할것(아마존가능)",
+    "description": "",
+    "gold": [
+      "비즈니스",
+      "마케팅"
+    ]
+  },
+  {
+    "url": "https://leonardo.ai/",
+    "title": "Leonardo AI",
+    "description": "",
+    "gold": [
+      "AI/ML"
+    ]
+  },
+  {
+    "url": "https://elevenlabs.io/",
+    "title": "ElevenLabs",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "음성합성",
+      "API"
+    ]
+  },
+  {
+    "url": "https://notion.so/myinsightbox/13dc62d9c5ed808fa3c8f54293268f3f",
+    "title": "소소한 제안",
+    "description": "",
+    "gold": [
+      "커뮤니티",
+      "소셜미디어"
+    ]
+  },
+  {
+    "url": "https://notion.so/library/recents?p=2f885e63c37e81f5b3eac213f5d5c0b7&pm=s&pvs=140&spaceId=c6c095b2012e46eb95c498655e8a01ec",
+    "title": "라이브러리 | Notion",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "소프트웨어"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=FsB_nRGdeLs",
+    "title": "API Security Explained: Rate Limiting, CORS, SQL Injection, CSRF, XSS & More",
+    "description": "",
+    "gold": [
+      "개발",
+      "보안",
+      "API"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=EmE29ycOrSg",
+    "title": "VREW, 블로그 애드센스보다 쉬운 쿠팡 파트너스 유튜브영상 만들기 [무료강의 6강]",
+    "description": "",
+    "gold": [
+      "학습",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=lWWpUT9J3BM",
+    "title": "네이버 각성? 쇼핑커넥트 7월 정식 오픈! 모두에게 제한없이 오픈!",
+    "description": "",
+    "gold": [
+      "쇼핑",
+      "전자기기"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=1L6EppaaUC4",
+    "title": "3개월만 공부하면 돈 번다는 지수 투자기법",
+    "description": "",
+    "gold": [
+      "금융",
+      "투자"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=eyFO57ZkJaI",
+    "title": "배포자동화(CI/CD) 2 - 멀티 컨테이너 배포 (nginx proxy)",
+    "description": "",
+    "gold": [
+      "개발",
+      "인프라"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=s15ojX1P4NY",
+    "title": "LLM Wiki를 업그레이드한 Graphify 개념 + 실습 가이드",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://hohyon.com/teaching/vibe-coding-notes/claude-md-templates?sfnsn=mo",
+    "title": "CLAUDE.md 템플릿 모음 | VIBE Coding Notes",
+    "description": "",
+    "gold": [
+      "개발",
+      "프론트엔드",
+      "템플릿"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=zeNQqd5Q5Lo",
+    "title": "클로드 코드, 코덱스 스킬 관리 전략 왕초보 가이드",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "클로드"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=vVL6NFzr0Rg",
+    "title": "Every Data Structure Simply Explained in 25 Minutes!",
+    "description": "",
+    "gold": [
+      "학습",
+      "강의",
+      "데이터구조"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=D2qIc5rrUp8",
+    "title": "맥미니 사지 마세요 | n8n으로 끝내는 AI GitHub 에이전트 (1일 1커밋 자동화)",
+    "description": "",
+    "gold": [
+      "개발",
+      "자동화",
+      "n8n"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=GBXQu9FudwU",
+    "title": "클로드 코드 업무 자동화 A to Z 1시간 무료 강의ㅣ대기업 금융권 현직자 멘토",
+    "description": "",
+    "gold": [
+      "학습",
+      "강의",
+      "업무자동화"
+    ]
+  },
+  {
+    "url": "https://github.com/forrestchang/andrej-karpathy-skills",
+    "title": "GitHub - multica-ai/andrej-karpathy-skills",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
+  },
+  {
+    "url": "https://youtube.com/live/eQlA7oy-bxE",
+    "title": "Codex, 코딩 에이전트를 넘어 AI-Powered Backend Engine으로 | AI기반 애플리케이션 만들기",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=jqoFP9QapXI",
+    "title": "32 Tricks to Level Up Claude Code in 16 Mins",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=8ImlAQOyVTs",
+    "title": "It's Broken… The Codex vs Claude Code Debate Is Finally Over",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=MzhIr7BfpI0",
+    "title": "How I use Claude Code (Senior Software Engineer Tips)",
+    "description": "",
+    "gold": [
+      "개발",
+      "프론트엔드"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=rIs802-bXDY",
+    "title": "Ralph-loop 2.0? The real autonomous coder is coming...",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
+  },
+  {
+    "url": "https://youtube.com/live/th6s1VonsaI",
+    "title": "ZeroCho의 하네스엔지니어링 라이브 - OpenAI Codex + GPT-5.5로 AI 조련하기",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "강의",
+      "OpenAI Codex"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=7eO1kqAAWsc",
+    "title": "Ollama 대신 vLLM를 연동해 Openclaw 8배 빠르게 만들기!",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "강의",
+      "vLLM"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=Yt67kU3cZfQ",
+    "title": "프롬프트 말고 하네스 — 안드레 카파시와 코덱스 워크플로우 6원칙",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=jKjbXXBahiY",
+    "title": "코딩 배우지 마세요, 말 한마디로 주식 에이전트 만드는 법",
+    "description": "",
+    "gold": [
+      "비즈니스",
+      "강의",
+      "주식"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=MfS-4Qaj9no",
+    "title": "AI가 아이디어를 기억하고 검증하고 실행하게 만드는 방법 | Wiki · Graphify · Gstack · Superpowers",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "강의",
+      "아이디어"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=fMY5Sdj2DMk",
+    "title": "Knowing This Gives You An Unfair Advantage With AI Coding",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=XbvoUS-j2zo",
+    "title": "Claude Code PM은 어떻게 일하는가 — Cat Wu가 공개한 6개월→1일 출시법",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=LR2vONAVEYk",
+    "title": "\"당신이 원하던 n8n 2026 버전 마스터클래스!\" 8시간 완전정복 기초강의",
+    "description": "",
+    "gold": [
+      "학습",
+      "강의",
+      "n8n"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=-ibi3ikrNUI",
+    "title": "상위 1%가 쓰는 '하네스 프롬프트' 공개 (Claude 내부 시스템 프롬프트 유출본 분석)",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "프롬프트"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=o1TucehYZuk",
+    "title": "GPT로 7억 번 한국인이 공개한 미친 명령어 (자청 근황)",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=TlDBIDlCQVM",
+    "title": "HTTP vs HTTPS vs SSL vs TLS — How Secure Web Actually Works",
+    "description": "",
+    "gold": [
+      "개발",
+      "보안"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=5p6h23Md4Zw",
+    "title": "OpenAI Just Showed Us What Comes After the Harness",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=diF0Qbj56ys",
+    "title": "[한글자막] Anthropic이 공개한 대규모 코딩 프로젝트용 최고의 Claude Code 설정법",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=lo9VmozeTxg",
+    "title": "바이브 코딩은 이렇게 하셔야 합니다 (필수 스킬 6개)",
+    "description": "",
+    "gold": [
+      "개발",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=v3CDPOH6d78",
+    "title": "코덱스 클로드코드로 PR 금지",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=fInMcawbKng",
+    "title": "클로드 코드 Dynamic Workflow | 낡아빠진 하네스는 다이어트가 필수입니다...!",
+    "description": "",
+    "gold": [
+      "개발",
+      "프론트엔드"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=klfhUVnc44U",
+    "title": "하네스 엔지니어링! 에이전트들끼리 어떻게 일하게 할까? (황민호 카카오 AI네이티브 전략팀 리더)",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "강의",
+      "하네스"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=vrc0Uv2BfRk",
+    "title": "99.9%가 모르는 AI 에이전트를 학습시키는 천재적 방법",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "강의",
+      "AI 에이전트"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=GrNbuWWJYiI",
+    "title": "You Can Learn AI Agent Harness & Loop Engineering In 19 Min | LLM Ops, Eval, Tracing, RAG",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "강의",
+      "RAG"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=xFUgrOIgtNE",
+    "title": "자고 일어나면 앱이 완성된다? 클로드 코드 루프 파이프라인 실전",
+    "description": "",
+    "gold": [
+      "개발",
+      "강의",
+      "클로드"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=NTlT3q7TFls",
+    "title": "나만의 ERP 시스템 만들어보기 01편",
+    "description": "",
+    "gold": [
+      "개발",
+      "강의",
+      "ERP"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=FEc4EW9s2BU",
+    "title": "Everything I'd Learn to Ship My First PROFITABLE App in 2026 (beginner friendly)",
+    "description": "",
+    "gold": [
+      "학습",
+      "강의",
+      "앱개발"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=ds4NQRqy4T4",
+    "title": "대부분이 모르는 OpenAI Codex 진짜 활용법 (플러그인 6종·노코드 Sites)",
+    "description": "",
+    "gold": [
+      "개발",
+      "Codex"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=nw-7ry_hhio",
+    "title": "Frontend System Design Essentials: Data-Heavy Frontend Apps",
+    "description": "",
+    "gold": [
+      "개발",
+      "프론트엔드",
+      "시스템디자인"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=Qz3Mjk_7D0Y",
+    "title": "Do THIS Instead of Watching Endless Tutorials - How I'd Learn AWS FAST (2026)",
+    "description": "",
+    "gold": [
+      "학습",
+      "강의",
+      "AWS"
+    ]
+  },
+  {
+    "url": "https://app.notion.com/p/AI-AI-37fe43a167208010ad61d1de2c79fb3a",
+    "title": "[가이드] 내 업무 전용 AI 팀 만들기 - AI 오케스트레이션 | Notion",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "가이드"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=8X42ESFDsIw",
+    "title": "운전하면서 코딩을 할 수 있는 방법(Feat.아이언맨 자비스)",
+    "description": "",
+    "gold": [
+      "라이프스타일",
+      "운전"
+    ]
+  },
+  {
+    "url": "https://google.com/intl/ko/gmail/about",
+    "title": "Gmaikspace",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "Gmail"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=omB2JkC4QfA",
+    "title": "Why Every Developer Needs to Understand CI/CD",
+    "description": "",
+    "gold": [
+      "개발",
+      "인프라"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=of7Sr3uOlkA",
+    "title": "옵시디언 LLM Wiki, 아무 자료나 넣으면 안 됩니다",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
+  },
+  {
+    "url": "https://docs.google.com/spreadsheets/d/1Xh08YgT80vzOp5EUrXIvVtoH7zyeGP_UsRMh53bLSbc/htmlview",
+    "title": "[퍼블리] 전략·사업기획자 템플릿 28종 - Google Drive",
+    "description": "",
+    "gold": [
+      "비즈니스",
+      "기획"
+    ]
+  },
+  {
+    "url": "https://youtube.com/live/MRTQwBFURJs",
+    "title": "에이전트를 위한 지식 베이스 : LLM Wiki 활용",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=AyV0hum_hA8",
+    "title": "Getting Started with Omnigent | The Coding Agent Meta-Harness",
+    "description": "",
+    "gold": [
+      "개발",
+      "프론트엔드"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=8P7eso8b-dU",
+    "title": "I'm Launching a 10+ Hour Backend System Design Course on YouTube",
+    "description": "",
+    "gold": [
+      "학습",
+      "강의",
+      "백엔드"
+    ]
+  },
+  {
+    "url": "https://docs.google.com/spreadsheets/d/1qfAprpeRHq6PgdW1kOZtc8ex-z2z6zQel0inqSQwAog/htmlview",
+    "title": "[퍼블리] 마케터 템플릿 37종 - Google Drive",
+    "description": "",
+    "gold": [
+      "브랜드",
+      "마케팅"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=87rW_SPMbrk",
+    "title": "하네스 엔지니어링을 그래서 어떻게 써야할까",
+    "description": "",
+    "gold": [
+      "개발",
+      "강의",
+      "하네스 엔지니어링"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=SsHGSf_nzrI",
+    "title": "물경력 쌓인 개발자가 이직하려면 반드시 해야 하는 3가지",
+    "description": "",
+    "gold": [
+      "개발",
+      "강의",
+      "커리어"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=DgQaqaqcnqI",
+    "title": "코덱스 CLI + Warp 터미널 왕초보 가이드",
+    "description": "",
+    "gold": [
+      "개발",
+      "강의",
+      "CLI"
+    ]
+  },
+  {
+    "url": "https://app.notion.com/p/yeongiu/Claude-100-376fec6d90d281aab674d25e057a0393",
+    "title": "완전한 Claude 마스터 가이드100단계 | Notion",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "가이드"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=5C9B__SLoi4",
+    "title": "헤르메스 에이전트 20분 완벽 세팅법 A to Z",
+    "description": "",
+    "gold": [
+      "개발",
+      "강의",
+      "헤르메스"
+    ]
+  },
+  {
+    "url": "https://oavoir.notion.site/ADU-w-Claude-Code-1-32bc7076b19580a4ad05d86576b9f2cc",
+    "title": "ADU w. Claude Code 마스터 가이드 1편 | Notion",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "가이드"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=WXka6bp1aYw",
+    "title": "헤르메스 에이전트 20분 총정리",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "헤르메스"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=wiVd1CwfBls",
+    "title": "(FULL VER) 스스로 성장하는 AI가 나왔다.. 헤르메스 에이전트 사용법 A TO Z",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "강의",
+      "헤르메스 에이전트"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=bSPWuO28Jak",
+    "title": "Claude Opus급 성능을 Haiku 가격으로, Advisor Strategy로 AI 비용 90% 절감하는 법",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "비용절감"
+    ]
+  },
+  {
+    "url": "https://narrivo.io/",
+    "title": "NARRIVO(나리보) | 커리어를 가장 선명하게 보여주는 방법",
+    "description": "",
+    "gold": [
+      "비즈니스",
+      "커리어"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=2vnr5g4DFqU",
+    "title": "바이브코딩 막힘 없이 뻥 뚫어 드립니다",
+    "description": "",
+    "gold": [
+      "개발",
+      "프론트엔드",
+      "바이브코딩"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=g9b9G8dcS8Y",
+    "title": "Master All 6 Claude Code Dynamic Workflows",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://docs.google.com/spreadsheets/d/1-hoWoIfA2OmurXenEvJ5QQS1ZvRRQSuAzLjjGveTtKo/htmlview",
+    "title": "[퍼블리] 팀장·리더 템플릿 32종 - Google Drive",
+    "description": "",
+    "gold": [
+      "비즈니스",
+      "템플릿"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=wScdyoQjj8E",
+    "title": "Codex 마스터 클래스 1시간 편집본 | 하네스 설계부터 서비스 배포까지",
+    "description": "",
+    "gold": [
+      "개발",
+      "강의",
+      "Codex"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=xdUrASY3M1g",
+    "title": "에이전트 대격변의 시대에 꼭 챙겨야 할 개념, 다시 AGENTS.md, 스킬스, 훅스, MCP",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "강의",
+      "AGENTS"
+    ]
+  },
+  {
+    "url": "https://instagram.com/reel/DaO9W3VGjZU?igsh=aHQ2M3gyZHFmYnFk",
+    "title": "퀀텀점프클럽 | AI 도입 • 교육 (@qjc.ai) • Instagram reel",
+    "description": "",
+    "gold": [
+      "AI/ML"
+    ]
+  },
+  {
+    "url": "https://instagram.com/reel/DZm_h31ohB_?igsh=NTQwOXk0dWE3ZG4x",
+    "title": "RammCodes | Developer Advocate 👨‍💻 on Instagram",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
+  },
+  {
+    "url": "https://instagram.com/reel/DW1XeTREUi2?comment_id=18083628020065655&open_comments=true",
+    "title": "Daily Dose of Data Science on Instagram: RAG engine",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "RAG",
+      "LLM"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=Q33WveI7NqU",
+    "title": "옵시디언 아직도 그냥 쓰세요? 한방에 클로드 스타일로 바뀝니다!",
+    "description": "",
+    "gold": [
+      "개발",
+      "프론트엔드",
+      "옵시디언"
+    ]
+  },
+  {
+    "url": "https://docs.google.com/spreadsheets/d/1n8OYsYfKp5zjHFASIS7XxbOYK8Y_ekNOyvnyGgFxWuw/htmlview",
+    "title": "[퍼블리] PM·서비스기획자 템플릿 32종 - Google Drive",
+    "description": "",
+    "gold": [
+      "비즈니스",
+      "기획"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=uB2m8MATXow",
+    "title": "왕초보용 0부터 시작하는 하네스 엔지니어링 with 코덱스",
+    "description": "",
+    "gold": [
+      "개발",
+      "강의",
+      "하네스"
+    ]
+  },
+  {
+    "url": "https://youtube.com/watch?v=CE4YF-wYwCA",
+    "title": "[애드온 강의] 바로바로 바이브 코딩 with 클로드 코드 x 코덱스",
+    "description": "",
+    "gold": [
+      "개발",
+      "강의"
+    ]
+  },
+  {
+    "url": "https://clovanote.naver.com/w/GLeoADxvFNYnMBAA7RDw/home",
+    "title": "클로바노트",
+    "description": "",
+    "gold": [
+      "커뮤니티",
+      "포럼",
+      "네이버"
+    ]
+  },
+  {
+    "url": "https://docs.google.com/forms/d/14i9g4QfVIb9JG4-E8e0DRIAv7PBDuVKVa0sO7XJlf_4/edit",
+    "title": "덕질타임(가칭)_사용자 설문지",
+    "description": "",
+    "gold": [
+      "커뮤니티",
+      "설문조사"
+    ]
+  },
+  {
+    "url": "https://docs.google.com/forms/d/1w8WIOH10_dIUem5Zoh5ZZKLh4X4bvzfC2vzcu8DNI5g/edit",
+    "title": "20대 투자 행동 경험 설문조사 - Google Forms",
+    "description": "",
+    "gold": [
+      "금융",
+      "투자"
+    ]
+  },
+  {
+    "url": "https://app.notion.com/library/recents?p=3c70bcbfb8a84eb484cf3ebb610d4375&pm=s&pvs=140&spaceId=c6c095b2012e46eb95c498655e8a01ec",
+    "title": "라이브러리 | Notion",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "소프트웨어"
+    ]
+  },
+  {
+    "url": "https://possible-cart-99b.notion.site/PARK-DA-EUN-1327ec31d1474ea29e45ec688fb27bdc",
+    "title": "[ PARK DA EUN ]",
+    "description": "",
+    "gold": [
+      "콘텐츠",
+      "블로그"
+    ]
   }
 ]
