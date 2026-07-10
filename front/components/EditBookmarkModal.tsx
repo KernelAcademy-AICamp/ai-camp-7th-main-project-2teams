@@ -156,9 +156,9 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
                 태그
               </label>
               <div className="mb-2 flex flex-wrap gap-1.5">
-                {form.tags.map((tag) => (
+                {form.tags.map((tag, i) => (
                   <span
-                    key={tag}
+                    key={`${tag}-${i}`}
                     className="flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-brand-strong"
                   >
                     {tag}
