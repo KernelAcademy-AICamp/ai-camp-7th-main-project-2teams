@@ -211,12 +211,13 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
               size={12}
               className="hidden shrink-0 text-amber-500 sm:inline"
               aria-label="링크 끊김 의심"
+              title="링크 끊김 의심"
             />
           )}
-          {bookmark.tags[0] && (
-            <span className="hidden shrink-0 truncate text-xs text-gray-400 md:inline">
-              {bookmark.tags[0]}
-              {bookmark.tags.length > 1 && ` +${bookmark.tags.length - 1}`}
+          {bookmark.category && (
+            <span className={cn(CATEGORY_CHIP_LIST, "hidden shrink-0 md:inline-flex")}>
+              <Shapes size={10} />
+              {bookmark.category}
             </span>
           )}
           <div className="flex shrink-0 items-center gap-0.5">
@@ -242,7 +243,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
               href={safeUrl(bookmark.url)}
               target="_blank"
               rel="noopener noreferrer"
-              className="line-clamp-1 block text-base font-semibold text-gray-900 hover:underline"
+              className="line-clamp-2 text-base font-semibold text-gray-900 hover:underline"
             >
               {bookmark.title}
             </a>
