@@ -57,5 +57,6 @@ export function useSearch() {
     setVisibleCount((count) => count + SEARCH_PAGE_SIZE)
   }, [])
 
-  return { ...mutation, visibleResults, hasMore, showMore }
+  // 검색창 결과수 피드백(SearchBar)용 — 실제 매칭 총량(top-60 캡)
+  return { ...mutation, visibleResults, hasMore, showMore, total: allResults.length }
 }

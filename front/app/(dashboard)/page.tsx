@@ -141,6 +141,7 @@ function DashboardContent() {
     visibleResults: searchVisibleResults,
     hasMore: searchHasMore,
     showMore: searchShowMore,
+    total: searchTotal,
   } = useSearch();
 
   const handleSearch = useCallback(
@@ -220,7 +221,14 @@ function DashboardContent() {
             <ArrowUp className="h-5 w-5" />
           </button>
         )}
-        <SearchBar onSearch={handleSearch} onClear={handleClear} value={searchQuery} onChange={setSearchQuery} />
+        <SearchBar
+          onSearch={handleSearch}
+          onClear={handleClear}
+          value={searchQuery}
+          onChange={setSearchQuery}
+          isLoading={isSearching && isSearchPending}
+          resultCount={isSearching && !isSearchPending ? searchTotal : undefined}
+        />
 
         {isPending && (
           <div
