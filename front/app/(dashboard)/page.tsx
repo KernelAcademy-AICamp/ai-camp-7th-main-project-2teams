@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, Menu } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { AddBookmarkModal } from "@/components/AddBookmarkModal";
 import { BookmarkCard } from "@/components/BookmarkCard";
@@ -28,6 +28,7 @@ function DashboardContent() {
 
   const mainRef = useRef<HTMLElement>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const {
     category,
@@ -191,13 +192,24 @@ function DashboardContent() {
   return (
     <>
       {fromExtension && <ExtensionSync />}
-      <Sidebar />
+      <Sidebar mobileOpen={mobileSidebarOpen} onMobileClose={() => setMobileSidebarOpen(false)} />
 
       <main
         ref={mainRef}
         onScroll={handleScroll}
         className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 px-4 py-8 overflow-y-auto"
       >
+        {/* 모바일 전용 필터 열기 버튼 — md 이상에서는 사이드바가 항상 노출되므로 숨김 */}
+        <button
+          type="button"
+          onClick={() => setMobileSidebarOpen(true)}
+          aria-label="필터 열기"
+          className="flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary md:hidden"
+        >
+          <Menu size={16} />
+          필터
+        </button>
+
         {showScrollTop && (
           <button
             type="button"
@@ -208,10 +220,7 @@ function DashboardContent() {
             <ArrowUp className="h-5 w-5" />
           </button>
         )}
-        {/* 북마크가 하나도 없으면 검색 의미 없음 → 검색바 숨김 (검색 중에는 유지) */}
-        {(allBookmarks.length > 0 || isSearching) && (
-          <SearchBar onSearch={handleSearch} onClear={handleClear} value={searchQuery} onChange={setSearchQuery} />
-        )}
+        <SearchBar onSearch={handleSearch} onClear={handleClear} value={searchQuery} onChange={setSearchQuery} />
 
         {isPending && (
           <div
