@@ -331,8 +331,8 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
                       링크 끊김
                     </span>
                   )}
-                  {bookmark.tags.map((tag) => (
-                    <span key={tag} className={TAG_CHIP}>
+                  {bookmark.tags.map((tag, i) => (
+                    <span key={`${tag}-${i}`} className={TAG_CHIP}>
                       {tag}
                     </span>
                   ))}
@@ -368,8 +368,8 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
                 </>
               )}
               {bookmark.tags.length > 0 && <span aria-hidden>·</span>}
-              {bookmark.tags.map((tag) => (
-                <span key={tag} className={TAG_CHIP}>
+              {bookmark.tags.map((tag, i) => (
+                <span key={`${tag}-${i}`} className={TAG_CHIP}>
                   {tag}
                 </span>
               ))}
@@ -472,8 +472,8 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
               style={{ scrollbarWidth: "none" }}
             >
               <Tag size={12} className="shrink-0 text-gray-500" />
-              {bookmark.tags.map((tag) => (
-                <span key={tag} className={cn(TAG_CHIP, "shrink-0")}>
+              {bookmark.tags.map((tag, i) => (
+                <span key={`${tag}-${i}`} className={cn(TAG_CHIP, "shrink-0")}>
                   {tag}
                 </span>
               ))}
