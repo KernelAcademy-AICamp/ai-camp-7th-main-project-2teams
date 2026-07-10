@@ -96,9 +96,14 @@ export function ServiceFeatures() {
         ))}
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+      {/* key={track} — 트랙 전환 시 카드가 그대로 갈아끼워지지 않고 다시 순차 리빌되게 함 */}
+      <div key={track} className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
         {TRACKS[track].map((feature, i) => (
-          <div key={feature.title} className="rounded-xl border border-line bg-surface-card p-5 shadow-sm">
+          <div
+            key={feature.title}
+            className="animate-rise rounded-xl border border-line bg-surface-card p-5 opacity-0 shadow-sm"
+            style={{ animationDelay: `${i * 90}ms` }}
+          >
             <div className="mb-3 flex h-7 w-7 items-center justify-center rounded-md bg-mint-soft text-xs font-bold text-ink">
               {i + 1}
             </div>
