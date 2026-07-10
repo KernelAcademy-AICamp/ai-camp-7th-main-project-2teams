@@ -49,6 +49,11 @@ export function OnboardingContent({ userId }: OnboardingContentProps) {
           <p className="mt-2 text-text-secondary">
             북마크를 저장하면 AI가 자동으로 정리해 드립니다.
           </p>
+          {/* 설치 없이 웹에서 바로 쓸 수 있다는 걸 아래 ServiceFeatures 탭(웹이 기본값)보다 먼저 알림 —
+              여기 없으면 "익스텐션부터 깔아야 하나" 오해 소지 */}
+          <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-mint-soft px-3 py-1 text-xs font-bold text-ink">
+            설치 없이 웹에서 바로 시작 · 익스텐션은 선택
+          </span>
         </div>
 
         {/* 3개 안내 섹션 — 공용 컴포넌트. 카드 자체는 ServiceFeatures 내부에서 순차 리빌 */}
