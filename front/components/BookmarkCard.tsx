@@ -397,7 +397,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
   // overflow-hidden(둥근 모서리용)에 잘리지 않게 이 레벨에서 절대 위치시키기 위함.
   return (
     <div className="relative">
-      <article className="group flex flex-col overflow-hidden rounded-md bg-gray-900 shadow-lg transition-shadow hover:shadow-2xl">
+      <article className="group flex h-full flex-col overflow-hidden rounded-md bg-gray-900 shadow-lg transition-shadow hover:shadow-2xl">
         {/* 썸네일 — 없으면 파비콘 그라디언트 커버로 대체 */}
         <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-gray-800">
           {bookmark.thumbnail_url && !thumbnailErrored ? (
