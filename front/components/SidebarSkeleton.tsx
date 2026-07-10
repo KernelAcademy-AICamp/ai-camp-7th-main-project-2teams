@@ -6,7 +6,7 @@ export function SidebarSkeleton({ rows = 6 }: { rows?: number }) {
       {Array.from({ length: rows }).map((_, i) => (
         <li key={i} className="px-3 py-1.5">
           <div
-            className="h-4 animate-pulse rounded bg-gray-200 dark:bg-gray-700"
+            className="h-4 animate-pulse rounded bg-gray-200"
             // 길이 변주로 목록처럼 보이게
             style={{ width: `${60 + ((i * 13) % 35)}%` }}
           />

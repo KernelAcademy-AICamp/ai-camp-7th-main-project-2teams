@@ -129,7 +129,7 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
       aria-modal="true"
       aria-label="북마크 수정"
     >
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-[0_20px_40px_-12px_rgba(45,62,80,.25)] dark:bg-gray-900">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-[0_20px_40px_-12px_rgba(45,62,80,.25)]">
         <div className="p-6">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-base font-semibold text-text-primary">북마크 수정</h2>

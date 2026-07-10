@@ -548,9 +548,9 @@
       "id": "A54",
       "title": "자연어 검색 하이브리드 (pgvector + FTS)",
       "description": "순수 벡터 단독은 정확 단어 매칭에 취약. Postgres 내장 tsvector(FTS)와 벡터 검색을 RRF로 병합해 recall·정밀도 보강. 확장 설치 불필요.",
-      "details": "match_bookmarks RPC를 벡터 결과 + FTS 결과 RRF 병합으로 확장. title/tags 대상 tsvector 인덱스 추가. GraphRAG는 도입 안 함 — 북마크 검색은 단일 홉 시맨틱 검색이라 형태 불일치, 서버리스·content 미저장 제약과도 충돌(2026-07 판단, 집계·관통 질문 기능 생기면 재검토).",
+      "details": "match_bookmarks RPC를 벡터 결과 + FTS 결과 RRF 병합으로 확장. title/tags 대상 tsvector 인덱스 추가. GraphRAG는 도입 안 함 — 북마크 검색은 단일 홉 시맨틱 검색이라 형태 불일치, 서버리스·content 미저장 제약과도 충돌(2026-07 판단, 집계·관통 질문 기능 생기면 재검토). 실제로는 tsvector 대신 pg_trgm 채택(한글 부분 문자열 매칭 우위) — supabase/migrations/0009_hybrid_search.sql, app/api/search/route.ts query_text 파라미터.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A36"
       ],
@@ -560,9 +560,9 @@
       "id": "A55",
       "title": "검색 메타데이터 필터 (tags/category)",
       "description": "match_bookmarks가 tags/category_id 필터를 못 받음. '즐겨찾기 중 리액트' 같은 쿼리에 이미 있는 메타데이터 결합 시 공짜 정확도.",
-      "details": "match_bookmarks RPC에 선택적 tag/category/is_favorite 필터 파라미터 추가, search route에서 쿼리 파싱 후 전달. RLS·명시 컬럼 select 유지(embedding 미포함).",
+      "details": "match_bookmarks RPC에 선택적 tag/category/is_favorite 필터 파라미터 추가, search route에서 쿼리 파싱 후 전달. RLS·명시 컬럼 select 유지(embedding 미포함). supabase/migrations/0010_search_category_filter.sql(category/uncategorized) + A58에서 tags/is_favorite 파라미터 추가 완료.",
       "priority": "medium",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "A36"
       ],

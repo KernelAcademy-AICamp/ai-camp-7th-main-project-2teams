@@ -1,10 +1,10 @@
 export const metadata = {
-  title: '개인정보처리방침 | Bookmarker',
+  title: '개인정보처리방침 | Mowaba',
 }
 
 export default function PrivacyPage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 text-gray-800 dark:text-gray-200">
+    <div className="mx-auto max-w-3xl px-4 py-12 text-gray-800">
       <h1 className="mb-2 text-3xl font-bold">개인정보처리방침</h1>
       <p className="mb-10 text-sm text-gray-500">시행일: 2026년 6월 28일</p>
 
@@ -47,31 +47,31 @@ export default function PrivacyPage() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="bg-gray-100 dark:bg-gray-800">
-                <th className="border border-gray-200 px-3 py-2 text-left dark:border-gray-700">수탁자</th>
-                <th className="border border-gray-200 px-3 py-2 text-left dark:border-gray-700">국가</th>
-                <th className="border border-gray-200 px-3 py-2 text-left dark:border-gray-700">위탁 목적</th>
-                <th className="border border-gray-200 px-3 py-2 text-left dark:border-gray-700">거부 방법</th>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-200 px-3 py-2 text-left">수탁자</th>
+                <th className="border border-gray-200 px-3 py-2 text-left">국가</th>
+                <th className="border border-gray-200 px-3 py-2 text-left">위탁 목적</th>
+                <th className="border border-gray-200 px-3 py-2 text-left">거부 방법</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">OpenAI</td>
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">미국</td>
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">AI 태깅 및 임베딩 생성 (본문 즉시 파기, 학습 미사용)</td>
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">회원 탈퇴</td>
+                <td className="border border-gray-200 px-3 py-2">OpenAI</td>
+                <td className="border border-gray-200 px-3 py-2">미국</td>
+                <td className="border border-gray-200 px-3 py-2">AI 태깅 및 임베딩 생성 (본문 즉시 파기, 학습 미사용)</td>
+                <td className="border border-gray-200 px-3 py-2">회원 탈퇴</td>
               </tr>
-              <tr className="bg-gray-50 dark:bg-gray-900/40">
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">Supabase</td>
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">미국</td>
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">데이터베이스 저장 및 인증</td>
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">회원 탈퇴</td>
+              <tr className="bg-gray-50">
+                <td className="border border-gray-200 px-3 py-2">Supabase</td>
+                <td className="border border-gray-200 px-3 py-2">미국</td>
+                <td className="border border-gray-200 px-3 py-2">데이터베이스 저장 및 인증</td>
+                <td className="border border-gray-200 px-3 py-2">회원 탈퇴</td>
               </tr>
               <tr>
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">Vercel</td>
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">미국</td>
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">웹 서버 및 서버리스 함수 실행</td>
-                <td className="border border-gray-200 px-3 py-2 dark:border-gray-700">회원 탈퇴</td>
+                <td className="border border-gray-200 px-3 py-2">Vercel</td>
+                <td className="border border-gray-200 px-3 py-2">미국</td>
+                <td className="border border-gray-200 px-3 py-2">웹 서버 및 서버리스 함수 실행</td>
+                <td className="border border-gray-200 px-3 py-2">회원 탈퇴</td>
               </tr>
             </tbody>
           </table>
@@ -102,7 +102,7 @@ export default function PrivacyPage() {
         <h2 className="mb-3 text-xl font-semibold">7. 개인정보 보호책임자</h2>
         <p className="text-sm leading-relaxed">
           성명: AI Camp 7기 2팀<br />
-          이메일: privacy@bookmarker.example.com
+          이메일: privacy@mowaba.example.com
         </p>
       </section>
 

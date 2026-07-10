@@ -8,9 +8,9 @@ export function BookmarkSkeleton({ view = "grid" }: BookmarkSkeletonProps) {
     return (
       <div role="status" aria-label="북마크 로딩 중" className="flex items-center gap-3 px-3 py-2">
         <span className="sr-only">로딩 중...</span>
-        <div className="h-5 w-5 shrink-0 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-        <div className="h-4 flex-1 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-        <div className="hidden h-3 w-20 shrink-0 animate-pulse rounded bg-gray-200 sm:block dark:bg-gray-700" />
+        <div className="h-5 w-5 shrink-0 animate-pulse rounded bg-gray-200" />
+        <div className="h-4 flex-1 animate-pulse rounded bg-gray-200" />
+        <div className="hidden h-3 w-20 shrink-0 animate-pulse rounded bg-gray-200 sm:block" />
       </div>
     )
   }
@@ -20,13 +20,13 @@ export function BookmarkSkeleton({ view = "grid" }: BookmarkSkeletonProps) {
       <div
         role="status"
         aria-label="북마크 로딩 중"
-        className="flex items-center gap-4 rounded-md border border-line bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
+        className="flex items-center gap-4 rounded-md border border-line bg-white p-4"
       >
         <span className="sr-only">로딩 중...</span>
-        <div className="h-12 w-12 shrink-0 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-700" />
+        <div className="h-12 w-12 shrink-0 animate-pulse rounded-xl bg-gray-200" />
         <div className="min-w-0 flex-1 space-y-2">
-          <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
-          <div className="h-3 w-1/2 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200" />
+          <div className="h-3 w-1/2 animate-pulse rounded bg-gray-200" />
         </div>
       </div>
     )

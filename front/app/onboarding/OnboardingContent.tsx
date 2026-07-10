@@ -29,12 +29,13 @@ export function OnboardingContent({ userId }: OnboardingContentProps) {
   if (done) return null
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-surface">
       {/* 헤더 — 대시보드 레이아웃과 동일한 톤 */}
-      <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <header className="border-b border-line bg-white/70 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-4xl items-center px-4">
-          <span className="text-lg font-bold tracking-tight text-indigo-600 dark:text-indigo-400">
-            Bookmarker
+          <span className="flex items-center gap-2 text-lg font-extrabold tracking-tight text-ink">
+            <span className="gradient-brand h-2.5 w-2.5 rotate-45 rounded-[3px]" />
+            Mowaba
           </span>
         </div>
       </header>
@@ -42,10 +43,10 @@ export function OnboardingContent({ userId }: OnboardingContentProps) {
       <main className="mx-auto max-w-4xl px-4 py-12">
         {/* 상단 인사 */}
         <div className="mb-10 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-3xl font-extrabold tracking-tight text-ink">
             환영합니다!
           </h1>
-          <p className="mt-2 text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-text-secondary">
             북마크를 저장하면 AI가 자동으로 정리해 드립니다.
           </p>
         </div>
@@ -58,14 +59,14 @@ export function OnboardingContent({ userId }: OnboardingContentProps) {
           <button
             type="button"
             onClick={handleComplete}
-            className="cursor-pointer rounded-md bg-indigo-600 px-8 py-3 font-medium text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
+            className="gradient-brand cursor-pointer rounded-xl px-8 py-3 font-semibold text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px"
           >
             시작하기
           </button>
           <button
             type="button"
             onClick={handleComplete}
-            className="cursor-pointer text-sm text-gray-400 underline-offset-2 hover:underline dark:text-gray-500"
+            className="cursor-pointer text-sm text-text-secondary underline-offset-2 hover:underline"
           >
             건너뛰기
           </button>

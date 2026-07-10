@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Bookmarker",
+  "name": "Mowaba",
   "version": "0.1.0",
   "description": "AI 북마크 관리 — 자동 태깅 및 자연어 검색",
   "permissions": ["activeTab", "storage", "scripting"],
@@ -14,7 +14,7 @@
   },
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "Bookmarker"
+    "default_title": "Mowaba"
   },
   "content_scripts": [
     {
