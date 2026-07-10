@@ -29,6 +29,12 @@
   --font-sans: "Pretendard", var(--font-inter), var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;
 
+  /* 반응형 폰트 스케일(clamp) — 마케팅/헤딩류 전용. 제품 UI의 본문·라벨·태그(text-xs/sm)는
+     정보 밀도 유지를 위해 의도적으로 고정 크기 유지, 이 토큰 대상 아님. */
+  --text-hero: clamp(2.25rem, 1.6rem + 3.2vw, 3.5rem); /* 36px→56px — welcome 히어로 h1 */
+  --text-heading: clamp(1.875rem, 1.65rem + 1.1vw, 2.25rem); /* 30px→36px — 페이지 타이틀(온보딩 등) */
+  --text-stat: clamp(1.5rem, 1.35rem + 0.75vw, 1.875rem); /* 24px→30px — 통계 숫자 */
+
   /* 랜딩 페이지(/welcome) 모션 — animate-* 유틸리티 생성용 */
   --animate-rise: rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-drift: drift 6s ease-in-out infinite;

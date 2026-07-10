@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useUpdateBookmark, type UpdateBookmarkFields } from "@/hooks/useUpdateBookmark";
 import { TOP_CATEGORIES } from "@/lib/tag-alias";
@@ -10,6 +11,7 @@ import type { Bookmark } from "@/hooks/useBookmarks";
 const CATEGORY_OPTIONS = Array.from(TOP_CATEGORIES).sort((a, b) => a.localeCompare(b, "ko"));
 
 const MAX_TAGS = 10;
+const MAX_TAG_LENGTH = 12;
 const MAX_DESCRIPTION_LENGTH = 2000;
 
 export interface EditFormState {
@@ -28,9 +30,9 @@ export function toFormState(bookmark: Pick<Bookmark, "tags" | "description" | "c
   };
 }
 
-/** 중복·빈 값·최대 개수 방어 후 태그 추가 — 테스트 가능하도록 export */
+/** 중복·빈 값·최대 개수·최대 길이 방어 후 태그 추가 — 테스트 가능하도록 export */
 export function addTag(tags: string[], input: string): string[] {
-  const trimmed = input.trim();
+  const trimmed = input.trim().slice(0, MAX_TAG_LENGTH);
   if (!trimmed || tags.includes(trimmed) || tags.length >= MAX_TAGS) return tags;
   return [...tags, trimmed];
 }
@@ -121,7 +123,10 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
     mutate({ id: bookmark.id, ...payload }, { onSuccess: onClose });
   };
 
-  return (
+  // portal로 body에 렌더 — 그리드 카드의 순차 리빌 애니메이션(animate-rise, transform 사용)이
+  // position:fixed의 containing block을 카드 내부로 가둬버려서, 카드 안에 그대로 두면
+  // 모달이 뷰포트 전체가 아니라 카드 크기로 쪼그라들어 렌더됨.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
       onClick={(e) => !isPending && e.target === e.currentTarget && onClose()}
@@ -176,6 +181,7 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleTagKeyDown}
                   placeholder="태그 입력 후 Enter"
+                  maxLength={MAX_TAG_LENGTH}
                   disabled={isPending || form.tags.length >= MAX_TAGS}
                   className="flex-1 rounded-lg border border-line px-3 py-2 text-sm text-text-primary outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
                 />
@@ -250,6 +256,7 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

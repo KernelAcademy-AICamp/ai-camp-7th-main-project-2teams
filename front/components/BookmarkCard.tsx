@@ -1,12 +1,25 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { AlertTriangle, Star, ExternalLink, Tag, Shapes, Calendar, MoreVertical, Trash2, Pencil } from "lucide-react";
+import { createPortal } from "react-dom";
+import {
+  AlertTriangle,
+  Star,
+  ExternalLink,
+  Tag,
+  Shapes,
+  Calendar,
+  MoreVertical,
+  Trash2,
+  Pencil,
+  RefreshCw,
+} from "lucide-react";
 import { useOnClickOutside } from "usehooks-ts";
 import { cn } from "@/lib/utils";
 import type { Bookmark } from "@/hooks/useBookmarks";
 import { useToggleFavorite } from "@/hooks/useToggleFavorite";
 import { useDeleteBookmark } from "@/hooks/useDeleteBookmark";
+import { useRecheckBookmark } from "@/hooks/useRecheckBookmark";
 import { Favicon } from "@/components/Favicon";
 import { EditBookmarkModal } from "@/components/EditBookmarkModal";
 
@@ -33,6 +46,12 @@ const DEAD_CHIP_GRID =
 
 /** 그리드 카드 썸네일 위 hover 액션 버튼 — 즐겨찾기·외부링크·메뉴 크기 통일 (고정 박스 + 내부 중앙정렬) */
 const ACTION_CHIP = "inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black/50 backdrop-blur-sm";
+
+/** 죽은 링크 툴팁 너비(px) — w-56과 동일, 뷰포트 클램프 계산에 사용 */
+const DEAD_TOOLTIP_WIDTH = 224;
+
+/** 수정/삭제 드롭다운 너비(px) — min-w-[120px]과 동일, 우측 정렬 위치 계산에 사용 */
+const MENU_WIDTH = 120;
 
 /** javascript: URL XSS 방어 — http/https만 허용 */
 export function safeUrl(url: string): string {
@@ -79,14 +98,27 @@ export function getDeleteConfirmMessage(title: string): string {
 export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
   const { mutate: toggleFavorite, isPending: isTogglePending } = useToggleFavorite();
   const { mutate: deleteBookmark, isPending: isDeletePending } = useDeleteBookmark();
+  const { mutate: recheckDeadLink, isPending: isRechecking } = useRecheckBookmark();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [thumbnailErrored, setThumbnailErrored] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  // 죽은 링크 재검사 결과 안내 — 재검사할 때마다 초기화, 세션 내에서만 유지(영속 저장 안 함)
+  const [recheckMessage, setRecheckMessage] = useState<string | null>(null);
+  // 죽은 링크 툴팁 — 그리드가 각 카드를 개별 stacking context(순차 리빌 애니메이션)로 감싸서
+  // CSS group-hover만으로는 옆 카드 위로 올라오지 못함(z-index가 카드 내부로 갇힘).
+  // body에 portal로 그려서 그리드의 stacking context를 완전히 벗어나게 함.
+  const [isDeadTooltipOpen, setIsDeadTooltipOpen] = useState(false);
+  const [deadTooltipPos, setDeadTooltipPos] = useState<{ top: number; left: number } | null>(null);
+  const deadBadgeRef = useRef<HTMLSpanElement>(null);
+  // 수정/삭제 드롭다운 — 죽은 링크 툴팁과 동일 이유로 portal. 트리거 버튼과 portal된 드롭다운
+  // 양쪽 다 "내부 클릭"으로 인식해야 하므로 useOnClickOutside에 두 ref를 배열로 전달.
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const menuDropdownRef = useRef<HTMLDivElement>(null);
 
   // 외부 클릭 시 메뉴 닫힘
-  useOnClickOutside(menuRef as React.RefObject<HTMLElement>, () => {
+  useOnClickOutside([menuTriggerRef, menuDropdownRef] as React.RefObject<HTMLElement>[], () => {
     if (isMenuOpen) setIsMenuOpen(false);
   });
 
@@ -116,12 +148,46 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
     setIsEditOpen(true);
   };
 
+  const toggleMenu = () => {
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+      return;
+    }
+    const rect = menuTriggerRef.current?.getBoundingClientRect();
+    if (rect) {
+      setMenuPos({ top: rect.bottom + 4, left: Math.max(8, rect.right - MENU_WIDTH) });
+    }
+    setIsMenuOpen(true);
+  };
+
+  const openDeadTooltip = () => {
+    const rect = deadBadgeRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const left = Math.min(Math.max(8, rect.left), window.innerWidth - DEAD_TOOLTIP_WIDTH - 8);
+    setDeadTooltipPos({ top: rect.bottom + 6, left });
+    setIsDeadTooltipOpen(true);
+  };
+  const closeDeadTooltip = () => setIsDeadTooltipOpen(false);
+
+  const handleRecheck = () => {
+    setRecheckMessage(null);
+    recheckDeadLink(bookmark.id, {
+      onSuccess: ({ bookmark: result }) => {
+        setRecheckMessage(result.is_dead ? "여전히 응답 없음" : "복구됨 — 정상 링크예요");
+      },
+      onError: () => setRecheckMessage("재검사 실패, 잠시 후 다시 시도해주세요"),
+    });
+  };
+
   // 메뉴 버튼 + 드롭다운 — 일반/컴팩트/그리드 공유. className으로 버튼 자체 크기 오버라이드 가능
   // (그리드 오버레이에서 감싸는 배경 span 없이 버튼 자체가 칩 크기를 갖도록).
+  // 드롭다운 자체는 portal로 body에 그려서 카드별 stacking context(순차 리빌 애니메이션)를
+  // 벗어남 — 그냥 z-index만 올리면 카드 안에 갇혀 아래쪽 카드에 가려짐(죽은 링크 툴팁과 동일 이유).
   const menu = (buttonClassName?: string) => (
-    <div ref={menuRef} className="relative flex items-center">
+    <div className="relative flex items-center">
       <button
-        onClick={() => setIsMenuOpen((prev) => !prev)}
+        ref={menuTriggerRef}
+        onClick={toggleMenu}
         aria-label={isMenuOpen ? "북마크 메뉴 닫기" : "북마크 메뉴 열기"}
         aria-haspopup="menu"
         aria-expanded={isMenuOpen}
@@ -134,39 +200,41 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
         <MoreVertical size={16} className="text-gray-400" />
       </button>
 
-      {isMenuOpen && (
-        <div
-          role="menu"
-          aria-label="북마크 작업 메뉴"
-          className={cn(
-            "absolute right-0 top-full z-10 mt-1 min-w-[120px] rounded-lg border border-gray-200",
-            "bg-white py-1 shadow-lg",
-          )}
-        >
-          <button
-            role="menuitem"
-            onClick={handleEditClick}
-            className={cn(
-              "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-text-primary",
-              "hover:bg-slate-50",
-            )}
+      {isMenuOpen &&
+        menuPos &&
+        createPortal(
+          <div
+            ref={menuDropdownRef}
+            role="menu"
+            aria-label="북마크 작업 메뉴"
+            style={{ position: "fixed", top: menuPos.top, left: menuPos.left }}
+            className="z-50 min-w-[120px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
           >
-            <Pencil size={14} />
-            수정
-          </button>
-          <button
-            role="menuitem"
-            onClick={handleDeleteClick}
-            className={cn(
-              "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-red-600",
-              "hover:bg-red-50",
-            )}
-          >
-            <Trash2 size={14} />
-            삭제
-          </button>
-        </div>
-      )}
+            <button
+              role="menuitem"
+              onClick={handleEditClick}
+              className={cn(
+                "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-text-primary",
+                "hover:bg-slate-50",
+              )}
+            >
+              <Pencil size={14} />
+              수정
+            </button>
+            <button
+              role="menuitem"
+              onClick={handleDeleteClick}
+              className={cn(
+                "flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-sm text-red-600",
+                "hover:bg-red-50",
+              )}
+            >
+              <Trash2 size={14} />
+              삭제
+            </button>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 
@@ -247,7 +315,39 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             {bookmark.description && (
               <p className="mt-0.5 line-clamp-1 text-xs text-gray-500">{bookmark.description}</p>
             )}
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400">
+            {/* 모바일 — 2줄: 카테고리+태그 / url+date(between으로 양끝 분리) */}
+            <div className="mt-1 flex flex-col gap-1 text-xs text-gray-400 sm:hidden">
+              {(bookmark.category || bookmark.is_dead || bookmark.tags.length > 0) && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {bookmark.category && (
+                    <span className={CATEGORY_CHIP_LIST}>
+                      <Shapes size={10} />
+                      {bookmark.category}
+                    </span>
+                  )}
+                  {bookmark.is_dead && (
+                    <span className={DEAD_CHIP_LIST}>
+                      <AlertTriangle size={10} />
+                      링크 끊김
+                    </span>
+                  )}
+                  {bookmark.tags.map((tag) => (
+                    <span key={tag} className={TAG_CHIP}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate font-mono">{extractDomain(bookmark.url)}</span>
+                <time dateTime={bookmark.created_at} className="shrink-0 font-mono">
+                  {formatDate(bookmark.created_at)}
+                </time>
+              </div>
+            </div>
+
+            {/* 데스크톱 — 기존 한 줄 유지 */}
+            <div className="mt-1 hidden flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400 sm:flex">
               <span className="font-mono">{extractDomain(bookmark.url)}</span>
               {bookmark.category && (
                 <>
@@ -290,9 +390,11 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
   }
 
   // 그리드 뷰 — 미디어 카드 (썸네일 상단 + 다크 정보 패널)
+  // 바깥 wrapper는 overflow-hidden 없는 relative — 죽은 링크 툴팁이 article/썸네일의
+  // overflow-hidden(둥근 모서리용)에 잘리지 않게 이 레벨에서 절대 위치시키기 위함.
   return (
-    <>
-      <article className="group flex flex-col overflow-hidden rounded-md bg-gray-900 shadow-lg transition-shadow hover:shadow-2xl">
+    <div className="relative h-full">
+      <article className="group flex h-full flex-col overflow-hidden rounded-md bg-gray-900 shadow-lg transition-shadow hover:shadow-2xl">
         {/* 썸네일 — 없으면 파비콘 그라디언트 커버로 대체 */}
         <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-gray-800">
           {bookmark.thumbnail_url && !thumbnailErrored ? (
@@ -320,15 +422,8 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             </div>
           )}
 
-          {/* 죽은 링크 경고 배지 — 카테고리 배지가 있으면 그 아래로 쌓음 */}
-          {bookmark.is_dead && (
-            <div className={cn("absolute left-2", bookmark.category ? "top-11" : "top-2")}>
-              <span className={DEAD_CHIP_GRID}>
-                <AlertTriangle size={10} />
-                링크 끊김
-              </span>
-            </div>
-          )}
+          {/* 죽은 링크 배지 트리거 자리 — 실제 배지+툴팁은 article 밖(overflow-hidden 미적용 wrapper)에서 렌더.
+              이 안에 두면 카드/썸네일의 overflow-hidden에 툴팁이 잘려 모바일 좁은 카드에서 안 보이는 문제 발생. */}
 
           {/* 액션 오버레이 — hover/focus 시 노출 */}
           <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
@@ -370,12 +465,15 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             {extractDomain(bookmark.url)}
           </a>
 
-          {/* 태그 뱃지 */}
+          {/* 태그 뱃지 — 좁은 화면에서 한 줄 넘어가면 wrap 대신 가로 슬라이드 */}
           {bookmark.tags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <div
+              className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap pt-1 [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: "none" }}
+            >
               <Tag size={12} className="shrink-0 text-gray-500" />
               {bookmark.tags.map((tag) => (
-                <span key={tag} className={TAG_CHIP}>
+                <span key={tag} className={cn(TAG_CHIP, "shrink-0")}>
                   {tag}
                 </span>
               ))}
@@ -389,7 +487,52 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
           </div>
         </div>
       </article>
+
+      {/* 죽은 링크 배지 트리거 — article/썸네일 바깥(overflow-hidden 없는 wrapper)에서 절대 위치.
+          카테고리 배지가 있으면 그 아래로 쌓음. 툴팁 본체는 portal(아래)로 body에 그려서
+          그리드 카드의 stacking context(순차 리빌 애니메이션이 만드는)를 완전히 벗어남 —
+          그냥 z-index만 올리면 카드 내부에 갇혀 옆 카드에 다시 가려짐. */}
+      {bookmark.is_dead && (
+        <span
+          ref={deadBadgeRef}
+          className={cn(DEAD_CHIP_GRID, "absolute left-2 z-10 cursor-default", bookmark.category ? "top-11" : "top-2")}
+          tabIndex={0}
+          onMouseEnter={openDeadTooltip}
+          onMouseLeave={closeDeadTooltip}
+          onFocus={openDeadTooltip}
+          onBlur={closeDeadTooltip}
+        >
+          <AlertTriangle size={10} />
+          링크 끊김
+        </span>
+      )}
+
+      {isDeadTooltipOpen &&
+        deadTooltipPos &&
+        createPortal(
+          <div
+            role="tooltip"
+            onMouseEnter={openDeadTooltip}
+            onMouseLeave={closeDeadTooltip}
+            style={{ position: "fixed", top: deadTooltipPos.top, left: deadTooltipPos.left }}
+            className="z-50 w-56 rounded-lg bg-gray-900 p-2.5 text-xs text-gray-200 shadow-xl"
+          >
+            저장 시점에 404/410 응답을 확인했어요. 지금은 복구됐을 수 있어요.
+            <button
+              type="button"
+              onClick={handleRecheck}
+              disabled={isRechecking}
+              className="mt-2 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-white/20 bg-white/10 py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <RefreshCw size={11} className={cn(isRechecking && "animate-spin")} />
+              {isRechecking ? "확인 중..." : "지금 다시 확인"}
+            </button>
+            {recheckMessage && <p className="mt-1.5 text-[11px] font-medium text-mint">{recheckMessage}</p>}
+          </div>,
+          document.body,
+        )}
+
       {editModal}
-    </>
+    </div>
   );
 }

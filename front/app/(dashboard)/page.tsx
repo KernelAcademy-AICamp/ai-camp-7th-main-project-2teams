@@ -141,6 +141,7 @@ function DashboardContent() {
     visibleResults: searchVisibleResults,
     hasMore: searchHasMore,
     showMore: searchShowMore,
+    total: searchTotal,
   } = useSearch();
 
   const handleSearch = useCallback(
@@ -220,7 +221,14 @@ function DashboardContent() {
             <ArrowUp className="h-5 w-5" />
           </button>
         )}
-        <SearchBar onSearch={handleSearch} onClear={handleClear} value={searchQuery} onChange={setSearchQuery} />
+        <SearchBar
+          onSearch={handleSearch}
+          onClear={handleClear}
+          value={searchQuery}
+          onChange={setSearchQuery}
+          isLoading={isSearching && isSearchPending}
+          resultCount={isSearching && !isSearchPending ? searchTotal : undefined}
+        />
 
         {isPending && (
           <div
@@ -311,7 +319,9 @@ function DashboardContent() {
                   불러오는 중
                 </div>
               )}
+              {/* key={viewMode} — 뷰 전환 시 컨테이너를 통째로 리마운트해 카드 순차 fade-in을 다시 재생시킴 */}
               <div
+                key={viewMode}
                 className={cn(
                   viewMode === "grid"
                     ? "grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"
@@ -321,8 +331,14 @@ function DashboardContent() {
                   isRefetching && "opacity-50 transition-opacity duration-200",
                 )}
               >
-                {sortedItems.map((item) => (
-                  <BookmarkCard key={item.id} bookmark={item} view={viewMode} />
+                {sortedItems.map((item, i) => (
+                  <div
+                    key={item.id}
+                    className="animate-rise opacity-0"
+                    style={{ animationDelay: `${Math.min(i * 25, 300)}ms` }}
+                  >
+                    <BookmarkCard bookmark={item} view={viewMode} />
+                  </div>
                 ))}
                 <InfiniteScrollTrigger onIntersect={handleLoadMore} disabled={loadMoreDisabled} />
               </div>
