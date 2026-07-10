@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Folder } from "lucide-react";
+import { Folder, X } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { useFilterStore } from "@/store/filterStore";
 import { useFolders } from "@/hooks/useFolders";
@@ -14,7 +14,13 @@ import { SidebarSkeleton } from "@/components/SidebarSkeleton";
 import { createClient } from "@/lib/supabase/client";
 import { useUserStore } from "@/store/userStore";
 
-export function Sidebar() {
+interface SidebarProps {
+  /** 모바일(md 미만)에서 오프캔버스 열림 상태 — md 이상에서는 항상 노출되므로 무시됨 */
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}
+
+export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const [categoryOpen, setCategoryOpen] = useState(true);
   const [popupOpen, setPopupOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
@@ -132,12 +138,34 @@ export function Sidebar() {
   const showSkeleton = showFolders ? foldersPending : categoriesPending;
 
   return (
-    <nav
-      aria-label="북마크 필터"
-      className="glass flex max-h-full w-52 shrink-0 flex-col gap-6 self-stretch overflow-x-hidden overflow-y-auto border-r border-line p-4"
-    >
-      {/* 상단 탭 — 홈 / 즐겨찾기 / 내 폴더(폴더 있을 때만) */}
-      <section>
+    <>
+      {/* 모바일 오프캔버스 배경 오버레이 — md 이상에서는 사이드바가 항상 노출되므로 불필요 */}
+      {mobileOpen && (
+        <div
+          onClick={onMobileClose}
+          aria-hidden="true"
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+        />
+      )}
+      <nav
+        aria-label="북마크 필터"
+        className={[
+          "fixed inset-y-0 left-0 z-40 flex w-64 max-w-[80vw] shrink-0 flex-col gap-6 overflow-x-hidden overflow-y-auto border-r border-line bg-white p-4 shadow-xl transition-transform duration-200",
+          "md:static md:z-auto md:w-52 md:max-w-none md:max-h-full md:translate-x-0 md:self-stretch md:glass md:bg-transparent md:shadow-none",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+        ].join(" ")}
+      >
+        {/* 모바일 전용 닫기 버튼 */}
+        <button
+          onClick={onMobileClose}
+          aria-label="필터 닫기"
+          className="ml-auto -mb-2 cursor-pointer rounded-md p-1 text-text-secondary hover:bg-slate-100 md:hidden"
+        >
+          <X size={18} />
+        </button>
+
+        {/* 상단 탭 — 홈 / 즐겨찾기 / 내 폴더(폴더 있을 때만) */}
+        <section>
         <div className="flex gap-0.5 rounded-lg bg-slate-100 p-1">
           {topTabs.map((t) => (
             <button
@@ -204,6 +232,7 @@ export function Sidebar() {
                   <button
                     onClick={() => handleCategory(name)}
                     aria-pressed={category === name}
+                    title={name}
                     className={[
                       "flex w-full cursor-pointer items-center gap-1.5 rounded-md border-l-4 px-3 py-1.5 text-left text-sm transition-colors",
                       category === name
@@ -213,7 +242,7 @@ export function Sidebar() {
                   >
                     {/* 카테고리 컬러코딩 도트 (Design.md 7×7 라운드 스퀘어) */}
                     <span className="h-[7px] w-[7px] shrink-0 rounded-[2px] bg-text-secondary" />
-                    {name}
+                    <span className="truncate">{name}</span>
                   </button>
                 </li>
               ))}
@@ -307,7 +336,8 @@ export function Sidebar() {
           </Link>
         </div>
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }
 
@@ -343,6 +373,7 @@ function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps
         <button
           onClick={() => onSelect(node.name)}
           aria-pressed={active}
+          title={node.name}
           className={[
             "flex flex-1 cursor-pointer items-center gap-1.5 rounded-md border-l-4 px-2 py-1.5 text-left text-sm transition-colors",
             active
@@ -351,7 +382,7 @@ function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps
           ].join(" ")}
         >
           <Folder size={12} className="shrink-0 text-text-secondary" />
-          {node.name}
+          <span className="truncate">{node.name}</span>
         </button>
       </div>
       {hasChildren && open && (
