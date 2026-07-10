@@ -35,6 +35,11 @@ describe('normalizeTags', () => {
   it('빈 배열', () => {
     expect(normalizeTags([])).toEqual([])
   })
+
+  it('서로 다른 원본 태그가 같은 alias로 매핑되면 dedupe — React key 중복 방지', () => {
+    // infra/DevOps/배포 모두 '인프라'로 매핑됨 (TAG_ALIAS 참조)
+    expect(normalizeTags(['infra', 'DevOps', '배포'])).toEqual(['인프라'])
+  })
 })
 
 describe('extractTopCategory', () => {

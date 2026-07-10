@@ -224,7 +224,7 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         {savedBookmark.tags.map((tag, i) => (
                           <span
-                            key={tag}
+                            key={`${tag}-${i}`}
                             className="animate-tag-in rounded-full bg-mint-soft px-2.5 py-1 text-xs font-bold text-ink opacity-0"
                             style={{ animationDelay: `${240 + i * 140}ms` }}
                           >
