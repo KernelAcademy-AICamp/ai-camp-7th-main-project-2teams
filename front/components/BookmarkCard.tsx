@@ -118,12 +118,9 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
   const menuDropdownRef = useRef<HTMLDivElement>(null);
 
   // 외부 클릭 시 메뉴 닫힘
-  useOnClickOutside(
-    [menuTriggerRef, menuDropdownRef] as React.RefObject<HTMLElement>[],
-    () => {
-      if (isMenuOpen) setIsMenuOpen(false);
-    },
-  );
+  useOnClickOutside([menuTriggerRef, menuDropdownRef] as React.RefObject<HTMLElement>[], () => {
+    if (isMenuOpen) setIsMenuOpen(false);
+  });
 
   // ESC 키로 메뉴 닫힘 — usehooks-ts useEventListener는 조건부 비활성 미지원이라
   // 메뉴 열림 상태에서만 리스너 등록하도록 useEffect 직접 사용
@@ -396,7 +393,7 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
   // 바깥 wrapper는 overflow-hidden 없는 relative — 죽은 링크 툴팁이 article/썸네일의
   // overflow-hidden(둥근 모서리용)에 잘리지 않게 이 레벨에서 절대 위치시키기 위함.
   return (
-    <div className="relative">
+    <div className="relative h-full">
       <article className="group flex h-full flex-col overflow-hidden rounded-md bg-gray-900 shadow-lg transition-shadow hover:shadow-2xl">
         {/* 썸네일 — 없으면 파비콘 그라디언트 커버로 대체 */}
         <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-gray-800">
