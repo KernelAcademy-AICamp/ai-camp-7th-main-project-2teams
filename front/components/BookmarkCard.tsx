@@ -247,7 +247,39 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             {bookmark.description && (
               <p className="mt-0.5 line-clamp-1 text-xs text-gray-500">{bookmark.description}</p>
             )}
-            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400">
+            {/* 모바일 — 2줄: 카테고리+태그 / url+date(between으로 양끝 분리) */}
+            <div className="mt-1 flex flex-col gap-1 text-xs text-gray-400 sm:hidden">
+              {(bookmark.category || bookmark.is_dead || bookmark.tags.length > 0) && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {bookmark.category && (
+                    <span className={CATEGORY_CHIP_LIST}>
+                      <Shapes size={10} />
+                      {bookmark.category}
+                    </span>
+                  )}
+                  {bookmark.is_dead && (
+                    <span className={DEAD_CHIP_LIST}>
+                      <AlertTriangle size={10} />
+                      링크 끊김
+                    </span>
+                  )}
+                  {bookmark.tags.map((tag) => (
+                    <span key={tag} className={TAG_CHIP}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate font-mono">{extractDomain(bookmark.url)}</span>
+                <time dateTime={bookmark.created_at} className="shrink-0 font-mono">
+                  {formatDate(bookmark.created_at)}
+                </time>
+              </div>
+            </div>
+
+            {/* 데스크톱 — 기존 한 줄 유지 */}
+            <div className="mt-1 hidden flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400 sm:flex">
               <span className="font-mono">{extractDomain(bookmark.url)}</span>
               {bookmark.category && (
                 <>
@@ -370,12 +402,15 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
             {extractDomain(bookmark.url)}
           </a>
 
-          {/* 태그 뱃지 */}
+          {/* 태그 뱃지 — 좁은 화면에서 한 줄 넘어가면 wrap 대신 가로 슬라이드 */}
           {bookmark.tags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <div
+              className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap pt-1 [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: "none" }}
+            >
               <Tag size={12} className="shrink-0 text-gray-500" />
               {bookmark.tags.map((tag) => (
-                <span key={tag} className={TAG_CHIP}>
+                <span key={tag} className={cn(TAG_CHIP, "shrink-0")}>
                   {tag}
                 </span>
               ))}

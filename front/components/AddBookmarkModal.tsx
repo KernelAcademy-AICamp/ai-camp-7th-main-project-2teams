@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, Globe } from "lucide-react";
+import { AlertTriangle, Check, Globe } from "lucide-react";
 import { useDebounceValue } from "usehooks-ts";
-import { useAddBookmark } from "@/hooks/useAddBookmark";
+import { useAddBookmark, type AddedBookmark } from "@/hooks/useAddBookmark";
 import { Favicon } from "@/components/Favicon";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +63,8 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
   const inputRef = useRef<HTMLInputElement>(null);
   // 검증 요청 순번 — 늦게 도착한 이전 요청 결과 무시(레이스 방지)
   const reqIdRef = useRef(0);
+  // 저장 직후 AI 태깅 결과 — 성공 화면에서 태그 순차 리빌용
+  const [savedBookmark, setSavedBookmark] = useState<AddedBookmark | null>(null);
 
   const { mutate, isPending, isSuccess, error, reset } = useAddBookmark();
 
@@ -71,6 +73,7 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
     setUrl("");
     setUrlError("");
     setMeta(null);
+    setSavedBookmark(null);
     reqIdRef.current++;
     reset();
   }, [reset]);
@@ -151,9 +154,10 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
     mutate(
       { url: withProtocol, title },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
           setUrl("");
           setMeta(null);
+          setSavedBookmark(data.bookmark);
         },
       },
     );
@@ -193,16 +197,62 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
                 </button>
               </div>
 
-              {isSuccess ? (
-                <div className="flex flex-col items-center gap-4 py-4 text-center">
-                  <p className="text-sm text-text-primary">
-                    북마크가 저장됐습니다. AI가 자동으로 태그를 생성했습니다.
-                  </p>
+              {isSuccess && savedBookmark ? (
+                <div className="flex flex-col gap-4 py-2">
+                  {/* AI 태깅 리빌 — welcome 히어로 목업(app/welcome/page.tsx)과 동일한 animate-tag-in 재사용 */}
+                  <div className="rounded-lg border border-line bg-accent p-4">
+                    <div className="flex items-center gap-3">
+                      <Favicon url={savedBookmark.url} />
+                      <div className="min-w-0">
+                        <p className="animate-rise truncate text-sm font-semibold text-text-primary opacity-0 [animation-delay:0ms]">
+                          {savedBookmark.title}
+                        </p>
+                        <p className="animate-rise truncate font-mono text-xs text-text-secondary opacity-0 [animation-delay:80ms]">
+                          {savedBookmark.url}
+                        </p>
+                      </div>
+                    </div>
+
+                    {savedBookmark.is_dead && (
+                      <p className="animate-rise mt-2.5 flex items-center gap-1 text-xs text-amber-600 opacity-0 [animation-delay:160ms]">
+                        <AlertTriangle size={12} aria-hidden />
+                        이 링크는 더 이상 존재하지 않는 것 같아요.
+                      </p>
+                    )}
+
+                    {savedBookmark.tags.length > 0 ? (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {savedBookmark.tags.map((tag, i) => (
+                          <span
+                            key={tag}
+                            className="animate-tag-in rounded-full bg-mint-soft px-2.5 py-1 text-xs font-bold text-ink opacity-0"
+                            style={{ animationDelay: `${240 + i * 140}ms` }}
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="animate-rise mt-3 text-xs text-text-secondary opacity-0 [animation-delay:240ms]">
+                        태그 자동 생성에 실패했어요 — 나중에 수정에서 직접 추가할 수 있어요.
+                      </p>
+                    )}
+
+                    <p
+                      className="animate-rise mt-3 flex items-center gap-1.5 text-xs font-semibold text-mint opacity-0"
+                      style={{ animationDelay: `${240 + savedBookmark.tags.length * 140 + 120}ms` }}
+                    >
+                      <Check size={12} aria-hidden />
+                      AI 분류 완료
+                    </p>
+                  </div>
+
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
                         reset();
                         setUrl("");
+                        setSavedBookmark(null);
                       }}
                       className="cursor-pointer rounded-lg border border-line px-4 py-2 text-sm text-text-primary hover:bg-slate-50"
                     >

@@ -57,7 +57,7 @@ export default async function WelcomePage() {
               AI 자동 태깅 · pgvector 자연어 검색
             </div>
 
-            <h1 className="animate-rise text-4xl leading-tight font-extrabold tracking-tight text-ink opacity-0 [animation-delay:80ms] sm:text-5xl">
+            <h1 className="animate-rise text-hero leading-tight font-extrabold tracking-tight text-ink opacity-0 [animation-delay:80ms]">
               저장은 1초,
               <br />
               정리는{' '}
@@ -151,7 +151,7 @@ export default async function WelcomePage() {
         >
           {STATS.map((stat) => (
             <div key={stat.big} className="px-6 py-8 text-center sm:text-left">
-              <p className="text-2xl font-extrabold tracking-tight text-ink">
+              <p className="text-stat font-extrabold tracking-tight text-ink">
                 {stat.big}
               </p>
               <p className="mt-1 text-sm font-semibold text-text-secondary">

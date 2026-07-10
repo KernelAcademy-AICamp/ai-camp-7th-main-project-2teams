@@ -41,9 +41,9 @@ export function OnboardingContent({ userId }: OnboardingContentProps) {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-12">
-        {/* 상단 인사 */}
-        <div className="mb-10 text-center">
-          <h1 className="text-3xl font-extrabold tracking-tight text-ink">
+        {/* 상단 인사 — 순차 리빌 1단계 */}
+        <div className="animate-rise mb-10 text-center opacity-0">
+          <h1 className="text-heading font-extrabold tracking-tight text-ink">
             환영합니다!
           </h1>
           <p className="mt-2 text-text-secondary">
@@ -51,11 +51,13 @@ export function OnboardingContent({ userId }: OnboardingContentProps) {
           </p>
         </div>
 
-        {/* 3개 안내 섹션 — 공용 컴포넌트 */}
-        <ServiceFeatures />
+        {/* 3개 안내 섹션 — 공용 컴포넌트. 카드 자체는 ServiceFeatures 내부에서 순차 리빌 */}
+        <div className="animate-rise opacity-0 [animation-delay:120ms]">
+          <ServiceFeatures />
+        </div>
 
-        {/* CTA 버튼 영역 */}
-        <div className="mt-10 flex flex-col items-center gap-3">
+        {/* CTA 버튼 영역 — 안내를 다 읽을 시점에 맞춰 마지막으로 등장 */}
+        <div className="animate-rise mt-10 flex flex-col items-center gap-3 opacity-0 [animation-delay:520ms]">
           <button
             type="button"
             onClick={handleComplete}
