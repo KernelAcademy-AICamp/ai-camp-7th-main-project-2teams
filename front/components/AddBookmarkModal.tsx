@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, Check, Globe } from "lucide-react";
 import { useDebounceValue } from "usehooks-ts";
 import { useAddBookmark, type AddedBookmark } from "@/hooks/useAddBookmark";
@@ -52,9 +52,17 @@ export function getErrorMessageClassName(error: unknown): string {
 interface AddBookmarkModalProps {
   /** 트리거 버튼 클래스 오버라이드 — 상단바(흰 버튼)와 빈 상태(그라디언트) 컨텍스트 분리 */
   triggerClassName?: string;
+  /** 트리거 버튼 내용 오버라이드 — 모바일 FAB의 아이콘 전용 트리거 등 */
+  triggerContent?: ReactNode;
+  /** 트리거 버튼 aria-label — 텍스트 없는 아이콘 전용 트리거일 때 필수 */
+  triggerAriaLabel?: string;
 }
 
-export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {}) {
+export function AddBookmarkModal({
+  triggerClassName,
+  triggerContent,
+  triggerAriaLabel,
+}: AddBookmarkModalProps = {}) {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
   const [urlError, setUrlError] = useState("");
@@ -167,13 +175,14 @@ export function AddBookmarkModal({ triggerClassName }: AddBookmarkModalProps = {
     <>
       <button
         onClick={() => setOpen(true)}
+        aria-label={triggerAriaLabel}
         className={cn(
           triggerClassName ??
             "gradient-brand rounded-lg px-3 py-1.5 text-sm font-medium text-white shadow-[0_10px_20px_-6px_rgba(74,144,226,.5)] transition-transform hover:-translate-y-px",
           "cursor-pointer",
         )}
       >
-        + 북마크 추가
+        {triggerContent ?? "+ 북마크 추가"}
       </button>
 
       {open && (

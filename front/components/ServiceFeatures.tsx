@@ -75,6 +75,7 @@ export function ServiceFeatures() {
         </div>
       </div>
 
+      {/* 익스텐션 트랙은 모바일 브라우저에서 설치·실행 자체가 불가(데스크톱 Chrome/Edge/Brave 전용) — md 미만에서 탭 숨김 */}
       <div className="mb-5 flex w-full gap-1 rounded-full bg-surface p-1 sm:inline-flex sm:w-auto" role="group" aria-label="온보딩 방법 선택">
         {TRACK_TABS.map((tab) => (
           <button
@@ -82,7 +83,7 @@ export function ServiceFeatures() {
             type="button"
             aria-pressed={track === tab.key}
             onClick={() => setTrack(tab.key)}
-            className={`flex flex-1 flex-col items-center gap-1 rounded-2xl px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2 sm:flex-none sm:flex-row sm:gap-0 sm:rounded-full ${
+            className={`${tab.key === 'ext' ? 'hidden md:flex' : 'flex'} flex-1 flex-col items-center gap-1 rounded-2xl px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand focus-visible:outline-offset-2 sm:flex-none sm:flex-row sm:gap-0 sm:rounded-full ${
               track === tab.key
                 ? 'bg-white text-ink shadow-sm'
                 : 'text-text-secondary hover:text-text-primary'

@@ -198,7 +198,7 @@ function DashboardContent() {
       <main
         ref={mainRef}
         onScroll={handleScroll}
-        className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 px-4 py-8 overflow-y-auto"
+        className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-4 px-4 pt-8 pb-24 overflow-y-auto"
       >
         {/* 모바일 전용 필터 열기 버튼 — md 이상에서는 사이드바가 항상 노출되므로 숨김 */}
         <button
@@ -216,9 +216,9 @@ function DashboardContent() {
             type="button"
             onClick={scrollToTop}
             aria-label="맨 위로 이동"
-            className="gradient-brand fixed bottom-6 right-6 z-20 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:-translate-y-0.5"
+            className="gradient-brand fixed bottom-6 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-md text-white shadow-lg transition-transform hover:-translate-y-0.5"
           >
-            <ArrowUp className="h-5 w-5" />
+            <ArrowUp className="h-4 w-4" />
           </button>
         )}
         <SearchBar
