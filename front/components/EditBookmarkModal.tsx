@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useUpdateBookmark, type UpdateBookmarkFields } from "@/hooks/useUpdateBookmark";
 import { TOP_CATEGORIES } from "@/lib/tag-alias";
@@ -122,7 +123,10 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
     mutate({ id: bookmark.id, ...payload }, { onSuccess: onClose });
   };
 
-  return (
+  // portal로 body에 렌더 — 그리드 카드의 순차 리빌 애니메이션(animate-rise, transform 사용)이
+  // position:fixed의 containing block을 카드 내부로 가둬버려서, 카드 안에 그대로 두면
+  // 모달이 뷰포트 전체가 아니라 카드 크기로 쪼그라들어 렌더됨.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
       onClick={(e) => !isPending && e.target === e.currentTarget && onClose()}
@@ -252,6 +256,7 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

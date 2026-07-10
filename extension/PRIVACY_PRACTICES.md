@@ -5,10 +5,10 @@ English is required by the review process.
 
 ## Single purpose
 
-Bookmarker saves the page the user is currently viewing and organizes it with
+Mowaba saves the page the user is currently viewing and organizes it with
 AI-generated tags so it can later be found through natural-language search. The
 extension does one thing: capture the active tab (on an explicit user action)
-and send it to the user's own Bookmarker account.
+and send it to the user's own Mowaba account.
 
 ## Permission justifications
 
@@ -20,7 +20,7 @@ and send it to the user's own Bookmarker account.
 - **scripting** — Injects a content script on the active tab, on user action,
   to read the page text used for AI tagging.
 - **Host permissions** (`localhost`, `*.vercel.app`) — Sends the saved
-  bookmark to the Bookmarker web app's API. Limited to the app's own origins.
+  bookmark to the Mowaba web app's API. Limited to the app's own origins.
 
 ## Data collected and how it is used
 
@@ -40,7 +40,7 @@ Saved data is processed by:
 - **Supabase** — stores the user's bookmarks (URL, title, tags, embedding).
 
 The authentication token is never shared with any third party. It is used only
-to authenticate requests to the user's own Bookmarker account.
+to authenticate requests to the user's own Mowaba account.
 
 ## Data retention and deletion
 
