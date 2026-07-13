@@ -181,7 +181,15 @@ AS $$
     WHERE user_id = p_user_id
       AND (
         word_similarity(query_text, title) >= 0.6
-        OR EXISTS (SELECT 1 FROM unnest(tags) tg WHERE word_similarity(query_text, tg) >= 0.6)
+        OR EXISTS (
+          SELECT 1 FROM unnest(tags) tg
+          WHERE word_similarity(query_text, tg) >= 0.6
+            AND NOT EXISTS (
+              SELECT 1 FROM search_trgm_tag_exclusions e
+              WHERE (lower(e.term_a) = lower(query_text) AND lower(e.term_b) = lower(tg))
+                 OR (lower(e.term_b) = lower(query_text) AND lower(e.term_a) = lower(tg))
+            )
+        )
         OR (description IS NOT NULL AND word_similarity(query_text, description) >= 0.6)
       )
       AND (
@@ -225,8 +233,11 @@ $$;
 > "3D"↔"3D모델링"·"영상"↔"영상편집"·"커서"↔"커서AI"·"에르메스"↔"헤르메스 에이전트"·
 > "옵시디안"↔"옵시디언" 등 의도된 상위/하위·표기변형 태그 관계가 같은 점수대(0.6~0.8)라
 > 함께 깨짐(단일 threshold로 "우연한 겹침"과 "의도된 관련어" 구분 불가).
-> Codex/Claude Code 트라이그램 오탐은 알려진 한계로 남음. `<%` 미사용으로 trgm GIN 인덱스는
-> 못 타지만 현재 규모(수백~수천 건)에선 무시 가능.
+> `<%` 미사용으로 trgm GIN 인덱스는 못 타지만 현재 규모(수백~수천 건)에선 무시 가능.
+> Codex/Claude Code 트라이그램 오탐은 `search_trgm_tag_exclusions` 예외 테이블(0024)로 태그
+> 채널만 차단 — title/description에 "Claude Code" 문자열이 그대로 들어간 경우는 자유텍스트라
+> 정확일치 예외처리 불가, 미해결로 남음(front/scripts 등 후속 처리 필요 시 참고).
+> 유사 오탐 추가 발견 시 `search_trgm_tag_exclusions`에 `(term_a, term_b)` 행만 추가하면 됨.
 > 전체 구현: `supabase/migrations/0009_hybrid_search.sql`, `0010_search_category_filter.sql`,
 > `0014_search_tags_favorite_filter.sql`, `0015_search_ranking_tags_favorite.sql`, `0018_search_description_trgm.sql`,
 > `0019_search_return_description_thumbnail.sql`, `0022_search_tighten_vector_threshold.sql`,

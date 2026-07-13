@@ -12,6 +12,9 @@ export const SEARCH_ALIAS: Record<string, string> = {
   포토샵: 'Photoshop',
   일러스트: 'Illustrator',
   스프레드시트: 'Spreadsheet',
+  코덱스: 'Codex',
+  클로드코드: 'Claude Code',
+  '클로드 코드': 'Claude Code',
 }
 
 export function expandSearchQuery(query: string): string[] {
