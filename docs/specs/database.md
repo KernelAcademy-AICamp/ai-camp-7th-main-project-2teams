@@ -109,12 +109,14 @@ CREATE POLICY "categories_delete"
 
 ---
 
-## RPC 함수 — match_bookmarks (A7, A54 하이브리드 병합, A55 카테고리 필터)
+## RPC 함수 — match_bookmarks (A7, A54 하이브리드 병합, A55 카테고리 필터, A58 태그/즐겨찾기 필터)
 
 벡터 코사인 유사도 + pg_trgm 트라이그램 유사도를 RRF(Reciprocal Rank Fusion)로 병합.
 순수 벡터 검색은 의미 유사도만 보므로 정확 단어 매칭에 약함 — 트라이그램으로 키워드 매칭을 보강.
 한글은 형태소 분석 없는 tsvector('simple' config)보다 트라이그램 부분 문자열 매칭이 더 적합해 선택.
 `p_category_id`/`p_uncategorized`로 현재 선택된 카테고리(또는 미분류) 안에서만 검색 — `GET /api/bookmarks`와 동일 시맨틱.
+`p_tags`/`p_is_favorite`로 사이드바 태그·즐겨찾기 필터도 검색에 그대로 유지(A58).
+절대 코사인 threshold는 사용하지 않음(A55 후속, 0015) — top-K 상대 gap(0.05)/절대 floor(0.4)로 컷.
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -126,70 +128,97 @@ CREATE INDEX IF NOT EXISTS bookmarks_title_trgm_idx
 CREATE OR REPLACE FUNCTION match_bookmarks(
   query_embedding vector(1536),
   query_text      text,
-  match_threshold float,
   match_count     int,
   p_user_id       uuid,
   p_category_id   uuid DEFAULT NULL,
-  p_uncategorized boolean DEFAULT false
+  p_uncategorized boolean DEFAULT false,
+  p_tags          text[] DEFAULT NULL,
+  p_is_favorite   boolean DEFAULT NULL
 )
 RETURNS TABLE (
-  id          uuid,
-  title       text,
-  url         text,
-  tags        text[],
-  category_id uuid,
-  is_favorite boolean,
-  created_at  timestamptz,
-  similarity  float
+  id            uuid,
+  title         text,
+  url           text,
+  description   text,
+  thumbnail_url text,
+  tags          text[],
+  category_id   uuid,
+  is_favorite   boolean,
+  created_at    timestamptz,
+  similarity    float
 )
 LANGUAGE sql STABLE
 SET search_path = public
 AS $$
   WITH vector_matches AS (
-    SELECT id, 1 - (embedding <=> query_embedding) AS vec_sim,
-           row_number() OVER (ORDER BY embedding <=> query_embedding) AS vec_rank
+    SELECT
+      id,
+      1 - (embedding <=> query_embedding) AS vec_sim,
+      row_number() OVER (ORDER BY embedding <=> query_embedding) AS vec_rank
     FROM bookmarks
     WHERE user_id = p_user_id
-      AND 1 - (embedding <=> query_embedding) >= match_threshold
       AND (
         (p_uncategorized AND category_id IS NULL)
         OR (NOT p_uncategorized AND p_category_id IS NULL)
         OR (NOT p_uncategorized AND category_id = p_category_id)
       )
+      AND (p_tags IS NULL OR tags && p_tags)
+      AND (p_is_favorite IS NULL OR is_favorite = p_is_favorite)
+    ORDER BY embedding <=> query_embedding
+    LIMIT GREATEST(match_count * 5, 50)
   ),
   trgm_matches AS (
-    SELECT id, row_number() OVER (ORDER BY similarity(title, query_text) DESC) AS trgm_rank
+    SELECT
+      id,
+      row_number() OVER (
+        ORDER BY GREATEST(
+          word_similarity(query_text, title),
+          COALESCE((SELECT MAX(word_similarity(query_text, tg)) FROM unnest(tags) tg), 0),
+          word_similarity(query_text, COALESCE(description, ''))
+        ) DESC
+      ) AS trgm_rank
     FROM bookmarks
-    WHERE user_id = p_user_id AND title % query_text
+    WHERE user_id = p_user_id
+      AND (
+        query_text <% title
+        OR EXISTS (SELECT 1 FROM unnest(tags) tg WHERE query_text <% tg)
+        OR (description IS NOT NULL AND query_text <% description)
+      )
       AND (
         (p_uncategorized AND category_id IS NULL)
         OR (NOT p_uncategorized AND p_category_id IS NULL)
         OR (NOT p_uncategorized AND category_id = p_category_id)
       )
+      AND (p_tags IS NULL OR tags && p_tags)
+      AND (p_is_favorite IS NULL OR is_favorite = p_is_favorite)
   ),
   combined AS (
     SELECT
       COALESCE(v.id, t.id) AS id,
       COALESCE(1.0 / (60 + v.vec_rank), 0) + COALESCE(1.0 / (60 + t.trgm_rank), 0) AS rrf_score,
-      v.vec_sim
+      v.vec_sim,
+      t.id IS NOT NULL AS matched_trgm,
+      MAX(v.vec_sim) OVER () AS top_vec_sim
     FROM vector_matches v
     FULL OUTER JOIN trgm_matches t ON v.id = t.id
   )
-  SELECT b.id, b.title, b.url, b.tags, b.category_id, b.is_favorite, b.created_at,
-         COALESCE(c.vec_sim, 0) AS similarity
+  SELECT
+    b.id, b.title, b.url, b.description, b.thumbnail_url,
+    b.tags, b.category_id, b.is_favorite, b.created_at,
+    COALESCE(c.vec_sim, 0) AS similarity
   FROM combined c
   JOIN bookmarks b ON b.id = c.id
+  WHERE c.matched_trgm OR (c.vec_sim >= 0.4 AND c.vec_sim >= c.top_vec_sim - 0.05)
   ORDER BY c.rrf_score DESC
   LIMIT match_count;
 $$;
 ```
 
-> `<=>` = cosine distance 연산자. `%` = pg_trgm 유사도 연산자(기본 threshold 0.3). `embedding` 컬럼은 반환하지 않음.
-> 정렬 기준은 RRF 점수, 응답 `similarity` 필드는 벡터 코사인 유사도 값(트라이그램 전용 매칭 시 0).
-> `p_category_id`/`p_uncategorized` 미지정(기본값) 시 카테고리 필터 없음 — 기존 전체 검색과 동일.
-> A60 후속(0018): trgm 매칭 대상에 `description`(사용자 직접 입력) 추가 — title/tags에만 있던 키워드 검색 갭 해소.
-> 버그 수정(0019): RETURNS TABLE에 `description`/`thumbnail_url` 누락 — 검색 결과 카드에서 설명·썸네일 미표시 원인.
-> 전체 구현: `supabase/migrations/0009_hybrid_search.sql`, `supabase/migrations/0010_search_category_filter.sql`,
+> `<=>` = cosine distance 연산자. `<%`/`word_similarity` = pg_trgm 단어 단위 유사도(짧은 쿼리 과소평가 방지, 0.3 threshold의 `%`/`similarity()` 대체). `embedding` 컬럼은 반환하지 않음.
+> 정렬 기준은 RRF 점수. 벡터 매칭은 top-K(`GREATEST(match_count*5, 50)`)만 먼저 추리고, 최종 컷은 절대 threshold 대신 `matched_trgm`이거나 `vec_sim >= 0.4 AND top_vec_sim - 0.05` 이내인 것만 통과.
+> trgm 매칭 대상은 title/tags/description 3곳(A60 후속, 0018) — title에 키워드 없고 tags·description에만 있는 북마크도 검색됨.
+> `p_category_id`/`p_uncategorized`/`p_tags`/`p_is_favorite` 미지정(기본값) 시 해당 필터 없음 — 기존 전체 검색과 동일.
+> 전체 구현: `supabase/migrations/0009_hybrid_search.sql`, `0010_search_category_filter.sql`,
 > `0014_search_tags_favorite_filter.sql`, `0015_search_ranking_tags_favorite.sql`, `0018_search_description_trgm.sql`,
 > `0019_search_return_description_thumbnail.sql`.
 

@@ -137,19 +137,26 @@ export const POST = withAuth(async (req, { user }) => {
 
 ## 벡터 검색 임베딩 (A7)
 
+절대 코사인 threshold(`match_threshold`)는 사용하지 않음 — top-K(`SEARCH_TOP_K=60`) + RPC 내부 상대 gap/절대 floor로 컷(A55 후속, `database.md` 참조). `p_category_id`/`p_uncategorized`(A55), `p_tags`/`p_is_favorite`(A58)로 사이드바 필터를 검색에도 유지.
+
 ```typescript
 // app/api/search/route.ts
-export const POST = withAuth(async (req, { user }) => {
-  const { query } = await req.json()
+const SEARCH_TOP_K = 60
+
+export const POST = withAuth(async (req, { user, supabase }) => {
+  const { query } = parsed.data // searchSchema — query/category/tag/is_favorite
 
   const queryEmbedding = await createEmbedding(query)
 
-  const supabase = await createClient()
   const { data, error } = await supabase.rpc('match_bookmarks', {
     query_embedding: queryEmbedding,
-    match_threshold: 0.5,
-    match_count: 20,
+    query_text: query,
+    match_count: SEARCH_TOP_K,
     p_user_id: user.id,
+    p_category_id: categoryId,
+    p_uncategorized: uncategorized,
+    p_tags: tags,
+    p_is_favorite: isFavorite,
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

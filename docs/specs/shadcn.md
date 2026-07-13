@@ -26,24 +26,32 @@ npx shadcn@latest init -d
 ```json
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "new-york",
+  "style": "base-nova",
   "rsc": true,
   "tsx": true,
   "tailwind": {
-    "config": "tailwind.config.ts",
+    "config": "",
     "css": "app/globals.css",
-    "baseColor": "zinc",
-    "cssVariables": true
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
   },
+  "iconLibrary": "lucide",
+  "rtl": false,
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
-  }
+  },
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "registries": {}
 }
 ```
+
+> `tailwind.config` 빈 문자열 — Tailwind v4는 config 파일 없음(CSS-first `@theme`).
 
 ---
 
@@ -168,15 +176,16 @@ const badgeVariants = cva('...기존...', {
 ## 테마 토큰 (globals.css)
 
 ```css
+/* app/globals.css — 실제 정의는 oklch 아닌 hex. design-system.md 참조 */
 @theme inline {
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.145 0 0);
-  --color-primary: oklch(0.488 0.243 264.376);   /* 브랜드 컬러 */
-  --color-primary-foreground: oklch(0.985 0 0);
-  --color-muted: oklch(0.961 0 0);
-  --color-muted-foreground: oklch(0.556 0 0);
-  --color-border: oklch(0.922 0 0);
-  --radius: 0.625rem;
+  --radius: 0.5rem;
+}
+
+:root {
+  --primary: #4a90e2;             /* Vibrant Blue — 브랜드 컬러 */
+  --primary-foreground: #ffffff;
+  --ring: #4a90e2;
+  /* background/foreground/muted/border 등도 동일하게 hex로 정의 */
 }
 ```
 
