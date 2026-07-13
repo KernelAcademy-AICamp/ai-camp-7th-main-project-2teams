@@ -222,6 +222,25 @@ $$;
 > `0014_search_tags_favorite_filter.sql`, `0015_search_ranking_tags_favorite.sql`, `0018_search_description_trgm.sql`,
 > `0019_search_return_description_thumbnail.sql`.
 
+### 검색 품질 평가 (search-eval)
+
+> 관련: `front/lib/search-eval.ts`(채점 함수), `front/eval/search-golden.json`(골든셋),
+> `front/lib/__tests__/search-eval.test.ts`(러너). `front/lib/tag-eval.ts` 패턴 미러.
+
+골든셋 6개 카테고리(exact/synonym/cross-lingual/weak-vector/tag-only/noise), 북마크 18건 + 쿼리 12건.
+`scoreQuery`/`aggregateSearch`(순수 함수, I/O 없음)로 recall/MRR 채점 — 노이즈 쿼리는 "결과 없음"이 정답으로 반전 채점.
+
+`match_bookmarks` RPC 호출 시 `p_tags`/`p_is_favorite`를 생략하면 위 함수의 구버전 오버로드(0009~0010 시절 6-param)와
+모호성 충돌이 나므로, 호출부는 항상 8개 파라미터를 전부 명시해야 함(`app/api/search/route.ts` 참고).
+
+실행: `RUN_SEARCH_EVAL=1 npx vitest run lib/__tests__/search-eval.test.ts` — 비용·DB 쓰기(throwaway auth user +
+골든 북마크 18건 삽입, `finally`에서 정리) 때문에 태그 골든셋(`RUN_TAG_EVAL`)과 동일하게 기본 실행에서 제외.
+
+실측(2026-07-13, text-embedding-3-small, n=12): recall/MRR/hitRate 0.917(11/12).
+exact·synonym·cross-lingual·tag-only·noise 전부 1.0, weak-vector만 0 —
+description 없는 북마크는 title-only 임베딩이라 의미 검색 재현 안 되는 구조적 한계(회귀 아님, known limitation).
+회귀 게이트는 이 실패를 전제로 분리: `OVERALL_RECALL_BASELINE=0.83`, `NON_WEAK_VECTOR_RECALL_BASELINE=0.9`.
+
 ---
 
 ## 카테고리 구조
