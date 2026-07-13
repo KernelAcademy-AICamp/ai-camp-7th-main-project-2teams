@@ -1,36 +1,33 @@
-import Link from 'next/link'
-import { Check, Search, Sparkles } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
-import { ServiceFeatures } from '@/components/ServiceFeatures'
+import Link from "next/link";
+import { Check, Search, Sparkles } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { ServiceFeatures } from "@/components/ServiceFeatures";
+import { CopyTimelineSection } from "@/components/CopyTimelineSection";
 
 export const metadata = {
-  title: 'Mowaba — AI 북마크 관리',
-}
+  title: "Mowaba — AI 북마크 관리",
+};
 
-const TRUST_ITEMS = [
-  'Google·Kakao 로그인',
-  '브라우저 북마크 가져오기',
-  '설치 없이 웹에서 바로',
-]
+const TRUST_ITEMS = ["Google·Kakao 로그인", "브라우저 북마크 가져오기", "설치 없이 웹에서 바로"];
 
 const STATS = [
-  { big: 'URL 한 줄', rest: '붙여넣기만으로 저장 완료' },
-  { big: '태그·카테고리 자동', rest: '편집도 언제든 직접 가능' },
-  { big: '검색은 문장으로', rest: '키워드 안 외워도 됨' },
-]
+  { big: "URL 한 줄", rest: "붙여넣기만으로 저장 완료" },
+  { big: "태그·카테고리 자동", rest: "편집도 언제든 직접 가능" },
+  { big: "검색은 문장으로", rest: "키워드 안 외워도 됨" },
+];
 
 /**
  * 랜딩 페이지 — 전체 유저(비로그인/로그인) 접근 가능 (PUBLIC_PATHS)
  * 인증 상태에 따라 CTA 분기: 비로그인 → 로그인, 로그인 → 대시보드
  */
 export default async function WelcomePage() {
-  const supabase = await createClient()
+  const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
-  const ctaHref = user ? '/' : '/login'
-  const ctaLabel = user ? '대시보드로 이동' : '무료로 시작하기'
+  const ctaHref = user ? "/" : "/login";
+  const ctaLabel = user ? "대시보드로 이동" : "무료로 시작하기";
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-surface">
@@ -44,13 +41,13 @@ export default async function WelcomePage() {
             href={ctaHref}
             className="gradient-brand rounded-full px-5 py-2 text-sm font-bold text-white shadow-[0_10px_20px_-8px_rgba(45,111,209,.55)] transition-transform hover:-translate-y-px"
           >
-            {user ? '대시보드로' : '시작하기'}
+            {user ? "대시보드로" : "시작하기"}
           </Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-4">
-        <section className="grid gap-12 py-16 md:grid-cols-[1.05fr_0.95fr] md:items-center md:py-24">
+        <section className="grid gap-12 py-16 md:grid-cols-[1.05fr_0.95fr] md:items-center md:py-20">
           <div>
             <div className="animate-rise mb-5 inline-flex items-center gap-2 rounded-full bg-mint-soft px-3.5 py-1.5 text-xs font-bold text-ink opacity-0">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink" />
@@ -60,16 +57,13 @@ export default async function WelcomePage() {
             <h1 className="animate-rise text-hero leading-tight font-extrabold tracking-tight text-ink opacity-0 [animation-delay:80ms]">
               저장은 1초,
               <br />
-              정리는{' '}
-              <span className="bg-gradient-to-r from-brand to-mint bg-clip-text text-transparent">
-                AI
-              </span>
-              가 합니다
+              정리는 <span className="bg-gradient-to-r from-brand to-mint bg-clip-text text-transparent">AI</span>가
+              합니다
             </h1>
 
             <p className="animate-rise mt-5 max-w-md text-lg leading-relaxed text-text-secondary opacity-0 [animation-delay:160ms]">
-              링크만 붙여넣으면 제목·태그·카테고리가 자동으로 채워집니다. 나중엔
-              &ldquo;리액트 훅 정리&rdquo;처럼 문장으로 검색하세요.
+              링크만 붙여넣으면 제목·태그·카테고리가 자동으로 채워집니다. 나중엔 &ldquo;리액트 훅 정리&rdquo;처럼
+              문장으로 검색하세요.
             </p>
 
             <div className="animate-rise mt-8 flex flex-wrap items-center gap-3 opacity-0 [animation-delay:240ms]">
@@ -145,36 +139,28 @@ export default async function WelcomePage() {
           </div>
         </section>
 
+        <CopyTimelineSection />
+
         <section
           aria-label="핵심 지표"
           className="grid grid-cols-1 divide-y divide-line border-y border-line sm:grid-cols-3 sm:divide-x sm:divide-y-0"
         >
           {STATS.map((stat) => (
             <div key={stat.big} className="px-6 py-8 text-center sm:text-left">
-              <p className="text-stat font-extrabold tracking-tight text-ink">
-                {stat.big}
-              </p>
-              <p className="mt-1 text-sm font-semibold text-text-secondary">
-                {stat.rest}
-              </p>
+              <p className="text-stat font-extrabold tracking-tight text-ink">{stat.big}</p>
+              <p className="mt-1 text-sm font-semibold text-text-secondary">{stat.rest}</p>
             </div>
           ))}
         </section>
 
         <section aria-labelledby="features-heading" id="features" className="py-20">
           <div className="mx-auto mb-10 max-w-xl text-center sm:text-left">
-            <p className="mb-3 text-xs font-extrabold tracking-wider text-brand-strong uppercase">
-              Core Features
-            </p>
-            <h2
-              id="features-heading"
-              className="mb-3 text-2xl font-extrabold tracking-tight text-ink sm:text-3xl"
-            >
+            <p className="mb-3 text-xs font-extrabold tracking-wider text-brand-strong uppercase">Core Features</p>
+            <h2 id="features-heading" className="mb-3 text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
               정리 대신 저장에만 집중하세요
             </h2>
             <p className="text-text-secondary">
-              Mowaba가 태그·카테고리 분류를 맡고, 필요할 땐 문장으로 다시
-              찾아드립니다.
+              Mowaba가 태그·카테고리 분류를 맡고, 필요할 땐 문장으로 다시 찾아드립니다.
             </p>
           </div>
 
@@ -191,8 +177,7 @@ export default async function WelcomePage() {
               지금 저장한 링크, 나중에 다시 찾을 수 있나요?
             </h2>
             <p className="relative mb-8 text-white/85">
-              Mowaba로 시작하면 정리는 AI에게 맡기고 나만의 검색으로 바로 찾을
-              수 있습니다.
+              Mowaba로 시작하면 정리는 AI에게 맡기고 나만의 검색으로 바로 찾을 수 있습니다.
             </p>
             <Link
               href={ctaHref}
@@ -214,5 +199,5 @@ export default async function WelcomePage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }
