@@ -1,11 +1,13 @@
 // 전체 북마크 재태깅 — 개선된 SYSTEM_PROMPT(lib/ai.ts) 기준으로 tags 갱신.
 // 실행: source .env 후 `npx tsx scripts/retag.ts`
+// A-2(a) 확정(docs/specs/tag-eval-redesign.md §A-2·§4): DB description 컬럼을 재크롤링 없이 그대로 태깅 입력에 포함.
 // 환경변수:
 //   DRY=1          쓰기 없이 예측만 출력(카나리)
 //   RETAG_LIMIT=N  앞 N개만 처리(0=전체)
 //   CONCURRENCY=N  동시 OpenAI 호출 수(기본 6)
-//   KEEP_NONEMPTY=1 새 태그가 빈 배열이고 기존 태그가 있으면 스킵(순손실 방지).
-//                   content 없이 재태깅 시 저품질 title이 태그를 통째로 날리는 것 방지 — docs/specs/tag-eval-redesign.md §B-2.
+//   KEEP_NONEMPTY=0 새 태그가 빈 배열이고 기존 태그가 있어도 그대로 반영(순손실 허용).
+//                   기본값 true(생략 시 스킵) — content 부족 시 저품질 title이 태그를 통째로 날리는 것 방지,
+//                   §4 미결 정책 확정: retag는 항상 KEEP_NONEMPTY 기본 적용.
 //   RESTORE=<path> 백업 파일에서 tags 복원 후 종료(재태깅 안 함). 아래 자동 백업의 역연산.
 // 자동 백업(B-1, docs/specs/tag-eval-redesign.md §B-1):
 //   비-DRY 실행 시 쓰기 전 전체 (id, tags) 스냅샷을 scripts/backups/에 저장. 백업 실패면 쓰기 중단.
@@ -20,7 +22,7 @@ import { serializeBackup, parseBackup, type TagSnapshot } from './retag-backup'
 const DRY = process.env.DRY === '1'
 const LIMIT = Number(process.env.RETAG_LIMIT ?? '0')
 const CONCURRENCY = Number(process.env.CONCURRENCY ?? '6')
-const KEEP_NONEMPTY = process.env.KEEP_NONEMPTY === '1'
+const KEEP_NONEMPTY = process.env.KEEP_NONEMPTY !== '0'
 const RESTORE = process.env.RESTORE ?? ''
 
 const BACKUP_DIR = join(__dirname, 'backups')
@@ -31,7 +33,7 @@ const supabase = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } },
 )
 
-type Row = { id: string; url: string; title: string; tags: string[] }
+type Row = { id: string; url: string; title: string; tags: string[]; description: string | null }
 
 const eq = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i])
 
@@ -42,7 +44,7 @@ async function fetchAll(): Promise<Row[]> {
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await supabase
       .from('bookmarks')
-      .select('id, url, title, tags')
+      .select('id, url, title, tags, description')
       .order('created_at')
       .range(from, from + PAGE - 1)
     if (error) throw error
@@ -120,7 +122,11 @@ async function main() {
       const row = rows[cursor++]
       try {
         await rateGate()
-        const next = await generateTags({ title: row.title, url: row.url })
+        const next = await generateTags({
+          title: row.title,
+          url: row.url,
+          description: row.description ?? undefined,
+        })
         // KEEP_NONEMPTY: 새 태그가 비었고 기존 태그가 있으면 순손실 → 스킵(기존 유지)
         if (KEEP_NONEMPTY && next.length === 0 && (row.tags?.length ?? 0) > 0) {
           kept++
