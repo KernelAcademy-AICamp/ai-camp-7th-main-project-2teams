@@ -15,6 +15,14 @@ export const SEARCH_ALIAS: Record<string, string> = {
   코덱스: 'Codex',
   클로드코드: 'Claude Code',
   '클로드 코드': 'Claude Code',
+  클로드: 'Claude',
+  커서: 'Cursor',
+  옵시디언: 'Obsidian',
+  옵시디안: 'Obsidian',
+  헤르메스: 'Hermes Agent',
+  에르메스: 'Hermes Agent',
+  자바스크립트: 'JavaScript',
+  리액트: 'React',
 }
 
 export function expandSearchQuery(query: string): string[] {

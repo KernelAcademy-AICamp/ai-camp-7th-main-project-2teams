@@ -26,6 +26,15 @@
 - 방식: title/url로 게임명 식별 → 기존 tags에 게임명만 추가(다른 태그 유지)
 - category-backfill과 스코프 안 겹침(게임 카테고리 전용, 소분류만)
 
+### search-alias-backfill
+
+- 위치: `.claude/skills/search-alias-backfill/SKILL.md`
+- 대상: `front/lib/search-alias.ts`의 `SEARCH_ALIAS` — DB 데이터 아닌 코드 사전
+- 배경: 태그가 계속 쌓이면서 한글 음차↔영문 원어(옵시디언/Obsidian 등) 신규 쌍이 계속 생기는데,
+  pg_trgm(스크립트 다르면 word_similarity=0)도 임베딩(교차언어 cos_sim 0.09~0.44)도 못 잡음
+- 방식: 전체 태그 스캔 → 모델 판단으로 음차↔원어 쌍 식별(의역 제외) → 사전에 없는 쌍만 추가
+- 다른 백필과 달리 DB update 없음 — 코드 커밋 대상, PR 필요
+
 ## 스크립트 (일회성 ops)
 
 ### backfill-extract-top-category.ts
