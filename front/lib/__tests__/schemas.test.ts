@@ -99,9 +99,9 @@ describe('bookmarkUpdateSchema', () => {
     expect(parsed.success).toBe(false)
   })
 
-  it('tags 10개 초과 시 실패 (max(10))', () => {
+  it('tags 2개 초과 시 실패 (max(2))', () => {
     const parsed = bookmarkUpdateSchema.safeParse({
-      tags: Array.from({ length: 11 }, (_, i) => `tag${i}`),
+      tags: Array.from({ length: 3 }, (_, i) => `tag${i}`),
     })
     expect(parsed.success).toBe(false)
   })

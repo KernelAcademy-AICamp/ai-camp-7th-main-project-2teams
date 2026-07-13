@@ -3,6 +3,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 // devtools는 개발 환경에서만 로드 — production 번들 제외
 const ReactQueryDevtools =
@@ -31,6 +33,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
+      <ToastContainer position="top-center" autoClose={2500} hideProgressBar pauseOnHover={false} />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )

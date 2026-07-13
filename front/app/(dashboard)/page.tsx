@@ -240,7 +240,7 @@ function DashboardContent() {
                   : "flex flex-col gap-3",
             )}
           >
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 15 }).map((_, i) => (
               <BookmarkSkeleton key={i} view={viewMode} />
             ))}
           </div>
@@ -274,16 +274,12 @@ function DashboardContent() {
               // 즐겨찾기 탭은 북마크는 있으나 즐겨찾기만 없는 상태 — 추가/업로드 CTA 부적절
               <>
                 <p className="text-lg font-medium text-gray-700">즐겨찾기한 북마크가 없습니다</p>
-                <p className="mt-2 text-sm text-gray-500">
-                  북마크 카드의 별표를 눌러 즐겨찾기에 추가하세요.
-                </p>
+                <p className="mt-2 text-sm text-gray-500">북마크 카드의 별표를 눌러 즐겨찾기에 추가하세요.</p>
               </>
             ) : (
               <>
                 <p className="text-lg font-medium text-gray-700">저장된 북마크가 없습니다</p>
-                <p className="mt-2 text-sm text-gray-500">
-                  북마크를 추가하거나 파일을 업로드해 시작하세요.
-                </p>
+                <p className="mt-2 text-sm text-gray-500">북마크를 추가하거나 파일을 업로드해 시작하세요.</p>
                 <div className="mt-6 flex items-center gap-3">
                   <AddBookmarkModal />
                   <Link
@@ -345,12 +341,9 @@ function DashboardContent() {
 
             {/* 목록 다음 페이지 로딩 — 검색은 네트워크 호출이 없어 스피너 불필요 */}
             {!isSearching && isFetchingNextPage && (
-              <div
-                role="status"
-                className="flex items-center justify-center gap-2 py-4 text-xs text-gray-500"
-              >
-                <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-brand" />
-                더 불러오는 중
+              <div role="status" className="flex items-center justify-center gap-2 py-4 text-xs text-gray-500">
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-brand" />더
+                불러오는 중
               </div>
             )}
 

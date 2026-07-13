@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { toFormState, addTag, removeTag, buildUpdatePayload, isTagCommitKey } from '../EditBookmarkModal'
+import {
+  toFormState,
+  addTag,
+  removeTag,
+  buildUpdatePayload,
+  isTagCommitKey,
+  tagLimitWarning,
+} from '../EditBookmarkModal'
 
 // A60: 카드 수정 모달 — 순수 로직만 테스트(렌더 테스트는 프로젝트 관례상 제외, AddBookmarkModal.test.ts 참고)
 describe('toFormState', () => {
@@ -44,9 +51,27 @@ describe('addTag', () => {
     expect(addTag(['개발', 'React'], 'React')).toEqual(['개발', 'React'])
   })
 
-  it('최대 10개 초과 시 추가하지 않음', () => {
-    const tags = Array.from({ length: 10 }, (_, i) => `tag${i}`)
+  it('최대 2개 초과 시 추가하지 않음', () => {
+    const tags = ['개발', 'React']
     expect(addTag(tags, '새태그')).toEqual(tags)
+  })
+})
+
+describe('tagLimitWarning', () => {
+  it('상한 미만이면 경고 없음', () => {
+    expect(tagLimitWarning(['개발'], 'React')).toBeNull()
+  })
+
+  it('상한 도달 시 경고 문구 반환', () => {
+    expect(tagLimitWarning(['개발', 'React'], '새태그')).toBe('태그는 최대 2개까지 추가할 수 있어요.')
+  })
+
+  it('상한 도달해도 빈 입력이면 경고 없음', () => {
+    expect(tagLimitWarning(['개발', 'React'], '   ')).toBeNull()
+  })
+
+  it('상한 도달해도 중복 태그면 경고 없음(추가 자체가 안 일어나므로)', () => {
+    expect(tagLimitWarning(['개발', 'React'], 'React')).toBeNull()
   })
 })
 
