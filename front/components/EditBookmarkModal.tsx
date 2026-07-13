@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { toast } from "react-toastify";
 import { X } from "lucide-react";
 import { useUpdateBookmark, type UpdateBookmarkFields } from "@/hooks/useUpdateBookmark";
 import { TOP_CATEGORIES } from "@/lib/tag-alias";
@@ -97,7 +98,6 @@ interface EditBookmarkModalProps {
 export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps) {
   const [form, setForm] = useState<EditFormState>(() => toFormState(bookmark));
   const [tagInput, setTagInput] = useState("");
-  const [tagToast, setTagToast] = useState<string | null>(null);
   const { mutate, isPending, error } = useUpdateBookmark();
 
   // Escape 키로 닫기
@@ -109,17 +109,10 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
     return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  // 경고 토스트 자동 소멸
-  useEffect(() => {
-    if (!tagToast) return;
-    const timer = setTimeout(() => setTagToast(null), 2500);
-    return () => clearTimeout(timer);
-  }, [tagToast]);
-
   const handleAddTag = () => {
     const warning = tagLimitWarning(form.tags, tagInput);
     if (warning) {
-      setTagToast(warning);
+      toast.warning(warning);
       return;
     }
     const next = addTag(form.tags, tagInput);
@@ -157,15 +150,7 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
       aria-label="북마크 수정"
     >
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-[0_20px_40px_-12px_rgba(45,62,80,.25)]">
-        <div className="relative p-6">
-          {tagToast && (
-            <div
-              role="status"
-              className="absolute left-1/2 top-2 z-10 -translate-x-1/2 rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800 shadow-sm"
-            >
-              {tagToast}
-            </div>
-          )}
+        <div className="p-6">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-base font-semibold text-text-primary">북마크 수정</h2>
             <button
