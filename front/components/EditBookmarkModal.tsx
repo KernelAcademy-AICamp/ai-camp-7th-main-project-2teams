@@ -10,7 +10,8 @@ import type { Bookmark } from "@/hooks/useBookmarks";
 /** 카테고리 select 옵션 — 고정 13개, 가나다순 */
 const CATEGORY_OPTIONS = Array.from(TOP_CATEGORIES).sort((a, b) => a.localeCompare(b, "ko"));
 
-const MAX_TAGS = 10;
+// 백엔드 불변식과 정합(lib/schemas.ts bookmarkUpdateSchema.tags — 대분류 제외 중+소분류 최대 2개).
+const MAX_TAGS = 2;
 const MAX_TAG_LENGTH = 12;
 const MAX_DESCRIPTION_LENGTH = 2000;
 
@@ -35,6 +36,14 @@ export function addTag(tags: string[], input: string): string[] {
   const trimmed = input.trim().slice(0, MAX_TAG_LENGTH);
   if (!trimmed || tags.includes(trimmed) || tags.length >= MAX_TAGS) return tags;
   return [...tags, trimmed];
+}
+
+/** 상한 도달로 추가가 막힌 경우에만 경고 문구 반환, 그 외(빈 값·중복)는 null — 테스트 가능하도록 export */
+export function tagLimitWarning(tags: string[], input: string): string | null {
+  const trimmed = input.trim().slice(0, MAX_TAG_LENGTH);
+  if (!trimmed || tags.includes(trimmed)) return null;
+  if (tags.length >= MAX_TAGS) return `태그는 최대 ${MAX_TAGS}개까지 추가할 수 있어요.`;
+  return null;
 }
 
 /** 태그 제거 — 테스트 가능하도록 export */
@@ -88,6 +97,7 @@ interface EditBookmarkModalProps {
 export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps) {
   const [form, setForm] = useState<EditFormState>(() => toFormState(bookmark));
   const [tagInput, setTagInput] = useState("");
+  const [tagToast, setTagToast] = useState<string | null>(null);
   const { mutate, isPending, error } = useUpdateBookmark();
 
   // Escape 키로 닫기
@@ -99,7 +109,19 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
     return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  // 경고 토스트 자동 소멸
+  useEffect(() => {
+    if (!tagToast) return;
+    const timer = setTimeout(() => setTagToast(null), 2500);
+    return () => clearTimeout(timer);
+  }, [tagToast]);
+
   const handleAddTag = () => {
+    const warning = tagLimitWarning(form.tags, tagInput);
+    if (warning) {
+      setTagToast(warning);
+      return;
+    }
     const next = addTag(form.tags, tagInput);
     if (next !== form.tags) {
       setForm({ ...form, tags: next });
@@ -135,7 +157,15 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
       aria-label="북마크 수정"
     >
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-[0_20px_40px_-12px_rgba(45,62,80,.25)]">
-        <div className="p-6">
+        <div className="relative p-6">
+          {tagToast && (
+            <div
+              role="status"
+              className="absolute left-1/2 top-2 z-10 -translate-x-1/2 rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-800 shadow-sm"
+            >
+              {tagToast}
+            </div>
+          )}
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-base font-semibold text-text-primary">북마크 수정</h2>
             <button
@@ -182,13 +212,13 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
                   onKeyDown={handleTagKeyDown}
                   placeholder="태그 입력 후 Enter"
                   maxLength={MAX_TAG_LENGTH}
-                  disabled={isPending || form.tags.length >= MAX_TAGS}
+                  disabled={isPending}
                   className="flex-1 rounded-lg border border-line px-3 py-2 text-sm text-text-primary outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
                 />
                 <button
                   type="button"
                   onClick={handleAddTag}
-                  disabled={isPending || form.tags.length >= MAX_TAGS}
+                  disabled={isPending}
                   className="cursor-pointer rounded-lg border border-line px-3 py-2 text-sm text-text-primary hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   추가
