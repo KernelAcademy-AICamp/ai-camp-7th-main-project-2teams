@@ -319,9 +319,8 @@ function DashboardContent() {
                   불러오는 중
                 </div>
               )}
-              {/* key={viewMode} — 뷰 전환 시 컨테이너를 통째로 리마운트해 카드 순차 fade-in을 다시 재생시킴 */}
+              {/* 뷰 전환 시 리마운트하지 않음 — 순차 fade-in(animate-rise)은 최초 로드에만 재생, 뷰 전환은 즉시 리레이아웃 */}
               <div
-                key={viewMode}
                 className={cn(
                   viewMode === "grid"
                     ? "grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5"

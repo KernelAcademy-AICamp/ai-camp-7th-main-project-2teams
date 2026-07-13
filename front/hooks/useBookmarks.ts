@@ -21,7 +21,8 @@ export interface Bookmark {
 interface BookmarksFilters {
   tab?: string
   category?: string
-  folder?: string
+  /** 루트부터 선택 노드까지 전체 경로 — API 전달 시 '/'로 조인(동명이인 폴더 구분용) */
+  folder?: string[]
   tag?: string
 }
 
@@ -39,11 +40,13 @@ export function useBookmarks(filters: BookmarksFilters) {
   return useInfiniteQuery({
     queryKey: ['bookmarks', filters],
     queryFn: async ({ pageParam }): Promise<BookmarksPage> => {
+      const { folder, ...rest } = filters
       const params = new URLSearchParams(
         Object.fromEntries(
-          Object.entries(filters).filter(([, v]) => v != null)
+          Object.entries(rest).filter(([, v]) => v != null)
         ) as Record<string, string>
       )
+      if (folder && folder.length > 0) params.set('folder', folder.join('/'))
       params.set('page', String(pageParam))
       params.set('limit', String(PAGE_SIZE))
       const res = await fetch(`/api/bookmarks?${params}`)

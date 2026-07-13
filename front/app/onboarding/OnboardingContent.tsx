@@ -13,7 +13,13 @@ interface OnboardingContentProps {
 export function OnboardingContent({ userId }: OnboardingContentProps) {
   const router = useRouter()
   // CLAUDE.md 규칙: usehooks-ts의 useLocalStorage 필수 사용
-  const [done, setDone] = useLocalStorage(getOnboardingKey(userId), false)
+  // initializeWithValue: false — 기본값(true)이면 클라이언트 첫 렌더(hydration)에서 곧장 실제
+  // localStorage 값을 읽어 `if (done) return null` 분기가 서버 렌더(항상 false)와 달라져
+  // hydration mismatch가 난다. false로 두면 최초 렌더는 서버와 동일하게 false, 마운트 후
+  // 훅 내부 useEffect가 실값으로 재동기화 → 완료 유저는 잠깐 온보딩이 보였다 리다이렉트된다.
+  const [done, setDone] = useLocalStorage(getOnboardingKey(userId), false, {
+    initializeWithValue: false,
+  })
 
   // 이미 완료된 유저가 /onboarding에 직접 접근하면 홈으로 리다이렉트
   // replace로 히스토리에 /onboarding 미잔류 → 뒤로가기 루프 방지
