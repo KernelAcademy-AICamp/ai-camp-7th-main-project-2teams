@@ -116,7 +116,7 @@ CREATE POLICY "categories_delete"
 한글은 형태소 분석 없는 tsvector('simple' config)보다 트라이그램 부분 문자열 매칭이 더 적합해 선택.
 `p_category_id`/`p_uncategorized`로 현재 선택된 카테고리(또는 미분류) 안에서만 검색 — `GET /api/bookmarks`와 동일 시맨틱.
 `p_tags`/`p_is_favorite`로 사이드바 태그·즐겨찾기 필터도 검색에 그대로 유지(A58).
-절대 코사인 threshold는 사용하지 않음(A55 후속, 0015) — top-K 상대 gap(0.05)/절대 floor(0.4)로 컷.
+절대 코사인 threshold는 사용하지 않음(A55 후속, 0015) — top-K 상대 gap(0.03)/절대 floor(0.5)로 컷(0022에서 강화, 노이즈 밴드 0.3~0.48 회피).
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -208,19 +208,19 @@ AS $$
     COALESCE(c.vec_sim, 0) AS similarity
   FROM combined c
   JOIN bookmarks b ON b.id = c.id
-  WHERE c.matched_trgm OR (c.vec_sim >= 0.4 AND c.vec_sim >= c.top_vec_sim - 0.05)
+  WHERE c.matched_trgm OR (c.vec_sim >= 0.5 AND c.vec_sim >= c.top_vec_sim - 0.03)
   ORDER BY c.rrf_score DESC
   LIMIT match_count;
 $$;
 ```
 
 > `<=>` = cosine distance 연산자. `<%`/`word_similarity` = pg_trgm 단어 단위 유사도(짧은 쿼리 과소평가 방지, 0.3 threshold의 `%`/`similarity()` 대체). `embedding` 컬럼은 반환하지 않음.
-> 정렬 기준은 RRF 점수. 벡터 매칭은 top-K(`GREATEST(match_count*5, 50)`)만 먼저 추리고, 최종 컷은 절대 threshold 대신 `matched_trgm`이거나 `vec_sim >= 0.4 AND top_vec_sim - 0.05` 이내인 것만 통과.
+> 정렬 기준은 RRF 점수. 벡터 매칭은 top-K(`GREATEST(match_count*5, 50)`)만 먼저 추리고, 최종 컷은 절대 threshold 대신 `matched_trgm`이거나 `vec_sim >= 0.5 AND top_vec_sim - 0.03` 이내인 것만 통과.
 > trgm 매칭 대상은 title/tags/description 3곳(A60 후속, 0018) — title에 키워드 없고 tags·description에만 있는 북마크도 검색됨.
 > `p_category_id`/`p_uncategorized`/`p_tags`/`p_is_favorite` 미지정(기본값) 시 해당 필터 없음 — 기존 전체 검색과 동일.
 > 전체 구현: `supabase/migrations/0009_hybrid_search.sql`, `0010_search_category_filter.sql`,
 > `0014_search_tags_favorite_filter.sql`, `0015_search_ranking_tags_favorite.sql`, `0018_search_description_trgm.sql`,
-> `0019_search_return_description_thumbnail.sql`.
+> `0019_search_return_description_thumbnail.sql`, `0022_search_tighten_vector_threshold.sql`.
 
 ### 검색 품질 평가 (search-eval)
 
