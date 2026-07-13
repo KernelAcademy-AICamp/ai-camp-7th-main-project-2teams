@@ -50,6 +50,14 @@
 - 방식: 대상 행의 url을 `fetchMeta()`로 재크롤링(og:image/YouTube 썸네일) → `isSafeHttpUrl`로 SSRF 재검증 → `thumbnail_url` 갱신. 못 찾으면 NULL 유지(재실행 가능)
 - 실행: 기본 dry-run, `--apply` 플래그로 실제 반영. 단순 추가 컬럼이라 백업 스냅샷 없이 `thumbnail_url = NULL` 재설정으로 되돌림 가능
 
+### backfill-bookmark-description.ts
+
+- 위치: `front/scripts/backfill-bookmark-description.ts`
+- 대상: `description IS NULL`인 기존 북마크
+- 배경: `POST /api/bookmarks`(route.ts:56)는 `fetchMeta()`로 항상 description을 채우지만, 그 이전 저장분은 NULL로 남음(2026-07-10 기준 942/944행)
+- 방식: 대상 행의 url을 `fetchMeta()`로 재크롤링해 description 확보 후 갱신. OpenAI 미호출(재태깅·재임베딩 없음). 못 찾으면 NULL 유지(재실행 가능)
+- 실행: 기본 dry-run, `--apply` 플래그로 실제 반영
+
 ### backfill-dead-link.ts
 
 - 위치: `front/scripts/backfill-dead-link.ts`
