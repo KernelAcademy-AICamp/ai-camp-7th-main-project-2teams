@@ -23,6 +23,10 @@ export const SEARCH_ALIAS: Record<string, string> = {
   에르메스: 'Hermes Agent',
   자바스크립트: 'JavaScript',
   리액트: 'React',
+  제미나이: 'Gemini',
+  미드저니: 'Midjourney',
+  '안드레 카파시': 'Andrej Karpathy',
+  컬리: 'Kurly',
 }
 
 export function expandSearchQuery(query: string): string[] {
