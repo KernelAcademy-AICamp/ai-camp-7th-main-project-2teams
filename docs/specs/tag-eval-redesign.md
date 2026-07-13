@@ -118,16 +118,22 @@ SELECT
 
 ## 3. 실행 순서 (권장 — §0 판정 반영)
 
-1. **B-2** ✅ `KEEP_NONEMPTY` (bad0b81). B-1(백업 필수화) 미완.
-2. **C-1, C-2** — 골든셋에 저품질 title 패턴 편입 + 정책 결정. **미분류 감축 실질 지렛대(주원인 대응).** ⚠️ §4 팀 정책 선결.
+1. **B-1, B-2** ✅ `scripts/retag.ts` 자동 백업(쓰기 전 스냅샷 + `RESTORE=`) + `KEEP_NONEMPTY`(bad0b81, 2026-07-13 기본값 true로 확정 — 아래 §4).
+2. **C-1, C-2** ✅ 골든셋에 저품질 title 패턴 편입(n=115→213) + 정책 결정 완료. baseline 재측정 완료(아래 참조).
 3. **A-1** ✅ 평가 이중 모드(rich/title-only). A53·PR #156. 실측 skew F1 −0.039.
 4. **D-1, D-2** ✅ 게이트 강화(F1+`emptyRate`). 회귀 자동 차단.
-5. **A-2** — 입력 보강(description). import 경로 ✅ A52·PR #155. retag 경로 미완. **효과 제한적(미분류 -2%p, §0).**
+5. **A-2** ✅ 입력 보강(description). import 경로 ✅ A52·PR #155. retag 경로 2026-07-13 완료 — `scripts/retag.ts`가 DB `description` 컬럼을 재크롤링 없이 그대로 사용(§4 (a) 확정).
+
+### 현재 상태 (문서 갱신 시점)
+`front/eval/tag-golden.json`은 이 문서의 §0 분석 시점(115건)보다 커진 213건 — C-1 저품질 title 편입(pxd·G마켓·공공데이터포털·ChatGPT·Suno 등 잔여 gap 포함) 완료.
+2026-07-13 n=213 기준 재측정(gpt-4o-mini): rich F1 0.791(대분류 0.869, exact 0.587, emptyRate 0.071),
+title-only F1 0.764(대분류 0.840, exact 0.577, emptyRate 0.091). §0의 115건 시점 수치(F1 0.85 등)보다
+낮아졌는데 이는 회귀가 아니라 골든셋이 저품질 title 패턴을 더 대표하게 되며 과대평가가 빠진 결과 —
+§0/§1.2 판정 그대로 실증됨. `tag-eval.test.ts`의 `F1_BASELINE`(0.82→0.76)·`TITLE_ONLY_F1_BASELINE`(0.77→0.73)도
+이 실측치 기준으로 갱신 완료.
 
 ### 남은 작업
-- **C-1/C-2** (골든셋 저품질 title 편입) — §4 정책 합의 후. 미분류 감축 주 지렛대.
-- **B-1** (retag 백업 자동화) — 소규모 안전장치.
-- **A-2 retag** (retag 재크롤링 description) — 효과 제한적, 후순위.
+없음 — §2~§4 전 시나리오(A/B/C/D) 구현·정책 결정 완료(2026-07-13). 후속은 실사용 중 회귀 관찰(D-1/D-2 게이트) 정도.
 
 > §0 판정: description 부재는 부차 원인. retag만의 문제 아님(import 공통). 주원인은 저품질 title + 골든셋 비대표성.
 
@@ -136,5 +142,31 @@ SELECT
 - [x] LLM 챗 툴 분류 여부 (§C-2.1) → **AI/ML>LLM** (2026-07-02)
 - [x] 공공데이터/통계 대분류 신설 여부 (§C-2.2) → **비즈니스>데이터, 신설 안 함** (2026-07-02)
 - [x] 디자인 스튜디오 브랜드/디자인 우선순위 (§C-2.3) → **브랜드>마케팅** (2026-07-02, eval 후 디자인>스튜디오에서 번복)
-- [ ] retag `KEEP_NONEMPTY` 기본값 (§B-2)
-- [ ] retag 입력 보강 방식 a/b/c (§A-2)
+- [x] retag `KEEP_NONEMPTY` 기본값 (§B-2) → **기본값 true(스킵)** — `KEEP_NONEMPTY=0`으로만 순손실 허용 (2026-07-13)
+- [x] retag 입력 보강 방식 a/b/c (§A-2) → **(a) DB description 컬럼 사용** — 재크롤링(b) 없이 기존 컬럼을 그대로 태깅 입력에 포함 (2026-07-13)
+
+## 5. 회귀 관찰 운영 (2026-07-13)
+
+D-1/D-2 게이트(F1 baseline + `emptyRate` 상한)를 실제로 언제·어떻게 돌리고, 실패 시 무엇을 할지 정의. `RUN_TAG_EVAL=1`은 실 OpenAI 호출(비용) 때문에 CI 기본 실행에서 빠져있음(`ci.yml` 확인 — `RUN_TAG_EVAL` 미설정) → 사람이 수동 트리거.
+
+### 트리거 (언제 `RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts` 실행)
+1. `lib/ai.ts`(SYSTEM_PROMPT·`generateTags`) 수정 PR — 머지 전 필수
+2. `scripts/retag.ts` 전체 재태깅을 프로덕션 DB에 실행하기 전 — 사전 캐너리
+3. 그 외 정기 실행 없음 — 비용 대비 실익 낮아 스킵(트리거 1·2로 충분히 커버)
+
+### 실패 판단표
+
+| 증상 | 원인 추정 | 조치 |
+|---|---|---|
+| F1↓, emptyRate 정상 | 태그 네이밍 드리프트(alias 미매칭) | per-item mismatch 로그 확인 → `lib/tag-alias.ts` 보정 or 프롬프트 소폭 수정 후 재실행 |
+| emptyRate > `EMPTY_RATE_MAX`(0.15) 급등 | 프롬프트가 분류 과보수화(태그 포기) | 하드 블록 — 머지/배포 금지, 프롬프트 원복 |
+| F1↑(실개선) | 프롬프트 개선 | baseline 상향 갱신(실측 대비 −0.03 마진 관례 유지, §0/§본문 사례처럼) |
+| 특정 항목만 mismatch인데 gold가 틀려 보임 | 골든셋 라벨 오류 | `eval/tag-golden.json` 라벨 수정 후 재실행(코드 변경 아님) |
+
+### 사후 롤백
+retag를 이미 프로덕션에 실행한 뒤 문제 발견 시: `scripts/backups/retag-tags-<ts>.json`(B-1 자동 백업) 확인 →
+`RESTORE=<path> npx tsx scripts/retag.ts`로 즉시 원복. 별도 승인 절차 없음 — 소규모 팀, 실행자 판단.
+
+### 기록 방식
+별도 대시보드·알림 시스템 구축 안 함(2인 프로젝트 규모에 과함). PR·커밋 메시지에
+"RUN_TAG_EVAL: rich F1 x.xx / title-only F1 y.yy / emptyRate z.zz" 한 줄 남기는 것으로 충분.

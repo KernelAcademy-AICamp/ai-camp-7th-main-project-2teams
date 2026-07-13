@@ -101,27 +101,27 @@ describe('aggregate', () => {
 // 실 OpenAI 골든셋 평가 — 비용·flaky 때문에 RUN_TAG_EVAL=1에서만.
 // 실행: RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts
 // 회귀 게이트: macro-F1 baseline 미만이면 실패.
-// 골든셋: n=115, 대분류 13종(콘텐츠 신설 포함). 레버리지 1/115≈0.009.
-// 실측(2026-07): macro-F1 0.85, precision 0.86, recall 0.87, 대분류 정확도 0.93, exact 0.63.
-// baseline 0.82 = 실측 0.85 대비 ~0.03 여유(~3항목 오탐 허용). 실회귀는 잡고 노이즈는 통과.
-// 콘텐츠(3)·여행(4)은 표본 얇음 — 실데이터 유입 시 확충 권장.
-// 남은 모호: ev 충전소(여행 오판), 브랜드 디자인스튜디오 마케팅/기업 → 팀 검수 후 상향.
-const F1_BASELINE = 0.82
+// 골든셋: n=213 (C-1: 저품질 title/브랜드단독/URL통짜/로그인·앱 패턴 편입 후, 기존 n=115 대비 +98).
+// 실측(2026-07-13, gpt-4o-mini): macro-F1 0.791, precision 0.788, recall 0.811,
+// 대분류 정확도 0.869, exact 0.587, emptyRate 0.071.
+// baseline 0.76 = 실측 0.791 대비 ~0.03 여유(기존 마진 관례 유지). n=115 시절 baseline 0.82보다
+// 낮아진 건 회귀가 아니라 §0 판정대로 골든셋이 저품질 title을 더 대표하게 되며 과대평가가 빠진 것.
+const F1_BASELINE = 0.76
 
 // A53: 입력 조건별 평가.
 // - rich: description 포함 — 단건 추가·A52 임포트(fetchMeta 성공) 경로. 회귀 게이트 대상.
 // - title-only: description 제거 — 임포트에서 메타 조회 실패·본문 부재 시의 하한(floor).
 //   프로덕션 실패 모드를 eval이 보게 하는 것이 목적. rich 대비 하락폭 = train/serve skew 크기.
-// 실측(2026-07, gpt-4o-mini, n=115):
-//   rich       F1 0.838 · 대분류 0.922 · exact 0.635
-//   title-only F1 0.799 · 대분류 0.896 · exact 0.617  → skew F1 −0.039(A52가 회복하는 몫)
-//   주의: 골든셋 title이 실 임포트보다 깔끔해 이 skew는 프로덕션 실 skew의 하한. 지저분 title 표본
-//        확충 시 격차 커질 것(A53 후속).
-const TITLE_ONLY_F1_BASELINE = 0.77 // 실측 0.799 − ~0.03 여유(rich 0.838→0.82와 동일 마진)
+// 실측(2026-07-13, gpt-4o-mini, n=213, C-1 확장 후):
+//   rich       F1 0.791 · 대분류 0.869 · exact 0.587 · emptyRate 0.071
+//   title-only F1 0.764 · 대분류 0.840 · exact 0.577 · emptyRate 0.091  → skew F1 −0.027
+//   n=115 대비 두 모드 다 하락 — 브랜드단독/URL통짜/로그인·앱 표본 추가로 골든셋 대표성이
+//   실제 분포에 가까워진 결과(§0). 진짜 회귀 여부는 이 n=213 baseline 기준으로 판단할 것.
+const TITLE_ONLY_F1_BASELINE = 0.73 // 실측 0.764 − ~0.03 여유(기존 마진 관례 유지)
 
 // D-2: 미분류율 상한. F1만으론 "태그 삭제로 오답 회피"가 통과됨(retag 미분류 29% 사례).
-// emptyRate 병행 게이트로 대량 태그 삭제 회귀 차단. 골든셋 실측 emptyRate는 rich 0%·title-only ~2%로
-// 낮아 0.15는 느슨한 가드레일 — 큰 열화만 잡음. 프롬프트 회귀로 급증 시 실패.
+// emptyRate 병행 게이트로 대량 태그 삭제 회귀 차단. n=213 실측 emptyRate는 rich 7%·title-only 9%로
+// 0.15 밑 — 여전히 느슨한 가드레일(큰 열화만 잡음), 프롬프트 회귀로 급증 시 실패.
 const EMPTY_RATE_MAX = 0.15
 type GoldenItem = { url: string; title: string; description: string; gold: string[] }
 

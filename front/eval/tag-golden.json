@@ -1908,5 +1908,50 @@
       "콘텐츠",
       "블로그"
     ]
+  },
+  {
+    "url": "https://www.pxd.co.kr/",
+    "title": "pxd",
+    "description": "",
+    "gold": [
+      "브랜드",
+      "마케팅",
+      "pxd"
+    ]
+  },
+  {
+    "url": "https://www.gmarket.co.kr/",
+    "title": "G마켓",
+    "description": "",
+    "gold": [
+      "쇼핑"
+    ]
+  },
+  {
+    "url": "https://www.data.go.kr/",
+    "title": "공공데이터포털",
+    "description": "정부 및 공공기관이 보유한 공공데이터를 개방하는 통합 창구입니다.",
+    "gold": [
+      "비즈니스",
+      "데이터"
+    ]
+  },
+  {
+    "url": "https://chatgpt.com/",
+    "title": "ChatGPT",
+    "description": "",
+    "gold": [
+      "AI/ML",
+      "LLM"
+    ]
+  },
+  {
+    "url": "https://suno.com/",
+    "title": "Suno",
+    "description": "Suno is building a future where anyone can make great music.",
+    "gold": [
+      "AI/ML",
+      "음악생성"
+    ]
   }
 ]
