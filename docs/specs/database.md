@@ -180,9 +180,9 @@ AS $$
     FROM bookmarks
     WHERE user_id = p_user_id
       AND (
-        query_text <% title
-        OR EXISTS (SELECT 1 FROM unnest(tags) tg WHERE query_text <% tg)
-        OR (description IS NOT NULL AND query_text <% description)
+        word_similarity(query_text, title) >= 0.6
+        OR EXISTS (SELECT 1 FROM unnest(tags) tg WHERE word_similarity(query_text, tg) >= 0.6)
+        OR (description IS NOT NULL AND word_similarity(query_text, description) >= 0.6)
       )
       AND (
         (p_uncategorized AND category_id IS NULL)
@@ -218,9 +218,19 @@ $$;
 > 정렬 기준은 RRF 점수. 벡터 매칭은 top-K(`GREATEST(match_count*5, 50)`)만 먼저 추리고, 최종 컷은 절대 threshold 대신 `matched_trgm`이거나 `vec_sim >= 0.5 AND top_vec_sim - 0.03` 이내인 것만 통과.
 > trgm 매칭 대상은 title/tags/description 3곳(A60 후속, 0018) — title에 키워드 없고 tags·description에만 있는 북마크도 검색됨.
 > `p_category_id`/`p_uncategorized`/`p_tags`/`p_is_favorite` 미지정(기본값) 시 해당 필터 없음 — 기존 전체 검색과 동일.
+> trgm 매칭은 `<%` 연산자(GUC 의존) 대신 `word_similarity() >= 0.6` 명시 비교로 구현(0023,
+> 원격 managed role이 함수 레벨 GUC SET 권한 없어서 `<%`+GUC 조합 배포 불가했음). title/description/
+> tags 전부 동일 0.6 — 원래 `<%` 기본 GUC 값과 수학적으로 동일, 회귀 없음.
+> 0.65/0.7/태그만 0.85 전부 시도했으나 철회 — "Codex"↔"Claude Code"(0.667) 오탐은 막지만
+> "3D"↔"3D모델링"·"영상"↔"영상편집"·"커서"↔"커서AI"·"에르메스"↔"헤르메스 에이전트"·
+> "옵시디안"↔"옵시디언" 등 의도된 상위/하위·표기변형 태그 관계가 같은 점수대(0.6~0.8)라
+> 함께 깨짐(단일 threshold로 "우연한 겹침"과 "의도된 관련어" 구분 불가).
+> Codex/Claude Code 트라이그램 오탐은 알려진 한계로 남음. `<%` 미사용으로 trgm GIN 인덱스는
+> 못 타지만 현재 규모(수백~수천 건)에선 무시 가능.
 > 전체 구현: `supabase/migrations/0009_hybrid_search.sql`, `0010_search_category_filter.sql`,
 > `0014_search_tags_favorite_filter.sql`, `0015_search_ranking_tags_favorite.sql`, `0018_search_description_trgm.sql`,
-> `0019_search_return_description_thumbnail.sql`, `0022_search_tighten_vector_threshold.sql`.
+> `0019_search_return_description_thumbnail.sql`, `0022_search_tighten_vector_threshold.sql`,
+> `0023_search_word_similarity_threshold.sql`.
 
 ### 검색 품질 평가 (search-eval)
 
