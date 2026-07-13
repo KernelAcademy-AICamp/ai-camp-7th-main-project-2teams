@@ -121,7 +121,8 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ bookmark: data }, { status: 201 })
+  // category(대분류명)는 이미 위에서 계산된 top 재사용 — 추가 조인 불필요
+  return NextResponse.json({ bookmark: { ...data, category: top } }, { status: 201 })
 })
 
 // 목록 조회 + 필터. RLS로 본인 데이터만. embedding 컬럼 제외.
@@ -167,7 +168,12 @@ export const GET = withAuth(async (req, { supabase }) => {
   if (uncategorized) query = query.is('category_id', null)
   else if (categoryId) query = query.eq('category_id', categoryId)
   if (tag) query = query.contains('tags', [tag])
-  if (folder) query = query.contains('folder_hint', [folder])
+  // folder는 '/'로 조인된 전체 경로(예: "개발/React") — 배열 전체를 contains 조건으로 써서
+  // 동명이인 폴더(다른 부모, 같은 leaf 이름)의 단일 세그먼트 오탐 매칭을 방지한다.
+  if (folder) {
+    const folderPath = folder.split('/').filter(Boolean)
+    if (folderPath.length > 0) query = query.contains('folder_hint', folderPath)
+  }
 
   const { data, error, count } = await query
   if (error) {

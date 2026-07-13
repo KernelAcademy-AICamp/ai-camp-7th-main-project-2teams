@@ -1,4 +1,4 @@
-# Design System 구현 스펙 (Structured Teal)
+# Design System 구현 스펙
 
 시각 방향·팔레트·컴포넌트 명세는 루트 [`Design.md`](../../Design.md)가 **단일 출처(SSOT)**.
 이 문서는 그 의도가 코드에서 **어떻게 구현되는지**만 다룬다. 색/폰트 값 재정의 금지 — Design.md 참조.
@@ -9,10 +9,10 @@
 
 | 계층 | 정의 | 비고 |
 | --- | --- | --- |
-| 브랜드/폰트 | `@theme` (`--color-brand`, `--font-sans`, `--font-mono`) | `#0f766e` = Deep Teal |
-| 시그니처 그라디언트 | `@utility gradient-brand` | `linear-gradient(135deg, #0f766e, #14b8a6)` |
-| shadcn 시맨틱 | `@theme inline` + `:root`/`.dark` | oklch 변수(`--primary`, `--sidebar` 등) |
-| radius 스케일 | `@theme inline` (`--radius-sm`~`4xl`) | base `--radius: 0.625rem` |
+| 브랜드/폰트 | `@theme` (`--color-brand`, `--font-sans`, `--font-mono`) | `#4a90e2` = Vibrant Blue |
+| 시그니처 그라디언트 | `@utility gradient-brand` | `linear-gradient(135deg, #4a90e2, #2d6fd1)` |
+| shadcn 시맨틱 | `@theme inline` + `:root`/`.dark` | hex 변수(`--primary`, `--ring` 등, oklch 아님) |
+| radius 스케일 | `@theme inline` (`--radius-sm`~`4xl`) | base `--radius: 0.5rem` |
 
 ## 그라디언트 사용처 (남발 금지 원칙)
 
@@ -30,15 +30,19 @@
 
 ## shadcn 시맨틱 컬러 (oklch)
 
-`--primary`/`--ring` = `oklch(0.52 0.09 182)` ≈ Deep Teal. `:root`(라이트)·`.dark` 2벌.
-shadcn 컴포넌트는 이 시맨틱 토큰만 참조. Design.md 팔레트와 **표현 방식만 다름**(hex↔oklch), 의도 동일.
+`--primary`/`--ring` = `#4a90e2`(Vibrant Blue, hex). `:root`(라이트)·`.dark` 2벌.
+shadcn 컴포넌트는 이 시맨틱 토큰만 참조.
 
 ## 카테고리 도트 색상
 
 카테고리 도트는 **단일 색상 `#64748B`(slate-500) 고정**. 카테고리별 색상 코딩 없음.
 `Sidebar.tsx` 도트가 이 색을 직접 사용.
 
-> `import/page.tsx` 등의 `text-[#0F766E]`/`[#64748B]`는 브랜드/본문 텍스트 — 도트 색과 무관.
+> `import/page.tsx` 등의 `text-[#4A90E2]`/`[#64748B]`는 브랜드/본문 텍스트 — 도트 색과 무관.
+
+## 다크모드
+
+앱은 **라이트 전용**. `globals.css`에 `.dark` 커스텀 variant가 정의돼 있으나 앱 어디서도 `.dark` 클래스를 부여하지 않음(테마 토글 없음) — shadcn 시맨틱 컬러의 `.dark` 세트는 죽은 코드가 아니라 `dark:` 유틸리티가 `prefers-color-scheme` 미디어쿼리로 되살아나는 걸 막기 위한 의도적 스텁. 추후 다크모드 지원 시 CSS 변수 기반 토큰 설계라 컴포넌트 재작성 없이 `.dark` 오버라이드 추가만으로 확장 가능.
 
 ## 폰트
 
@@ -52,3 +56,4 @@ shadcn 컴포넌트는 이 시맨틱 토큰만 참조. Design.md 팔레트와 **
 - [ ] Design.md 팔레트 hex ↔ `globals.css` oklch 변수 대응 유지
 - [ ] `gradient-brand` 사용처 = 위 목록 (신규 남발 없음)
 - [ ] 카테고리 도트 = 단일 색상 `#64748B` 고정 (카테고리별 색 코딩 없음)
+- [ ] 다크모드 미지원 유지 (`.dark` 클래스 미부여, 토글 없음)

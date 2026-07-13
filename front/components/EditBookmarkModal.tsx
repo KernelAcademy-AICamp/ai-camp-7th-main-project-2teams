@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { toast } from "react-toastify";
 import { X } from "lucide-react";
 import { useUpdateBookmark, type UpdateBookmarkFields } from "@/hooks/useUpdateBookmark";
 import { TOP_CATEGORIES } from "@/lib/tag-alias";
@@ -10,7 +11,8 @@ import type { Bookmark } from "@/hooks/useBookmarks";
 /** 카테고리 select 옵션 — 고정 13개, 가나다순 */
 const CATEGORY_OPTIONS = Array.from(TOP_CATEGORIES).sort((a, b) => a.localeCompare(b, "ko"));
 
-const MAX_TAGS = 10;
+// 백엔드 불변식과 정합(lib/schemas.ts bookmarkUpdateSchema.tags — 대분류 제외 중+소분류 최대 2개).
+const MAX_TAGS = 2;
 const MAX_TAG_LENGTH = 12;
 const MAX_DESCRIPTION_LENGTH = 2000;
 
@@ -35,6 +37,14 @@ export function addTag(tags: string[], input: string): string[] {
   const trimmed = input.trim().slice(0, MAX_TAG_LENGTH);
   if (!trimmed || tags.includes(trimmed) || tags.length >= MAX_TAGS) return tags;
   return [...tags, trimmed];
+}
+
+/** 상한 도달로 추가가 막힌 경우에만 경고 문구 반환, 그 외(빈 값·중복)는 null — 테스트 가능하도록 export */
+export function tagLimitWarning(tags: string[], input: string): string | null {
+  const trimmed = input.trim().slice(0, MAX_TAG_LENGTH);
+  if (!trimmed || tags.includes(trimmed)) return null;
+  if (tags.length >= MAX_TAGS) return `태그는 최대 ${MAX_TAGS}개까지 추가할 수 있어요.`;
+  return null;
 }
 
 /** 태그 제거 — 테스트 가능하도록 export */
@@ -100,6 +110,11 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
   }, [onClose]);
 
   const handleAddTag = () => {
+    const warning = tagLimitWarning(form.tags, tagInput);
+    if (warning) {
+      toast.warning(warning);
+      return;
+    }
     const next = addTag(form.tags, tagInput);
     if (next !== form.tags) {
       setForm({ ...form, tags: next });
@@ -182,13 +197,13 @@ export function EditBookmarkModal({ bookmark, onClose }: EditBookmarkModalProps)
                   onKeyDown={handleTagKeyDown}
                   placeholder="태그 입력 후 Enter"
                   maxLength={MAX_TAG_LENGTH}
-                  disabled={isPending || form.tags.length >= MAX_TAGS}
+                  disabled={isPending}
                   className="flex-1 rounded-lg border border-line px-3 py-2 text-sm text-text-primary outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
                 />
                 <button
                   type="button"
                   onClick={handleAddTag}
-                  disabled={isPending || form.tags.length >= MAX_TAGS}
+                  disabled={isPending}
                   className="cursor-pointer rounded-lg border border-line px-3 py-2 text-sm text-text-primary hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   추가

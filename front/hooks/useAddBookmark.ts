@@ -7,6 +7,8 @@ export interface AddedBookmark {
   title: string
   tags: string[]
   category_id: string | null
+  /** 대분류명 — POST 응답에서 category_id 계산에 쓰인 top을 그대로 실어줌 (조인 없이) */
+  category: string | null
   folder_hint: string | null
   is_favorite: boolean
   thumbnail_url: string | null

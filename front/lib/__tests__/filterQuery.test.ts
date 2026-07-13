@@ -31,7 +31,12 @@ describe('parseFilterQuery', () => {
 
   it('category/folder/tag 파싱', () => {
     const f = parseFilterQuery('category=개발&folder=일&tag=react')
-    expect(f).toEqual({ category: '개발', folder: '일', tag: 'react', tab: 'all' })
+    expect(f).toEqual({ category: '개발', folder: ['일'], tag: 'react', tab: 'all' })
+  })
+
+  it('folder 다단계 경로 파싱 (동명이인 구분)', () => {
+    const f = parseFilterQuery('folder=개발%2FReact')
+    expect(f.folder).toEqual(['개발', 'React'])
   })
 })
 
@@ -80,5 +85,11 @@ describe('parse ↔ build 왕복', () => {
     const parsed = parseFilterQuery(built)
     expect(parsed.category).toBe('학습')
     expect(parsed.tab).toBe('all')
+  })
+
+  it('폴더 경로 라운드트립 유지 (다단계)', () => {
+    const built = buildFilterQuery({ category: null, folder: ['개발', 'React'], tag: null, tab: 'folders' })
+    const parsed = parseFilterQuery(built)
+    expect(parsed.folder).toEqual(['개발', 'React'])
   })
 })

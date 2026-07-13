@@ -8,14 +8,15 @@ type ViewMode = 'list' | 'grid' | 'compact'
 interface FilterState {
   tab: SidebarTab
   category: string | null
-  folder: string | null
+  /** 폴더 필터 — 루트부터 선택 노드까지 전체 경로(동명이인 폴더 구분용). 미선택 시 null */
+  folder: string[] | null
   tag: string | null
   searchQuery: string
   sortOrder: SortOrder
   viewMode: ViewMode
   setTab: (tab: SidebarTab) => void
   setCategory: (category: string | null) => void
-  setFolder: (folder: string | null) => void
+  setFolder: (folder: string[] | null) => void
   setTag: (tag: string | null) => void
   setSearchQuery: (query: string) => void
   setSortOrder: (order: SortOrder) => void

@@ -11,7 +11,8 @@
 |------|------|------|
 | **Vitest** | 유닛 + Route Handler 통합 (`*.test.ts`) | ESM/Next 16 친화, 단일 러너 |
 | **MSW** | OpenAI/Supabase fetch 모킹 | 실제 호출·비용 차단 |
-| **Playwright MCP** | E2E 브라우저 시나리오 (Claude 구동) | 스크립트 아님, 시나리오 MD 기반 |
+| **Playwright** | E2E — `front/e2e/**/*.spec.ts`, CI에서 실행 | `test:e2e`(public)/`test:e2e:authed`(로그인 필요) |
+| **Playwright MCP** | 탐색적 E2E 시나리오 (Claude가 `browser_*`로 구동) | 스크립트화 안 된 시나리오만 MD 기반 (`docs/specs/e2e/*.md`) |
 | `@testing-library/react` | 컴포넌트 (v1.1) | MVP 스킵 |
 
 > 익스텐션: `chrome` API는 수동 mock 객체 + Vitest. 별도 프레임워크 없음.
@@ -19,8 +20,9 @@
 ### 2계층 구조
 
 ```
-유닛/통합 (Vitest)   → 테스트 케이스 .ts 파일, 스크립트, CI 실행
-E2E (Playwright MCP) → 시나리오 MD, Claude가 browser_* 도구로 구동
+유닛/통합 (Vitest)      → 테스트 케이스 .ts 파일, 스크립트, CI 실행
+E2E (Playwright spec)  → front/e2e/**/*.spec.ts, CI에서 실행(docs/specs/e2e/authed-ci.md)
+E2E (Playwright MCP)   → 스크립트화 안 된 탐색적 시나리오만 MD, Claude가 browser_* 도구로 구동
 ```
 
 ---
@@ -141,17 +143,28 @@ describe('GET /api/bookmarks — 보안', () => {
 
 ---
 
-## 4. E2E — Playwright MCP
+## 4. E2E — Playwright
 
-스크립트(`*.spec.ts`) 아님. **시나리오 MD를 Claude가 `browser_*` MCP 도구로 구동**. 레이아웃 미완성·반응형 변경에 강함.
+**실제 CI E2E는 스크립트화됨** — `front/e2e/{public,authed}/*.spec.ts`, `npm run test:e2e`/`test:e2e:authed`로 실행(`docs/specs/e2e/authed-ci.md` 참조).
+그 외 레이아웃 미완성·반응형 변경 등 스크립트화하기 이른 플로우는 **시나리오 MD를 Claude가 `browser_*` MCP 도구로 구동**해 탐색적으로 검증.
 
 ### 시나리오 위치
 
 ```
-docs/specs/e2e/
-├── auth.md          # 로그인 플로우
-├── save-search.md   # 저장 → 검색 재발견 (핵심 가치)
-└── import.md        # 파일 임포트 (WEB-14)
+front/e2e/
+├── public/public-pages.spec.ts   # 스크립트화된 E2E (CI)
+├── authed/
+│   ├── auth.setup.ts
+│   ├── dashboard.spec.ts
+│   └── import.spec.ts
+└── fixtures/bookmarks.html
+
+docs/specs/e2e/                   # 탐색적 시나리오 MD (Playwright MCP, 스크립트화 전)
+├── auth.md
+├── authed-ci.md                  # 인증 필요 E2E CI 설정
+├── save-search.md
+├── import.md
+└── category-sidebar.md
 ```
 
 ### 시나리오 작성 형식
@@ -267,12 +280,14 @@ docs/specs/e2e/              # Playwright MCP 시나리오 (MD)
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage"
+    "test:cov": "vitest run --coverage",
+    "test:e2e": "playwright test --project=public",
+    "test:e2e:authed": "playwright test --project=authed"
   }
 }
 ```
 
-> E2E는 npm script 아님 — `/e2e` 스킬이 Playwright MCP로 시나리오 구동.
+> 탐색적 시나리오(스크립트화 전)는 npm script 아님 — `/e2e` 스킬이 Playwright MCP로 구동.
 
 ---
 

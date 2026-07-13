@@ -1,7 +1,9 @@
 # 태그 검증 프로세스 재정의 시나리오
 
 > 작성 배경: 2026-07-02 전체 재태깅(retag) 결과 미분류 119→371개(29%) 증가. 원인 분석 → 검증 프로세스 재설계.
-> 관련: `front/lib/ai.ts`, `front/lib/tag-eval.ts`, `front/eval/tag-golden.json`, `front/scripts/retag.ts`, `docs/specs/tag-taxonomy.md`
+> 관련: `front/lib/ai.ts`, `front/lib/tag-eval.ts`, `front/eval/tag-golden.json`, `front/scripts/retag.ts`,
+> `front/scripts/category-backfill.ts`, `front/lib/fetchMeta.ts`, `.claude/skills/game-tag-backfill/SKILL.md`,
+> `docs/specs/tag-taxonomy.md`
 
 ## 0. 원인 판정 (2026-07-02 ablation 실측)
 
@@ -118,16 +120,22 @@ SELECT
 
 ## 3. 실행 순서 (권장 — §0 판정 반영)
 
-1. **B-2** ✅ `KEEP_NONEMPTY` (bad0b81). B-1(백업 필수화) 미완.
-2. **C-1, C-2** — 골든셋에 저품질 title 패턴 편입 + 정책 결정. **미분류 감축 실질 지렛대(주원인 대응).** ⚠️ §4 팀 정책 선결.
+1. **B-1, B-2** ✅ `scripts/retag.ts` 자동 백업(쓰기 전 스냅샷 + `RESTORE=`) + `KEEP_NONEMPTY`(bad0b81, 2026-07-13 기본값 true로 확정 — 아래 §4).
+2. **C-1, C-2** ✅ 골든셋에 저품질 title 패턴 편입(n=115→213) + 정책 결정 완료. baseline 재측정 완료(아래 참조).
 3. **A-1** ✅ 평가 이중 모드(rich/title-only). A53·PR #156. 실측 skew F1 −0.039.
 4. **D-1, D-2** ✅ 게이트 강화(F1+`emptyRate`). 회귀 자동 차단.
-5. **A-2** — 입력 보강(description). import 경로 ✅ A52·PR #155. retag 경로 미완. **효과 제한적(미분류 -2%p, §0).**
+5. **A-2** ✅ 입력 보강(description). import 경로 ✅ A52·PR #155. retag 경로 2026-07-13 완료 — `scripts/retag.ts`가 DB `description` 컬럼을 재크롤링 없이 그대로 사용(§4 (a) 확정).
+
+### 현재 상태 (문서 갱신 시점)
+`front/eval/tag-golden.json`은 이 문서의 §0 분석 시점(115건)보다 커진 213건 — C-1 저품질 title 편입(pxd·G마켓·공공데이터포털·ChatGPT·Suno 등 잔여 gap 포함) 완료.
+2026-07-13 n=213 기준 재측정(gpt-4o-mini): rich F1 0.791(대분류 0.869, exact 0.587, emptyRate 0.071),
+title-only F1 0.764(대분류 0.840, exact 0.577, emptyRate 0.091). §0의 115건 시점 수치(F1 0.85 등)보다
+낮아졌는데 이는 회귀가 아니라 골든셋이 저품질 title 패턴을 더 대표하게 되며 과대평가가 빠진 결과 —
+§0/§1.2 판정 그대로 실증됨. `tag-eval.test.ts`의 `F1_BASELINE`(0.82→0.76)·`TITLE_ONLY_F1_BASELINE`(0.77→0.73)도
+이 실측치 기준으로 갱신 완료.
 
 ### 남은 작업
-- **C-1/C-2** (골든셋 저품질 title 편입) — §4 정책 합의 후. 미분류 감축 주 지렛대.
-- **B-1** (retag 백업 자동화) — 소규모 안전장치.
-- **A-2 retag** (retag 재크롤링 description) — 효과 제한적, 후순위.
+없음 — §2~§4 전 시나리오(A/B/C/D) 구현·정책 결정 완료(2026-07-13). 후속은 실사용 중 회귀 관찰(D-1/D-2 게이트) 정도.
 
 > §0 판정: description 부재는 부차 원인. retag만의 문제 아님(import 공통). 주원인은 저품질 title + 골든셋 비대표성.
 
@@ -136,5 +144,82 @@ SELECT
 - [x] LLM 챗 툴 분류 여부 (§C-2.1) → **AI/ML>LLM** (2026-07-02)
 - [x] 공공데이터/통계 대분류 신설 여부 (§C-2.2) → **비즈니스>데이터, 신설 안 함** (2026-07-02)
 - [x] 디자인 스튜디오 브랜드/디자인 우선순위 (§C-2.3) → **브랜드>마케팅** (2026-07-02, eval 후 디자인>스튜디오에서 번복)
-- [ ] retag `KEEP_NONEMPTY` 기본값 (§B-2)
-- [ ] retag 입력 보강 방식 a/b/c (§A-2)
+- [x] retag `KEEP_NONEMPTY` 기본값 (§B-2) → **기본값 true(스킵)** — `KEEP_NONEMPTY=0`으로만 순손실 허용 (2026-07-13)
+- [x] retag 입력 보강 방식 a/b/c (§A-2) → **(a) DB description 컬럼 사용** — 재크롤링(b) 없이 기존 컬럼을 그대로 태깅 입력에 포함 (2026-07-13)
+- [x] AI 코딩 툴 콘텐츠 개발/AI-ML 분류 기준 (§6.2) → **툴 자체가 주제=AI/ML, 툴로 만든 산출물이
+      주제=산출물 도메인** — 새 카테고리 신설 안 함 (2026-07-13)
+- [x] 재분류 스크립트의 빈 태그 슬롯 처리 (§6.4-3) → **`mergeTags`: 빈 슬롯만 기존 태그로 채움,
+      `KEEP_NONEMPTY`와 병행 적용** (2026-07-13)
+
+## 5. 회귀 관찰 운영 (2026-07-13)
+
+D-1/D-2 게이트(F1 baseline + `emptyRate` 상한)를 실제로 언제·어떻게 돌리고, 실패 시 무엇을 할지 정의. `RUN_TAG_EVAL=1`은 실 OpenAI 호출(비용) 때문에 CI 기본 실행에서 빠져있음(`ci.yml` 확인 — `RUN_TAG_EVAL` 미설정) → 사람이 수동 트리거.
+
+### 트리거 (언제 `RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts` 실행)
+1. `lib/ai.ts`(SYSTEM_PROMPT·`generateTags`) 수정 PR — 머지 전 필수
+2. `scripts/retag.ts` 전체 재태깅을 프로덕션 DB에 실행하기 전 — 사전 캐너리
+3. 그 외 정기 실행 없음 — 비용 대비 실익 낮아 스킵(트리거 1·2로 충분히 커버)
+
+### 실패 판단표
+
+| 증상 | 원인 추정 | 조치 |
+|---|---|---|
+| F1↓, emptyRate 정상 | 태그 네이밍 드리프트(alias 미매칭) | per-item mismatch 로그 확인 → `lib/tag-alias.ts` 보정 or 프롬프트 소폭 수정 후 재실행 |
+| emptyRate > `EMPTY_RATE_MAX`(0.15) 급등 | 프롬프트가 분류 과보수화(태그 포기) | 하드 블록 — 머지/배포 금지, 프롬프트 원복 |
+| F1↑(실개선) | 프롬프트 개선 | baseline 상향 갱신(실측 대비 −0.03 마진 관례 유지, §0/§본문 사례처럼) |
+| 특정 항목만 mismatch인데 gold가 틀려 보임 | 골든셋 라벨 오류 | `eval/tag-golden.json` 라벨 수정 후 재실행(코드 변경 아님) |
+
+### 사후 롤백
+retag를 이미 프로덕션에 실행한 뒤 문제 발견 시: `scripts/backups/retag-tags-<ts>.json`(B-1 자동 백업) 확인 →
+`RESTORE=<path> npx tsx scripts/retag.ts`로 즉시 원복. 별도 승인 절차 없음 — 소규모 팀, 실행자 판단.
+
+### 기록 방식
+별도 대시보드·알림 시스템 구축 안 함(2인 프로젝트 규모에 과함). PR·커밋 메시지에
+"RUN_TAG_EVAL: rich F1 x.xx / title-only F1 y.yy / emptyRate z.zz" 한 줄 남기는 것으로 충분.
+
+## 6. 개발 vs AI/ML 모호성 해소 (2026-07-13, PR #244)
+
+### 6.1 문제
+"하네스(+엔지니어링)", "코덱스", "클로드(+코드)" 등 AI 코딩 툴 콘텐츠가 대분류 **개발/AI-ML**에
+일관성 없이 흩어짐. 새 대분류·중분류 신설은 §1.2 골든셋 대표성 문제를 반복할 위험(카테고리
+추가 → 기존 정답 오버라이드 → F1 회귀, 최초 시도에서 실측 0.76→0.687로 확인 후 전량 리버트)
+→ **스키마 변경 없이 SYSTEM_PROMPT 판별 규칙만 추가**로 해소.
+
+### 6.2 판별 규칙 (`front/lib/ai.ts` SYSTEM_PROMPT)
+- AI 코딩 에이전트/툴(Claude Code·Codex·Cursor·Windsurf 등) **자체**의 사용법·설정·비교·내부동작이
+  주제 → 대분류 **AI/ML**(중분류: 강의 콘텐츠면 "강의" 규칙 우선, 아니면 "LLM")
+- 그 툴을 도구로 써서 **다른 도메인 산출물**(프론트엔드 앱·자동화 등)을 만드는 과정이 주제 →
+  그 산출물의 도메인(예: n8n으로 GitHub 자동화 = "개발")
+- few-shot 2건 추가(AI/ML>LLM 예시, 개발>자동화>n8n 예시)
+
+### 6.3 골든셋 재정합
+기존 라벨 중 위 규칙과 불일치하는 9건을 개발→AI/ML로 재라벨(예: "How I use Claude Code",
+"대부분이 모르는 OpenAI Codex 진짜 활용법", "하네스 엔지니어링을 그래서 어떻게 써야할까" 등).
+재측정: rich F1 0.770(baseline 0.76 유지), title-only F1 0.743(baseline 0.73 유지) — 회귀 없음.
+
+### 6.4 부수 발견·수정
+1. **YouTube description 오염** — oEmbed엔 실제 description이 없어 `"${channelName} 채널"`을
+   합성 사용 중이었는데, 채널명("개발동생 채널" 등)에 분류 키워드가 섞여 편향 유발. YouTube Data
+   API v3(`videos.list?part=snippet`) 연동으로 실제 description 사용(`front/lib/fetchMeta.ts`).
+   기존 YouTube 북마크 223건 description/tags/category/embedding 재계산.
+   - **레이턴시**: oEmbed+Data API 2개 호출이 `bookmarks`/`preview`/`recheck`/`import` 라우트
+     전부에서 발생. videoId는 URL에서 바로 뽑혀 두 호출이 서로 독립이라 `Promise.all` 병렬화
+     완료(worst-case 10s→5s, 2026-07-13).
+   - **백로그(B, 미적용)**: YouTube API 2개는 JSON 응답이라 HTML 스크래핑보다 훨씬 가벼움 —
+     공용 `FETCH_TIMEOUT_MS`(5s) 대신 YouTube 전용 더 짧은 타임아웃(예: 3s)으로 worst-case 추가
+     절감 가능. 병렬화만으로 5s까지 줄어 실익 작아 보류. **실사용 중 YouTube 북마크 저장이
+     느리다고 체감되면 바로 적용** — `fetchYouTubeOEmbed`/`fetchYouTubeDescription`에
+     `AbortSignal.timeout(FETCH_TIMEOUT_MS)` 대신 별도 상수(`YT_FETCH_TIMEOUT_MS = 3000`) 적용.
+   - **운영 요구사항**: `front/.env`(prod는 배포 환경변수)에 `YOUTUBE_API_KEY` 설정 필요.
+     미설정이어도 실패 안 함 — `fetchYouTubeDescription`이 `null` 반환하고 oEmbed의
+     `"채널명 채널"` 폴백으로 조용히 저하(§6.4-1 원 문제로 회귀). videos.list 1 unit/호출,
+     기본 일일 quota(10,000 units) 대비 여유 큼 — 별도 모니터링 불필요.
+2. **`retag.ts` category_id 갱신 누락 버그** — 재태깅 시 `extractTopCategory` 미호출로
+   `category_id`가 갱신 안 되고 대분류명까지 `tags` 컬럼에 그대로 오염되던 구조적 버그 발견·수정.
+3. **태그 유실 회귀** — 재분류 시 빈 슬롯을 기존 태그로 채우지 않고 통째로 덮어써 138건 중 77건
+   태그 유실(게임명 등 사용자 직접 추가값 포함). `mergeTags()` 병합 컨벤션을
+   `retag.ts`/`category-backfill.ts` 양쪽에 적용(§B-2 `KEEP_NONEMPTY`와 별개 계층 — 이쪽은
+   "일부 유지"가 아니라 "빈 슬롯만 구태그로 채움").
+4. **태그 개수 불변식 프론트 미동기화** — `lib/schemas.ts`는 태그 max 2(대분류 제외 중+소분류)인데
+   `EditBookmarkModal.tsx`는 max 10으로 남아있어 상한 도달해도 조용히 막히기만 함. `MAX_TAGS=2`로
+   정합 + 상한 도달 시 `react-toastify` 경고 토스트 추가.

@@ -21,7 +21,13 @@ interface SearchBarProps {
 export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resultCount }: SearchBarProps) {
   const [debounced] = useDebounceValue(value, 300)
   const isMounted = useRef(false)
-  const [recentSearches, setRecentSearches] = useLocalStorage<string[]>(RECENT_SEARCHES_KEY, [])
+  // initializeWithValue: false — 서버는 localStorage에 접근 불가해 항상 빈 배열을 렌더.
+  // 기본값(true)이면 클라이언트 첫 렌더(hydration)에서 곧장 실제 저장값을 읽어 서버 출력과 달라져
+  // hydration mismatch가 난다. false로 두면 최초 렌더는 서버와 동일하게 빈 배열, 마운트 후 훅 내부
+  // useEffect가 실값으로 재동기화한다.
+  const [recentSearches, setRecentSearches] = useLocalStorage<string[]>(RECENT_SEARCHES_KEY, [], {
+    initializeWithValue: false,
+  })
 
   useEffect(() => {
     // 마운트 시 최초 실행 건너뜀 — 빈 문자열로 onClear 의도치 않게 호출 방지

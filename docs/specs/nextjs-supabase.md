@@ -91,8 +91,11 @@ interface Bookmark {
   id: string
   title: string
   url: string
+  description: string | null      // 사용자 입력 설명 (A60)
+  thumbnail_url: string | null    // og:image/YouTube 썸네일 URL (/api/thumbnail 프록시로 표시)
   tags: string[]
   category_id: string | null
+  category: string | null         // categories.name 조인 (GET /api/account 등)
   is_favorite: boolean
   is_dead: boolean                // 저장 시점 404/410 감지 — 카드에 "링크 끊김" 배지(비차단)
   folder_hint: string[] | null   // 파일 임포트 시 원본 폴더 경로, 익스텐션 저장은 null
@@ -233,6 +236,10 @@ export const bookmarkCreateSchema = bookmarkSchema.extend({
 
 export const searchSchema = z.object({
   query: z.string().min(1).max(50),         // PRD: 검색창 최대 50자
+  category: z.string().min(1).optional(),
+  // A58: 태그·즐겨찾기 필터 — 둘 다 optional, 미지정 시 기존 전체 검색 동작 유지.
+  tag: z.string().min(1).optional(),
+  is_favorite: z.boolean().optional(),
 })
 
 // A60: PATCH /api/bookmarks/:id 확장 — 즐겨찾기·태그·카테고리·설명 부분 수정.
@@ -243,7 +250,8 @@ export const bookmarkUpdateSchema = z
     is_favorite: z.boolean().optional(),
     tags: z.array(z.string().min(1).max(50)).max(10).optional(),
     // 대분류 이름(또는 alias) — 실제 유효성 검증은 tag-alias.ts 기준으로 라우트에서 수행.
-    category: z.string().min(1).max(50).optional(),
+    // null 허용 — 미분류로 변경(카테고리 해제) 용도.
+    category: z.string().min(1).max(50).nullable().optional(),
     // null 허용 — 기존 설명 삭제 용도.
     description: z.string().max(2000).nullable().optional(),
   })
@@ -536,6 +544,8 @@ front/
 │   │   │       └── route.ts      # GET — folder_hint distinct 목록 (A31)
 │   │   ├── search/
 │   │   │   └── route.ts          # POST(A7)
+│   │   ├── thumbnail/
+│   │   │   └── route.ts          # GET — 썸네일 프록시(SSRF 가드), DB/스토리지 영구 저장 없음
 │   │   └── account/
 │   │       └── route.ts          # DELETE(A14) + GET(A15, category:categories(name) join)
 │   ├── onboarding/                # A26 — 온보딩 별도 페이지 (MVP)

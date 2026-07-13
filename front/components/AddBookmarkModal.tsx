@@ -1,11 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, Check, Globe } from "lucide-react";
+import { AlertTriangle, Check, Globe, Shapes, Tag } from "lucide-react";
 import { useDebounceValue } from "usehooks-ts";
 import { useAddBookmark, type AddedBookmark } from "@/hooks/useAddBookmark";
 import { Favicon } from "@/components/Favicon";
 import { cn } from "@/lib/utils";
+
+/** 대시보드 그리드 뷰 카드(BookmarkCard) 배지 스타일 그대로 미러링 — 카테고리(보라 outline)·태그(블루 filled) 색상 구분 유지 */
+const CATEGORY_CHIP_GRID =
+  "inline-flex h-7 items-center gap-1 rounded-lg border border-violet-400 bg-black/70 px-2 text-xs font-semibold text-violet-200 backdrop-blur-sm";
+const TAG_CHIP = "rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-brand-strong";
 
 function isValidUrl(value: string) {
   try {
@@ -73,6 +78,8 @@ export function AddBookmarkModal({
   const reqIdRef = useRef(0);
   // 저장 직후 AI 태깅 결과 — 성공 화면에서 태그 순차 리빌용
   const [savedBookmark, setSavedBookmark] = useState<AddedBookmark | null>(null);
+  // 그리드 카드 미리보기 썸네일 로드 실패 시 파비콘 폴백 (BookmarkCard 그리드 뷰와 동일 패턴)
+  const [thumbnailErrored, setThumbnailErrored] = useState(false);
 
   const { mutate, isPending, isSuccess, error, reset } = useAddBookmark();
 
@@ -82,6 +89,7 @@ export function AddBookmarkModal({
     setUrlError("");
     setMeta(null);
     setSavedBookmark(null);
+    setThumbnailErrored(false);
     reqIdRef.current++;
     reset();
   }, [reset]);
@@ -208,52 +216,79 @@ export function AddBookmarkModal({
 
               {isSuccess && savedBookmark ? (
                 <div className="flex flex-col gap-4 py-2">
-                  {/* AI 태깅 리빌 — welcome 히어로 목업(app/welcome/page.tsx)과 동일한 animate-tag-in 재사용 */}
-                  <div className="rounded-lg border border-line bg-accent p-4">
-                    <div className="flex items-center gap-3">
-                      <Favicon url={savedBookmark.url} />
-                      <div className="min-w-0">
-                        <p className="animate-rise truncate text-sm font-semibold text-text-primary opacity-0 [animation-delay:0ms]">
-                          {savedBookmark.title}
-                        </p>
-                        <p className="animate-rise truncate font-mono text-xs text-text-secondary opacity-0 [animation-delay:80ms]">
-                          {savedBookmark.url}
-                        </p>
-                      </div>
+                  {/* 그리드 뷰 카드 미리보기 — BookmarkCard(components/BookmarkCard.tsx) 그리드 뷰와 동일한
+                      썸네일+카테고리 배지+태그 구조를 그대로 미러링. 카테고리(보라)→태그(블루) 순으로 자동 완성되는
+                      과정을 animate-tag-in으로 리빌. */}
+                  <div className="overflow-hidden rounded-lg bg-gray-900 shadow-lg">
+                    <div className="relative aspect-video w-full bg-gray-800">
+                      {savedBookmark.thumbnail_url && !thumbnailErrored ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={`/api/thumbnail?id=${savedBookmark.id}`}
+                          alt=""
+                          loading="lazy"
+                          onError={() => setThumbnailErrored(true)}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="gradient-brand flex h-full w-full items-center justify-center">
+                          <Favicon url={savedBookmark.url} boxClassName="h-12 w-12 rounded-xl" />
+                        </div>
+                      )}
+
+                      {savedBookmark.category && (
+                        <span
+                          className={cn(CATEGORY_CHIP_GRID, "animate-tag-in absolute top-2 left-2 opacity-0")}
+                          style={{ animationDelay: "200ms" }}
+                        >
+                          <Shapes size={10} />
+                          {savedBookmark.category}
+                        </span>
+                      )}
                     </div>
 
-                    {savedBookmark.is_dead && (
-                      <p className="animate-rise mt-2.5 flex items-center gap-1 text-xs text-amber-600 opacity-0 [animation-delay:160ms]">
-                        <AlertTriangle size={12} aria-hidden />
-                        이 링크는 더 이상 존재하지 않는 것 같아요.
+                    <div className="flex flex-col gap-1.5 p-4">
+                      <p className="animate-rise line-clamp-2 text-base font-bold text-white opacity-0 [animation-delay:0ms]">
+                        {savedBookmark.title}
                       </p>
-                    )}
-
-                    {savedBookmark.tags.length > 0 ? (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {savedBookmark.tags.map((tag, i) => (
-                          <span
-                            key={`${tag}-${i}`}
-                            className="animate-tag-in rounded-full bg-mint-soft px-2.5 py-1 text-xs font-bold text-ink opacity-0"
-                            style={{ animationDelay: `${240 + i * 140}ms` }}
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="animate-rise mt-3 text-xs text-text-secondary opacity-0 [animation-delay:240ms]">
-                        태그 자동 생성에 실패했어요 — 나중에 수정에서 직접 추가할 수 있어요.
+                      <p className="animate-rise truncate text-sm font-medium text-brand opacity-0 [animation-delay:80ms]">
+                        {extractTitle(savedBookmark.url)}
                       </p>
-                    )}
 
-                    <p
-                      className="animate-rise mt-3 flex items-center gap-1.5 text-xs font-semibold text-mint opacity-0"
-                      style={{ animationDelay: `${240 + savedBookmark.tags.length * 140 + 120}ms` }}
-                    >
-                      <Check size={12} aria-hidden />
-                      AI 분류 완료
-                    </p>
+                      {savedBookmark.is_dead && (
+                        <p className="animate-rise flex items-center gap-1 text-xs text-amber-400 opacity-0 [animation-delay:160ms]">
+                          <AlertTriangle size={12} aria-hidden />
+                          이 링크는 더 이상 존재하지 않는 것 같아요.
+                        </p>
+                      )}
+
+                      {savedBookmark.tags.length > 0 ? (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          <Tag size={12} className="shrink-0 text-gray-500" aria-hidden />
+                          {savedBookmark.tags.map((tag, i) => (
+                            <span
+                              key={`${tag}-${i}`}
+                              className={cn(TAG_CHIP, "animate-tag-in opacity-0")}
+                              style={{ animationDelay: `${400 + i * 140}ms` }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="animate-rise pt-1 text-xs text-gray-400 opacity-0 [animation-delay:400ms]">
+                          태그 자동 생성에 실패했어요 — 나중에 수정에서 직접 추가할 수 있어요.
+                        </p>
+                      )}
+
+                      <p
+                        className="animate-rise flex items-center gap-1.5 border-t border-white/10 pt-2.5 text-xs font-semibold text-mint opacity-0"
+                        style={{ animationDelay: `${400 + savedBookmark.tags.length * 140 + 120}ms` }}
+                      >
+                        <Check size={12} aria-hidden />
+                        AI 분류 완료
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex gap-2">
@@ -262,6 +297,7 @@ export function AddBookmarkModal({
                         reset();
                         setUrl("");
                         setSavedBookmark(null);
+                        setThumbnailErrored(false);
                       }}
                       className="cursor-pointer rounded-lg border border-line px-4 py-2 text-sm text-text-primary hover:bg-slate-50"
                     >

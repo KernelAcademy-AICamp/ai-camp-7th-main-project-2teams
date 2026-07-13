@@ -94,14 +94,14 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     setTab(t);
     setCategory(null);
     setTag(null);
-    setFolder(t === "folders" ? (folderTree[0]?.name ?? null) : null);
+    setFolder(t === "folders" ? (folderTree[0]?.path ?? null) : null);
     setSearchQuery("");
   };
 
   // 내 폴더 탭 진입 시(탭 클릭 경유 안 한 새로고침·직접 진입 포함) 첫 줄 기본 선택
   useEffect(() => {
     if (tab === "folders" && folder === null && folderTree.length > 0) {
-      setFolder(folderTree[0].name);
+      setFolder(folderTree[0].path);
     }
   }, [tab, folder, folderTree, setFolder]);
 
@@ -121,9 +121,9 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     setSearchQuery("");
   };
 
-  const handleFolder = (name: string) => {
-    if (folder === name) return;
-    setFolder(name);
+  const handleFolder = (path: string[]) => {
+    if (folder !== null && folder.join("/") === path.join("/")) return;
+    setFolder(path);
     setCategory(null);
     setTag(null);
   };
@@ -240,7 +240,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
                         : "border-transparent text-text-secondary hover:bg-slate-100",
                     ].join(" ")}
                   >
-                    {/* 카테고리 컬러코딩 도트 (Design.md 7×7 라운드 스퀘어) */}
+                    {/* 카테고리 불릿 도트 — 색상은 카테고리별 구분 아닌 통일 회색 고정 (Design.md 7×7 라운드 스퀘어) */}
                     <span className="h-[7px] w-[7px] shrink-0 rounded-[2px] bg-text-secondary" />
                     <span className="truncate">{name}</span>
                   </button>
@@ -344,16 +344,16 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
 interface FolderTreeItemProps {
   node: FolderNode;
   depth: number;
-  selected: string | null;
-  onSelect: (name: string) => void;
+  selected: string[] | null;
+  onSelect: (path: string[]) => void;
 }
 
 // 폴더 트리 노드 1개 — 자식 있으면 펼침/접기, 행 클릭 시 폴더 필터 선택.
-// ponytail: 같은 이름 다른 부모면 함께 선택됨(전역 contains 필터). 경로 정밀 필터 필요 시 API에 path 전달.
+// 경로(path) 전체로 비교·선택해 동명이인 폴더(다른 부모, 같은 이름)를 구분한다.
 function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps) {
   const [open, setOpen] = useState(false); // 기본 접힘
   const hasChildren = node.children.length > 0;
-  const active = selected === node.name;
+  const active = selected !== null && selected.join("/") === node.path.join("/");
 
   return (
     <li>
@@ -371,7 +371,7 @@ function FolderTreeItem({ node, depth, selected, onSelect }: FolderTreeItemProps
           <span className="w-4 shrink-0" />
         )}
         <button
-          onClick={() => onSelect(node.name)}
+          onClick={() => onSelect(node.path)}
           aria-pressed={active}
           title={node.name}
           className={[

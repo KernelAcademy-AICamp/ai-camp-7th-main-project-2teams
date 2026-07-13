@@ -18,6 +18,17 @@ interface Row {
   tags: string[]
 }
 
+// 새 분류 결과가 빈 슬롯(최대 2개, schemas.ts 불변식)을 남기면 기존 태그로 채움 —
+// game-tag-backfill 등이 채운 특정 값(게임명 등)을 재분류가 통으로 덮어써 유실시키는 것 방지.
+function mergeTags(newTags: string[], oldTags: string[]): string[] {
+  const merged = [...newTags]
+  for (const old of oldTags) {
+    if (merged.length >= 2) break
+    if (!merged.includes(old)) merged.push(old)
+  }
+  return merged
+}
+
 async function categoryIdFor(userId: string, name: string, cache: Map<string, string>): Promise<string> {
   const key = `${userId}:${name}`
   const cached = cache.get(key)
@@ -61,14 +72,15 @@ async function processRow(row: Row, categoryCache: Map<string, string>): Promise
   const { category, midTags } = extractTopCategory(normalizeTags(tags))
   if (!category) return 'skipped'
 
+  const merged = mergeTags(midTags, row.tags ?? [])
   const categoryId = await categoryIdFor(row.user_id, category, categoryCache)
   const { error } = await supabase
     .from('bookmarks')
-    .update({ category_id: categoryId, tags: midTags })
+    .update({ category_id: categoryId, tags: merged })
     .eq('id', row.id)
   if (error) throw error
 
-  console.log(`  [OK] ${row.title.slice(0, 40)} → ${category}${midTags.length ? '>' + midTags.join(',') : ''}`)
+  console.log(`  [OK] ${row.title.slice(0, 40)} → ${category}${merged.length ? '>' + merged.join(',') : ''}`)
   return 'reclassified'
 }
 
