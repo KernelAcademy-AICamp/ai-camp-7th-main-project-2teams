@@ -240,7 +240,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
                         : "border-transparent text-text-secondary hover:bg-slate-100",
                     ].join(" ")}
                   >
-                    {/* 카테고리 컬러코딩 도트 (Design.md 7×7 라운드 스퀘어) */}
+                    {/* 카테고리 불릿 도트 — 색상은 카테고리별 구분 아닌 통일 회색 고정 (Design.md 7×7 라운드 스퀘어) */}
                     <span className="h-[7px] w-[7px] shrink-0 rounded-[2px] bg-text-secondary" />
                     <span className="truncate">{name}</span>
                   </button>
