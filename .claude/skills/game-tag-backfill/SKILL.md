@@ -29,7 +29,15 @@ description: 게임 카테고리 북마크 중 게임명 소분류 태그가 없
    title/url만으로 빈 태그 나오면, `lib/fetchMeta.ts`의 `fetchMeta(url)`로 description 재fetch 후
    `generateTags({ title, url, description })`로 1회 재시도(저장 시점과 동일 로직 재사용, 새 코드 불필요).
    재시도까지 빈 태그면 억지 태깅 금지 원칙대로 스킵(옛 링크 썩음·meta 빈약 등 정상 스킵 케이스).
-   찾아낸 태그는 기존 tags를 지우지 않고 새로 식별된 게임명만 배열에 추가(중복 방지). embedding은 title 불변이면 재계산 불필요.
+   찾아낸 태그는 기존 tags를 지우지 않고 새로 식별된 게임명만 배열에 추가(중복 방지).
+   **단, `lib/schemas.ts`의 태그 최대 2개 불변식(대분류 제외 중+소분류) 준수 필수** — 이 스킬은
+   `mcp__supabase__execute_sql`로 DB 직접 update하므로 zod validation을 거치지 않음, 캡을 스킬
+   단계에서 직접 지켜야 함:
+   - 기존 tags가 2개 미만이면 그대로 추가.
+   - 이미 2개 찬 경우, 게임명이 가장 구체적인 식별 정보이므로 기존 태그 중 가장 일반적인 것
+     (예: "공략"·"리뷰" 같은 범용 태그, 게임 장르·시리즈명보다 우선순위 낮음)을 밀어내고 게임명으로
+     교체. 어느 쪽이 더 일반적인지 애매하면 스킵(억지 판단 금지, 순수 누락분만 대상 원칙 유지).
+   embedding은 title 불변이면 재계산 불필요.
 
 4. **DB 갱신**: 대상 row의 `tags` 컬럼만 update. `content`/`embedding` 컬럼 건드리지 않음.
 

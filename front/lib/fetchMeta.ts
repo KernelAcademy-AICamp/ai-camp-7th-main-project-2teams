@@ -268,12 +268,16 @@ export async function fetchMeta(url: string): Promise<{
 }> {
   // YouTube 영상: oEmbed 우선 (HTML 파싱보다 안정적). 채널 URL이면 null → HTML 폴백.
   if (isYouTube(url)) {
-    const oembed = await fetchYouTubeOEmbed(url)
+    // videoId는 URL에서 바로 추출(oEmbed 응답에 비의존) — oEmbed와 Data API 호출은 서로 독립이라
+    // 병렬 실행. 순차 실행 시 worst-case(각 5s 타임아웃) 10s까지 늘어나던 것을 5s로 절감.
+    const videoId = extractYouTubeVideoId(url)
+    const [oembed, realDescription] = await Promise.all([
+      fetchYouTubeOEmbed(url),
+      videoId ? fetchYouTubeDescription(videoId) : Promise.resolve(null),
+    ])
     if (oembed) {
-      // Data API로 실제 영상 설명 보강 시도 — 실패/키없음/채널URL(videoId 없음)이면 oEmbed의
-      // "채널명 채널" 폴백 유지(그래도 태깅 입력이 완전히 비진 않게).
-      const videoId = extractYouTubeVideoId(url)
-      const realDescription = videoId ? await fetchYouTubeDescription(videoId) : null
+      // Data API 실패/키없음/채널URL(videoId 없음)이면 oEmbed의 "채널명 채널" 폴백 유지
+      // (그래도 태깅 입력이 완전히 비진 않게).
       const description = realDescription ?? oembed.description
       // oEmbed는 실제 페이지 status가 아니라 httpStatus는 null(oEmbed 실패 시엔 아래 HTML 폴백에서 실제 status 확보).
       return { ...oembed, description, content: description, httpStatus: null }
