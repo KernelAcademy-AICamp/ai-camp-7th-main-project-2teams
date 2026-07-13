@@ -1,5 +1,8 @@
-// 전체 북마크 재태깅 — 개선된 SYSTEM_PROMPT(lib/ai.ts) 기준으로 tags 갱신.
+// 전체 북마크 재태깅 — 개선된 SYSTEM_PROMPT(lib/ai.ts) 기준으로 category_id·tags 갱신.
 // 실행: source .env 후 `npx tsx scripts/retag.ts`
+// tags는 새 분류 결과(최대 2개, schemas.ts 불변식)로 빈 슬롯만 기존 태그로 채움(mergeTags) —
+// game-tag-backfill 등이 채운 특정 태그를 통째로 덮어써 유실시키지 않도록.
+// ※ 백업/RESTORE는 tags만 커버 — category_id 변경은 롤백 대상 아님(TagSnapshot 포맷 미확장).
 // A-2(a) 확정(docs/specs/tag-eval-redesign.md §A-2·§4): DB description 컬럼을 재크롤링 없이 그대로 태깅 입력에 포함.
 // 환경변수:
 //   DRY=1          쓰기 없이 예측만 출력(카나리)
@@ -17,6 +20,7 @@ import { createClient } from '@supabase/supabase-js'
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { generateTags } from '../lib/ai'
+import { normalizeTags, extractTopCategory } from '../lib/tag-alias'
 import { serializeBackup, parseBackup, type TagSnapshot } from './retag-backup'
 
 const DRY = process.env.DRY === '1'
@@ -33,9 +37,54 @@ const supabase = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } },
 )
 
-type Row = { id: string; url: string; title: string; tags: string[]; description: string | null }
+type Row = {
+  id: string
+  user_id: string
+  url: string
+  title: string
+  tags: string[]
+  description: string | null
+  category_id: string | null
+  category: { name: string } | null
+}
 
 const eq = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i])
+
+// 새 분류 결과가 빈 슬롯(최대 2개, schemas.ts 불변식)을 남기면 기존 태그로 채움 —
+// game-tag-backfill 등이 채운 특정 값(게임명 등)을 재태깅이 통으로 덮어써 유실시키는 것 방지.
+function mergeTags(newTags: string[], oldTags: string[]): string[] {
+  const merged = [...newTags]
+  for (const old of oldTags) {
+    if (merged.length >= 2) break
+    if (!merged.includes(old)) merged.push(old)
+  }
+  return merged
+}
+
+const categoryCache = new Map<string, string>()
+async function categoryIdFor(userId: string, name: string): Promise<string> {
+  const key = `${userId}:${name}`
+  const cached = categoryCache.get(key)
+  if (cached) return cached
+  const { data } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('name', name)
+    .maybeSingle()
+  if (data) {
+    categoryCache.set(key, data.id)
+    return data.id
+  }
+  const { data: inserted, error } = await supabase
+    .from('categories')
+    .insert({ user_id: userId, name })
+    .select('id')
+    .single()
+  if (error) throw error
+  categoryCache.set(key, inserted.id)
+  return inserted.id
+}
 
 // Supabase JS는 쿼리당 최대 1000행 → range로 페이지네이션
 async function fetchAll(): Promise<Row[]> {
@@ -44,11 +93,11 @@ async function fetchAll(): Promise<Row[]> {
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await supabase
       .from('bookmarks')
-      .select('id, url, title, tags, description')
+      .select('id, user_id, url, title, tags, description, category_id, category:categories(name)')
       .order('created_at')
       .range(from, from + PAGE - 1)
     if (error) throw error
-    all.push(...(data as Row[]))
+    all.push(...(data as unknown as Row[]))
     if (!data || data.length < PAGE) break
   }
   return all
@@ -122,27 +171,34 @@ async function main() {
       const row = rows[cursor++]
       try {
         await rateGate()
-        const next = await generateTags({
+        const raw = await generateTags({
           title: row.title,
           url: row.url,
           description: row.description ?? undefined,
         })
-        // KEEP_NONEMPTY: 새 태그가 비었고 기존 태그가 있으면 순손실 → 스킵(기존 유지)
-        if (KEEP_NONEMPTY && next.length === 0 && (row.tags?.length ?? 0) > 0) {
+        const { category: newCategory, midTags } = extractTopCategory(normalizeTags(raw))
+        const oldCategory = row.category?.name ?? null
+
+        // KEEP_NONEMPTY: 새 분류가 완전 미분류(대분류·중분류 다 없음)면 순손실 → 스킵(기존 유지)
+        if (KEEP_NONEMPTY && !newCategory && midTags.length === 0 && (row.tags?.length ?? 0) > 0) {
           kept++
           console.log(`= 유지 [${row.tags.join(',')}] (새 태그 빈값) | ${row.title}`)
           processed++
           continue
         }
-        const isDiff = !eq(row.tags ?? [], next)
-        if (isDiff) {
+
+        const next = mergeTags(midTags, row.tags ?? [])
+        const categoryDiff = newCategory !== null && newCategory !== oldCategory
+        const tagsDiff = !eq(row.tags ?? [], next)
+        if (categoryDiff || tagsDiff) {
           changed++
-          console.log(`~ [${row.tags?.join(',') ?? ''}] → [${next.join(',')}] | ${row.title}`)
+          console.log(
+            `~ [${oldCategory ?? '미분류'}|${row.tags?.join(',') ?? ''}] → [${newCategory ?? oldCategory ?? '미분류'}|${next.join(',')}] | ${row.title}`,
+          )
           if (!DRY) {
-            const { error: upErr } = await supabase
-              .from('bookmarks')
-              .update({ tags: next })
-              .eq('id', row.id)
+            const update: Record<string, unknown> = { tags: next }
+            if (newCategory) update.category_id = await categoryIdFor(row.user_id, newCategory)
+            const { error: upErr } = await supabase.from('bookmarks').update(update).eq('id', row.id)
             if (upErr) throw upErr
           }
         }
