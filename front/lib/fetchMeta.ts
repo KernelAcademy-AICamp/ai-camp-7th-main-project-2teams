@@ -18,6 +18,40 @@ function isYouTube(url: string): boolean {
   }
 }
 
+// watch?v=ID · youtu.be/ID · /shorts/ID · /live/ID 전부 지원. 채널·재생목록 URL은 null.
+function extractYouTubeVideoId(url: string): string | null {
+  try {
+    const u = new URL(url)
+    if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('/')[0] || null
+    const watchId = u.searchParams.get('v')
+    if (watchId) return watchId
+    const pathMatch = u.pathname.match(/^\/(shorts|live)\/([^/]+)/)
+    return pathMatch ? pathMatch[2] : null
+  } catch {
+    return null
+  }
+}
+
+// YouTube Data API v3 — 업로더가 작성한 실제 영상 설명(oEmbed엔 없는 필드). 키 없거나 실패하면 null(폴백은 호출부).
+// 설명 과도하게 긴 영상(링크 도배 등) 대비 상한.
+const YT_DESCRIPTION_MAX = 1000
+async function fetchYouTubeDescription(videoId: string): Promise<string | null> {
+  const apiKey = process.env.YOUTUBE_API_KEY
+  if (!apiKey) return null
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${encodeURIComponent(videoId)}&key=${apiKey}`,
+      { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) },
+    )
+    if (!res.ok) return null
+    const data = (await res.json()) as { items?: Array<{ snippet?: { description?: string } }> }
+    const description = data.items?.[0]?.snippet?.description?.trim()
+    return description ? description.slice(0, YT_DESCRIPTION_MAX) : null
+  } catch {
+    return null
+  }
+}
+
 // 채널·크리에이터 메인 페이지(/@handle·/channel·/c·/user) — oEmbed 미지원(404)이라 HTML 폴백 필요.
 function isYouTubeChannel(url: string): boolean {
   try {
@@ -235,9 +269,15 @@ export async function fetchMeta(url: string): Promise<{
   // YouTube 영상: oEmbed 우선 (HTML 파싱보다 안정적). 채널 URL이면 null → HTML 폴백.
   if (isYouTube(url)) {
     const oembed = await fetchYouTubeOEmbed(url)
-    // oEmbed는 body HTML이 없음 — description(채널명)을 content로 대체해 임베딩 품질 유지.
-    // oEmbed는 실제 페이지 status가 아니라 httpStatus는 null(oEmbed 실패 시엔 아래 HTML 폴백에서 실제 status 확보).
-    if (oembed) return { ...oembed, content: oembed.description, httpStatus: null }
+    if (oembed) {
+      // Data API로 실제 영상 설명 보강 시도 — 실패/키없음/채널URL(videoId 없음)이면 oEmbed의
+      // "채널명 채널" 폴백 유지(그래도 태깅 입력이 완전히 비진 않게).
+      const videoId = extractYouTubeVideoId(url)
+      const realDescription = videoId ? await fetchYouTubeDescription(videoId) : null
+      const description = realDescription ?? oembed.description
+      // oEmbed는 실제 페이지 status가 아니라 httpStatus는 null(oEmbed 실패 시엔 아래 HTML 폴백에서 실제 status 확보).
+      return { ...oembed, description, content: description, httpStatus: null }
+    }
   }
 
   try {
