@@ -4,8 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { ServiceFeatures } from "@/components/ServiceFeatures";
 import { CopyTimelineSection } from "@/components/CopyTimelineSection";
 
+const DESCRIPTION = "URL 한 줄만 붙여넣으면 AI가 자동 태깅·분류. 검색은 키워드가 아니라 문장으로.";
+
 export const metadata = {
   title: "Mowaba — AI 북마크 관리",
+  description: DESCRIPTION,
+  alternates: { canonical: "/welcome" },
+  openGraph: { title: "Mowaba — AI 북마크 관리", description: DESCRIPTION, url: "/welcome" },
 };
 
 const TRUST_ITEMS = ["Google·Kakao 로그인", "브라우저 북마크 가져오기", "설치 없이 웹에서 바로"];
