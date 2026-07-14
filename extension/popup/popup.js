@@ -24,7 +24,8 @@ function showToast(state) {
 
     const line2 = document.createElement('div')
     line2.className = 'toast-tags'
-    const category = state.bookmark?.category_id ? `[${state.bookmark.category_id}] ` : ''
+    // category_id(UUID)가 아니라 API 응답의 category(대분류 이름)를 표시 — A22 태그 미리보기 토스트.
+    const category = state.bookmark?.category ? `[${state.bookmark.category}] ` : ''
     const tags = state.bookmark?.tags?.length ? state.bookmark.tags.join(' · ') : '태그 없음'
     line2.textContent = `${category}${tags}`
 
