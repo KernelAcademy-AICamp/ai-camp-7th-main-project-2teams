@@ -5,36 +5,266 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mowaba</title>
     <style>
-      body { width: 320px; min-height: 140px; margin: 0; font-family: sans-serif; padding: 16px; box-sizing: border-box; }
-      #status { font-size: 14px; color: #6b7280; margin-bottom: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      #action { display: flex; flex-direction: column; gap: 8px; }
-      #action button {
-        width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;
-        background: #fff; font-size: 14px; cursor: pointer;
+      /* Mowaba 디자인 토큰 — front/app/globals.css(Design.md) 팔레트와 동기화 */
+      :root {
+        --color-brand: #4a90e2;
+        --color-brand-strong: #2d6fd1;
+        --color-ink: #2d3e50;
+        --color-mint: #48c9b0;
+        --color-mint-soft: #e6f9f4;
+        --color-warning: #f1c40f;
+        --color-warning-soft: #fffbeb;
+        --color-danger: #e74c3c;
+        --color-danger-soft: #fef2f2;
+        --color-surface: #f8fafc;
+        --color-surface-card: #ffffff;
+        --color-line: #e2e8f0;
+        --color-text-primary: #1e293b;
+        --color-text-secondary: #64748b;
+        --radius-lg: 0.5rem;
+        --radius-xl: 0.875rem;
+        --font-sans:
+          -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", ui-sans-serif, system-ui, sans-serif;
       }
-      #action button:hover:not(:disabled) { background: #f9fafb; }
-      #action button:disabled { opacity: 0.6; cursor: default; }
-      #action button.danger { border-color: #fca5a5; color: #dc2626; }
-      #action button.danger:hover:not(:disabled) { background: #fef2f2; }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        width: 320px;
+        min-height: 160px;
+        margin: 0;
+        padding: 16px;
+        font-family: var(--font-sans);
+        background: var(--color-surface);
+        color: var(--color-text-primary);
+      }
+
+      /* 브랜드 헤더 — 그라디언트 마크 + 워드마크 */
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .brand-mark {
+        width: 24px;
+        height: 24px;
+        border-radius: 7px;
+        flex-shrink: 0;
+        background-image: linear-gradient(135deg, var(--color-brand), var(--color-brand-strong));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .brand-mark svg {
+        width: 14px;
+        height: 14px;
+      }
+      .brand-name {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--color-ink);
+      }
+
+      /* 상태 카드 */
+      #status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-xl);
+        background: var(--color-surface-card);
+        font-size: 13px;
+        color: var(--color-text-secondary);
+        animation: rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+      #status::before {
+        content: "";
+        flex-shrink: 0;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--color-text-secondary);
+        opacity: 0.4;
+      }
+      #status.online::before {
+        background: var(--color-mint);
+        opacity: 1;
+        box-shadow: 0 0 0 3px var(--color-mint-soft);
+      }
+      #status.offline::before {
+        background: var(--color-warning);
+        opacity: 1;
+        box-shadow: 0 0 0 3px var(--color-warning-soft);
+      }
+      #status-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      #action {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        animation: rise 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+      }
+
+      #action button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        padding: 10px;
+        border: 1px solid transparent;
+        border-radius: var(--radius-lg);
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background-color 0.15s ease,
+          border-color 0.15s ease,
+          transform 0.1s ease;
+      }
+      #action button:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+      #action button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+
+      /* 기본(primary) — gradient-brand, welcome/CTA와 동일 시그니처 */
+      #action button:not(.danger):not(.secondary) {
+        background-image: linear-gradient(135deg, var(--color-brand), var(--color-brand-strong));
+        color: #fff;
+      }
+      #action button:not(.danger):not(.secondary):hover:not(:disabled) {
+        filter: brightness(1.05);
+      }
+
+      /* 위험(danger) — destructive/10 톤 (front Button destructive variant과 동일 계열) */
+      #action button.danger {
+        background: var(--color-danger-soft);
+        color: var(--color-danger);
+      }
+      #action button.danger:hover:not(:disabled) {
+        background: #fde2e1;
+      }
+
+      #action button svg {
+        width: 15px;
+        height: 15px;
+        flex-shrink: 0;
+      }
 
       #toast {
-        margin-top: 12px; padding: 10px 12px; border-radius: 6px;
-        font-size: 13px; line-height: 1.5;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: var(--radius-lg);
+        font-size: 13px;
+        line-height: 1.5;
+        animation: rise 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
       }
-      #toast.loading { background: #f3f4f6; color: #374151; }
-      #toast.success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
-      #toast.error   { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
-      #toast.duplicate { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+      #toast svg {
+        width: 15px;
+        height: 15px;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      #toast.loading {
+        background: #f1f5f9;
+        color: var(--color-text-secondary);
+      }
+      #toast.success {
+        background: var(--color-mint-soft);
+        color: #0f766e;
+      }
+      #toast.error {
+        background: var(--color-danger-soft);
+        color: #991b1b;
+      }
+      #toast.duplicate {
+        background: var(--color-warning-soft);
+        color: #92400e;
+      }
 
-      .toast-tags { margin-top: 4px; font-size: 12px; color: #4b7c62; }
-      .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #d1d5db; border-top-color: #6b7280; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
-      @keyframes spin { to { transform: rotate(360deg); } }
+      .hint {
+        margin: 10px 0 0;
+        font-size: 11px;
+        line-height: 1.5;
+        color: var(--color-text-secondary);
+      }
+
+      .toast-body {
+        min-width: 0;
+      }
+      .toast-tags {
+        margin-top: 2px;
+        font-size: 12px;
+        opacity: 0.85;
+      }
+
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(100, 116, 139, 0.25);
+        border-top-color: var(--color-text-secondary);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        flex-shrink: 0;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #status,
+        #action,
+        #toast {
+          animation: none !important;
+        }
+      }
     </style>
   </head>
   <body>
-    <div id="status">로딩 중...</div>
+    <div class="brand">
+      <span class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 3h9a2 2 0 0 1 2 2v16l-6.5-4L4 21V5a2 2 0 0 1 2-2Z" />
+        </svg>
+      </span>
+      <span class="brand-name">Mowaba</span>
+    </div>
+
+    <div id="status"><span id="status-text">로딩 중...</span></div>
     <div id="action"></div>
     <div id="toast" hidden></div>
+    <p class="hint">단축키(⌘/Ctrl+Shift+S) 저장 알림을 받으려면 OS 알림 권한에서 Chrome을 허용해주세요.</p>
     <script src="../dist/popup.js" type="module"></script>
   </body>
 </html>
