@@ -16,7 +16,8 @@ export const bookmarkCreateSchema = bookmarkSchema.extend({
 })
 
 export const searchSchema = z.object({
-  query: z.string().min(1).max(50),
+  // trim 선행 — 공백 전용 쿼리(" ")가 min(1)을 통과해 createEmbedding('')로 미제어 500이 나는 것 방지.
+  query: z.string().trim().min(1).max(50),
   category: z.string().min(1).optional(),
   // A58: 태그·즐겨찾기 필터 — 둘 다 optional, 미지정 시 기존 전체 검색 동작 유지.
   tag: z.string().min(1).optional(),

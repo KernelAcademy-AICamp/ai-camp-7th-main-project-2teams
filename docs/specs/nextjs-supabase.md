@@ -235,7 +235,8 @@ export const bookmarkCreateSchema = bookmarkSchema.extend({
 })
 
 export const searchSchema = z.object({
-  query: z.string().min(1).max(50),         // PRD: 검색창 최대 50자
+  // trim 선행(PR #251) — 공백 전용 쿼리가 createEmbedding('')로 500 나던 것을 400으로 차단
+  query: z.string().trim().min(1).max(50),  // PRD: 검색창 최대 50자
   category: z.string().min(1).optional(),
   // A58: 태그·즐겨찾기 필터 — 둘 다 optional, 미지정 시 기존 전체 검색 동작 유지.
   tag: z.string().min(1).optional(),
@@ -248,7 +249,8 @@ export const searchSchema = z.object({
 export const bookmarkUpdateSchema = z
   .object({
     is_favorite: z.boolean().optional(),
-    tags: z.array(z.string().min(1).max(50)).max(10).optional(),
+    // PR #251: 라우트에서 normalizeTags+extractTopCategory 적용 — 대분류명 입력 시 400
+    tags: z.array(z.string().min(1).max(50)).max(2).optional(),
     // 대분류 이름(또는 alias) — 실제 유효성 검증은 tag-alias.ts 기준으로 라우트에서 수행.
     // null 허용 — 미분류로 변경(카테고리 해제) 용도.
     category: z.string().min(1).max(50).nullable().optional(),

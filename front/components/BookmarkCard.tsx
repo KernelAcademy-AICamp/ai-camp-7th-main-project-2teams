@@ -441,19 +441,44 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
           </div>
         </div>
 
-        {/* 정보 패널 */}
+        {/* 정보 패널 — 제목/설명/태그 영역은 내용 유무와 상관없이 min-h로 자리를 예약해
+            카드마다 아래 요소(도메인·날짜) 위치가 들쭉날쭉해지지 않게 고정 */}
         <div className="flex flex-1 flex-col gap-2 p-4">
-          <a
-            href={safeUrl(bookmark.url)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="line-clamp-2 text-lg font-bold leading-snug text-white hover:underline"
-          >
-            {bookmark.title}
-          </a>
+          {/* min-h와 line-clamp를 같은 요소에 같이 주면(특히 min-h가 실제 clamp 높이보다 클 때)
+              크로미움이 -webkit-line-clamp 계산을 깨뜨려 3번째 줄 일부가 삐져나옴.
+              자리 예약용 min-h는 wrapper div로, line-clamp는 내부 요소에만 적용해 분리. */}
+          <div className="min-h-[3.5rem]">
+            <a
+              href={safeUrl(bookmark.url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="line-clamp-2 text-lg font-bold leading-snug text-white hover:underline"
+            >
+              {bookmark.title}
+            </a>
+          </div>
 
-          {/* AI 요약 설명 */}
-          {bookmark.description && <p className="line-clamp-2 text-sm text-gray-400">{bookmark.description}</p>}
+          {/* AI 요약 설명 — 없어도 2줄 높이만큼 자리 예약 */}
+          <div className="min-h-[2.5rem]">
+            <p className="line-clamp-2 text-sm text-gray-400">{bookmark.description}</p>
+          </div>
+
+          {/* 태그 뱃지 — 좁은 화면에서 한 줄 넘어가면 wrap 대신 가로 슬라이드. 태그 없어도 한 줄 높이 예약 */}
+          <div
+            className="flex min-h-[1.75rem] items-center gap-1.5 overflow-x-auto whitespace-nowrap pt-1 [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {bookmark.tags.length > 0 && (
+              <>
+                <Tag size={12} className="shrink-0 text-gray-500" />
+                {bookmark.tags.map((tag, i) => (
+                  <span key={`${tag}-${i}`} className={cn(TAG_CHIP, "shrink-0")}>
+                    {tag}
+                  </span>
+                ))}
+              </>
+            )}
+          </div>
 
           {/* 도메인 URL */}
           <a
@@ -464,21 +489,6 @@ export function BookmarkCard({ bookmark, view = "grid" }: BookmarkCardProps) {
           >
             {extractDomain(bookmark.url)}
           </a>
-
-          {/* 태그 뱃지 — 좁은 화면에서 한 줄 넘어가면 wrap 대신 가로 슬라이드 */}
-          {bookmark.tags.length > 0 && (
-            <div
-              className="flex items-center gap-1.5 overflow-x-auto whitespace-nowrap pt-1 [&::-webkit-scrollbar]:hidden"
-              style={{ scrollbarWidth: "none" }}
-            >
-              <Tag size={12} className="shrink-0 text-gray-500" />
-              {bookmark.tags.map((tag, i) => (
-                <span key={`${tag}-${i}`} className={cn(TAG_CHIP, "shrink-0")}>
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
 
           {/* 저장일 */}
           <div className="mt-auto flex items-center gap-1 border-t border-white/10 pt-2.5 font-mono text-xs text-gray-500">

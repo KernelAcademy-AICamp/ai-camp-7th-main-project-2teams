@@ -5,7 +5,16 @@ import { createEmbedding } from '@/lib/ai'
 import { UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { expandSearchQuery } from '@/lib/search-alias'
 
-type SearchRow = Record<string, unknown> & { id: string; similarity: number }
+type SearchRow = Record<string, unknown> & {
+  id: string
+  similarity: number
+  rrf_score?: number
+}
+
+// 병합·정렬 기준은 RPC의 RRF 점수(벡터+trgm 하이브리드 랭킹, 0025). similarity(=vec_sim)로
+// 정렬하면 trgm 전용 매치(정확 단어 일치, vec_sim=0)가 최하위로 강등돼 A54 취지가 무효화된다.
+// rrf_score 미반환(0025 적용 전 RPC) 환경에서는 similarity로 fallback — 배포 순서 무관 동작.
+const scoreOf = (row: SearchRow): number => row.rrf_score ?? row.similarity
 
 // A62: 검색은 클라이언트 사이드 페이지네이션(useSearch visibleCount)을 쓴다 — 스크롤마다
 // 재임베딩 비용을 내는 대신, 한 번에 top-60을 받아 이후 스크롤은 로컬 슬라이스만 늘린다.
@@ -70,12 +79,12 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   for (const { data } of rpcResults) {
     for (const row of (data ?? []) as SearchRow[]) {
       const existing = merged.get(row.id)
-      if (!existing || row.similarity > existing.similarity) merged.set(row.id, row)
+      if (!existing || scoreOf(row) > scoreOf(existing)) merged.set(row.id, row)
     }
   }
 
   const results = [...merged.values()]
-    .sort((a, b) => b.similarity - a.similarity)
+    .sort((a, b) => scoreOf(b) - scoreOf(a))
     .slice(0, SEARCH_TOP_K)
 
   return NextResponse.json({ results })

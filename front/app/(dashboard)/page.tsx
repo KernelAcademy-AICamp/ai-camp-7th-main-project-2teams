@@ -184,11 +184,14 @@ function DashboardContent() {
   );
 
   // 정렬: created_at 기준 최신/오래된. ponytail: 현재 페이지 한정 클라 정렬, 페이지네이션 도입 시 서버 order로
+  // 검색 중에는 날짜 재정렬 금지 — 서버가 RRF(관련도)로 랭킹한 순서를 그대로 유지한다
+  // (스펙 database.md "정렬 기준은 RRF"; 날짜로 덮으면 관련도 랭킹이 화면에서 폐기됨).
   const sortedItems = useMemo(() => {
+    if (isSearching) return items;
     return [...items].sort((a, b) =>
       sortOrder === "latest" ? b.created_at.localeCompare(a.created_at) : a.created_at.localeCompare(b.created_at),
     );
-  }, [items, sortOrder]);
+  }, [items, sortOrder, isSearching]);
 
   return (
     <>

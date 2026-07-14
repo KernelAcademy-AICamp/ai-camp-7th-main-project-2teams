@@ -143,7 +143,7 @@ export const GET = withAuth(async (req, { supabase }) => {
   const to = from + limit - 1
 
   // category는 이름으로 전달 → category_id 해석. 없는 이름이면 빈 결과.
-  // '미분류'는 category_id IS NULL 조회 (고정 12개 외·태깅 실패분)
+  // '미분류'는 category_id IS NULL 조회 (고정 13개(TOP_CATEGORIES) 외·태깅 실패분)
   let categoryId: string | null = null
   let uncategorized = false
   if (category === UNCATEGORIZED_LABEL) {

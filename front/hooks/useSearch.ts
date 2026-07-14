@@ -4,6 +4,8 @@ import type { Bookmark } from './useBookmarks'
 
 export interface SearchResult extends Bookmark {
   similarity: number
+  /** 벡터+trgm RRF 병합 점수 — 서버 정렬 기준 (0025 이전 RPC는 미반환) */
+  rrf_score?: number
 }
 
 interface SearchParams {
