@@ -8,8 +8,10 @@ import { test, expect } from '@playwright/test'
 test.describe('공개 페이지', () => {
   test('/welcome — 랜딩, 비로그인 시 로그인 CTA 노출', async ({ page }) => {
     await page.goto('/welcome')
-    // 랜딩 리디자인 후 카피 — h1이 <br>·gradient span으로 분절돼 부분 매칭 사용
-    await expect(page.getByRole('heading', { name: /저장은 1초/ })).toBeVisible()
+    // 랜딩 리디자인 후 카피. 부분 매칭 금지 — h3 피처 카드("저장은 1초")와 strict mode 충돌
+    await expect(
+      page.getByRole('heading', { name: '저장은 1초, 정리는 AI가 합니다' }),
+    ).toBeVisible()
     // 비로그인 분기 — 헤더 "시작하기" → /login. exact — hero의 "무료로 시작하기"와 substring 충돌 방지
     const cta = page.getByRole('link', { name: '시작하기', exact: true })
     await expect(cta).toBeVisible()
