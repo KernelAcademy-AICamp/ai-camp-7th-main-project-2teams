@@ -40,9 +40,14 @@ AI 태깅 출력 정규화용. 운영 중 누락 발견 시 이 파일에 추가
 ```typescript
 const TOP_CATEGORIES = new Set(['개발', 'AI/ML', '디자인', '비즈니스', '학습', '쇼핑', '커뮤니티', '콘텐츠', '브랜드', '게임', '라이프스타일', '여행', '금융'])
 
+// 정확 일치 우선 → 소문자 fallback (PR #251). 'UI'(대분류 디자인) vs 'ui'(중분류 UI/UX)처럼
+// 케이스로 구분되는 기존 매핑은 불변, 'Frontend'/'FRONTEND' 같은 케이스 변형만 흡수.
+// trim 선행 — 공백 포함 태그가 정확일치를 빠져나가는 것 방지.
 export function normalizeTags(tags: string[]): string[] {
-  return tags.map(t => TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? t)
+  const mapped = tags.map(t => t.trim()).filter(t => t.length > 0).map(resolveAlias)
+  return Array.from(new Set(mapped))
 }
+// resolveAlias = TAG_ALIAS[t] ?? CATEGORY_ALIAS[t] ?? TAG_ALIAS_LOWER ?? CATEGORY_ALIAS_LOWER ?? t
 
 // AI 태깅 직후: normalizeTags 거친 배열에서 대분류 토큰을 찾아 제거 — 나머지는 중분류(midTags)로 확정
 export function extractTopCategory(normalizedTags: string[]): { category: string | null; midTags: string[] } {
@@ -52,13 +57,15 @@ export function extractTopCategory(normalizedTags: string[]): { category: string
 }
 
 // A60: 사용자가 PATCH로 직접 입력한 대분류명(별칭 포함)을 표준 대분류명으로 해석. 13종 외는 null(400 처리용)
+// PR #251: trim + 소문자 fallback 추가 — 'Dev'/'dev' 케이스 변형도 해석.
 export function resolveTopCategory(input: string): string | null {
-  const resolved = CATEGORY_ALIAS[input] ?? input
+  const trimmed = input.trim()
+  const resolved = CATEGORY_ALIAS[trimmed] ?? CATEGORY_ALIAS_LOWER.get(trimmed.toLowerCase()) ?? trimmed
   return TOP_CATEGORIES.has(resolved) ? resolved : null
 }
 ```
 
-**사용 위치**: `extractTopCategory`는 `app/api/bookmarks/route.ts`(AI 태깅 직후) · `app/api/bookmarks/import/route.ts`(일반 브라우저 임포트분). `resolveTopCategory`는 `app/api/bookmarks/[id]/route.ts`(A60 PATCH 카테고리 수정) · import route(자체 내보내기 HTML의 DATA_CATEGORY 복원분 — 이미 대소분류 분리돼 있어 재분리 불필요, 유효성 검증만).
+**사용 위치**: `extractTopCategory`는 `app/api/bookmarks/route.ts`(AI 태깅 직후) · `app/api/bookmarks/import/route.ts`(일반 브라우저 임포트분) · `app/api/bookmarks/[id]/route.ts`(PR #251: PATCH tags 정규화 — 대분류명 태그 입력 시 400, tags는 중·소분류 전용 불변식 유지). `resolveTopCategory`는 `app/api/bookmarks/[id]/route.ts`(A60 PATCH 카테고리 수정) · import route(자체 내보내기 HTML의 DATA_CATEGORY 복원분 — 이미 대소분류 분리돼 있어 재분리 불필요, 유효성 검증만).
 
 ---
 
