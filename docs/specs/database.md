@@ -15,7 +15,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 ## 테이블 DDL
 
 ```sql
--- 유저별 개인 카테고리 (시드 없음, 북마크 저장/임포트 시 AI tags[0] 기반 자동 생성)
+-- 유저별 개인 카테고리 (시드 없음, 북마크 저장/임포트 시 AI 태그에서 추출한 대분류(extractTopCategory) 기반 자동 생성)
 -- 마이그레이션 0004_user_categories.sql 에서 전역 고정값 → 유저별로 전환
 CREATE TABLE categories (
   id      UUID  PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -30,7 +30,7 @@ CREATE TABLE bookmarks (
   title       TEXT        NOT NULL,
   url         TEXT        NOT NULL,
   tags        TEXT[]      NOT NULL DEFAULT '{}',
-  category_id UUID        REFERENCES categories(id),   -- tags[0] 매핑, null = 미분류
+  category_id UUID        REFERENCES categories(id),   -- AI 태그에서 추출한 대분류 매핑, null = 미분류
   folder_hint TEXT[],                                   -- 크롬 폴더 경로 (파일 임포트 시 원본 경로 보존)
   is_favorite BOOLEAN     NOT NULL DEFAULT false,       -- 즐겨찾기 토글 (A27)
   is_dead     BOOLEAN     NOT NULL DEFAULT false,       -- 저장 시점 404/410 감지 (마이그레이션 0021)
@@ -145,7 +145,11 @@ RETURNS TABLE (
   category_id   uuid,
   is_favorite   boolean,
   created_at    timestamptz,
-  similarity    float
+  similarity    float,
+  category      text,     -- 0025: 카테고리 이름(categories 조인) — 검색 카드 칩 표시용
+  folder_hint   text[],   -- 0025
+  is_dead       boolean,  -- 0025: 링크끊김 배지 표시용
+  rrf_score     float     -- 0025: API 병합·정렬 기준(하이브리드 랭킹 노출)
 )
 LANGUAGE sql STABLE
 SET search_path = public
@@ -213,9 +217,12 @@ AS $$
   SELECT
     b.id, b.title, b.url, b.description, b.thumbnail_url,
     b.tags, b.category_id, b.is_favorite, b.created_at,
-    COALESCE(c.vec_sim, 0) AS similarity
+    COALESCE(c.vec_sim, 0) AS similarity,
+    cat.name AS category, b.folder_hint, b.is_dead,
+    c.rrf_score::float AS rrf_score
   FROM combined c
   JOIN bookmarks b ON b.id = c.id
+  LEFT JOIN categories cat ON cat.id = b.category_id
   WHERE c.matched_trgm OR (c.vec_sim >= 0.5 AND c.vec_sim >= c.top_vec_sim - 0.03)
   ORDER BY c.rrf_score DESC
   LIMIT match_count;
@@ -241,7 +248,9 @@ $$;
 > 전체 구현: `supabase/migrations/0009_hybrid_search.sql`, `0010_search_category_filter.sql`,
 > `0014_search_tags_favorite_filter.sql`, `0015_search_ranking_tags_favorite.sql`, `0018_search_description_trgm.sql`,
 > `0019_search_return_description_thumbnail.sql`, `0022_search_tighten_vector_threshold.sql`,
-> `0023_search_word_similarity_threshold.sql`.
+> `0023_search_word_similarity_threshold.sql`, `0024_search_trgm_tag_exclusions.sql`,
+> `0025_search_return_rrf_and_card_fields.sql`(rrf_score·category·folder_hint·is_dead 반환 —
+> API가 RRF 랭킹을 유지한 채 병합하고 검색 카드에서 카테고리 칩·링크끊김 배지가 소실되지 않도록).
 
 ### 검색 품질 평가 (search-eval)
 
@@ -268,9 +277,9 @@ description 없는 북마크는 title-only 임베딩이라 의미 검색 재현 
 
 `categories`는 **유저별 개인 카테고리** (전역 고정 목록 아님). 신규 유저는 카테고리 0개로 시작.
 
-북마크 저장(`POST /api/bookmarks`)·임포트(`/api/bookmarks/import`) 시 AI `tags[0]` 이름으로 `categories`를 `(user_id, name)` upsert → 자동 생성 후 `category_id` 매핑.
+북마크 저장(`POST /api/bookmarks`)·임포트(`/api/bookmarks/import`) 시 AI 태그에서 추출한 대분류(`extractTopCategory`, 배열 내 위치 무관) 이름으로 `categories`를 `(user_id, name)` upsert → 자동 생성 후 `category_id` 매핑.
 
-사이드바 카테고리 목록은 별도 시드가 아니라 보유 북마크의 `tags[0]` 기반으로 동적 구성 (PR #79).
+사이드바 카테고리 목록은 별도 시드가 아니라 보유 북마크의 `category_id` 조인 집계 기반으로 동적 구성 (PR #79).
 
 `tags = []` 이면 카테고리 미생성, `category_id: null` (미분류).
 
@@ -282,7 +291,7 @@ description 없는 북마크는 title-only 임베딩이라 의미 검색 재현 
 원본 경로: 북마크 바 > 개발 > 프론트엔드
 → 기본 폴더 제거: ["개발", "프론트엔드"]
 → folder_hint: ["개발", "프론트엔드"]
-→ category_id: tags[0] 기준 (폴더명 아님)
+→ category_id: AI 태그에서 추출한 대분류 기준 (폴더명 아님)
 ```
 
 크롬 기본 폴더(북마크 바·다른 북마크·모바일 북마크) 제거 후 저장. 폴더 없는 북마크는 `folder_hint: null`.
