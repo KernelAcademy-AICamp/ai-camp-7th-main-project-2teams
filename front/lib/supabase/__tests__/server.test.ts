@@ -3,10 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // createServerClient 호출 인자 캡처 — Bearer 헤더가 global에 주입되는지 검증
 type ClientOpts = { global?: { headers?: Record<string, string> } }
 const { createServerClient } = vi.hoisted(() => ({
-  // 인자 타입 명시 — calls[0][2](options)에 안전 접근
-  createServerClient: vi.fn(
-    (_url: string, _key: string, _opts: { global?: { headers?: Record<string, string> } }) => ({}),
-  ),
+  // 인자 타입은 vi.fn 제네릭으로 명시 — calls[0][2](options)에 안전 접근 (미사용 파라미터 린트 경고 방지)
+  createServerClient: vi.fn<
+    (url: string, key: string, opts: { global?: { headers?: Record<string, string> } }) => object
+  >(() => ({})),
 }))
 vi.mock('@supabase/ssr', () => ({ createServerClient }))
 
