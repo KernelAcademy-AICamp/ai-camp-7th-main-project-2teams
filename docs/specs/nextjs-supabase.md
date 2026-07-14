@@ -248,7 +248,7 @@ export const searchSchema = z.object({
 export const bookmarkUpdateSchema = z
   .object({
     is_favorite: z.boolean().optional(),
-    tags: z.array(z.string().min(1).max(50)).max(10).optional(),
+    tags: z.array(z.string().min(1).max(50)).max(2).optional(),
     // 대분류 이름(또는 alias) — 실제 유효성 검증은 tag-alias.ts 기준으로 라우트에서 수행.
     // null 허용 — 미분류로 변경(카테고리 해제) 용도.
     category: z.string().min(1).max(50).nullable().optional(),

@@ -211,7 +211,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
           )
         }
 
-        // category_id 조회 메모이즈 — 최대 6대분류 고정이므로 N+1 방지
+        // category_id 조회 메모이즈 — 대분류 13종(TOP_CATEGORIES) 고정이므로 N+1 방지
         const categoryCache = new Map<string, string | null>()
 
         // CHUNK_SIZE개씩 청크로 나눠 처리 — OpenAI rate limit 방어

@@ -10,7 +10,7 @@ AI 태깅 출력 정규화용. 운영 중 누락 발견 시 이 파일에 추가
 
 ## 대분류 (categories 매핑)
 
-`CATEGORY_ALIAS` — `tags[0]`을 `categories` 테이블 name으로 정규화. 고정 13개(`TOP_CATEGORIES`) 외 값은 `null` (미분류).
+`CATEGORY_ALIAS` — AI 태그(배열 내 위치 무관, `extractTopCategory`로 추출)를 `categories` 테이블 name으로 정규화. 고정 13개(`TOP_CATEGORIES`) 외 값은 `null` (미분류).
 
 | 대분류 | 비고 |
 |--------|------|

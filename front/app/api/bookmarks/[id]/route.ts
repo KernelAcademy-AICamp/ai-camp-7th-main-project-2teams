@@ -4,7 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth'
 import { bookmarkUpdateSchema } from '@/lib/schemas'
 import { createEmbedding } from '@/lib/ai'
-import { resolveTopCategory } from '@/lib/tag-alias'
+import { resolveTopCategory, normalizeTags, extractTopCategory } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
 
 // 명시 컬럼 — embedding 누출 방지 (select('*') 금지)
@@ -40,7 +40,9 @@ async function resolveCategoryId(
   return { ok: true, categoryId: categoryRow?.id ?? null }
 }
 
-// description 변경 시 title+description 재임베딩 (POST와 동일 조합) — 검색 정확도 유지 목적.
+// description 변경 시 title+description 재임베딩 — 검색 정확도 유지 목적.
+// 주의: POST는 title+content(본문 최대 2000자)를 임베딩하지만 content는 저장 금지(보안 규칙)라
+// PATCH 시점엔 재확보 불가 — title+description이 가용한 최선의 조합이다.
 // 재임베딩 실패해도 필드 변경 자체는 이미 커밋됨 — best-effort degrade (검색 정확도만 저하).
 async function reembedIfDescriptionChanged(
   supabase: SupabaseClient,
@@ -87,7 +89,18 @@ export const PATCH = withAuth<{ params: Promise<{ id: string }> }>(
     // 요청에 포함된 필드만 update payload에 반영 (부분 수정)
     const updatePayload: Record<string, unknown> = {}
     if (is_favorite !== undefined) updatePayload.is_favorite = is_favorite
-    if (tags !== undefined) updatePayload.tags = tags
+    if (tags !== undefined) {
+      // AI 저장 경로(POST)와 동일 정규화 — alias 통일 + "tags는 중·소분류 전용" 불변식 유지.
+      // 대분류명이 태그로 들어오면 400 — 조용히 category로 이동시키면 body의 category 필드와 충돌한다.
+      const { category: topInTags, midTags } = extractTopCategory(normalizeTags(tags))
+      if (topInTags) {
+        return NextResponse.json(
+          { error: `'${topInTags}'는 대분류입니다. 태그가 아닌 카테고리로 지정해 주세요.` },
+          { status: 400 },
+        )
+      }
+      updatePayload.tags = midTags
+    }
     if (description !== undefined) updatePayload.description = description
 
     if (category !== undefined) {
