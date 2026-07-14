@@ -127,7 +127,9 @@ export function selectConfidentTags(raw: unknown): string[] {
         typeof i.confidence === 'number' &&
         i.confidence >= CONFIDENCE_THRESHOLD,
     )
-    .map((i) => i.tag)
+    // trim 반환 — 필터는 trim 기준으로 통과시키면서 원본(공백 포함)을 반환하면
+    // 이후 TOP_CATEGORIES/alias 정확일치가 깨진다(방어선 불일치).
+    .map((i) => i.tag.trim())
     .slice(0, 3)
 }
 
