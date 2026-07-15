@@ -30,6 +30,10 @@ front/scripts/backups/
 # git worktree 작업 디렉토리
 .worktrees/
 
+# 익스텐션 서명 키·패키지 (개인키 유출 위험)
+*.pem
+*.crx
+
 # 기타
 .DS_Store
 .vercel

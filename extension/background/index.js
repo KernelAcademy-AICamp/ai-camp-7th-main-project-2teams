@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase.js'
 import { WEB_APP_URL } from '../lib/config.js'
+import { formatBookmarkPreview } from '../lib/formatBookmarkPreview.js'
 
 let loginTabId = null
 
@@ -81,9 +82,33 @@ async function saveCurrentTab() {
   return res.json()
 }
 
+// 단축키 저장 결과 피드백 — 팝업이 닫혀있어 토스트를 못 띄우니 배지로 대체(알림 권한 불필요)
+function flashBadge(text, color) {
+  chrome.action.setBadgeText({ text })
+  chrome.action.setBadgeBackgroundColor({ color })
+  setTimeout(() => chrome.action.setBadgeText({ text: '' }), 2000)
+}
+
 // 단축키 (Cmd+Shift+S / Ctrl+Shift+S) → 저장
-chrome.commands.onCommand.addListener((command) => {
-  if (command === 'save-bookmark') saveCurrentTab()
+// 리스너를 async로 두고 await까지 마쳐야 크롬이 SW를 살려둠 — 서버 AI 태깅으로 fetch가
+// 몇 초 걸리는데, 프라미스를 리턴 안 하면 그 사이 SW가 유휴 종료되어 배지 콜백이 못 불림.
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command !== 'save-bookmark') return
+  const result = await saveCurrentTab()
+  if (result?.duplicate) {
+    flashBadge('!', '#f1c40f') // Mowaba warning
+  } else if (result?.error) {
+    flashBadge('!', '#e74c3c') // Mowaba danger
+  } else {
+    flashBadge('✓', '#48c9b0') // Mowaba mint
+    // 배지는 텍스트를 못 담아 태그 미리보기(A22)를 알림으로 대신 표시 — 성공 시에만
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+      title: '저장 완료',
+      message: formatBookmarkPreview(result?.bookmark),
+    })
+  }
 })
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {

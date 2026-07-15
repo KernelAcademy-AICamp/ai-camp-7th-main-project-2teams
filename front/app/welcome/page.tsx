@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Check, Search, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ServiceFeatures } from "@/components/ServiceFeatures";
+import { HeroSlideshow } from "@/components/HeroSlideshow";
 import { CopyTimelineSection } from "@/components/CopyTimelineSection";
 
 const DESCRIPTION = "URL 한 줄만 붙여넣으면 AI가 자동 태깅·분류. 검색은 키워드가 아니라 문장으로.";
@@ -52,7 +53,7 @@ export default async function WelcomePage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4">
-        <section className="grid gap-12 py-16 md:grid-cols-[1.05fr_0.95fr] md:items-center md:py-20">
+        <section className="grid gap-8 py-16 md:grid-cols-[1.05fr_0.95fr] md:items-center md:py-20">
           <div>
             <div className="animate-rise mb-5 inline-flex items-center gap-2 rounded-full bg-mint-soft px-3.5 py-1.5 text-xs font-bold text-ink opacity-0">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-ink" />
@@ -98,34 +99,12 @@ export default async function WelcomePage() {
 
           {/* 히어로 비주얼 — 북마크 자동 태깅 카드 목업 (장식용, aria-hidden) */}
           <div
-            className="animate-rise relative h-[380px] opacity-0 [animation-delay:280ms] md:h-[420px]"
+            className="animate-rise relative h-[420px] opacity-0 [animation-delay:280ms] md:h-[480px]"
             aria-hidden="true"
           >
-            <div className="animate-drift absolute top-[8%] left-[6%] w-[88%] overflow-hidden rounded-2xl border border-line bg-white shadow-[0_30px_60px_-24px_rgba(45,62,80,.28)]">
-              <div className="flex gap-1.5 border-b border-line px-4 py-3">
-                <span className="h-2.5 w-2.5 rounded-full bg-line" />
-                <span className="h-2.5 w-2.5 rounded-full bg-line" />
-                <span className="h-2.5 w-2.5 rounded-full bg-line" />
-              </div>
-              <div className="p-5">
-                <div className="mb-4 flex items-center gap-2 rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm text-text-secondary">
-                  <Search className="h-3.5 w-3.5 flex-none text-brand" />
-                  velog.io/@dev/react-hooks-deep-dive
-                </div>
-                <div className="mb-2.5 h-3 w-[78%] rounded-md bg-line" />
-                <div className="mb-4 h-3 w-[45%] rounded-md bg-line" />
-                <div className="flex flex-wrap gap-2">
-                  <span className="animate-tag-in rounded-full bg-mint-soft px-3 py-1.5 text-xs font-bold text-ink opacity-0 [animation-delay:1.1s] [animation-fill-mode:forwards]">
-                    #React
-                  </span>
-                  <span className="animate-tag-in rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground opacity-0 [animation-delay:1.3s] [animation-fill-mode:forwards]">
-                    #프론트엔드
-                  </span>
-                  <span className="animate-tag-in rounded-full bg-warning/15 px-3 py-1.5 text-xs font-bold text-ink opacity-0 [animation-delay:1.5s] [animation-fill-mode:forwards]">
-                    #추후정리
-                  </span>
-                </div>
-              </div>
+            <div className="animate-drift absolute top-[3%] left-[2%] w-[96%]">
+              {/* 실제 3개 플로우(익스텐션/추가/검색) 녹화 GIF를 순환 크로스페이드하는 슬라이드쇼 */}
+              <HeroSlideshow />
             </div>
 
             <div className="animate-drift absolute top-[2%] right-0 flex items-center gap-2.5 rounded-2xl border border-line bg-white px-3.5 py-3 text-sm font-bold text-ink shadow-[0_16px_32px_-12px_rgba(45,62,80,.22)] [animation-delay:.4s]">

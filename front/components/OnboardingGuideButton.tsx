@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { ServiceFeatures } from '@/components/ServiceFeatures'
+import { UsageGuideTabs } from '@/components/UsageGuideTabs'
 
 /**
  * 사용법 재확인 가이드 — 대시보드 헤더 버튼 (A26 v1.1 "다시 보기" 트리거)
@@ -27,10 +27,12 @@ export function OnboardingGuideButton() {
         사용법
       </button>
 
+      {/* max-h+overflow-y-auto — UsageGuideTabs가 뷰포트 높이에 맞춰 GIF를 줄이므로 평소엔 스크롤 없이
+          꽉 참. 그래도 아주 작은 화면(접힌 폴더블 등) 대비 안전망으로 넘치면 다이얼로그 내부만 스크롤 */}
       <dialog
         ref={dialogRef}
         onClick={handleBackdropClick}
-        className="m-auto w-[min(56rem,90vw)] rounded-xl bg-transparent p-0 backdrop:bg-black/40"
+        className="m-auto max-h-[90vh] w-[min(56rem,90vw)] overflow-y-auto rounded-xl bg-transparent p-0 backdrop:bg-black/40"
       >
         <div className="rounded-xl bg-white p-6">
           <div className="mb-6 flex items-center justify-between">
@@ -46,7 +48,7 @@ export function OnboardingGuideButton() {
               ✕
             </button>
           </div>
-          <ServiceFeatures />
+          <UsageGuideTabs />
         </div>
       </dialog>
     </>
