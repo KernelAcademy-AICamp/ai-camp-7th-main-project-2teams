@@ -111,6 +111,7 @@ export const TAG_ALIAS: Record<string, string> = {
   제품관리: '기획', 프로덕트: '기획', 'product management': '기획',
   // 소분류 표기 통일
   파이썬: 'Python', 도커: 'Docker', 쿠버네티스: 'Kubernetes',
+  클로드: 'Claude', 옵시디언: 'Obsidian', pandas: 'Pandas',
 }
 
 // A60: PATCH 카테고리 수정 시 유효성 검증에도 사용 — export 필요.

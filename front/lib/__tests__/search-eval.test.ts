@@ -66,7 +66,11 @@ describe('aggregateSearch', () => {
 // exact/synonym/cross-lingual/tag-only/noise 전부 1.0. weak-vector만 0(known limitation —
 // description 없는 북마크는 title-only 임베딩이라 의미 검색 재현 안 됨, front/lib/ai.ts:171 구조적 한계,
 // 회귀 아님). baseline은 weak-vector 실패를 전제로 잡되 그 외 카테고리 하락은 잡도록 마진 둠.
-const OVERALL_RECALL_BASELINE = 0.83 // 실측 0.917 − weak-vector 1건(0.083) 여유
+// N-2(2026-07-15): weak-vector 표본 1→3건 확대(b19 옵시디언·b20 Zotero, 고유명사 title-only↔기능형 쿼리 어휘갭).
+// n=12→14. weak-vector 전건 miss 최악 시 non-weak 11/14=0.786 → overall baseline 0.83→0.75 재보정.
+// 회귀 아니라 알려진 약점 표본 증가에 따른 분모 확대(태깅 골든셋 0.82→0.76과 동일 논리).
+// 진짜 품질 게이트는 NON_WEAK_VECTOR_RECALL_BASELINE(weak-vector 제외 0.90) — 그대로 유지.
+const OVERALL_RECALL_BASELINE = 0.75 // 비-weak 11/14=0.786 − 마진(weak-vector 3건 miss 전제)
 const NON_WEAK_VECTOR_RECALL_BASELINE = 0.9 // weak-vector 제외 실측 1.0 − 마진
 interface GoldenBookmark {
   ref: string
