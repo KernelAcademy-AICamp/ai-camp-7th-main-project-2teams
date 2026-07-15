@@ -1042,11 +1042,12 @@
   {
     "url": "https://gemini.google.com/app",
     "title": "Gemini",
-    "description": "",
+    "description": "Gemini은 Google이 만든 대화형 AI 어시스턴트로, 텍스트·이미지·코드 생성을 지원합니다.",
     "gold": [
       "AI/ML",
       "LLM"
-    ]
+    ],
+    "source": "extension"
   },
   {
     "url": "https://kosis.kr/",
@@ -1060,10 +1061,11 @@
   {
     "url": "https://www.behance.net/",
     "title": "https://www.behance.net/",
-    "description": "",
+    "description": "Behance — 크리에이티브 디자인 포트폴리오 공유 플랫폼.",
     "gold": [
       "디자인"
-    ]
+    ],
+    "source": "extension"
   },
   {
     "url": "https://www.saramin.co.kr/",
@@ -1089,10 +1091,9 @@
     "title": "콘텐츠 내용 최종 - Google Sheets",
     "description": "",
     "gold": [
-      "학습",
-      "강의",
-      "Google Sheets"
-    ]
+      "학습"
+    ],
+    "source": "webapp"
   },
   {
     "url": "https://youtube.com/watch?v=UUNgWvVoT4E",
@@ -1109,54 +1110,57 @@
     "title": "I'm Wonism!",
     "description": "",
     "gold": [
-      "콘텐츠",
-      "블로그"
-    ]
+      "콘텐츠"
+    ],
+    "source": "webapp"
   },
   {
     "url": "https://app.creatify.ai/home",
     "title": "Creatify - 탈퇴할것(아마존가능)",
-    "description": "",
+    "description": "Creatify — AI로 광고·마케팅 영상을 자동 생성하는 도구.",
     "gold": [
       "비즈니스",
       "마케팅"
-    ]
+    ],
+    "source": "extension"
   },
   {
     "url": "https://leonardo.ai/",
     "title": "Leonardo AI",
-    "description": "",
+    "description": "Leonardo AI — 생성형 AI 이미지·아트 제작 플랫폼.",
     "gold": [
       "AI/ML"
-    ]
+    ],
+    "source": "extension"
   },
   {
     "url": "https://elevenlabs.io/",
     "title": "ElevenLabs",
-    "description": "",
+    "description": "ElevenLabs — AI 음성 합성 및 텍스트 음성 변환(TTS) API 플랫폼.",
     "gold": [
       "AI/ML",
       "음성합성",
       "API"
-    ]
+    ],
+    "source": "extension"
   },
   {
     "url": "https://notion.so/myinsightbox/13dc62d9c5ed808fa3c8f54293268f3f",
     "title": "소소한 제안",
     "description": "",
     "gold": [
-      "커뮤니티",
-      "소셜미디어"
-    ]
+      "커뮤니티"
+    ],
+    "source": "webapp"
   },
   {
     "url": "https://notion.so/library/recents?p=2f885e63c37e81f5b3eac213f5d5c0b7&pm=s&pvs=140&spaceId=c6c095b2012e46eb95c498655e8a01ec",
     "title": "라이브러리 | Notion",
     "description": "",
     "gold": [
-      "AI/ML",
-      "소프트웨어"
-    ]
+      "AI/ML"
+    ],
+    "source": "webapp"
   },
   {
     "url": "https://youtube.com/watch?v=FsB_nRGdeLs",
@@ -1584,9 +1588,9 @@
     "title": "Gmaikspace",
     "description": "",
     "gold": [
-      "AI/ML",
-      "Gmail"
-    ]
+      "AI/ML"
+    ],
+    "source": "webapp"
   },
   {
     "url": "https://youtube.com/watch?v=omB2JkC4QfA",
@@ -1869,19 +1873,18 @@
     "title": "클로바노트",
     "description": "",
     "gold": [
-      "커뮤니티",
-      "포럼",
-      "네이버"
-    ]
+      "커뮤니티"
+    ],
+    "source": "webapp"
   },
   {
     "url": "https://docs.google.com/forms/d/14i9g4QfVIb9JG4-E8e0DRIAv7PBDuVKVa0sO7XJlf_4/edit",
     "title": "덕질타임(가칭)_사용자 설문지",
     "description": "",
     "gold": [
-      "커뮤니티",
-      "설문조사"
-    ]
+      "커뮤니티"
+    ],
+    "source": "webapp"
   },
   {
     "url": "https://docs.google.com/forms/d/1w8WIOH10_dIUem5Zoh5ZZKLh4X4bvzfC2vzcu8DNI5g/edit",
@@ -1897,9 +1900,9 @@
     "title": "라이브러리 | Notion",
     "description": "",
     "gold": [
-      "AI/ML",
-      "소프트웨어"
-    ]
+      "AI/ML"
+    ],
+    "source": "webapp"
   },
   {
     "url": "https://possible-cart-99b.notion.site/PARK-DA-EUN-1327ec31d1474ea29e45ec688fb27bdc",
@@ -1913,12 +1916,13 @@
   {
     "url": "https://www.pxd.co.kr/",
     "title": "pxd",
-    "description": "",
+    "description": "pxd — UX 디자인 컨설팅 및 브랜드 경험 디자인 전문 회사.",
     "gold": [
       "브랜드",
       "마케팅",
       "pxd"
-    ]
+    ],
+    "source": "extension"
   },
   {
     "url": "https://www.gmarket.co.kr/",
