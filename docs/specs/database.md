@@ -37,7 +37,8 @@ CREATE TABLE bookmarks (
   description TEXT,                                     -- 사용자 입력 설명 (A60, 마이그레이션 0013). content(본문) 아님 — 프라이버시 정책과 무관
   thumbnail_url TEXT,                                    -- og:image/YouTube 썸네일 URL만 저장 (마이그레이션 0017), 이미지 자체는 미저장
   embedding   vector(1536),                              -- text-embedding-3-small (A51 bge-m3 롤백, 마이그레이션 0006)
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT bookmarks_user_url_unique UNIQUE (user_id, url) -- A35: 동일 사용자 URL 중복 저장 방지 (마이그레이션 0003)
 );
 ```
 
@@ -102,6 +103,12 @@ CREATE POLICY "categories_insert"
   ON categories FOR INSERT
   WITH CHECK (user_id = auth.uid());
 
+-- 0016: PATCH /api/bookmarks/:id의 카테고리 upsert(onConflict) 재배정이 RLS에 막히지 않도록
+CREATE POLICY "categories_update"
+  ON categories FOR UPDATE
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
 CREATE POLICY "categories_delete"
   ON categories FOR DELETE
   USING (user_id = auth.uid());
@@ -124,6 +131,12 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX IF NOT EXISTS bookmarks_title_trgm_idx
   ON bookmarks
   USING gin (title gin_trgm_ops);
+
+-- A60 후속(0018): description도 trgm 검색 대상 — description에만 있는 단어 정확 매칭용
+CREATE INDEX IF NOT EXISTS bookmarks_description_trgm_idx
+  ON bookmarks
+  USING gin (description gin_trgm_ops)
+  WHERE description IS NOT NULL;
 
 CREATE OR REPLACE FUNCTION match_bookmarks(
   query_embedding vector(1536),
@@ -177,7 +190,15 @@ AS $$
       row_number() OVER (
         ORDER BY GREATEST(
           word_similarity(query_text, title),
-          COALESCE((SELECT MAX(word_similarity(query_text, tg)) FROM unnest(tags) tg), 0),
+          COALESCE((
+            SELECT MAX(word_similarity(query_text, tg))
+            FROM unnest(tags) tg
+            WHERE NOT EXISTS (
+              SELECT 1 FROM search_trgm_tag_exclusions e
+              WHERE (lower(e.term_a) = lower(query_text) AND lower(e.term_b) = lower(tg))
+                 OR (lower(e.term_b) = lower(query_text) AND lower(e.term_a) = lower(tg))
+            )
+          ), 0),
           word_similarity(query_text, COALESCE(description, ''))
         ) DESC
       ) AS trgm_rank
@@ -252,24 +273,36 @@ $$;
 > `0025_search_return_rrf_and_card_fields.sql`(rrf_score·category·folder_hint·is_dead 반환 —
 > API가 RRF 랭킹을 유지한 채 병합하고 검색 카드에서 카테고리 칩·링크끊김 배지가 소실되지 않도록).
 
+trgm 오탐 예외 테이블(0024) — `match_bookmarks`가 태그 매칭 시 참조:
+
+```sql
+-- (query_text, tag) 쌍이 trgm상 우연히 겹치지만 의미 무관한 경우 태그 채널만 차단.
+-- 대칭 처리 — (term_a, term_b)와 (term_b, term_a) 양방향 모두 매칭에서 제외.
+CREATE TABLE IF NOT EXISTS search_trgm_tag_exclusions (
+  term_a text NOT NULL,
+  term_b text NOT NULL,
+  PRIMARY KEY (term_a, term_b)
+);
+```
+
 ### 검색 품질 평가 (search-eval)
 
 > 관련: `front/lib/search-eval.ts`(채점 함수), `front/eval/search-golden.json`(골든셋),
 > `front/lib/__tests__/search-eval.test.ts`(러너). `front/lib/tag-eval.ts` 패턴 미러.
 
-골든셋 6개 카테고리(exact/synonym/cross-lingual/weak-vector/tag-only/noise), 북마크 18건 + 쿼리 12건.
+골든셋 6개 카테고리(exact/synonym/cross-lingual/weak-vector/tag-only/noise), 북마크 20건 + 쿼리 14건.
 `scoreQuery`/`aggregateSearch`(순수 함수, I/O 없음)로 recall/MRR 채점 — 노이즈 쿼리는 "결과 없음"이 정답으로 반전 채점.
 
 `match_bookmarks` RPC 호출 시 `p_tags`/`p_is_favorite`를 생략하면 위 함수의 구버전 오버로드(0009~0010 시절 6-param)와
 모호성 충돌이 나므로, 호출부는 항상 8개 파라미터를 전부 명시해야 함(`app/api/search/route.ts` 참고).
 
 실행: `RUN_SEARCH_EVAL=1 npx vitest run lib/__tests__/search-eval.test.ts` — 비용·DB 쓰기(throwaway auth user +
-골든 북마크 18건 삽입, `finally`에서 정리) 때문에 태그 골든셋(`RUN_TAG_EVAL`)과 동일하게 기본 실행에서 제외.
+골든 북마크 20건 삽입, `finally`에서 정리) 때문에 태그 골든셋(`RUN_TAG_EVAL`)과 동일하게 기본 실행에서 제외.
 
-실측(2026-07-13, text-embedding-3-small, n=12): recall/MRR/hitRate 0.917(11/12).
-exact·synonym·cross-lingual·tag-only·noise 전부 1.0, weak-vector만 0 —
+실측(text-embedding-3-small): exact·synonym·cross-lingual·tag-only·noise 전부 1.0, weak-vector만 0 —
 description 없는 북마크는 title-only 임베딩이라 의미 검색 재현 안 되는 구조적 한계(회귀 아님, known limitation).
-회귀 게이트는 이 실패를 전제로 분리: `OVERALL_RECALL_BASELINE=0.83`, `NON_WEAK_VECTOR_RECALL_BASELINE=0.9`.
+N-2(2026-07-15, 5dfccf3): weak-vector 표본 1→3 확대(n=12→14), 최악 시 overall recall 11/14=0.786.
+회귀 게이트는 이 실패를 전제로 분리: `OVERALL_RECALL_BASELINE=0.75`(0.83에서 분모 확대 재보정), `NON_WEAK_VECTOR_RECALL_BASELINE=0.9`.
 
 ---
 

@@ -5,7 +5,7 @@
 ## Route Handler (front/app/api/**/route.ts)
 
 ```ts
-import { withAuth } from '@/lib/withAuth'
+import { withAuth } from '@/lib/auth'
 import { z } from 'zod'
 
 const bodySchema = z.object({ /* ... */ })

@@ -128,8 +128,8 @@ SELECT
 
 ### 현재 상태 (문서 갱신 시점)
 `front/eval/tag-golden.json`은 이 문서의 §0 분석 시점(115건)보다 커진 213건 — C-1 저품질 title 편입(pxd·G마켓·공공데이터포털·ChatGPT·Suno 등 잔여 gap 포함) 완료.
-2026-07-13 n=213 기준 재측정(gpt-4o-mini): rich F1 0.791(대분류 0.869, exact 0.587, emptyRate 0.071),
-title-only F1 0.764(대분류 0.840, exact 0.577, emptyRate 0.091). §0의 115건 시점 수치(F1 0.85 등)보다
+n=213 기준 재측정(gpt-4o-mini): rich F1 0.787(대분류 0.864, exact 0.587, emptyRate 0.051, 2026-07-15 5dfccf3 재측정),
+title-only F1 0.764(대분류 0.840, exact 0.577, emptyRate 0.091, 2026-07-13 · 5dfccf3 미재측정). §0의 115건 시점 수치(F1 0.85 등)보다
 낮아졌는데 이는 회귀가 아니라 골든셋이 저품질 title 패턴을 더 대표하게 되며 과대평가가 빠진 결과 —
 §0/§1.2 판정 그대로 실증됨. `tag-eval.test.ts`의 `F1_BASELINE`(0.82→0.76)·`TITLE_ONLY_F1_BASELINE`(0.77→0.73)도
 이 실측치 기준으로 갱신 완료.
