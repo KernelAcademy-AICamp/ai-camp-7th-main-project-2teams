@@ -5,7 +5,7 @@ MVP v1.0 태스크 — PRD `scripts/prd.md` 기반 (v0.5, IA 정리본 반영)
 ## 구조
 
 ```
-front/tasks.json       # Next.js 웹앱 + API Routes (A1~A16, A26~A65, A51 삭제됨)
+front/tasks.json       # Next.js 웹앱 + API Routes (A1~A16, A26~A66, A51 삭제됨)
 extension/tasks.json   # Chrome Extension (A17~A25)
 tasks/README.md        # 이 파일 (진행 현황 포함)
 ```
@@ -221,8 +221,9 @@ A17 (Extension 셋업)
 - [x] A63: 카카오 소셜 로그인 (medium)
 - [ ] A64: 개인 북마크 대시보드 — 프리미엄 전용 (low)
 - [x] A65: 북마크 HTML/CSV 내보내기 + 자체 재임포트 왕복 복원 (medium)
+- [x] A66: 죽은 링크 감지 + 재검사 (medium)
 
-**진행률: 7 / 8 완료**
+**진행률: 8 / 9 완료**
 
 ### 태스크 상세
 
@@ -236,6 +237,7 @@ A17 (Extension 셋업)
 | A63 | 카카오 소셜 로그인                         | medium   | done    | PR #181. Supabase 네이티브 프로바이더 확인(커스텀 OIDC 아님), Google과 동일 패턴. 네이버 스코프 제외. |
 | A64 | 개인 북마크 대시보드 (프리미엄)           | low      | pending | 프리미엄 게이팅 인프라 부재. 스코프 최대.                      |
 | A65 | HTML/CSV 내보내기 + 자체 재임포트 왕복 복원   | medium   | done    | GET /api/account category 조인, formatNetscapeBookmarks.ts 신설(TAGS/DATA_CATEGORY 인코딩). parseNetscapeBookmarks.ts 왕복 파싱 추가. import route는 TAGS 있으면 재태깅 생략, DATA_CATEGORY는 resolveTopCategory로 검증만. formatKakaoChatCsv.ts 추가 — 카카오톡 CSV(Date,User,Message) 포맷으로 직렬화해 parseKakaoChat과 왕복 호환. |
+| A66 | 죽은 링크 감지 + 재검사                    | medium   | done    | 소급 문서화. is_dead 컬럼(0021)·검색 반환(0025), POST /api/bookmarks/:id/recheck 라우트, BookmarkCard 배지 + useRecheckBookmark 훅. 저장 시 404/410 감지, 수동 재검사로 갱신. |
 
 ### 의존 관계
 
