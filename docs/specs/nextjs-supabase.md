@@ -261,10 +261,8 @@ export const bookmarkUpdateSchema = z
     message: '변경할 필드를 최소 1개 이상 전달해야 합니다.',
   })
 
-export const importSchema = z.object({
-  // multipart/form-data — HTML(브라우저 북마크) 또는 CSV(카카오톡 채팅 내보내기) 업로드 (A29)
-  // Route Handler에서 req.formData()로 파싱
-})
+// 임포트(A29)는 공유 스키마 없음 — multipart/form-data라 app/api/bookmarks/import/route.ts의
+// 로컬 fileSchema(File 크기·타입 검증)로 처리. schemas.ts에는 두지 않음.
 
 export type BookmarkInput = z.infer<typeof bookmarkSchema>
 export type BookmarkCreateInput = z.infer<typeof bookmarkCreateSchema>
@@ -276,11 +274,12 @@ Route Handler에서 사용:
 
 ```typescript
 // app/api/bookmarks/route.ts
-import { bookmarkSchema } from '@/lib/schemas'
+import { bookmarkCreateSchema } from '@/lib/schemas'
 
 export const POST = withAuth(async (req, { user }) => {
   const body = await req.json()
-  const parsed = bookmarkSchema.safeParse(body)
+  // content 포함 검증 → bookmarkCreateSchema(transient). 공개 bookmarkSchema엔 content 없음.
+  const parsed = bookmarkCreateSchema.safeParse(body)
 
   if (!parsed.success) {
     return NextResponse.json(
@@ -500,19 +499,19 @@ import { NextResponse } from 'next/server'
 import { withAuth } from '@/lib/auth'
 
 export const POST = withAuth(async (req, { user }) => {
-  const { title, url, content } = await req.json()
-  // content 로그 절대 출력하지 않음 (A8)
-  // ...처리 로직
-  return NextResponse.json({ id, tags, category }, { status: 201 })
+  const parsed = bookmarkCreateSchema.safeParse(await req.json())
+  // content 로그 절대 출력하지 않음 (A8) — 임베딩 계산 후 즉시 파기
+  // ...처리 로직 (대분류 top 계산, embedding 제외 명시 컬럼 select)
+  // 응답은 embedding 제외 카드 필드 + category(대분류명)를 bookmark 객체로 래핑
+  return NextResponse.json({ bookmark: { ...data, category: top } }, { status: 201 })
 })
 
-export const GET = withAuth(async (req, { user }) => {
-  const { searchParams } = new URL(req.url)
-  const category = searchParams.get('category')
-  const tag = searchParams.get('tag')
-  const page = Number(searchParams.get('page') ?? 1)
-  const limit = Number(searchParams.get('limit') ?? 20)
-  // ...조회 로직
+export const GET = withAuth(async (req, { supabase }) => {
+  // 쿼리 파라미터도 zod 검증 — getQuerySchema(tab/category/tag/folder/page/limit, coerce+default)
+  const parsed = getQuerySchema.safeParse(
+    Object.fromEntries(new URL(req.url).searchParams),
+  )
+  // ...조회 로직 (RLS 본인 데이터, embedding 제외 LIST_COLUMNS)
   return NextResponse.json({ bookmarks, total })
 })
 ```
@@ -535,7 +534,9 @@ front/
 │   │   ├── bookmarks/
 │   │   │   ├── route.ts          # POST(A5) + GET(A6)
 │   │   │   ├── [id]/
-│   │   │   │   └── route.ts      # PATCH is_favorite(A27) + DELETE(카드 삭제)
+│   │   │   │   ├── route.ts      # PATCH 부분수정(A60: is_favorite/tags/category/description) + DELETE(카드 삭제)
+│   │   │   │   └── recheck/
+│   │   │   │       └── route.ts  # POST — 죽은 링크 재검사(is_dead 갱신)
 │   │   │   ├── import/
 │   │   │   │   └── route.ts      # POST — HTML/카카오톡 CSV 파싱 + 배치 태깅 (A29)
 │   │   │   ├── preview/
