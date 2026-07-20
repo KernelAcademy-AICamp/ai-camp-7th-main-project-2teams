@@ -29,6 +29,14 @@ describe('CategoryDrilldownModal', () => {
     expect(container).toBeEmptyDOMElement()
   })
 
+  it('category 없을 때 Escape 눌러도 리스너 미등록으로 push 호출 안 됨', async () => {
+    params = new URLSearchParams('')
+    render(<CategoryDrilldownModal range="7d" />)
+    const { fireEvent } = await import('@testing-library/react')
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(push).not.toHaveBeenCalled()
+  })
+
   it('category 있으면 태그 데이터 페치 후 도넛 표시', async () => {
     params = new URLSearchParams('category=개발&range=7d')
     vi.spyOn(global, 'fetch').mockResolvedValue(

@@ -38,6 +38,7 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
 
   // Escape 키로 닫기 — EditBookmarkModal/AddBookmarkModal과 동일 패턴
   useEffect(() => {
+    if (!category) return
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close()
     }
