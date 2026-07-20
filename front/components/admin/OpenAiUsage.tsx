@@ -31,7 +31,8 @@ export function OpenAiUsage({ usage, activeUsers }: { usage: Usage; activeUsers:
       <div className="mt-2 text-sm tabular-nums">
         유저당 <span>${perUser.toFixed(4)}</span>
         <span className="ml-2 text-xs text-muted-foreground">
-          (가정선 $0.02{perUser > ASSUMED_COST_PER_USER ? ' 초과' : ' 이내'})
+          (가정선 ${ASSUMED_COST_PER_USER.toFixed(2)}
+          {perUser > ASSUMED_COST_PER_USER ? ' 초과' : ' 이내'})
         </span>
       </div>
     </div>
