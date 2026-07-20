@@ -54,9 +54,9 @@ export function DonutChart({
       </div>
       <ul className="flex-1 space-y-1 text-sm">
         {data.map((d, i) => {
+          // 반올림한 %만 보이면 소수 비율에서 "내용 있는데 0%"로 오해할 수 있어
+          // 모든 행에 건수를 1차 표시로 통일하고, 비율은 괄호 안 보조 정보로 유지.
           const roundedPct = Math.round(d.pct * 100)
-          // 반올림하면 0%로 보이지만 실제로는 내용이 있는 경우 — 비율 대신 건수로 표시해 오해 방지
-          const displayValue = roundedPct === 0 && d.value > 0 ? `${d.value}건` : `${roundedPct}%`
           return (
             <li key={d.label} className="flex items-center justify-between gap-2 border-b border-line py-1 last:border-b-0">
               <span className="flex items-center gap-2 text-text-primary">
@@ -76,7 +76,9 @@ export function DonutChart({
                   <span>{d.label}</span>
                 )}
               </span>
-              <span className="tabular-nums text-text-secondary">{displayValue}</span>
+              <span className="tabular-nums text-text-secondary">
+                {d.value}건 (<span className="tabular-nums">{roundedPct}%</span>)
+              </span>
             </li>
           )
         })}

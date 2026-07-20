@@ -70,10 +70,10 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
       aria-labelledby="category-drilldown-title"
     >
       <div
-        className="w-full max-w-lg rounded-xl border border-line bg-surface-card p-5 shadow-lg"
+        className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-xl border border-line bg-surface-card shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between">
+        <div className="flex flex-shrink-0 items-center justify-between p-5 pb-4">
           <h3 id="category-drilldown-title" className="text-base font-semibold text-text-primary">
             <span>{category}</span> · 하위 태그
           </h3>
@@ -86,13 +86,16 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
             ✕
           </button>
         </div>
-        {loading ? (
-          <p className="text-sm text-text-secondary">불러오는 중…</p>
-        ) : isError ? (
-          <p className="text-sm text-destructive">하위 태그를 불러오지 못했습니다</p>
-        ) : (
-          <DonutChart data={data} />
-        )}
+        {/* 하위 태그 수에 따라 내용이 길어질 수 있어 헤더는 고정, 본문만 스크롤 */}
+        <div className="overflow-y-auto px-5 pb-5">
+          {loading ? (
+            <p className="text-sm text-text-secondary">불러오는 중…</p>
+          ) : isError ? (
+            <p className="text-sm text-destructive">하위 태그를 불러오지 못했습니다</p>
+          ) : (
+            <DonutChart data={data} />
+          )}
+        </div>
       </div>
     </div>
   )
