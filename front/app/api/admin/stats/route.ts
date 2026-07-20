@@ -45,13 +45,19 @@ export const GET = withAdmin(async (req) => {
     return NextResponse.json({ range, category, tags })
   }
 
-  // 기본: OKR + 카테고리 분포
-  const [okrRes, catRes] = await Promise.all([
+  // 기본: OKR + 카테고리 분포 + 성장/트렌딩/건강
+  const [okrRes, catRes, growthRes, trendRes, healthRes] = await Promise.all([
     admin.rpc('admin_okr_stats', { p_interval: interval }),
     admin.rpc('admin_category_stats', { p_interval: interval }),
+    admin.rpc('admin_growth_series', { p_interval: interval }),
+    admin.rpc('admin_trending_tags', { p_interval: interval }),
+    admin.rpc('admin_health_stats'),
   ])
   if (okrRes.error) return NextResponse.json({ error: okrRes.error.message }, { status: 500 })
   if (catRes.error) return NextResponse.json({ error: catRes.error.message }, { status: 500 })
+  if (growthRes.error) return NextResponse.json({ error: growthRes.error.message }, { status: 500 })
+  if (trendRes.error) return NextResponse.json({ error: trendRes.error.message }, { status: 500 })
+  if (healthRes.error) return NextResponse.json({ error: healthRes.error.message }, { status: 500 })
 
   const o = okrRes.data?.[0] ?? {
     active_users: 0,
@@ -60,6 +66,17 @@ export const GET = withAdmin(async (req) => {
     new_saves: 0,
   }
   const categories = withPct((catRes.data ?? []) as CountRow[], 'name')
+  const growth = (
+    (growthRes.data ?? []) as Array<{ bucket: string; signups: number | string; saves: number | string }>
+  ).map((r) => ({ bucket: r.bucket, signups: Number(r.signups), saves: Number(r.saves) }))
+  const trending = (
+    (trendRes.data ?? []) as Array<{ tag: string; count: number | string; prev_count: number | string }>
+  ).map((r) => ({ tag: r.tag, count: Number(r.count), prevCount: Number(r.prev_count) }))
+  const h = (healthRes.data?.[0] ?? { dead_ratio: 0, uncategorized_ratio: 0 }) as {
+    dead_ratio: number | string
+    uncategorized_ratio: number | string
+  }
+  const health = { deadRatio: Number(h.dead_ratio), uncategorizedRatio: Number(h.uncategorized_ratio) }
 
   return NextResponse.json({
     range,
@@ -70,5 +87,8 @@ export const GET = withAdmin(async (req) => {
       newSaves: Number(o.new_saves),
     },
     categories,
+    growth,
+    trending,
+    health,
   })
 })
