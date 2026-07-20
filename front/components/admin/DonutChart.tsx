@@ -23,7 +23,8 @@ export function DonutChart({
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      <div className="h-56 w-full sm:w-56">
+      {/* 차트 자체는 시각적 보조 요소 — 키보드/스크린리더 접근은 아래 범례(버튼)가 전담 */}
+      <div aria-hidden="true" className="h-56 w-full sm:w-56">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
