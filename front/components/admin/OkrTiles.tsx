@@ -5,27 +5,12 @@ export type Okr = {
   newSaves: number
 }
 
-const ACCENTS = ['var(--sr-signal)', 'var(--sr-cyan)', 'var(--sr-violet)', 'var(--sr-amber)']
-
-function Tile({
-  label,
-  value,
-  hint,
-  index,
-}: {
-  label: string
-  value: string
-  hint?: string
-  index: number
-}) {
+function Tile({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div
-      className="sr-tile"
-      style={{ '--sr-tile-accent': ACCENTS[index % ACCENTS.length], animationDelay: `${index * 70}ms` } as React.CSSProperties}
-    >
-      <div className="sr-tile-label">{label}</div>
-      <div className="sr-tile-value">{value}</div>
-      {hint && <div className="sr-tile-hint">{hint}</div>}
+    <div className="rounded-lg border border-line bg-surface-card p-4">
+      <div className="text-sm text-text-secondary">{label}</div>
+      <div className="mt-1 text-2xl font-semibold tabular-nums text-text-primary">{value}</div>
+      {hint && <div className="mt-1 text-xs text-text-secondary">{hint}</div>}
     </div>
   )
 }
@@ -33,10 +18,10 @@ function Tile({
 export function OkrTiles({ okr }: { okr: Okr }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <Tile index={0} label="활성 사용자" value={String(okr.activeUsers)} hint="저장 기준 대리지표" />
-      <Tile index={1} label="첫 저장 완료율" value={`${Math.round(okr.firstSaveRate * 100)}%`} hint="목표 70%" />
-      <Tile index={2} label="1인당 저장" value={okr.savesPerUser.toFixed(1)} hint="목표 20건/월" />
-      <Tile index={3} label="신규 저장" value={String(okr.newSaves)} />
+      <Tile label="활성 사용자" value={String(okr.activeUsers)} hint="저장 기준 대리지표" />
+      <Tile label="첫 저장 완료율" value={`${Math.round(okr.firstSaveRate * 100)}%`} hint="목표 70%" />
+      <Tile label="1인당 저장" value={okr.savesPerUser.toFixed(1)} hint="목표 20건/월" />
+      <Tile label="신규 저장" value={String(okr.newSaves)} />
     </div>
   )
 }

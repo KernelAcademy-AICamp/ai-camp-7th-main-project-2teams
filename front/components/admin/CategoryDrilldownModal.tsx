@@ -63,25 +63,33 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
 
   return (
     <div
-      className="sr-backdrop"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4 backdrop-blur-sm"
       onClick={close}
       role="dialog"
       aria-modal="true"
       aria-labelledby="category-drilldown-title"
     >
-      <div className="sr-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="w-full max-w-lg rounded-xl border border-line bg-surface-card p-5 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-4 flex items-center justify-between">
-          <h3 id="category-drilldown-title" className="sr-modal-title">
+          <h3 id="category-drilldown-title" className="text-base font-semibold text-text-primary">
             <span>{category}</span> · 하위 태그
           </h3>
-          <button type="button" aria-label="닫기" onClick={close} className="sr-modal-close">
+          <button
+            type="button"
+            aria-label="닫기"
+            onClick={close}
+            className="text-text-secondary hover:text-text-primary"
+          >
             ✕
           </button>
         </div>
         {loading ? (
-          <p className="sr-muted">불러오는 중…</p>
+          <p className="text-sm text-text-secondary">불러오는 중…</p>
         ) : isError ? (
-          <p className="sr-error">하위 태그를 불러오지 못했습니다</p>
+          <p className="text-sm text-destructive">하위 태그를 불러오지 못했습니다</p>
         ) : (
           <DonutChart data={data} />
         )}

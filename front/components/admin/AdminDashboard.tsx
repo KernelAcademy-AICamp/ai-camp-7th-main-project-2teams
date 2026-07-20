@@ -64,15 +64,25 @@ export function AdminDashboard() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 px-6 py-10">
-      <div className="flex items-end justify-between border-b pb-5" style={{ borderColor: 'var(--sr-line)' }}>
+    <main className="mx-auto max-w-5xl space-y-6 bg-surface px-6 py-10 font-sans">
+      <div className="flex items-end justify-between border-b border-line pb-4">
         <div>
-          <div className="sr-eyebrow">Growth · Ops · Internal</div>
-          <h1 className="sr-wordmark mt-1 text-3xl">Signal Room</h1>
+          <div className="text-xs font-medium tracking-wide text-text-secondary">내부 운영</div>
+          <h1 className="mt-1 text-xl font-semibold text-text-primary">관리자 대시보드</h1>
         </div>
-        <div className="sr-segment">
+        <div className="flex gap-1 rounded-lg border border-line bg-surface-card p-1">
           {ADMIN_RANGES.map((r) => (
-            <button key={r} type="button" aria-pressed={r === range} onClick={() => setRange(r)}>
+            <button
+              key={r}
+              type="button"
+              aria-pressed={r === range}
+              onClick={() => setRange(r)}
+              className={`rounded-md px-3 py-1 text-sm transition-colors ${
+                r === range
+                  ? 'bg-brand text-white'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
               {r}
             </button>
           ))}
@@ -80,15 +90,15 @@ export function AdminDashboard() {
       </div>
 
       {error ? (
-        <p className="sr-error">{error}</p>
+        <p className="text-sm text-destructive">{error}</p>
       ) : stats ? (
         <OkrTiles okr={stats.okr} />
       ) : (
-        <p className="sr-muted">불러오는 중…</p>
+        <p className="text-sm text-text-secondary">불러오는 중…</p>
       )}
 
       {!error && (
-        <div className="grid gap-5 sm:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-5">
           <div className="sm:col-span-2">
             {usage && <OpenAiUsage usage={usage} activeUsers={stats?.okr.activeUsers ?? 0} />}
           </div>

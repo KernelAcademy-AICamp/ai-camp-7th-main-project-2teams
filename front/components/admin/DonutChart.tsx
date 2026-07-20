@@ -4,10 +4,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 
 export type DonutDatum = { label: string; value: number; pct: number }
 
-// SIGNAL ROOM 팔레트 — 관제실 다크 테마와 어울리는 신호색 계열 (색은 의미가 아니라 구분용)
+// Mowaba 팔레트 기반 — brand/mint 축에 차분한 보조색 추가 (색은 의미가 아니라 구분용)
 const COLORS = [
-  '#baff29', '#4fd6c4', '#b39bff', '#ffb020', '#ff7a7a',
-  '#6fd6ff', '#e0a8ff', '#8fd960', '#ffd166', '#7c9490',
+  '#4a90e2', '#48c9b0', '#f1c40f', '#94a3b8', '#a78bfa',
+  '#fb923c', '#38bdf8', '#f472b6', '#84cc16', '#64748b',
 ]
 
 export function DonutChart({
@@ -18,7 +18,7 @@ export function DonutChart({
   onSliceClick?: (label: string) => void
 }) {
   if (data.length === 0) {
-    return <p className="sr-empty">데이터 없음</p>
+    return <p className="text-sm text-text-secondary">데이터 없음</p>
   }
 
   return (
@@ -34,7 +34,7 @@ export function DonutChart({
               innerRadius="58%"
               outerRadius="88%"
               paddingAngle={3}
-              stroke="var(--sr-bg)"
+              stroke="var(--color-surface-card)"
               strokeWidth={2}
               onClick={(d: unknown) => {
                 const label = (d as { label?: string })?.label
@@ -52,22 +52,34 @@ export function DonutChart({
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <ul className="flex-1">
-        {data.map((d, i) => (
-          <li key={d.label} className="sr-legend-row">
-            <span className="sr-legend-label">
-              <span className="sr-legend-dot" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-              {onSliceClick ? (
-                <button type="button" className="sr-legend-btn" onClick={() => onSliceClick(d.label)}>
-                  {d.label}
-                </button>
-              ) : (
-                <span>{d.label}</span>
-              )}
-            </span>
-            <span className="sr-legend-pct">{Math.round(d.pct * 100)}%</span>
-          </li>
-        ))}
+      <ul className="flex-1 space-y-1 text-sm">
+        {data.map((d, i) => {
+          const roundedPct = Math.round(d.pct * 100)
+          // 반올림하면 0%로 보이지만 실제로는 내용이 있는 경우 — 비율 대신 건수로 표시해 오해 방지
+          const displayValue = roundedPct === 0 && d.value > 0 ? `${d.value}건` : `${roundedPct}%`
+          return (
+            <li key={d.label} className="flex items-center justify-between gap-2 border-b border-line py-1 last:border-b-0">
+              <span className="flex items-center gap-2 text-text-primary">
+                <span
+                  className="inline-block h-2.5 w-2.5 flex-shrink-0 rounded-sm"
+                  style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                />
+                {onSliceClick ? (
+                  <button
+                    type="button"
+                    className="text-left hover:text-brand hover:underline"
+                    onClick={() => onSliceClick(d.label)}
+                  >
+                    {d.label}
+                  </button>
+                ) : (
+                  <span>{d.label}</span>
+                )}
+              </span>
+              <span className="tabular-nums text-text-secondary">{displayValue}</span>
+            </li>
+          )
+        })}
       </ul>
     </div>
   )
