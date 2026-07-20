@@ -19,6 +19,9 @@ type CostsApiResponse = {
   data?: Array<{ results?: Array<{ amount?: { value?: number } }> }>
 }
 
+// next: revalidate와 동일 — URL을 15분 단위로 고정해 캐시가 실제로 히트하도록 버킷팅
+const CACHE_WINDOW_SECONDS = 900
+
 export const GET = withAdmin(async (req) => {
   const range = parseRange(new URL(req.url).searchParams.get('range'))
   // OPENAI_API_KEY(태깅/임베딩용)와 분리된 Organization Admin 전용 키.
@@ -26,7 +29,10 @@ export const GET = withAdmin(async (req) => {
   const key = process.env.OPENAI_ADMIN_KEY
   if (!key) return NextResponse.json(unavailable(range))
 
-  const startTime = Math.floor(Date.now() / 1000) - RANGE_DAYS[range] * 86400
+  // Date.now()를 그대로 쓰면 매 요청마다 URL(=캐시 키)이 달라져 캐시가 무력화된다.
+  // 15분 단위로 버킷팅해 같은 윈도우 내 요청은 동일 URL → Next.js Data Cache 히트.
+  const bucket = Math.floor(Date.now() / 1000 / CACHE_WINDOW_SECONDS) * CACHE_WINDOW_SECONDS
+  const startTime = bucket - RANGE_DAYS[range] * 86400
 
   try {
     const res = await fetch(
@@ -34,7 +40,7 @@ export const GET = withAdmin(async (req) => {
       {
         headers: { Authorization: `Bearer ${key}` },
         // 사용량 API는 지연·rate limit 있음 → 15분 캐시
-        next: { revalidate: 900 },
+        next: { revalidate: CACHE_WINDOW_SECONDS },
       }
     )
     if (!res.ok) return NextResponse.json(unavailable(range))

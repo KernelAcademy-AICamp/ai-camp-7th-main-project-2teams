@@ -62,4 +62,18 @@ describe('GET /api/admin/openai-usage', () => {
     const body = await res.json()
     expect(body.available).toBe(false)
   })
+
+  it('fetch 자체 실패(네트워크 에러) 시 available:false', async () => {
+    process.env.OPENAI_ADMIN_KEY = 'sk-admin-test'
+    vi.spyOn(global, 'fetch').mockRejectedValue(new Error('network down'))
+    const res = await GET(req('?range=30d'))
+    expect((await res.json()).available).toBe(false)
+  })
+
+  it('JSON 파싱 실패 시 available:false', async () => {
+    process.env.OPENAI_ADMIN_KEY = 'sk-admin-test'
+    vi.spyOn(global, 'fetch').mockResolvedValue(new Response('not-json', { status: 200 }))
+    const res = await GET(req('?range=30d'))
+    expect((await res.json()).available).toBe(false)
+  })
 })
