@@ -355,3 +355,40 @@ ORDER BY folder_name;
 DELETE FROM bookmarks WHERE user_id = $1;
 -- 그 후: supabase.auth.admin.deleteUser(userId)
 ```
+
+---
+
+## RPC 함수 — 관리자 대시보드 집계 (A67, 마이그레이션 0026)
+
+`/admin` 내부 대시보드 전용. 전체 사용자 집계를 위해 `security definer` + `set search_path = public`로 RLS를 우회하되, **`service_role`에만 execute 권한을 부여하고 `PUBLIC`/`anon`/`authenticated`는 명시적으로 회수**한다(PostgreSQL이 `CREATE FUNCTION` 시 `PUBLIC`에 자동 부여하는 기본 권한까지 회수해야 PostgREST 미인증 호출 경로가 완전히 차단됨). 반환은 집계값만 — `embedding`/`content`/개별 `user_id` 행 노출 없음.
+
+```sql
+-- OKR 실측: 활성 사용자·첫 저장 완료율(누적 활성화율, 윈도우 내 저장 아님)·1인당 저장·신규 저장
+CREATE OR REPLACE FUNCTION admin_okr_stats(p_interval text)
+RETURNS TABLE(active_users bigint, first_save_rate numeric, saves_per_user numeric, new_saves bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 카테고리 분포: categories가 유저별 테이블이라 name 기준 집계, category_id IS NULL → '미분류'
+CREATE OR REPLACE FUNCTION admin_category_stats(p_interval text)
+RETURNS TABLE(name text, count bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 카테고리 드릴다운: tags 배열 unnest로 하위 태그 분포
+CREATE OR REPLACE FUNCTION admin_tag_stats(p_category text, p_interval text)
+RETURNS TABLE(tag text, count bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+GRANT EXECUTE ON FUNCTION admin_okr_stats(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_category_stats(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_tag_stats(text, text) TO service_role;
+
+REVOKE EXECUTE ON FUNCTION admin_okr_stats(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_category_stats(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_tag_stats(text, text) FROM anon, authenticated, public;
+```
+
+전체 정의: `supabase/migrations/0026_admin_stats_functions.sql`.
+
+**알려진 후속 개선 사항 (비차단, 이번 범위 밖):**
+- `bookmarks.created_at`에 별도 인덱스 없음 — 현재는 저트래픽 내부 페이지라 허용, 테이블 성장 시 `created_at` btree 인덱스 추가 검토.
+- `admin_category_stats`/`admin_tag_stats`는 count=1인 희귀 라벨도 그대로 노출 — 사용자 자유입력 태그가 다수 유저에 걸쳐 집계되므로, 필요 시 최소 count 임계값 또는 "기타" 버킷 도입 검토.
