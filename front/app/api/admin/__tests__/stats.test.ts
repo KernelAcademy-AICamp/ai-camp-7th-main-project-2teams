@@ -83,4 +83,11 @@ describe('GET /api/admin/stats', () => {
     const res = await GET(req('?range=7d'))
     expect(res.status).toBe(500)
   })
+
+  it('category가 50자 초과이면 400', async () => {
+    const longCategory = 'a'.repeat(51)
+    const res = await GET(req(`?range=7d&category=${longCategory}`))
+    expect(res.status).toBe(400)
+    expect(rpc).not.toHaveBeenCalled()
+  })
 })
