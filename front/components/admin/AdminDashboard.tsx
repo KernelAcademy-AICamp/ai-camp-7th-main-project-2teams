@@ -18,17 +18,32 @@ export function AdminDashboard() {
 
   const [stats, setStats] = useState<Stats | null>(null)
   const [usage, setUsage] = useState<Usage | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let alive = true
-    Promise.all([
-      fetch(`/api/admin/stats?range=${range}`).then((r) => r.json()),
-      fetch(`/api/admin/openai-usage?range=${range}`).then((r) => r.json()),
-    ]).then(([s, u]) => {
-      if (!alive) return
-      setStats({ okr: s.okr, categories: s.categories })
-      setUsage(u)
-    })
+    Promise.all([fetch(`/api/admin/stats?range=${range}`), fetch(`/api/admin/openai-usage?range=${range}`)])
+      .then(async ([statsRes, usageRes]) => {
+        if (!alive) return
+        if (!statsRes.ok) {
+          setError('대시보드 데이터를 불러오지 못했습니다')
+          return
+        }
+        const s = await statsRes.json()
+        if (!s || !s.okr || !s.categories) {
+          setError('대시보드 데이터를 불러오지 못했습니다')
+          return
+        }
+        const u = usageRes.ok
+          ? await usageRes.json()
+          : { available: false, totalCostUsd: 0, totalTokens: 0, byModel: [] }
+        setError(null)
+        setStats({ okr: s.okr, categories: s.categories })
+        setUsage(u)
+      })
+      .catch(() => {
+        if (alive) setError('대시보드 데이터를 불러오지 못했습니다')
+      })
     return () => {
       alive = false
     }
@@ -47,6 +62,7 @@ export function AdminDashboard() {
             <button
               key={r}
               type="button"
+              aria-pressed={r === range}
               onClick={() => setRange(r)}
               className={`rounded px-3 py-1 text-sm ${r === range ? 'bg-foreground text-background' : ''}`}
             >
@@ -56,14 +72,22 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {stats ? <OkrTiles okr={stats.okr} /> : <p className="text-sm text-muted-foreground">불러오는 중…</p>}
+      {error ? (
+        <p className="text-sm text-destructive">{error}</p>
+      ) : stats ? (
+        <OkrTiles okr={stats.okr} />
+      ) : (
+        <p className="text-sm text-muted-foreground">불러오는 중…</p>
+      )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {usage && <OpenAiUsage usage={usage} activeUsers={stats?.okr.activeUsers ?? 0} />}
-        {stats && <CategoryPie categories={stats.categories} onSelect={selectCategory} />}
-      </div>
+      {!error && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {usage && <OpenAiUsage usage={usage} activeUsers={stats?.okr.activeUsers ?? 0} />}
+          {stats && <CategoryPie categories={stats.categories} onSelect={selectCategory} />}
+        </div>
+      )}
 
-      <CategoryDrilldownModal range={range} />
+      {!error && <CategoryDrilldownModal range={range} />}
     </main>
   )
 }

@@ -59,4 +59,21 @@ describe('AdminDashboard', () => {
     fireEvent.click(screen.getByRole('button', { name: '30d' }))
     expect(push).toHaveBeenCalledWith('/admin?range=30d')
   })
+
+  it('stats API 500 응답 시 크래시 대신 에러 메시지 표시', async () => {
+    vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/api/admin/openai-usage')) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ available: true, totalCostUsd: 2, totalTokens: 0, byModel: [] }), {
+            status: 200,
+          })
+        )
+      }
+      return Promise.resolve(new Response(JSON.stringify({ error: 'RPC failed' }), { status: 500 }))
+    })
+    render(<AdminDashboard />)
+    await waitFor(() => expect(screen.getByText('대시보드 데이터를 불러오지 못했습니다')).toBeInTheDocument())
+    expect(screen.queryByText('활성 사용자')).not.toBeInTheDocument()
+  })
 })
