@@ -64,18 +64,15 @@ export function AdminDashboard() {
   }
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Admin Dashboard</h1>
-        <div className="flex gap-1 rounded-lg border p-1">
+    <main className="mx-auto max-w-5xl space-y-8 px-6 py-10">
+      <div className="flex items-end justify-between border-b pb-5" style={{ borderColor: 'var(--sr-line)' }}>
+        <div>
+          <div className="sr-eyebrow">Growth · Ops · Internal</div>
+          <h1 className="sr-wordmark mt-1 text-3xl">Signal Room</h1>
+        </div>
+        <div className="sr-segment">
           {ADMIN_RANGES.map((r) => (
-            <button
-              key={r}
-              type="button"
-              aria-pressed={r === range}
-              onClick={() => setRange(r)}
-              className={`rounded px-3 py-1 text-sm ${r === range ? 'bg-foreground text-background' : ''}`}
-            >
+            <button key={r} type="button" aria-pressed={r === range} onClick={() => setRange(r)}>
               {r}
             </button>
           ))}
@@ -83,17 +80,21 @@ export function AdminDashboard() {
       </div>
 
       {error ? (
-        <p className="text-sm text-destructive">{error}</p>
+        <p className="sr-error">{error}</p>
       ) : stats ? (
         <OkrTiles okr={stats.okr} />
       ) : (
-        <p className="text-sm text-muted-foreground">불러오는 중…</p>
+        <p className="sr-muted">불러오는 중…</p>
       )}
 
       {!error && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {usage && <OpenAiUsage usage={usage} activeUsers={stats?.okr.activeUsers ?? 0} />}
-          {stats && <CategoryPie categories={stats.categories} onSelect={selectCategory} />}
+        <div className="grid gap-5 sm:grid-cols-5">
+          <div className="sm:col-span-2">
+            {usage && <OpenAiUsage usage={usage} activeUsers={stats?.okr.activeUsers ?? 0} />}
+          </div>
+          <div className="sm:col-span-3">
+            {stats && <CategoryPie categories={stats.categories} onSelect={selectCategory} />}
+          </div>
         </div>
       )}
 

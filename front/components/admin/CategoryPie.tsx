@@ -17,8 +17,8 @@ export function CategoryPie({
     pct: c.pct,
   }))
   return (
-    <section className="rounded-lg border p-4">
-      <h2 className="mb-3 text-sm font-medium">카테고리 분포</h2>
+    <section className="sr-panel h-full">
+      <h2 className="sr-panel-title">카테고리 분포</h2>
       <DonutChart data={data} onSliceClick={onSelect} />
     </section>
   )

@@ -1,0 +1,338 @@
+/* ── SIGNAL ROOM ─────────────────────────────────────────────────
+   /admin 전용 다크 "관제실" 테마. 메인 앱(Mowaba, 라이트 코퍼레이트)과
+   완전히 분리된 스코프 — .admin-theme 셀렉터 밖으로 새어나가지 않음.
+   폰트: Fraunces(옵티컬 사이즈 세리프, 라벨/타이틀) + IBM Plex Mono(모든 수치). */
+
+.admin-theme {
+  --sr-bg: #0a0d0f;
+  --sr-surface: #11171a;
+  --sr-surface-2: #161d21;
+  --sr-line: #232d31;
+  --sr-line-strong: #34423f;
+  --sr-text: #e8f1ee;
+  --sr-text-dim: #7c9490;
+  --sr-text-dimmer: #4d605d;
+  --sr-signal: #baff29;
+  --sr-signal-dim: #7a9e1f;
+  --sr-amber: #ffb020;
+  --sr-red: #ff5c5c;
+  --sr-violet: #b39bff;
+  --sr-cyan: #4fd6c4;
+
+  position: relative;
+  min-height: 100dvh;
+  background: var(--sr-bg);
+  color: var(--sr-text);
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  isolation: isolate;
+}
+
+/* 그레인 텍스처 — feTurbulence 데이터 URI, 아주 미세하게 */
+.admin-theme::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* 스캔라인 — CRT 관제실 분위기, 아주 은은하게 */
+.admin-theme::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(186, 255, 41, 0.012) 0px,
+    rgba(186, 255, 41, 0.012) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+.admin-theme > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sr-wordmark {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-optical-sizing: auto;
+  font-style: italic;
+  font-weight: 480;
+  letter-spacing: -0.01em;
+  color: var(--sr-text);
+}
+
+.sr-eyebrow {
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sr-signal);
+}
+
+/* ── 세그먼트 토글 (range 탭) ─────────────────────────────────── */
+.sr-segment {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--sr-surface);
+  border: 1px solid var(--sr-line);
+  border-radius: 3px;
+}
+
+.sr-segment button {
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  padding: 0.3rem 0.75rem;
+  border-radius: 2px;
+  color: var(--sr-text-dim);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.sr-segment button:hover {
+  color: var(--sr-text);
+}
+
+.sr-segment button[aria-pressed='true'] {
+  background: var(--sr-signal);
+  color: #0a0d0f;
+  font-weight: 600;
+}
+
+/* ── 신호 타일 (OKR) ──────────────────────────────────────────── */
+.sr-tile {
+  position: relative;
+  background: var(--sr-surface);
+  border: 1px solid var(--sr-line);
+  border-radius: 2px;
+  padding: 1.1rem 1rem 0.9rem;
+  overflow: hidden;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: sr-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.sr-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: var(--sr-tile-accent, var(--sr-signal));
+  opacity: 0.75;
+}
+
+.sr-tile:hover {
+  border-color: var(--sr-line-strong);
+  transform: translateY(-1px);
+}
+
+.sr-tile-label {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-style: italic;
+  font-size: 0.8125rem;
+  color: var(--sr-text-dim);
+}
+
+.sr-tile-value {
+  margin-top: 0.35rem;
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 1.85rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--sr-text);
+}
+
+.sr-tile-hint {
+  margin-top: 0.4rem;
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 0.6875rem;
+  color: var(--sr-text-dimmer);
+}
+
+@keyframes sr-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── 패널 (카드형 섹션) ───────────────────────────────────────── */
+.sr-panel {
+  background: var(--sr-surface);
+  border: 1px solid var(--sr-line);
+  border-radius: 2px;
+  padding: 1.25rem;
+}
+
+.sr-panel-title {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--sr-text-dim);
+  margin-bottom: 0.9rem;
+}
+
+/* ── OpenAI 비용 게이지 ───────────────────────────────────────── */
+.sr-gauge-value {
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--sr-signal);
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-gauge-row {
+  margin-top: 0.75rem;
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 0.8125rem;
+  color: var(--sr-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-gauge-bar {
+  margin-top: 0.6rem;
+  height: 4px;
+  background: var(--sr-line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sr-gauge-bar-fill {
+  height: 100%;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── 도넛 범례 ────────────────────────────────────────────────── */
+.sr-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--sr-line);
+  font-size: 0.8125rem;
+}
+
+.sr-legend-row:last-child {
+  border-bottom: none;
+}
+
+.sr-legend-label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--sr-text);
+}
+
+.sr-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.sr-legend-pct {
+  font-family: var(--font-plex-mono), monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--sr-text-dim);
+}
+
+.sr-legend-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sr-legend-btn:hover {
+  color: var(--sr-signal);
+}
+
+/* ── 상태 텍스트 ──────────────────────────────────────────────── */
+.sr-muted {
+  color: var(--sr-text-dim);
+  font-size: 0.8125rem;
+}
+
+.sr-error {
+  color: var(--sr-red);
+  font-size: 0.8125rem;
+}
+
+.sr-empty {
+  color: var(--sr-text-dimmer);
+  font-size: 0.8125rem;
+  font-style: italic;
+  font-family: var(--font-fraunces), Georgia, serif;
+}
+
+/* ── 드릴다운 모달 ────────────────────────────────────────────── */
+.sr-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(4, 6, 7, 0.72);
+  backdrop-filter: blur(6px);
+  animation: sr-fade 0.15s ease forwards;
+}
+
+@keyframes sr-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sr-modal {
+  width: 100%;
+  max-width: 32rem;
+  background: var(--sr-surface-2);
+  border: 1px solid var(--sr-line-strong);
+  border-left: 2px solid var(--sr-signal);
+  border-radius: 2px;
+  padding: 1.4rem;
+  box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.7);
+}
+
+.sr-modal-title {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--sr-text);
+}
+
+.sr-modal-close {
+  background: none;
+  border: none;
+  color: var(--sr-text-dim);
+  cursor: pointer;
+  font-family: var(--font-plex-mono), monospace;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.4rem;
+  transition: color 0.15s ease;
+}
+
+.sr-modal-close:hover {
+  color: var(--sr-red);
+}
