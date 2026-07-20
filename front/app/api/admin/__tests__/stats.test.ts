@@ -4,6 +4,11 @@ let currentUser: unknown = { id: 'admin-1' }
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: { getUser: async () => ({ data: { user: currentUser }, error: null }) },
+    // withAdmin의 isAdmin()이 호출하는 is_admin RPC — admin-1만 관리자로 취급
+    rpc: async () => ({
+      data: (currentUser as { id?: string } | null)?.id === 'admin-1',
+      error: null,
+    }),
   }),
 }))
 
@@ -20,7 +25,6 @@ function req(qs = '') {
 
 describe('GET /api/admin/stats', () => {
   beforeEach(() => {
-    process.env.ADMIN_USER_IDS = 'admin-1'
     currentUser = { id: 'admin-1' }
     rpc.mockReset()
   })

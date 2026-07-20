@@ -392,3 +392,42 @@ REVOKE EXECUTE ON FUNCTION admin_tag_stats(text, text) FROM anon, authenticated,
 **알려진 후속 개선 사항 (비차단, 이번 범위 밖):**
 - `bookmarks.created_at`에 별도 인덱스 없음 — 현재는 저트래픽 내부 페이지라 허용, 테이블 성장 시 `created_at` btree 인덱스 추가 검토.
 - `admin_category_stats`/`admin_tag_stats`는 count=1인 희귀 라벨도 그대로 노출 — 사용자 자유입력 태그가 다수 유저에 걸쳐 집계되므로, 필요 시 최소 count 임계값 또는 "기타" 버킷 도입 검토.
+
+---
+
+## 관리자 판별 — admin_users 테이블 (A67, 마이그레이션 0027)
+
+`ADMIN_USER_IDS` env var allowlist를 **폐기**하고 DB 테이블 기반으로 전환. redeploy 없이 승격/강등, 감사 추적(`granted_by`/`granted_at`) 확보.
+
+```sql
+CREATE TABLE admin_users (
+  user_id    uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  granted_by uuid REFERENCES auth.users(id),
+  granted_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+-- 정책 0개 = 기본 거부. service_role만 RLS 우회로 직접 접근·관리.
+
+-- authenticated 세션이 본인 관리자 여부를 확인하는 유일한 통로.
+CREATE OR REPLACE FUNCTION is_admin(p_user_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$ SELECT EXISTS(SELECT 1 FROM admin_users WHERE user_id = p_user_id) $$;
+
+GRANT EXECUTE ON FUNCTION is_admin(uuid) TO authenticated;
+REVOKE EXECUTE ON FUNCTION is_admin(uuid) FROM anon, public;
+```
+
+전체 정의: `supabase/migrations/0027_admin_users.sql`.
+
+**승격/강등:**
+```sql
+-- 승격
+INSERT INTO admin_users (user_id, granted_by) VALUES ('<대상 user.id>', '<승격시킨 관리자 user.id>');
+-- 강등
+DELETE FROM admin_users WHERE user_id = '<대상 user.id>';
+```
+service_role 필요(SQL Editor 또는 `createAdminClient()`). 앱 내 self-service 승격 UI는 없음(YAGNI, 필요 시 `POST /api/admin/admins` 후속 추가).
+
+`front/lib/admin-auth.ts`의 `isAdmin(supabase, userId)`가 호출자 세션으로 `is_admin` RPC를 호출 — RPC 에러 시 fail-closed(false).
