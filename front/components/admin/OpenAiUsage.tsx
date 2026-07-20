@@ -20,13 +20,15 @@ export function OpenAiUsage({ usage, activeUsers }: { usage: Usage; activeUsers:
     )
   }
 
-  const perUser = activeUsers > 0 ? usage.totalCostUsd / activeUsers : 0
+  // API 응답이 malformed(number 아닌 값)여도 렌더가 죽지 않도록 방어
+  const totalCostUsd = Number.isFinite(usage.totalCostUsd) ? usage.totalCostUsd : 0
+  const perUser = activeUsers > 0 ? totalCostUsd / activeUsers : 0
 
   return (
     <div className="rounded-lg border p-4">
       <div className="text-sm text-muted-foreground">OpenAI 사용량</div>
       <div className="mt-1 text-2xl font-semibold tabular-nums">
-        ${usage.totalCostUsd.toFixed(2)}
+        ${totalCostUsd.toFixed(2)}
       </div>
       <div className="mt-2 text-sm tabular-nums">
         유저당 <span>${perUser.toFixed(4)}</span>

@@ -59,6 +59,26 @@ describe('GET /api/admin/openai-usage', () => {
     expect(body.totalCostUsd).toBeCloseTo(1.75)
   })
 
+  it('amount.value가 numeric string이어도 정상 합산 (실제 OpenAI API 관례)', async () => {
+    process.env.OPENAI_ADMIN_KEY = 'sk-admin-test'
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: [
+            { results: [{ amount: { value: '0.5' } }] },
+            { results: [{ amount: { value: '1.25' } }] },
+          ],
+        }),
+        { status: 200 }
+      )
+    )
+    const res = await GET(req('?range=30d'))
+    const body = await res.json()
+    expect(body.available).toBe(true)
+    expect(typeof body.totalCostUsd).toBe('number')
+    expect(body.totalCostUsd).toBeCloseTo(1.75)
+  })
+
   it('비200 응답 시 available:false', async () => {
     process.env.OPENAI_ADMIN_KEY = 'sk-admin-test'
     vi.spyOn(global, 'fetch').mockResolvedValue(new Response('nope', { status: 401 }))

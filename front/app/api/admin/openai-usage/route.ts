@@ -15,8 +15,9 @@ function unavailable(range: string): UsageResponse {
 }
 
 // OpenAI Organization Costs API 응답 형태: { data: [{ results: [{ amount: { value } }] }] }
+// value가 number 또는 numeric string(재무 API의 부동소수점 회피 관례)으로 올 수 있어 unknown으로 받고 Number()로 강제.
 type CostsApiResponse = {
-  data?: Array<{ results?: Array<{ amount?: { value?: number } }> }>
+  data?: Array<{ results?: Array<{ amount?: { value?: unknown } }> }>
 }
 
 // next: revalidate와 동일 — URL을 15분 단위로 고정해 캐시가 실제로 히트하도록 버킷팅
@@ -48,7 +49,7 @@ export const GET = withAdmin(async (req) => {
     const json = (await res.json()) as CostsApiResponse
     const totalCostUsd = (json.data ?? [])
       .flatMap((b) => b.results ?? [])
-      .reduce((sum, r) => sum + (r.amount?.value ?? 0), 0)
+      .reduce((sum, r) => sum + (Number(r.amount?.value) || 0), 0)
 
     return NextResponse.json({
       range,
