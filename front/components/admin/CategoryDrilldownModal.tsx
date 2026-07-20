@@ -30,10 +30,24 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
     }
   }, [category, range])
 
+  const close = () => {
+    const next = new URLSearchParams(params)
+    next.delete('category')
+    router.push(`${pathname}?${next.toString()}`)
+  }
+
+  // Escape 키로 닫기 — EditBookmarkModal/AddBookmarkModal과 동일 패턴
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  })
+
   if (!category) return null
 
   const loading = !result || result.category !== category
-  const close = () => router.push(`${pathname}?range=${range}`)
   const data: DonutDatum[] = loading
     ? []
     : result.tags.map((t) => ({ label: t.tag, value: t.count, pct: t.pct }))
@@ -42,13 +56,16 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onClick={close}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="category-drilldown-title"
     >
       <div
         className="w-full max-w-lg rounded-xl bg-background p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold">
+          <h3 id="category-drilldown-title" className="text-base font-semibold">
             <span>{category}</span> · 하위 태그
           </h3>
           <button type="button" aria-label="닫기" onClick={close} className="text-muted-foreground">
