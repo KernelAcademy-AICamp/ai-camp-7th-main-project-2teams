@@ -355,3 +355,133 @@ ORDER BY folder_name;
 DELETE FROM bookmarks WHERE user_id = $1;
 -- 그 후: supabase.auth.admin.deleteUser(userId)
 ```
+
+---
+
+## RPC 함수 — 관리자 대시보드 집계 (A67, 마이그레이션 0026)
+
+`/admin` 내부 대시보드 전용. 전체 사용자 집계를 위해 `security definer` + `set search_path = public`로 RLS를 우회하되, **`service_role`에만 execute 권한을 부여하고 `PUBLIC`/`anon`/`authenticated`는 명시적으로 회수**한다(PostgreSQL이 `CREATE FUNCTION` 시 `PUBLIC`에 자동 부여하는 기본 권한까지 회수해야 PostgREST 미인증 호출 경로가 완전히 차단됨). 반환은 집계값만 — `embedding`/`content`/개별 `user_id` 행 노출 없음.
+
+```sql
+-- OKR 실측: 활성 사용자·첫 저장 완료율(누적 활성화율, 윈도우 내 저장 아님)·1인당 저장·신규 저장
+CREATE OR REPLACE FUNCTION admin_okr_stats(p_interval text)
+RETURNS TABLE(active_users bigint, first_save_rate numeric, saves_per_user numeric, new_saves bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 카테고리 분포: categories가 유저별 테이블이라 name 기준 집계, category_id IS NULL → '미분류'
+CREATE OR REPLACE FUNCTION admin_category_stats(p_interval text)
+RETURNS TABLE(name text, count bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 카테고리 드릴다운: tags 배열 unnest로 하위 태그 분포
+CREATE OR REPLACE FUNCTION admin_tag_stats(p_category text, p_interval text)
+RETURNS TABLE(tag text, count bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+GRANT EXECUTE ON FUNCTION admin_okr_stats(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_category_stats(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_tag_stats(text, text) TO service_role;
+
+REVOKE EXECUTE ON FUNCTION admin_okr_stats(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_category_stats(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_tag_stats(text, text) FROM anon, authenticated, public;
+```
+
+전체 정의: `supabase/migrations/0026_admin_stats_functions.sql`.
+
+**알려진 후속 개선 사항 (비차단, 이번 범위 밖):**
+- `bookmarks.created_at`에 별도 인덱스 없음 — 현재는 저트래픽 내부 페이지라 허용, 테이블 성장 시 `created_at` btree 인덱스 추가 검토.
+- `admin_category_stats`/`admin_tag_stats`는 count=1인 희귀 라벨도 그대로 노출 — 사용자 자유입력 태그가 다수 유저에 걸쳐 집계되므로, 필요 시 최소 count 임계값 또는 "기타" 버킷 도입 검토.
+
+### v2 확장 — 성장/트렌딩/건강/관리자관리 RPC (A67 v2, 마이그레이션 0028·0029)
+
+`/admin` v2 재정의(마케팅·유저관리·북마크 동향)에서 추가된 RPC. 0026과 동일 규약: `security definer` + `set search_path = public`, `service_role`에만 execute 부여, `PUBLIC`/`anon`/`authenticated` 명시적 revoke. 반환은 집계값만 — `embedding`/`content`/개별 유저 북마크 미노출. `admin_list_admins`가 노출하는 이메일은 관리자(소수 신뢰집합) 본인 것으로, 일반 유저 PII가 아니다.
+
+```sql
+-- 성장 추이: 신규 가입(auth.users) + 저장(bookmarks) 시계열. 1d=시간별, 7d/30d=일별 버킷.
+CREATE OR REPLACE FUNCTION admin_growth_series(p_interval text)
+RETURNS TABLE(bucket timestamptz, signups bigint, saves bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 트렌딩 태그: 현재 윈도우 vs 직전 동일 윈도우 delta 상위 10.
+CREATE OR REPLACE FUNCTION admin_trending_tags(p_interval text)
+RETURNS TABLE(tag text, count bigint, prev_count bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 건강 지표: 데드링크·미분류 누적 비율(전체 기간, 무인자).
+CREATE OR REPLACE FUNCTION admin_health_stats()
+RETURNS TABLE(dead_ratio numeric, uncategorized_ratio numeric)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 현재 관리자 목록 (admin_users ⨝ auth.users)
+CREATE OR REPLACE FUNCTION admin_list_admins()
+RETURNS TABLE(user_id uuid, email text, granted_at timestamptz)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 이메일로 승격: email→id 해석 후 upsert. 미존재 시 예외(errcode = no_data_found).
+CREATE OR REPLACE FUNCTION admin_grant_by_email(p_email text, p_granted_by uuid)
+RETURNS TABLE(user_id uuid, email text)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 강등
+CREATE OR REPLACE FUNCTION admin_revoke(p_user_id uuid)
+RETURNS void
+LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+GRANT EXECUTE ON FUNCTION admin_growth_series(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_trending_tags(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_health_stats() TO service_role;
+GRANT EXECUTE ON FUNCTION admin_list_admins() TO service_role;
+GRANT EXECUTE ON FUNCTION admin_grant_by_email(text, uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_revoke(uuid) TO service_role;
+
+REVOKE EXECUTE ON FUNCTION admin_growth_series(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_trending_tags(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_health_stats() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_list_admins() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_grant_by_email(text, uuid) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_revoke(uuid) FROM anon, authenticated, public;
+```
+
+전체 정의: `supabase/migrations/0028_admin_v2_stats_functions.sql`(성장/트렌딩/건강), `supabase/migrations/0029_admin_management_functions.sql`(관리자 목록/승격/강등). `p_interval`은 기존 `rangeToInterval` 반환값(`'1 day'`/`'7 days'`/`'30 days'`)을 그대로 받음 — 0026 함수와 호출 규약 동일. `admin_grant_by_email`/`admin_revoke`는 `POST`/`DELETE /api/admin/admins`(`withAdmin` 게이팅, 본인 강등 방지)에서만 호출.
+
+---
+
+## 관리자 판별 — admin_users 테이블 (A67, 마이그레이션 0027)
+
+`ADMIN_USER_IDS` env var allowlist를 **폐기**하고 DB 테이블 기반으로 전환. redeploy 없이 승격/강등, 감사 추적(`granted_by`/`granted_at`) 확보.
+
+```sql
+CREATE TABLE admin_users (
+  user_id    uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  granted_by uuid REFERENCES auth.users(id),
+  granted_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+-- 정책 0개 = 기본 거부. service_role만 RLS 우회로 직접 접근·관리.
+
+-- authenticated 세션이 본인 관리자 여부만 확인하는 유일한 통로.
+-- 인자 없이 auth.uid() 사용 — 파라미터로 임의 uuid를 받으면 타인의
+-- 관리자 여부까지 조회 가능해지는 정보노출 경로가 생기므로 의도적으로 무인자.
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$ SELECT EXISTS(SELECT 1 FROM admin_users WHERE user_id = auth.uid()) $$;
+
+GRANT EXECUTE ON FUNCTION is_admin() TO authenticated;
+REVOKE EXECUTE ON FUNCTION is_admin() FROM anon, public;
+```
+
+전체 정의: `supabase/migrations/0027_admin_users.sql`.
+
+**승격/강등:**
+```sql
+-- 승격
+INSERT INTO admin_users (user_id, granted_by) VALUES ('<대상 user.id>', '<승격시킨 관리자 user.id>');
+-- 강등
+DELETE FROM admin_users WHERE user_id = '<대상 user.id>';
+```
+service_role 필요(SQL Editor 또는 `createAdminClient()`). 마이그레이션에는 특정 유저를 시드하지 않음(환경 비종속성) — 승격은 항상 이 수동 SQL로. 앱 내 self-service 승격 UI는 없음(YAGNI, 필요 시 `POST /api/admin/admins` 후속 추가).
+
+`front/lib/admin-auth.ts`의 `isAdmin(supabase)`가 호출자 세션으로 인자 없이 `is_admin` RPC를 호출 — RPC 에러 시 fail-closed(false).
