@@ -393,6 +393,58 @@ REVOKE EXECUTE ON FUNCTION admin_tag_stats(text, text) FROM anon, authenticated,
 - `bookmarks.created_at`에 별도 인덱스 없음 — 현재는 저트래픽 내부 페이지라 허용, 테이블 성장 시 `created_at` btree 인덱스 추가 검토.
 - `admin_category_stats`/`admin_tag_stats`는 count=1인 희귀 라벨도 그대로 노출 — 사용자 자유입력 태그가 다수 유저에 걸쳐 집계되므로, 필요 시 최소 count 임계값 또는 "기타" 버킷 도입 검토.
 
+### v2 확장 — 성장/트렌딩/건강/관리자관리 RPC (A67 v2, 마이그레이션 0028·0029)
+
+`/admin` v2 재정의(마케팅·유저관리·북마크 동향)에서 추가된 RPC. 0026과 동일 규약: `security definer` + `set search_path = public`, `service_role`에만 execute 부여, `PUBLIC`/`anon`/`authenticated` 명시적 revoke. 반환은 집계값만 — `embedding`/`content`/개별 유저 북마크 미노출. `admin_list_admins`가 노출하는 이메일은 관리자(소수 신뢰집합) 본인 것으로, 일반 유저 PII가 아니다.
+
+```sql
+-- 성장 추이: 신규 가입(auth.users) + 저장(bookmarks) 시계열. 1d=시간별, 7d/30d=일별 버킷.
+CREATE OR REPLACE FUNCTION admin_growth_series(p_interval text)
+RETURNS TABLE(bucket timestamptz, signups bigint, saves bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 트렌딩 태그: 현재 윈도우 vs 직전 동일 윈도우 delta 상위 10.
+CREATE OR REPLACE FUNCTION admin_trending_tags(p_interval text)
+RETURNS TABLE(tag text, count bigint, prev_count bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 건강 지표: 데드링크·미분류 누적 비율(전체 기간, 무인자).
+CREATE OR REPLACE FUNCTION admin_health_stats()
+RETURNS TABLE(dead_ratio numeric, uncategorized_ratio numeric)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 현재 관리자 목록 (admin_users ⨝ auth.users)
+CREATE OR REPLACE FUNCTION admin_list_admins()
+RETURNS TABLE(user_id uuid, email text, granted_at timestamptz)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 이메일로 승격: email→id 해석 후 upsert. 미존재 시 예외(errcode = no_data_found).
+CREATE OR REPLACE FUNCTION admin_grant_by_email(p_email text, p_granted_by uuid)
+RETURNS TABLE(user_id uuid, email text)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 강등
+CREATE OR REPLACE FUNCTION admin_revoke(p_user_id uuid)
+RETURNS void
+LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+GRANT EXECUTE ON FUNCTION admin_growth_series(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_trending_tags(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_health_stats() TO service_role;
+GRANT EXECUTE ON FUNCTION admin_list_admins() TO service_role;
+GRANT EXECUTE ON FUNCTION admin_grant_by_email(text, uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_revoke(uuid) TO service_role;
+
+REVOKE EXECUTE ON FUNCTION admin_growth_series(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_trending_tags(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_health_stats() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_list_admins() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_grant_by_email(text, uuid) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_revoke(uuid) FROM anon, authenticated, public;
+```
+
+전체 정의: `supabase/migrations/0028_admin_v2_stats_functions.sql`(성장/트렌딩/건강), `supabase/migrations/0029_admin_management_functions.sql`(관리자 목록/승격/강등). `p_interval`은 기존 `rangeToInterval` 반환값(`'1 day'`/`'7 days'`/`'30 days'`)을 그대로 받음 — 0026 함수와 호출 규약 동일. `admin_grant_by_email`/`admin_revoke`는 `POST`/`DELETE /api/admin/admins`(`withAdmin` 게이팅, 본인 강등 방지)에서만 호출.
+
 ---
 
 ## 관리자 판별 — admin_users 테이블 (A67, 마이그레이션 0027)

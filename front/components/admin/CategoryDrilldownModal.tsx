@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { DonutChart, type DonutDatum } from './DonutChart'
+import { BarList, type BarDatum } from './BarList'
 import type { AdminRange } from '@/lib/admin-range'
 
 type TagStat = { tag: string; count: number; pct: number }
@@ -58,7 +58,7 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
   // result가 현재 category에 대한 것일 때만 신뢰 — 이전 category의 stale 에러/데이터 배제
   const isError = result !== null && 'error' in result && result.category === category
   const loading = !isError && (!result || result.category !== category)
-  const data: DonutDatum[] =
+  const data: BarDatum[] =
     !loading && result && 'tags' in result ? result.tags.map((t) => ({ label: t.tag, value: t.count, pct: t.pct })) : []
 
   return (
@@ -93,7 +93,7 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
           ) : isError ? (
             <p className="text-sm text-destructive">하위 태그를 불러오지 못했습니다</p>
           ) : (
-            <DonutChart data={data} />
+            <BarList data={data} />
           )}
         </div>
       </div>

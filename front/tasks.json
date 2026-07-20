@@ -715,8 +715,8 @@
     {
       "id": "A67",
       "title": "관리자 대시보드 (내부 도구)",
-      "description": "PRD 원래 범위 밖 — PM이 별도 발의한 내부 그로스/운영 대시보드. /admin 페이지에서 OKR 실측·OpenAI 사용량·카테고리/태그 분포를 관리자만 조회.",
-      "details": "front/lib/admin-auth.ts(withAdmin, allowlist 게이팅 → 비관리자 404)·admin-range.ts(1d/7d/30d). supabase/migrations/0026_admin_stats_functions.sql — admin_okr_stats/admin_category_stats/admin_tag_stats(security definer, service_role 전용 execute, PUBLIC/anon/authenticated 명시적 revoke). GET /api/admin/stats·GET /api/admin/openai-usage(OpenAI Organization Costs API 서버 프록시, OPENAI_ADMIN_KEY 별도 키, 무음 실패 없이 available:false 폴백). front/components/admin/* — OkrTiles·OpenAiUsage·CategoryPie·CategoryDrilldownModal(?category= URL 동기화 모달, recharts 도넛). AdminDashboard.tsx가 range 상태·fetch·에러 처리(stats API 실패 시 에러 메시지, 크래시 없음) 소유. A64(사용자향 프리미엄 대시보드)와는 무관한 별도 기능.",
+      "description": "PRD 원래 범위 밖 — PM이 별도 발의한 내부 그로스/운영 대시보드. /admin 페이지에서 OKR 실측·OpenAI 사용량·카테고리/태그 분포를 관리자만 조회. (v2 재정의: 성장/동향/관리자관리)",
+      "details": "front/lib/admin-auth.ts(withAdmin, allowlist 게이팅 → 비관리자 404)·admin-range.ts(1d/7d/30d). supabase/migrations/0026_admin_stats_functions.sql — admin_okr_stats/admin_category_stats/admin_tag_stats(security definer, service_role 전용 execute, PUBLIC/anon/authenticated 명시적 revoke). v2: 0028_admin_v2_stats_functions.sql(admin_growth_series/admin_trending_tags/admin_health_stats), 0029_admin_management_functions.sql(admin_list_admins/admin_grant_by_email/admin_revoke) — 동일 security definer + service_role 전용 규약. GET /api/admin/stats(growth/trending/health payload 확장)·GET /api/admin/openai-usage(OpenAI Organization Costs API 서버 프록시, OPENAI_ADMIN_KEY 별도 키, 무음 실패 없이 available:false 폴백)·GET/POST/DELETE /api/admin/admins(관리자 목록/승격/강등, 본인 강등 방지). front/components/admin/* — OkrTiles·OpenAiUsage·BarList(공유 랭킹 가로막대, 도넛 폐기)·CategoryBar·CategoryDrilldownModal(?category= URL 동기화 모달)·GrowthChart(recharts 영역그래프)·TrendingTags·HealthStats·AdminManager(관리자 관리 UI). AdminDashboard.tsx가 range 상태·fetch·에러 처리(stats API 실패 시 에러 메시지, 크래시 없음) 소유. A64(사용자향 프리미엄 대시보드)와는 무관한 별도 기능.",
       "priority": "medium",
       "status": "done",
       "dependencies": [

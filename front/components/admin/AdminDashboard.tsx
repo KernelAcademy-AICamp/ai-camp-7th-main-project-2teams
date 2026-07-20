@@ -5,10 +5,20 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { ADMIN_RANGES, parseRange, type AdminRange } from '@/lib/admin-range'
 import { OkrTiles, type Okr } from './OkrTiles'
 import { OpenAiUsage, type Usage } from './OpenAiUsage'
-import { CategoryPie, type CategoryStat } from './CategoryPie'
+import { CategoryBar, type CategoryStat } from './CategoryBar'
+import { GrowthChart, type GrowthPoint } from './GrowthChart'
+import { TrendingTags, type TrendingTag } from './TrendingTags'
+import { HealthStats } from './HealthStats'
+import { AdminManager } from './AdminManager'
 import { CategoryDrilldownModal } from './CategoryDrilldownModal'
 
-type Stats = { okr: Okr; categories: CategoryStat[] }
+type Stats = {
+  okr: Okr
+  categories: CategoryStat[]
+  growth: GrowthPoint[]
+  trending: TrendingTag[]
+  health: { deadRatio: number; uncategorizedRatio: number }
+}
 
 export function AdminDashboard() {
   const router = useRouter()
@@ -40,7 +50,13 @@ export function AdminDashboard() {
           : { available: false, totalCostUsd: 0, totalTokens: 0, byModel: [] }
         if (!alive) return
         setError(null)
-        setStats({ okr: s.okr, categories: s.categories })
+        setStats({
+          okr: s.okr,
+          categories: s.categories,
+          growth: s.growth ?? [],
+          trending: s.trending ?? [],
+          health: s.health ?? { deadRatio: 0, uncategorizedRatio: 0 },
+        })
         setUsage(u)
       })
       .catch(() => {
@@ -78,9 +94,7 @@ export function AdminDashboard() {
               aria-pressed={r === range}
               onClick={() => setRange(r)}
               className={`rounded-md px-3 py-1 text-sm transition-colors ${
-                r === range
-                  ? 'bg-brand text-white'
-                  : 'text-text-secondary hover:text-text-primary'
+                r === range ? 'bg-brand text-white' : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               {r}
@@ -97,15 +111,22 @@ export function AdminDashboard() {
         <p className="text-sm text-text-secondary">불러오는 중…</p>
       )}
 
-      {!error && (
-        <div className="grid gap-4 sm:grid-cols-5">
-          <div className="sm:col-span-2">
-            {usage && <OpenAiUsage usage={usage} activeUsers={stats?.okr.activeUsers ?? 0} />}
+      {!error && stats && (
+        <>
+          <GrowthChart data={stats.growth} />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <CategoryBar categories={stats.categories} onSelect={selectCategory} />
+            <TrendingTags data={stats.trending} />
           </div>
-          <div className="sm:col-span-3">
-            {stats && <CategoryPie categories={stats.categories} onSelect={selectCategory} />}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <HealthStats deadRatio={stats.health.deadRatio} uncategorizedRatio={stats.health.uncategorizedRatio} />
+            {usage && <OpenAiUsage usage={usage} activeUsers={stats.okr.activeUsers} />}
           </div>
-        </div>
+
+          <AdminManager />
+        </>
       )}
 
       {!error && <CategoryDrilldownModal range={range} />}

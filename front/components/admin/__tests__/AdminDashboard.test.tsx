@@ -30,12 +30,18 @@ function mockFetch() {
         new Response(JSON.stringify({ available: true, totalCostUsd: 2, totalTokens: 0, byModel: [] }), { status: 200 })
       )
     }
+    if (url.includes('/api/admin/admins')) {
+      return Promise.resolve(new Response(JSON.stringify({ admins: [] }), { status: 200 }))
+    }
     return Promise.resolve(
       new Response(
         JSON.stringify({
           range: '7d',
           okr: { activeUsers: 10, firstSaveRate: 0.6, savesPerUser: 3, newSaves: 30 },
           categories: [{ name: '개발', count: 30, pct: 0.75 }, { name: '미분류', count: 10, pct: 0.25 }],
+          growth: [],
+          trending: [],
+          health: { deadRatio: 0, uncategorizedRatio: 0 },
         }),
         { status: 200 }
       )
@@ -78,6 +84,9 @@ describe('AdminDashboard', () => {
             status: 200,
           })
         )
+      }
+      if (url.includes('/api/admin/admins')) {
+        return Promise.resolve(new Response(JSON.stringify({ admins: [] }), { status: 200 }))
       }
       return Promise.resolve(new Response(JSON.stringify({ error: 'RPC failed' }), { status: 500 }))
     })
