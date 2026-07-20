@@ -77,6 +77,38 @@ describe('CategoryDrilldownModal', () => {
     expect(screen.queryByText('불러오는 중…')).not.toBeInTheDocument()
   })
 
+  it('A 카테고리 에러 후 B로 전환 시 B 페치 완료 전까지 stale 에러 아닌 로딩 표시', async () => {
+    // A: 에러로 종료
+    params = new URLSearchParams('category=A&range=7d')
+    vi.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('network error'))
+
+    const { rerender } = render(<CategoryDrilldownModal range="7d" />)
+
+    expect(await screen.findByText('하위 태그를 불러오지 못했습니다')).toBeInTheDocument()
+
+    // B로 전환 — B의 fetch는 수동으로 resolve 시점을 제어(아직 응답 없음)
+    let resolveB: (value: Response) => void = () => {}
+    const bPromise = new Promise<Response>((resolve) => {
+      resolveB = resolve
+    })
+    vi.spyOn(global, 'fetch').mockReturnValueOnce(bPromise)
+    params = new URLSearchParams('category=B&range=7d')
+    rerender(<CategoryDrilldownModal range="7d" />)
+
+    // B의 fetch가 아직 끝나지 않았으므로 A의 stale 에러가 아니라 로딩이 보여야 함
+    expect(await screen.findByText('불러오는 중…')).toBeInTheDocument()
+    expect(screen.queryByText('하위 태그를 불러오지 못했습니다')).not.toBeInTheDocument()
+
+    // B의 fetch를 resolve하면 정상적으로 데이터가 반영됨
+    resolveB(
+      new Response(
+        JSON.stringify({ range: '7d', category: 'B', tags: [{ tag: 'Vue', count: 1, pct: 1 }] }),
+        { status: 200 }
+      )
+    )
+    await waitFor(() => expect(screen.getByText('Vue')).toBeInTheDocument())
+  })
+
   it('닫기 클릭 시 category 파라미터 제거 push', async () => {
     params = new URLSearchParams('category=개발&range=7d')
     vi.spyOn(global, 'fetch').mockResolvedValue(

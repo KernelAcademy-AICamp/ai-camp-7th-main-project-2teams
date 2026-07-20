@@ -13,8 +13,10 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
   const params = useSearchParams()
   const category = params.get('category')
 
-  // 세 가지 상태(로딩/에러/성공)를 구분하기 위해 result에 'error' 케이스를 추가
-  const [result, setResult] = useState<{ category: string; tags: TagStat[] } | 'error' | null>(null)
+  // 세 가지 상태(로딩/에러/성공)를 구분하기 위해 error 케이스에도 category를 함께 저장
+  // — 에러가 어느 category에서 발생했는지 알아야 category 전환 시 stale 에러를 걸러낼 수 있음
+  type Result = { category: string; tags: TagStat[] } | { category: string; error: true } | null
+  const [result, setResult] = useState<Result>(null)
 
   useEffect(() => {
     if (!category) return
@@ -28,7 +30,7 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
         if (alive) setResult({ category, tags: body.tags ?? [] })
       })
       .catch(() => {
-        if (alive) setResult('error')
+        if (alive) setResult({ category, error: true })
       })
     return () => {
       alive = false
@@ -53,10 +55,11 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
 
   if (!category) return null
 
-  const isError = result === 'error'
+  // result가 현재 category에 대한 것일 때만 신뢰 — 이전 category의 stale 에러/데이터 배제
+  const isError = result !== null && 'error' in result && result.category === category
   const loading = !isError && (!result || result.category !== category)
   const data: DonutDatum[] =
-    !loading && !isError && result ? result.tags.map((t) => ({ label: t.tag, value: t.count, pct: t.pct })) : []
+    !loading && result && 'tags' in result ? result.tags.map((t) => ({ label: t.tag, value: t.count, pct: t.pct })) : []
 
   return (
     <div
