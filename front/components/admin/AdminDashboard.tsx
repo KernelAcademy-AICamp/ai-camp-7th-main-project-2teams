@@ -51,9 +51,17 @@ export function AdminDashboard() {
     }
   }, [range])
 
-  const setRange = (r: AdminRange) => router.push(`${pathname}?range=${r}`)
-  const selectCategory = (name: string) =>
-    router.push(`${pathname}?range=${range}&category=${encodeURIComponent(name)}`)
+  // URLSearchParams 기반으로 기존 파라미터(category 등)를 보존하며 갱신
+  const setRange = (r: AdminRange) => {
+    const next = new URLSearchParams(params)
+    next.set('range', r)
+    router.push(`${pathname}?${next.toString()}`)
+  }
+  const selectCategory = (name: string) => {
+    const next = new URLSearchParams(params)
+    next.set('category', name)
+    router.push(`${pathname}?${next.toString()}`)
+  }
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 p-6">

@@ -13,17 +13,22 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
   const params = useSearchParams()
   const category = params.get('category')
 
-  // 로딩 여부는 별도 state 대신 "현재 category에 대한 응답이 아직 없음"으로 파생
-  // (react-hooks/set-state-in-effect 회피: effect 본문에서 setState를 동기 호출하지 않음)
-  const [result, setResult] = useState<{ category: string; tags: TagStat[] } | null>(null)
+  // 세 가지 상태(로딩/에러/성공)를 구분하기 위해 result에 'error' 케이스를 추가
+  const [result, setResult] = useState<{ category: string; tags: TagStat[] } | 'error' | null>(null)
 
   useEffect(() => {
     if (!category) return
     let alive = true
     fetch(`/api/admin/stats?range=${range}&category=${encodeURIComponent(category)}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error('fetch failed')
+        return r.json()
+      })
       .then((body) => {
         if (alive) setResult({ category, tags: body.tags ?? [] })
+      })
+      .catch(() => {
+        if (alive) setResult('error')
       })
     return () => {
       alive = false
@@ -48,10 +53,10 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
 
   if (!category) return null
 
-  const loading = !result || result.category !== category
-  const data: DonutDatum[] = loading
-    ? []
-    : result.tags.map((t) => ({ label: t.tag, value: t.count, pct: t.pct }))
+  const isError = result === 'error'
+  const loading = !isError && (!result || result.category !== category)
+  const data: DonutDatum[] =
+    !loading && !isError && result ? result.tags.map((t) => ({ label: t.tag, value: t.count, pct: t.pct })) : []
 
   return (
     <div
@@ -73,7 +78,13 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
             ✕
           </button>
         </div>
-        {loading ? <p className="text-sm text-muted-foreground">불러오는 중…</p> : <DonutChart data={data} />}
+        {loading ? (
+          <p className="text-sm text-muted-foreground">불러오는 중…</p>
+        ) : isError ? (
+          <p className="text-sm text-destructive">하위 태그를 불러오지 못했습니다</p>
+        ) : (
+          <DonutChart data={data} />
+        )}
       </div>
     </div>
   )

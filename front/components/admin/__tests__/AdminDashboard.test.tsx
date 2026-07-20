@@ -60,6 +60,15 @@ describe('AdminDashboard', () => {
     expect(push).toHaveBeenCalledWith('/admin?range=30d')
   })
 
+  it('category 파라미터가 있을 때 range 탭 클릭해도 category 유지', async () => {
+    params = new URLSearchParams('range=7d&category=개발')
+    mockFetch()
+    render(<AdminDashboard />)
+    await waitFor(() => expect(screen.getByText('활성 사용자')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: '30d' }))
+    expect(push).toHaveBeenCalledWith('/admin?range=30d&category=%EA%B0%9C%EB%B0%9C')
+  })
+
   it('stats API 500 응답 시 크래시 대신 에러 메시지 표시', async () => {
     vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL) => {
       const url = String(input)

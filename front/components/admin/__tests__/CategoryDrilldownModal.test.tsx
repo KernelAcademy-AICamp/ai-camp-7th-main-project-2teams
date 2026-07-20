@@ -57,6 +57,26 @@ describe('CategoryDrilldownModal', () => {
     expect(screen.getByText('React')).toBeInTheDocument()
   })
 
+  it('fetch 실패(비정상 응답) 시 에러 메시지 표시, 무한 로딩 아님', async () => {
+    params = new URLSearchParams('category=개발&range=7d')
+    vi.spyOn(global, 'fetch').mockResolvedValue(new Response('server error', { status: 500 }))
+
+    render(<CategoryDrilldownModal range="7d" />)
+
+    expect(await screen.findByText('하위 태그를 불러오지 못했습니다')).toBeInTheDocument()
+    expect(screen.queryByText('불러오는 중…')).not.toBeInTheDocument()
+  })
+
+  it('fetch가 reject되면 에러 메시지 표시, 무한 로딩 아님', async () => {
+    params = new URLSearchParams('category=개발&range=7d')
+    vi.spyOn(global, 'fetch').mockRejectedValue(new Error('network error'))
+
+    render(<CategoryDrilldownModal range="7d" />)
+
+    expect(await screen.findByText('하위 태그를 불러오지 못했습니다')).toBeInTheDocument()
+    expect(screen.queryByText('불러오는 중…')).not.toBeInTheDocument()
+  })
+
   it('닫기 클릭 시 category 파라미터 제거 push', async () => {
     params = new URLSearchParams('category=개발&range=7d')
     vi.spyOn(global, 'fetch').mockResolvedValue(
