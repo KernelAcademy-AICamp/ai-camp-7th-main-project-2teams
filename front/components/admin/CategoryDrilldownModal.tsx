@@ -13,20 +13,17 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
   const params = useSearchParams()
   const category = params.get('category')
 
-  const [tags, setTags] = useState<TagStat[]>([])
-  const [loading, setLoading] = useState(false)
+  // 로딩 여부는 별도 state 대신 "현재 category에 대한 응답이 아직 없음"으로 파생
+  // (react-hooks/set-state-in-effect 회피: effect 본문에서 setState를 동기 호출하지 않음)
+  const [result, setResult] = useState<{ category: string; tags: TagStat[] } | null>(null)
 
   useEffect(() => {
     if (!category) return
     let alive = true
-    setLoading(true)
     fetch(`/api/admin/stats?range=${range}&category=${encodeURIComponent(category)}`)
       .then((r) => r.json())
       .then((body) => {
-        if (alive) setTags(body.tags ?? [])
-      })
-      .finally(() => {
-        if (alive) setLoading(false)
+        if (alive) setResult({ category, tags: body.tags ?? [] })
       })
     return () => {
       alive = false
@@ -35,8 +32,11 @@ export function CategoryDrilldownModal({ range }: { range: AdminRange }) {
 
   if (!category) return null
 
+  const loading = !result || result.category !== category
   const close = () => router.push(`${pathname}?range=${range}`)
-  const data: DonutDatum[] = tags.map((t) => ({ label: t.tag, value: t.count, pct: t.pct }))
+  const data: DonutDatum[] = loading
+    ? []
+    : result.tags.map((t) => ({ label: t.tag, value: t.count, pct: t.pct }))
 
   return (
     <div
