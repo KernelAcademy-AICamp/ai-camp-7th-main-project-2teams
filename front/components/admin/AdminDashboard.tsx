@@ -30,6 +30,7 @@ export function AdminDashboard() {
           return
         }
         const s = await statsRes.json()
+        if (!alive) return
         if (!s || !s.okr || !s.categories) {
           setError('대시보드 데이터를 불러오지 못했습니다')
           return
@@ -37,6 +38,7 @@ export function AdminDashboard() {
         const u = usageRes.ok
           ? await usageRes.json()
           : { available: false, totalCostUsd: 0, totalTokens: 0, byModel: [] }
+        if (!alive) return
         setError(null)
         setStats({ okr: s.okr, categories: s.categories })
         setUsage(u)
