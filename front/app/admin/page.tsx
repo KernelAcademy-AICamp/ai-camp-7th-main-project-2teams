@@ -10,7 +10,7 @@ export default async function AdminPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user || !(await isAdmin(supabase, user.id))) {
+  if (!user || !(await isAdmin(supabase))) {
     notFound()
   }
 

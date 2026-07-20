@@ -27,20 +27,21 @@ describe('isAdmin', () => {
 
   it('is_admin RPC가 true면 true', async () => {
     // @ts-expect-error 테스트 전용 fakeSupabase
-    expect(await isAdmin(fakeSupabase, 'admin-1')).toBe(true)
-    expect(rpc).toHaveBeenCalledWith('is_admin', { p_user_id: 'admin-1' })
+    expect(await isAdmin(fakeSupabase)).toBe(true)
+    // 인자 없이 호출 — auth.uid()로 호출자 본인만 조회, 타인 uuid 전달 불가
+    expect(rpc).toHaveBeenCalledWith('is_admin')
   })
 
   it('is_admin RPC가 false면 false', async () => {
     rpcResult = { data: false, error: null }
     // @ts-expect-error 테스트 전용 fakeSupabase
-    expect(await isAdmin(fakeSupabase, 'stranger')).toBe(false)
+    expect(await isAdmin(fakeSupabase)).toBe(false)
   })
 
   it('RPC 에러 시 fail-closed(false)', async () => {
     rpcResult = { data: null, error: { message: 'boom' } }
     // @ts-expect-error 테스트 전용 fakeSupabase
-    expect(await isAdmin(fakeSupabase, 'admin-1')).toBe(false)
+    expect(await isAdmin(fakeSupabase)).toBe(false)
   })
 })
 
