@@ -555,7 +555,11 @@ front/
 │   │       ├── stats/route.ts        # GET — OKR·카테고리·성장·트렌딩·건강 집계 + 태그 드릴다운
 │   │       ├── openai-usage/route.ts # GET — OpenAI 사용량 위젯
 │   │       └── admins/route.ts       # GET 목록 + POST 승격(email) + DELETE 강등(본인 강등 방지)
-│   ├── admin/page.tsx             # A67 — 관리자 대시보드 (서버 게이트, 비관리자 404 은닉)
+│   ├── admin/                     # A67 — 관리자 대시보드 (성장/운영 라우트 분리)
+│   │   ├── layout.tsx             # 공통 게이트(isAdmin, 비관리자 404) + AdminTabs 네비, 하위 페이지 공유
+│   │   ├── page.tsx               # /admin → /admin/growth redirect
+│   │   ├── growth/page.tsx        # 마케팅·그로스(OKR·성장추이·카테고리·트렌딩)
+│   │   └── ops/page.tsx           # 운영·개발(건강·OpenAI 사용량·관리자 관리)
 │   ├── onboarding/                # A26 — 온보딩 별도 페이지 (MVP)
 │   │   ├── page.tsx
 │   │   ├── OnboardingContent.tsx  # 스텝 UI + 노출 제어
