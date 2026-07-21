@@ -549,8 +549,13 @@ front/
 │   │   │   └── route.ts          # POST(A7)
 │   │   ├── thumbnail/
 │   │   │   └── route.ts          # GET — 썸네일 프록시(SSRF 가드), DB/스토리지 영구 저장 없음
-│   │   └── account/
-│   │       └── route.ts          # DELETE(A14) + GET(A15, category:categories(name) join)
+│   │   ├── account/
+│   │   │   └── route.ts          # DELETE(A14) + GET(A15, category:categories(name) join)
+│   │   └── admin/                # A67 — 내부 운영 대시보드 API (withAdmin 게이팅, 비관리자 404)
+│   │       ├── stats/route.ts        # GET — OKR·카테고리·성장·트렌딩·건강 집계 + 태그 드릴다운
+│   │       ├── openai-usage/route.ts # GET — OpenAI 사용량 위젯
+│   │       └── admins/route.ts       # GET 목록 + POST 승격(email) + DELETE 강등(본인 강등 방지)
+│   ├── admin/page.tsx             # A67 — 관리자 대시보드 (서버 게이트, 비관리자 404 은닉)
 │   ├── onboarding/                # A26 — 온보딩 별도 페이지 (MVP)
 │   │   ├── page.tsx
 │   │   ├── OnboardingContent.tsx  # 스텝 UI + 노출 제어
@@ -567,6 +572,8 @@ front/
 │   │   ├── client.ts
 │   │   └── admin.ts
 │   ├── auth.ts                    # withAuth HOF (A3)
+│   ├── admin-auth.ts              # withAdmin HOF (A67) — withAuth 위 is_admin() 게이팅, 비관리자 404
+│   ├── admin-range.ts             # A67 — range(1d/7d/30d) 파싱 + rangeToInterval
 │   ├── schemas.ts                 # bookmarkSchema, searchSchema, bookmarkUpdateSchema(A60: is_favorite/tags/category/description)
 │   ├── parseNetscapeBookmarks.ts  # HTML 임포트 파싱 (A29). 자체 내보내기분은 TAGS/DATA_CATEGORY 속성 복원
 │   ├── parseKakaoChat.ts         # 카카오톡 채팅 내보내기 CSV(Date,User,Message) 파싱 — Message 내 URL만 추출, 대화 본문 미보관
