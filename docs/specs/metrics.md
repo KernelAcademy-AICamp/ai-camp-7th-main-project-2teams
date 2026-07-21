@@ -1,6 +1,6 @@
 # 지표 스펙 — North Star + 이벤트 계측
 
-**관련 파일**: `supabase/migrations/0030_events.sql`, `supabase/migrations/0031_metrics_aggregation.sql`, `front/lib/events.ts`, `front/app/api/events/route.ts`, `front/app/api/bookmarks/route.ts`, `front/app/api/search/route.ts`, `front/app/(dashboard)/page.tsx`, `front/app/api/admin/metrics/route.ts`, `front/components/admin/NorthStarMetrics.tsx`
+**관련 파일**: `supabase/migrations/0030_events.sql`, `supabase/migrations/0031_metrics_aggregation.sql`, `front/lib/events.ts`, `front/app/api/events/route.ts`, `front/app/api/bookmarks/route.ts`, `front/app/api/search/route.ts`, `front/app/(dashboard)/page.tsx`, `front/app/api/admin/metrics/route.ts`, `front/components/admin/NorthStarMetrics.tsx`, `front/app/api/bookmarks/[id]/route.ts`, `supabase/migrations/0031_metrics_aggregation.sql`, `supabase/migrations/0032_metrics_manual_retag.sql`
 
 서비스 핵심 가치: **"저장은 편리하게, 관리/검색은 간편하게"**. 비즈니스 게임 = Productivity(저장한 걸 얼마나 효율적으로 되찾는가).
 
@@ -64,7 +64,8 @@ RLS: 활성. authenticated는 본인 `user_id`만 insert. **조회는 service_ro
 | type | 기록 지점 | 위조방지 | meta |
 |------|----------|---------|------|
 | `bookmark_saved` | `POST /api/bookmarks` insert 성공 후 | 서버 전용 | `{ has_content }` |
-| `tag_assigned` | 동상(1 insert 배치) | 서버 전용 | `{ source:'auto', auto_category, tag_count }` |
+| `tag_assigned` (자동) | `POST /api/bookmarks` 저장 시(1 insert 배치) | 서버 전용 | `{ source:'auto', auto_category, tag_count }` |
+| `tag_assigned` (수동) | `PATCH /api/bookmarks/:id` 태그·카테고리 편집 시 | 서버 전용 | `{ source:'manual', tags_changed, category_changed, tag_count }` |
 | `search_performed` | `POST /api/search` 결과 반환 전 | 서버 전용 | `{ result_count }` |
 | `search_result_clicked` | 대시보드 검색 결과 클릭 → `POST /api/events` | 클라 허용(위조 무해), `CLIENT_LOGGABLE` 화이트리스트 | `{ bookmark_id, rank }` |
 
@@ -78,7 +79,8 @@ RLS: 활성. authenticated는 본인 `user_id`만 insert. **조회는 service_ro
 | Input 지표 | 집계 |
 |-----------|------|
 | 신규 저장 | 주간 `bookmark_saved` count |
-| 자동분류 커버리지 | `tag_assigned` 중 `meta.auto_category=true` 비율 |
+| 자동분류 커버리지 | `tag_assigned{source:'auto'}` 중 `meta.auto_category=true` 비율 (수동 제외 — 0032) |
+| 수동 교정 빈도 | 주간 `tag_assigned{source:'manual'}` count (`manual_retags`) |
 | 검색 성공률 | `search_result_clicked` / `search_performed` |
 | 활성 큐레이터 | 주간 `bookmark_saved`+`search_performed` 동시 발생 유저 수 |
 | **NSM: 되찾은 북마크** | 주간 `search_result_clicked` count |
@@ -94,7 +96,9 @@ RLS: 활성. authenticated는 본인 `user_id`만 insert. **조회는 service_ro
 
 ## 미구현 (backlog)
 
-- 수동 재태깅(카드 편집) `tag_assigned{source:'manual'}` — 자동 대비 수동 교정률 측정용.
+- (현재 없음 — 코호트별·유료/무료 세그먼트 분리 목표는 실측 데이터 확보 후.)
+
+> 수동 재태깅 계측 완료: `PATCH /api/bookmarks/:id` 태그·카테고리 편집 시 `tag_assigned{source:'manual'}` 적재. 집계 함수(0032)에 `manual_retags` 컬럼 + `auto_coverage`를 `source='auto'`로 한정(수동 유입 오염 방지).
 
 > 관리자 대시보드 위젯 완료: `GET /api/admin/metrics` + `NorthStarMetrics`(전용 'North Star' 탭 `/admin/northstar`, 주간 8주 별자리) — `admin_metrics_weekly`(0031) 소비. 주간 고정이라 AdminTabs가 이 경로에서 range(1d/7d/30d) 토글을 숨긴다.
 - 코호트별·유료/무료 세그먼트 분리 목표.

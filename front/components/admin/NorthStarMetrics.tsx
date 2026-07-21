@@ -10,6 +10,7 @@ export type WeeklyMetric = {
   searchSuccess: number
   activeCurators: number
   retrieved: number
+  manualRetags: number
 }
 
 const LOAD_ERROR = 'North Star 지표를 불러오지 못했습니다'
@@ -34,6 +35,7 @@ function tilesFrom(m: WeeklyMetric): Tile[] {
     { label: '자동분류 커버리지', value: pct(m.autoCoverage) },
     { label: '검색 성공률', value: pct(m.searchSuccess) },
     { label: '활성 큐레이터', value: String(m.activeCurators) },
+    { label: '수동 재태깅', value: String(m.manualRetags), hint: '자동 교정' },
   ]
 }
 
@@ -82,7 +84,7 @@ export function NorthStarMetrics() {
         <p className="text-sm text-text-secondary">데이터 없음</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {tilesFrom(latest).map((t) => (
               <div key={t.label} className="rounded-md border border-line p-3">
                 <div className="text-xs text-text-secondary">{t.label}</div>

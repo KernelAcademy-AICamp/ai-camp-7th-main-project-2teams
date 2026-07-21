@@ -13,6 +13,7 @@ type MetricRow = {
   search_success: number | string
   active_curators: number | string
   retrieved: number | string
+  manual_retags: number | string
 }
 
 export const GET = withAdmin(async () => {
@@ -27,6 +28,7 @@ export const GET = withAdmin(async () => {
     searchSuccess: Number(r.search_success),
     activeCurators: Number(r.active_curators),
     retrieved: Number(r.retrieved),
+    manualRetags: Number(r.manual_retags),
   }))
   return NextResponse.json({ metrics })
 })
