@@ -1,0 +1,4 @@
+# Supabase CLI 로컬 상태 — 커밋 금지
+.branches
+.temp
+.env
