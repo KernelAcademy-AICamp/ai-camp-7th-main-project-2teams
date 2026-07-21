@@ -1,183 +1,290 @@
 {
-  "categories": ["exact", "synonym", "cross-lingual", "weak-vector", "tag-only", "noise"],
+  "categories": [
+    "exact",
+    "synonym",
+    "cross-lingual",
+    "weak-vector",
+    "tag-only",
+    "noise"
+  ],
   "bookmarks": [
     {
       "ref": "b1",
       "url": "https://react.dev/reference/react/useEffect",
       "title": "useEffect – React",
       "description": "React 훅으로 외부 시스템과 동기화하는 방법을 설명합니다.",
-      "tags": ["개발", "프론트엔드", "React"]
+      "tags": [
+        "개발",
+        "프론트엔드",
+        "React"
+      ]
     },
     {
       "ref": "b2",
       "url": "https://nextjs.org/blog/next-15-caching",
       "title": "Next.js 캐싱 전략",
       "description": "Next.js의 캐싱 메커니즘과 최적화 가이드",
-      "tags": ["개발", "프론트엔드", "Next.js"]
+      "tags": [
+        "개발",
+        "프론트엔드",
+        "Next.js"
+      ]
     },
     {
       "ref": "b3",
       "url": "https://help.figma.com/hc/en-us/articles/design-basics",
       "title": "Figma Design Basics",
       "description": "피그마 디자인 기초 가이드 — 프레임, 컴포넌트, 오토레이아웃",
-      "tags": ["디자인", "Figma"]
+      "tags": [
+        "디자인",
+        "Figma"
+      ]
     },
     {
       "ref": "b4",
       "url": "https://www.youtube.com/@codingapple",
       "title": "코딩애플 유튜브 채널",
       "description": "프론트엔드 강의 영상 모음",
-      "tags": ["개발", "강의", "YouTube"]
+      "tags": [
+        "개발",
+        "강의",
+        "YouTube"
+      ]
     },
     {
       "ref": "b5",
       "url": "https://www.notion.so/guides/workspace-setup",
       "title": "Notion 워크스페이스 설정",
       "description": "노션으로 팀 문서와 위키를 관리하는 방법",
-      "tags": ["생산성", "Notion"]
+      "tags": [
+        "생산성",
+        "Notion"
+      ]
     },
     {
       "ref": "b6",
       "url": "https://api.slack.com/start/building",
       "title": "Slack API 연동 가이드",
       "description": "슬랙 봇을 만들고 워크스페이스에 배포하는 방법",
-      "tags": ["개발", "Slack"]
+      "tags": [
+        "개발",
+        "Slack"
+      ]
     },
     {
       "ref": "b7",
       "url": "https://docs.github.com/actions",
       "title": "GitHub Actions CI/CD",
       "description": "깃허브 액션으로 빌드와 배포를 자동화하는 방법",
-      "tags": ["개발", "인프라", "GitHub"]
+      "tags": [
+        "개발",
+        "인프라",
+        "GitHub"
+      ]
     },
     {
       "ref": "b8",
       "url": "https://www.atlassian.com/software/jira/guides/workflows",
       "title": "Jira 워크플로우 설정",
       "description": "지라 스크럼 보드와 워크플로우 구성 방법",
-      "tags": ["생산성", "Jira"]
+      "tags": [
+        "생산성",
+        "Jira"
+      ]
     },
     {
       "ref": "b9",
       "url": "https://www.postgresql.org/docs/current/index.html",
       "title": "PostgreSQL Documentation",
       "description": "The official PostgreSQL manual covering SQL, administration and internals.",
-      "tags": ["개발", "데이터베이스", "PostgreSQL"]
+      "tags": [
+        "개발",
+        "데이터베이스",
+        "PostgreSQL"
+      ]
     },
     {
       "ref": "b10",
       "url": "https://github.com/pgvector/pgvector",
       "title": "pgvector 벡터 검색 튜토리얼",
       "description": "PostgreSQL 확장으로 임베딩 유사도 검색을 구현하는 방법",
-      "tags": ["개발", "데이터베이스", "AI"]
+      "tags": [
+        "개발",
+        "데이터베이스",
+        "AI"
+      ]
     },
     {
       "ref": "b11",
       "url": "https://zettelkasten.de/introduction/",
       "title": "제텔카스텐 정리법",
       "description": "",
-      "tags": ["생산성"]
+      "tags": [
+        "생산성"
+      ]
     },
     {
       "ref": "b12",
       "url": "https://fastapi.tiangolo.com/tutorial/",
       "title": "이 링크 나중에 보기",
       "description": "임시로 저장해둔 페이지",
-      "tags": ["개발", "백엔드", "FastAPI"]
+      "tags": [
+        "개발",
+        "백엔드",
+        "FastAPI"
+      ]
     },
     {
       "ref": "b13",
       "url": "https://helpx.adobe.com/illustrator/brushes.html",
       "title": "Illustrator 브러시 팩 다운로드",
       "description": "일러스트레이터용 무료 브러시 모음",
-      "tags": ["디자인", "Illustrator"]
+      "tags": [
+        "디자인",
+        "Illustrator"
+      ]
     },
     {
       "ref": "b14",
       "url": "https://helpx.adobe.com/photoshop/retouching.html",
       "title": "Photoshop 보정 튜토리얼",
       "description": "포토샵으로 인물 사진 리터칭하기",
-      "tags": ["디자인", "Photoshop"]
+      "tags": [
+        "디자인",
+        "Photoshop"
+      ]
     },
     {
       "ref": "b15",
       "url": "https://slidesgo.com/free-powerpoint-templates",
       "title": "PowerPoint 템플릿 모음",
       "description": "피피티 발표자료 무료 템플릿 모음",
-      "tags": ["생산성", "PowerPoint"]
+      "tags": [
+        "생산성",
+        "PowerPoint"
+      ]
     },
     {
       "ref": "b16",
       "url": "https://support.google.com/docs/spreadsheet-functions",
       "title": "Google Spreadsheet 함수 정리",
       "description": "스프레드시트 VLOOKUP, QUERY 함수 사용법",
-      "tags": ["생산성", "Spreadsheet"]
+      "tags": [
+        "생산성",
+        "Spreadsheet"
+      ]
     },
     {
       "ref": "b17",
       "url": "https://vercel.com/docs/deployments",
       "title": "Deployments - Vercel",
       "description": "Vercel에 애플리케이션을 배포하고 설정하는 방법",
-      "tags": ["개발", "인프라", "Vercel"]
+      "tags": [
+        "개발",
+        "인프라",
+        "Vercel"
+      ]
     },
     {
       "ref": "b18",
       "url": "https://tailwindcss.com/docs/installation",
       "title": "Installation - Tailwind CSS",
       "description": "Tailwind CSS 유틸리티 프레임워크 시작하기",
-      "tags": ["개발", "프론트엔드", "Tailwind"]
+      "tags": [
+        "개발",
+        "프론트엔드",
+        "Tailwind"
+      ]
+    },
+    {
+      "ref": "b19",
+      "url": "https://obsidian.md/",
+      "title": "옵시디언",
+      "description": "",
+      "tags": [
+        "생산성"
+      ]
+    },
+    {
+      "ref": "b20",
+      "url": "https://www.zotero.org/",
+      "title": "Zotero",
+      "description": "",
+      "tags": [
+        "학습"
+      ]
     }
   ],
   "queries": [
     {
       "query": "PostgreSQL Documentation",
-      "expected_refs": ["b9"],
+      "expected_refs": [
+        "b9"
+      ],
       "category": "exact"
     },
     {
       "query": "React 훅 사용법",
-      "expected_refs": ["b1"],
+      "expected_refs": [
+        "b1"
+      ],
       "category": "synonym"
     },
     {
       "query": "임베딩 유사도 검색 구현",
-      "expected_refs": ["b10"],
+      "expected_refs": [
+        "b10"
+      ],
       "category": "synonym"
     },
     {
       "query": "피그마",
-      "expected_refs": ["b3"],
+      "expected_refs": [
+        "b3"
+      ],
       "category": "cross-lingual"
     },
     {
       "query": "YouTube",
-      "expected_refs": ["b4"],
+      "expected_refs": [
+        "b4"
+      ],
       "category": "cross-lingual"
     },
     {
       "query": "지라",
-      "expected_refs": ["b8"],
+      "expected_refs": [
+        "b8"
+      ],
       "category": "cross-lingual"
     },
     {
       "query": "일러스트",
-      "expected_refs": ["b13"],
+      "expected_refs": [
+        "b13"
+      ],
       "category": "cross-lingual"
     },
     {
       "query": "스프레드시트",
-      "expected_refs": ["b16"],
+      "expected_refs": [
+        "b16"
+      ],
       "category": "cross-lingual"
     },
     {
       "query": "메모 정리 시스템",
-      "expected_refs": ["b11"],
+      "expected_refs": [
+        "b11"
+      ],
       "category": "weak-vector",
       "note": "description 없음 (title-only 임베딩) — 재현 실패 가능성 있는 알려진 약점 케이스"
     },
     {
       "query": "FastAPI",
-      "expected_refs": ["b12"],
+      "expected_refs": [
+        "b12"
+      ],
       "category": "tag-only",
       "note": "title/description엔 없고 tags에만 존재 — trgm 채널 의존, vec 채널은 약함"
     },
@@ -190,6 +297,22 @@
       "query": "부동산 시세 조회",
       "expected_refs": [],
       "category": "noise"
+    },
+    {
+      "query": "글쓰기 노트 앱",
+      "expected_refs": [
+        "b19"
+      ],
+      "category": "weak-vector",
+      "note": "옵시디언(고유명사) vs 글쓰기앱(기능) 어휘갭 + description 없음"
+    },
+    {
+      "query": "논문 참고문헌 관리",
+      "expected_refs": [
+        "b20"
+      ],
+      "category": "weak-vector",
+      "note": "Zotero(고유명사) vs 참고문헌관리(기능) 어휘갭 + description 없음"
     }
   ]
 }

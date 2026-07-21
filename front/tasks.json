@@ -698,6 +698,32 @@
         "A60"
       ],
       "testStrategy": "내보내기 HTML을 동일 계정에 재임포트 → AI 재태깅 없이 태그·카테고리 원본 그대로 복원 확인. 일반 브라우저(Chrome) 내보내기 HTML은 기존처럼 generateTags 정상 호출 확인(회귀)."
+    },
+    {
+      "id": "A66",
+      "title": "죽은 링크 감지 + 재검사",
+      "description": "저장 시점에 404/410 응답을 감지해 카드에 경고 배지를 표시하고, 사용자가 수동으로 재검사할 수 있는 액션 제공. 소급 문서화(기 배포 기능).",
+      "details": "migration 0021: bookmarks.is_dead 컬럼(저장 시 fetchMeta httpStatus 404/410 판정). migration 0025: match_bookmarks RPC가 is_dead 반환 → 검색 결과 카드에도 배지 유지. POST /api/bookmarks/:id/recheck(app/api/bookmarks/[id]/recheck/route.ts): 저장 URL 재요청해 is_dead 갱신 — 순수 DB 쓰기인 PATCH와 책임 분리(bookmarkUpdateSchema에 is_dead 없음). UI: BookmarkCard.tsx 배지 + useRecheckBookmark.ts 훅(낙관적 갱신).",
+      "priority": "medium",
+      "status": "done",
+      "dependencies": [
+        "A5",
+        "A6"
+      ],
+      "testStrategy": "404/410 URL 저장 → is_dead=true·배지 노출 확인. 복구된 URL에 recheck 호출 → is_dead=false 갱신 확인. 200 URL은 배지 미노출."
+    },
+    {
+      "id": "A67",
+      "title": "관리자 대시보드 (내부 도구)",
+      "description": "PRD 원래 범위 밖 — PM이 별도 발의한 내부 그로스/운영 대시보드. /admin 페이지에서 OKR 실측·OpenAI 사용량·카테고리/태그 분포를 관리자만 조회. (v2 재정의: 성장/동향/관리자관리)",
+      "details": "front/lib/admin-auth.ts(withAdmin — admin_users 테이블 + is_admin() RPC 게이팅 → 비관리자 404)·admin-range.ts(1d/7d/30d). supabase/migrations/0026_admin_stats_functions.sql — admin_okr_stats/admin_category_stats/admin_tag_stats(security definer, service_role 전용 execute, PUBLIC/anon/authenticated 명시적 revoke). v2: 0028_admin_v2_stats_functions.sql(admin_growth_series/admin_trending_tags/admin_health_stats), 0029_admin_management_functions.sql(admin_list_admins/admin_grant_by_email/admin_revoke) — 동일 security definer + service_role 전용 규약. GET /api/admin/stats(growth/trending/health payload 확장)·GET /api/admin/openai-usage(OpenAI Organization Costs API 서버 프록시, OPENAI_ADMIN_KEY 별도 키, 무음 실패 없이 available:false 폴백)·GET/POST/DELETE /api/admin/admins(관리자 목록/승격/강등, 본인 강등 방지). front/components/admin/* — OkrTiles·OpenAiUsage·BarList(공유 랭킹 가로막대, 도넛 폐기)·CategoryBar·CategoryDrilldownModal(?category= URL 동기화 모달)·GrowthChart(recharts 영역그래프)·TrendingTags·HealthStats·AdminManager(관리자 관리 UI). AdminDashboard.tsx가 range 상태·fetch·에러 처리(stats API 실패 시 에러 메시지, 크래시 없음) 소유. A64(사용자향 프리미엄 대시보드)와는 무관한 별도 기능.",
+      "priority": "medium",
+      "status": "done",
+      "dependencies": [
+        "A5",
+        "A7"
+      ],
+      "testStrategy": "비관리자 계정으로 /admin 접속 → 404 확인. 관리자 계정 → OKR 타일·카테고리 랭킹막대(BarList)·성장/트렌딩/건강·OpenAI 사용량 위젯 노출, range 탭 전환 시 URL·데이터 갱신 확인. 카테고리 막대 클릭 → ?category= 쿼리 반영·모달 표시·새로고침 시 복원 확인. AdminManager 승격(422 미존재)·강등(본인 강등 400) 확인. API 응답에 embedding/content/user_id 미포함 검증. 상세: docs/specs/e2e/admin.md."
     }
   ]
 }

@@ -261,10 +261,8 @@ export const bookmarkUpdateSchema = z
     message: '변경할 필드를 최소 1개 이상 전달해야 합니다.',
   })
 
-export const importSchema = z.object({
-  // multipart/form-data — HTML(브라우저 북마크) 또는 CSV(카카오톡 채팅 내보내기) 업로드 (A29)
-  // Route Handler에서 req.formData()로 파싱
-})
+// 임포트(A29)는 공유 스키마 없음 — multipart/form-data라 app/api/bookmarks/import/route.ts의
+// 로컬 fileSchema(File 크기·타입 검증)로 처리. schemas.ts에는 두지 않음.
 
 export type BookmarkInput = z.infer<typeof bookmarkSchema>
 export type BookmarkCreateInput = z.infer<typeof bookmarkCreateSchema>
@@ -276,11 +274,12 @@ Route Handler에서 사용:
 
 ```typescript
 // app/api/bookmarks/route.ts
-import { bookmarkSchema } from '@/lib/schemas'
+import { bookmarkCreateSchema } from '@/lib/schemas'
 
 export const POST = withAuth(async (req, { user }) => {
   const body = await req.json()
-  const parsed = bookmarkSchema.safeParse(body)
+  // content 포함 검증 → bookmarkCreateSchema(transient). 공개 bookmarkSchema엔 content 없음.
+  const parsed = bookmarkCreateSchema.safeParse(body)
 
   if (!parsed.success) {
     return NextResponse.json(
@@ -500,19 +499,19 @@ import { NextResponse } from 'next/server'
 import { withAuth } from '@/lib/auth'
 
 export const POST = withAuth(async (req, { user }) => {
-  const { title, url, content } = await req.json()
-  // content 로그 절대 출력하지 않음 (A8)
-  // ...처리 로직
-  return NextResponse.json({ id, tags, category }, { status: 201 })
+  const parsed = bookmarkCreateSchema.safeParse(await req.json())
+  // content 로그 절대 출력하지 않음 (A8) — 임베딩 계산 후 즉시 파기
+  // ...처리 로직 (대분류 top 계산, embedding 제외 명시 컬럼 select)
+  // 응답은 embedding 제외 카드 필드 + category(대분류명)를 bookmark 객체로 래핑
+  return NextResponse.json({ bookmark: { ...data, category: top } }, { status: 201 })
 })
 
-export const GET = withAuth(async (req, { user }) => {
-  const { searchParams } = new URL(req.url)
-  const category = searchParams.get('category')
-  const tag = searchParams.get('tag')
-  const page = Number(searchParams.get('page') ?? 1)
-  const limit = Number(searchParams.get('limit') ?? 20)
-  // ...조회 로직
+export const GET = withAuth(async (req, { supabase }) => {
+  // 쿼리 파라미터도 zod 검증 — getQuerySchema(tab/category/tag/folder/page/limit, coerce+default)
+  const parsed = getQuerySchema.safeParse(
+    Object.fromEntries(new URL(req.url).searchParams),
+  )
+  // ...조회 로직 (RLS 본인 데이터, embedding 제외 LIST_COLUMNS)
   return NextResponse.json({ bookmarks, total })
 })
 ```
@@ -535,7 +534,9 @@ front/
 │   │   ├── bookmarks/
 │   │   │   ├── route.ts          # POST(A5) + GET(A6)
 │   │   │   ├── [id]/
-│   │   │   │   └── route.ts      # PATCH is_favorite(A27) + DELETE(카드 삭제)
+│   │   │   │   ├── route.ts      # PATCH 부분수정(A60: is_favorite/tags/category/description) + DELETE(카드 삭제)
+│   │   │   │   └── recheck/
+│   │   │   │       └── route.ts  # POST — 죽은 링크 재검사(is_dead 갱신)
 │   │   │   ├── import/
 │   │   │   │   └── route.ts      # POST — HTML/카카오톡 CSV 파싱 + 배치 태깅 (A29)
 │   │   │   ├── preview/
@@ -548,8 +549,17 @@ front/
 │   │   │   └── route.ts          # POST(A7)
 │   │   ├── thumbnail/
 │   │   │   └── route.ts          # GET — 썸네일 프록시(SSRF 가드), DB/스토리지 영구 저장 없음
-│   │   └── account/
-│   │       └── route.ts          # DELETE(A14) + GET(A15, category:categories(name) join)
+│   │   ├── account/
+│   │   │   └── route.ts          # DELETE(A14) + GET(A15, category:categories(name) join)
+│   │   └── admin/                # A67 — 내부 운영 대시보드 API (withAdmin 게이팅, 비관리자 404)
+│   │       ├── stats/route.ts        # GET — OKR·카테고리·성장·트렌딩·건강 집계 + 태그 드릴다운
+│   │       ├── openai-usage/route.ts # GET — OpenAI 사용량 위젯
+│   │       └── admins/route.ts       # GET 목록 + POST 승격(email) + DELETE 강등(본인 강등 방지)
+│   ├── admin/                     # A67 — 관리자 대시보드 (성장/운영 라우트 분리)
+│   │   ├── layout.tsx             # 공통 게이트(isAdmin, 비관리자 404) + AdminTabs 네비, 하위 페이지 공유
+│   │   ├── page.tsx               # /admin → /admin/growth redirect
+│   │   ├── growth/page.tsx        # 마케팅·그로스(OKR·성장추이·카테고리·트렌딩)
+│   │   └── ops/page.tsx           # 운영·개발(건강·OpenAI 사용량·관리자 관리)
 │   ├── onboarding/                # A26 — 온보딩 별도 페이지 (MVP)
 │   │   ├── page.tsx
 │   │   ├── OnboardingContent.tsx  # 스텝 UI + 노출 제어
@@ -566,6 +576,8 @@ front/
 │   │   ├── client.ts
 │   │   └── admin.ts
 │   ├── auth.ts                    # withAuth HOF (A3)
+│   ├── admin-auth.ts              # withAdmin HOF (A67) — withAuth 위 is_admin() 게이팅, 비관리자 404
+│   ├── admin-range.ts             # A67 — range(1d/7d/30d) 파싱 + rangeToInterval
 │   ├── schemas.ts                 # bookmarkSchema, searchSchema, bookmarkUpdateSchema(A60: is_favorite/tags/category/description)
 │   ├── parseNetscapeBookmarks.ts  # HTML 임포트 파싱 (A29). 자체 내보내기분은 TAGS/DATA_CATEGORY 속성 복원
 │   ├── parseKakaoChat.ts         # 카카오톡 채팅 내보내기 CSV(Date,User,Message) 파싱 — Message 내 URL만 추출, 대화 본문 미보관

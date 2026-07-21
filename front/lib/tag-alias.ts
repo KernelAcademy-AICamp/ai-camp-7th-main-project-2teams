@@ -111,6 +111,21 @@ export const TAG_ALIAS: Record<string, string> = {
   제품관리: '기획', 프로덕트: '기획', 'product management': '기획',
   // 소분류 표기 통일
   파이썬: 'Python', 도커: 'Docker', 쿠버네티스: 'Kubernetes',
+  옵시디언: 'Obsidian', 옵시디안: 'Obsidian', pandas: 'Pandas',
+  // Claude Code (Anthropic) — 실제 데이터 다수 표기가 'Claude Code'라 이쪽으로 통일
+  클로드코드: 'Claude Code', '클로드 코드': 'Claude Code',
+  클로드: 'Claude Code', Claude: 'Claude Code',
+  // Codex (OpenAI) — Claude Code와 별개 제품, 혼동 방지 위해 분리 유지
+  코덱스: 'Codex', openaicodex: 'Codex', 'OpenAI Codex': 'Codex',
+  // 기타 툴명 한/영·오타 통일
+  커서: 'Cursor', 커서Ai: 'Cursor', 커서AI: 'Cursor',
+  헤르메스: 'Hermes Agent', '헤르메스 에이전트': 'Hermes Agent', 에르메스: 'Hermes Agent',
+  하네스: '하네스엔지니어링', '하네스 엔지니어링': '하네스엔지니어링',
+  노션: 'Notion', 리액트: 'React', 자바스크립트: 'JavaScript', JIRA: 'Jira',
+  'UX/UI': 'UI/UX',
+  // 띄어쓰기 표기 통일
+  '디자인 시스템': '디자인시스템', '프로젝트 관리': '프로젝트관리',
+  '데이터 분석': '데이터분석', '코드 품질': '코드품질', '바이브 코딩': '바이브코딩',
 }
 
 // A60: PATCH 카테고리 수정 시 유효성 검증에도 사용 — export 필요.

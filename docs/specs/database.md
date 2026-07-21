@@ -37,7 +37,8 @@ CREATE TABLE bookmarks (
   description TEXT,                                     -- 사용자 입력 설명 (A60, 마이그레이션 0013). content(본문) 아님 — 프라이버시 정책과 무관
   thumbnail_url TEXT,                                    -- og:image/YouTube 썸네일 URL만 저장 (마이그레이션 0017), 이미지 자체는 미저장
   embedding   vector(1536),                              -- text-embedding-3-small (A51 bge-m3 롤백, 마이그레이션 0006)
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT bookmarks_user_url_unique UNIQUE (user_id, url) -- A35: 동일 사용자 URL 중복 저장 방지 (마이그레이션 0003)
 );
 ```
 
@@ -102,6 +103,12 @@ CREATE POLICY "categories_insert"
   ON categories FOR INSERT
   WITH CHECK (user_id = auth.uid());
 
+-- 0016: PATCH /api/bookmarks/:id의 카테고리 upsert(onConflict) 재배정이 RLS에 막히지 않도록
+CREATE POLICY "categories_update"
+  ON categories FOR UPDATE
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
 CREATE POLICY "categories_delete"
   ON categories FOR DELETE
   USING (user_id = auth.uid());
@@ -124,6 +131,12 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX IF NOT EXISTS bookmarks_title_trgm_idx
   ON bookmarks
   USING gin (title gin_trgm_ops);
+
+-- A60 후속(0018): description도 trgm 검색 대상 — description에만 있는 단어 정확 매칭용
+CREATE INDEX IF NOT EXISTS bookmarks_description_trgm_idx
+  ON bookmarks
+  USING gin (description gin_trgm_ops)
+  WHERE description IS NOT NULL;
 
 CREATE OR REPLACE FUNCTION match_bookmarks(
   query_embedding vector(1536),
@@ -177,7 +190,15 @@ AS $$
       row_number() OVER (
         ORDER BY GREATEST(
           word_similarity(query_text, title),
-          COALESCE((SELECT MAX(word_similarity(query_text, tg)) FROM unnest(tags) tg), 0),
+          COALESCE((
+            SELECT MAX(word_similarity(query_text, tg))
+            FROM unnest(tags) tg
+            WHERE NOT EXISTS (
+              SELECT 1 FROM search_trgm_tag_exclusions e
+              WHERE (lower(e.term_a) = lower(query_text) AND lower(e.term_b) = lower(tg))
+                 OR (lower(e.term_b) = lower(query_text) AND lower(e.term_a) = lower(tg))
+            )
+          ), 0),
           word_similarity(query_text, COALESCE(description, ''))
         ) DESC
       ) AS trgm_rank
@@ -252,24 +273,36 @@ $$;
 > `0025_search_return_rrf_and_card_fields.sql`(rrf_score·category·folder_hint·is_dead 반환 —
 > API가 RRF 랭킹을 유지한 채 병합하고 검색 카드에서 카테고리 칩·링크끊김 배지가 소실되지 않도록).
 
+trgm 오탐 예외 테이블(0024) — `match_bookmarks`가 태그 매칭 시 참조:
+
+```sql
+-- (query_text, tag) 쌍이 trgm상 우연히 겹치지만 의미 무관한 경우 태그 채널만 차단.
+-- 대칭 처리 — (term_a, term_b)와 (term_b, term_a) 양방향 모두 매칭에서 제외.
+CREATE TABLE IF NOT EXISTS search_trgm_tag_exclusions (
+  term_a text NOT NULL,
+  term_b text NOT NULL,
+  PRIMARY KEY (term_a, term_b)
+);
+```
+
 ### 검색 품질 평가 (search-eval)
 
 > 관련: `front/lib/search-eval.ts`(채점 함수), `front/eval/search-golden.json`(골든셋),
 > `front/lib/__tests__/search-eval.test.ts`(러너). `front/lib/tag-eval.ts` 패턴 미러.
 
-골든셋 6개 카테고리(exact/synonym/cross-lingual/weak-vector/tag-only/noise), 북마크 18건 + 쿼리 12건.
+골든셋 6개 카테고리(exact/synonym/cross-lingual/weak-vector/tag-only/noise), 북마크 20건 + 쿼리 14건.
 `scoreQuery`/`aggregateSearch`(순수 함수, I/O 없음)로 recall/MRR 채점 — 노이즈 쿼리는 "결과 없음"이 정답으로 반전 채점.
 
 `match_bookmarks` RPC 호출 시 `p_tags`/`p_is_favorite`를 생략하면 위 함수의 구버전 오버로드(0009~0010 시절 6-param)와
 모호성 충돌이 나므로, 호출부는 항상 8개 파라미터를 전부 명시해야 함(`app/api/search/route.ts` 참고).
 
 실행: `RUN_SEARCH_EVAL=1 npx vitest run lib/__tests__/search-eval.test.ts` — 비용·DB 쓰기(throwaway auth user +
-골든 북마크 18건 삽입, `finally`에서 정리) 때문에 태그 골든셋(`RUN_TAG_EVAL`)과 동일하게 기본 실행에서 제외.
+골든 북마크 20건 삽입, `finally`에서 정리) 때문에 태그 골든셋(`RUN_TAG_EVAL`)과 동일하게 기본 실행에서 제외.
 
-실측(2026-07-13, text-embedding-3-small, n=12): recall/MRR/hitRate 0.917(11/12).
-exact·synonym·cross-lingual·tag-only·noise 전부 1.0, weak-vector만 0 —
+실측(text-embedding-3-small): exact·synonym·cross-lingual·tag-only·noise 전부 1.0, weak-vector만 0 —
 description 없는 북마크는 title-only 임베딩이라 의미 검색 재현 안 되는 구조적 한계(회귀 아님, known limitation).
-회귀 게이트는 이 실패를 전제로 분리: `OVERALL_RECALL_BASELINE=0.83`, `NON_WEAK_VECTOR_RECALL_BASELINE=0.9`.
+N-2(2026-07-15, 5dfccf3): weak-vector 표본 1→3 확대(n=12→14), 최악 시 overall recall 11/14=0.786.
+회귀 게이트는 이 실패를 전제로 분리: `OVERALL_RECALL_BASELINE=0.75`(0.83에서 분모 확대 재보정), `NON_WEAK_VECTOR_RECALL_BASELINE=0.9`.
 
 ---
 
@@ -322,3 +355,133 @@ ORDER BY folder_name;
 DELETE FROM bookmarks WHERE user_id = $1;
 -- 그 후: supabase.auth.admin.deleteUser(userId)
 ```
+
+---
+
+## RPC 함수 — 관리자 대시보드 집계 (A67, 마이그레이션 0026)
+
+`/admin` 내부 대시보드 전용. 전체 사용자 집계를 위해 `security definer` + `set search_path = public`로 RLS를 우회하되, **`service_role`에만 execute 권한을 부여하고 `PUBLIC`/`anon`/`authenticated`는 명시적으로 회수**한다(PostgreSQL이 `CREATE FUNCTION` 시 `PUBLIC`에 자동 부여하는 기본 권한까지 회수해야 PostgREST 미인증 호출 경로가 완전히 차단됨). 반환은 집계값만 — `embedding`/`content`/개별 `user_id` 행 노출 없음.
+
+```sql
+-- OKR 실측: 활성 사용자·첫 저장 완료율(누적 활성화율, 윈도우 내 저장 아님)·1인당 저장·신규 저장
+CREATE OR REPLACE FUNCTION admin_okr_stats(p_interval text)
+RETURNS TABLE(active_users bigint, first_save_rate numeric, saves_per_user numeric, new_saves bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 카테고리 분포: categories가 유저별 테이블이라 name 기준 집계, category_id IS NULL → '미분류'
+CREATE OR REPLACE FUNCTION admin_category_stats(p_interval text)
+RETURNS TABLE(name text, count bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 카테고리 드릴다운: tags 배열 unnest로 하위 태그 분포
+CREATE OR REPLACE FUNCTION admin_tag_stats(p_category text, p_interval text)
+RETURNS TABLE(tag text, count bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+GRANT EXECUTE ON FUNCTION admin_okr_stats(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_category_stats(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_tag_stats(text, text) TO service_role;
+
+REVOKE EXECUTE ON FUNCTION admin_okr_stats(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_category_stats(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_tag_stats(text, text) FROM anon, authenticated, public;
+```
+
+전체 정의: `supabase/migrations/0026_admin_stats_functions.sql`.
+
+**알려진 후속 개선 사항 (비차단, 이번 범위 밖):**
+- `bookmarks.created_at`에 별도 인덱스 없음 — 현재는 저트래픽 내부 페이지라 허용, 테이블 성장 시 `created_at` btree 인덱스 추가 검토.
+- `admin_category_stats`/`admin_tag_stats`는 count=1인 희귀 라벨도 그대로 노출 — 사용자 자유입력 태그가 다수 유저에 걸쳐 집계되므로, 필요 시 최소 count 임계값 또는 "기타" 버킷 도입 검토.
+
+### v2 확장 — 성장/트렌딩/건강/관리자관리 RPC (A67 v2, 마이그레이션 0028·0029)
+
+`/admin` v2 재정의(마케팅·유저관리·북마크 동향)에서 추가된 RPC. 0026과 동일 규약: `security definer` + `set search_path = public`, `service_role`에만 execute 부여, `PUBLIC`/`anon`/`authenticated` 명시적 revoke. 반환은 집계값만 — `embedding`/`content`/개별 유저 북마크 미노출. `admin_list_admins`가 노출하는 이메일은 관리자(소수 신뢰집합) 본인 것으로, 일반 유저 PII가 아니다.
+
+```sql
+-- 성장 추이: 신규 가입(auth.users) + 저장(bookmarks) 시계열. 1d=시간별, 7d/30d=일별 버킷.
+CREATE OR REPLACE FUNCTION admin_growth_series(p_interval text)
+RETURNS TABLE(bucket timestamptz, signups bigint, saves bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 트렌딩 태그: 현재 윈도우 vs 직전 동일 윈도우 delta 상위 10.
+CREATE OR REPLACE FUNCTION admin_trending_tags(p_interval text)
+RETURNS TABLE(tag text, count bigint, prev_count bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 건강 지표: 데드링크·미분류 누적 비율(전체 기간, 무인자).
+CREATE OR REPLACE FUNCTION admin_health_stats()
+RETURNS TABLE(dead_ratio numeric, uncategorized_ratio numeric)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 현재 관리자 목록 (admin_users ⨝ auth.users)
+CREATE OR REPLACE FUNCTION admin_list_admins()
+RETURNS TABLE(user_id uuid, email text, granted_at timestamptz)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 이메일로 승격: email→id 해석 후 upsert. 미존재 시 예외(errcode = no_data_found).
+CREATE OR REPLACE FUNCTION admin_grant_by_email(p_email text, p_granted_by uuid)
+RETURNS TABLE(user_id uuid, email text)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+-- 강등
+CREATE OR REPLACE FUNCTION admin_revoke(p_user_id uuid)
+RETURNS void
+LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$ ... $$;
+
+GRANT EXECUTE ON FUNCTION admin_growth_series(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_trending_tags(text) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_health_stats() TO service_role;
+GRANT EXECUTE ON FUNCTION admin_list_admins() TO service_role;
+GRANT EXECUTE ON FUNCTION admin_grant_by_email(text, uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION admin_revoke(uuid) TO service_role;
+
+REVOKE EXECUTE ON FUNCTION admin_growth_series(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_trending_tags(text) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_health_stats() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_list_admins() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_grant_by_email(text, uuid) FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION admin_revoke(uuid) FROM anon, authenticated, public;
+```
+
+전체 정의: `supabase/migrations/0028_admin_v2_stats_functions.sql`(성장/트렌딩/건강), `supabase/migrations/0029_admin_management_functions.sql`(관리자 목록/승격/강등). `p_interval`은 기존 `rangeToInterval` 반환값(`'1 day'`/`'7 days'`/`'30 days'`)을 그대로 받음 — 0026 함수와 호출 규약 동일. `admin_grant_by_email`/`admin_revoke`는 `POST`/`DELETE /api/admin/admins`(`withAdmin` 게이팅, 본인 강등 방지)에서만 호출.
+
+---
+
+## 관리자 판별 — admin_users 테이블 (A67, 마이그레이션 0027)
+
+`ADMIN_USER_IDS` env var allowlist를 **폐기**하고 DB 테이블 기반으로 전환. redeploy 없이 승격/강등, 감사 추적(`granted_by`/`granted_at`) 확보.
+
+```sql
+CREATE TABLE admin_users (
+  user_id    uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  granted_by uuid REFERENCES auth.users(id),
+  granted_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+-- 정책 0개 = 기본 거부. service_role만 RLS 우회로 직접 접근·관리.
+
+-- authenticated 세션이 본인 관리자 여부만 확인하는 유일한 통로.
+-- 인자 없이 auth.uid() 사용 — 파라미터로 임의 uuid를 받으면 타인의
+-- 관리자 여부까지 조회 가능해지는 정보노출 경로가 생기므로 의도적으로 무인자.
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$ SELECT EXISTS(SELECT 1 FROM admin_users WHERE user_id = auth.uid()) $$;
+
+GRANT EXECUTE ON FUNCTION is_admin() TO authenticated;
+REVOKE EXECUTE ON FUNCTION is_admin() FROM anon, public;
+```
+
+전체 정의: `supabase/migrations/0027_admin_users.sql`.
+
+**승격/강등:**
+```sql
+-- 승격
+INSERT INTO admin_users (user_id, granted_by) VALUES ('<대상 user.id>', '<승격시킨 관리자 user.id>');
+-- 강등
+DELETE FROM admin_users WHERE user_id = '<대상 user.id>';
+```
+service_role 필요(SQL Editor 또는 `createAdminClient()`). 마이그레이션에는 특정 유저를 시드하지 않음(환경 비종속성) — **최초 관리자 부트스트랩**은 이 수동 SQL로. 이후 승격/강등은 `/admin/ops`의 AdminManager UI(`POST`/`DELETE /api/admin/admins`, `withAdmin` 게이팅·본인 강등 방지)로 처리한다. self-service(자기 승격) 경로는 없음.
+
+`front/lib/admin-auth.ts`의 `isAdmin(supabase)`가 호출자 세션으로 인자 없이 `is_admin` RPC를 호출 — RPC 에러 시 fail-closed(false).

@@ -175,11 +175,21 @@ export default async function WelcomePage() {
 
       <footer className="border-t border-line py-9">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 text-sm text-text-secondary">
-          <span className="flex items-center gap-2 font-extrabold text-ink">
-            <span className="gradient-brand h-2 w-2 rotate-45 rounded-[2px]" />
-            Mowaba
-          </span>
-          <span>© 2026 Mowaba. AI 북마크 관리 서비스.</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="flex items-center gap-2 font-extrabold text-ink">
+              <span className="gradient-brand h-2 w-2 rotate-45 rounded-[2px]" />
+              Mowaba
+            </span>
+            <span>© 2026 Mowaba. AI 북마크 관리 서비스.</span>
+          </div>
+          <nav aria-label="법적 고지" className="flex items-center gap-4">
+            <Link href="/terms" className="transition-colors hover:text-brand-strong">
+              이용약관
+            </Link>
+            <Link href="/privacy" className="transition-colors hover:text-brand-strong">
+              개인정보처리방침
+            </Link>
+          </nav>
         </div>
       </footer>
     </div>
