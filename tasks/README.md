@@ -223,7 +223,7 @@ A17 (Extension 셋업)
 - [x] A65: 북마크 HTML/CSV 내보내기 + 자체 재임포트 왕복 복원 (medium)
 - [x] A66: 죽은 링크 감지 + 재검사 (medium)
 - [x] A67: 관리자 대시보드 (내부 도구) (medium)
-- [x] A68: North Star 이벤트 계측 4종 (medium)
+- [x] A68: North Star 이벤트 계측 4종 + 집계·대시보드 (medium)
 
 **진행률: 10 / 11 완료**
 
@@ -240,7 +240,7 @@ A17 (Extension 셋업)
 | A64 | 개인 북마크 대시보드 (프리미엄)           | low      | pending | 프리미엄 게이팅 인프라 부재. 스코프 최대.                      |
 | A65 | HTML/CSV 내보내기 + 자체 재임포트 왕복 복원   | medium   | done    | GET /api/account category 조인, formatNetscapeBookmarks.ts 신설(TAGS/DATA_CATEGORY 인코딩). parseNetscapeBookmarks.ts 왕복 파싱 추가. import route는 TAGS 있으면 재태깅 생략, DATA_CATEGORY는 resolveTopCategory로 검증만. formatKakaoChatCsv.ts 추가 — 카카오톡 CSV(Date,User,Message) 포맷으로 직렬화해 parseKakaoChat과 왕복 호환. |
 | A66 | 죽은 링크 감지 + 재검사                    | medium   | done    | 소급 문서화. is_dead 컬럼(0021)·검색 반환(0025), POST /api/bookmarks/:id/recheck 라우트, BookmarkCard 배지 + useRecheckBookmark 훅. 저장 시 404/410 감지, 수동 재검사로 갱신. |
-| A68 | North Star 이벤트 계측 4종                 | medium   | done    | **PRD 원래 범위 밖 — PM 발의 그로스 계측 인프라.** events 테이블(0030, RLS 본인 insert·조회 service_role 전용) + lib/events.ts(실패 삼킴·CLIENT_LOGGABLE 화이트리스트). 서버 이벤트 bookmark_saved·tag_assigned·search_performed는 서버 성공 시점 기록(위조 차단), search_result_clicked만 클라(POST /api/events, keepalive). docs/specs/metrics.md에 NSM·매핑·실측 전환 절차. A67 OKR 타일 데이터원. PR #270. |
+| A68 | North Star 이벤트 계측 4종 + 집계·대시보드 | medium   | done    | **PRD 원래 범위 밖 — PM 발의 그로스 계측 인프라(파이프라인 전 단계 완료).** ①이벤트 계측: events 테이블(0030, RLS 본인 insert·조회 service_role 전용) + lib/events.ts(실패 삼킴·CLIENT_LOGGABLE 화이트리스트). 서버 이벤트 bookmark_saved·tag_assigned·search_performed는 서버 성공 시점 기록(위조 차단), search_result_clicked만 클라(POST /api/events, keepalive). 수동 재태깅 tag_assigned{source:'manual'}은 PATCH /api/bookmarks/:id 편집 시. ②집계: admin_metrics_weekly(0031, 주간 5지표 별자리 + 0032 manual_retags·auto_coverage source=auto 한정). ③대시보드: GET /api/admin/metrics + 전용 'North Star' 탭(/admin/northstar, range 무관 주간 고정). docs/specs/metrics.md. A67 OKR 타일 데이터원. PR #270·#271·#272·#273·#274. |
 | A67 | 관리자 대시보드 (내부 도구)                | medium   | done    | **PRD 원래 범위 밖 — PM이 별도 발의한 내부 그로스/운영 도구.** *(v2 재정의: 성장/동향/관리자관리)* `/admin` 페이지: OKR 실측 타일(활성 사용자·첫 저장률·1인당 저장·신규 저장), OpenAI 사용량 위젯($0.02/유저 가정선 비교), 카테고리 분포 랭킹막대(BarList, 1d/7d/30d 탭) + 하위 태그 드릴다운(URL 동기화 모달), 성장 추이 영역그래프(GrowthChart), 트렌딩 태그(TrendingTags), 건강 지표(HealthStats: 데드링크·미분류 비율), 관리자 목록/승격/강등 UI(AdminManager). service_role 집계 SQL 함수 3종(0026) + v2 6종(0028·0029), `withAdmin`(admin_users 테이블 + is_admin() RPC) 게이팅(비관리자 404). A64(사용자향 프리미엄 대시보드)와 무관. |
 
 ### 의존 관계
