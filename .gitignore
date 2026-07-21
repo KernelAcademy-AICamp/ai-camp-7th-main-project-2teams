@@ -34,6 +34,10 @@ front/scripts/backups/
 *.pem
 *.crx
 
+# 로컬 개인 스킬 (Claude Code 툴링 — 공유 대상 아님. 프로젝트 스킬은 계속 추적)
+.claude/skills/frontend-design
+skills-lock.json
+
 # 기타
 .DS_Store
 .vercel
