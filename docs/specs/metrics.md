@@ -1,6 +1,6 @@
 # 지표 스펙 — North Star + 이벤트 계측
 
-**관련 파일**: `supabase/migrations/0030_events.sql`, `front/lib/events.ts`, `front/app/api/events/route.ts`, `front/app/api/bookmarks/route.ts`, `front/app/api/search/route.ts`, `front/app/(dashboard)/page.tsx`
+**관련 파일**: `supabase/migrations/0030_events.sql`, `supabase/migrations/0031_metrics_aggregation.sql`, `front/lib/events.ts`, `front/app/api/events/route.ts`, `front/app/api/bookmarks/route.ts`, `front/app/api/search/route.ts`, `front/app/(dashboard)/page.tsx`
 
 서비스 핵심 가치: **"저장은 편리하게, 관리/검색은 간편하게"**. 비즈니스 게임 = Productivity(저장한 걸 얼마나 효율적으로 되찾는가).
 
@@ -90,10 +90,10 @@ RLS: 활성. authenticated는 본인 `user_id`만 insert. **조회는 service_ro
 1. 배포 → 이벤트 자동 적재 시작(테이블 준비 완료).
 2. **2주 관측** → 실제 중앙값이 진짜 baseline. 위 가정치 폐기.
 3. 목표 재조정: 실측 baseline × 성장계수(초기 Productivity SaaS 분기 1.5~2배 현실적).
-4. 관리자 집계 대시보드는 service_role로 `events` GROUP BY 조회(별도 태스크).
+4. 집계는 `admin_metrics_weekly(p_weeks)` RPC(0031, service_role 전용) — 주간 5지표 별자리 반환. 관리자 대시보드 위젯 연동은 별도 태스크.
 
 ## 미구현 (backlog)
 
 - 수동 재태깅(카드 편집) `tag_assigned{source:'manual'}` — 자동 대비 수동 교정률 측정용.
-- 집계 SQL/관리자 대시보드.
+- 관리자 대시보드 위젯(`admin_metrics_weekly` 소비 UI) — 집계 SQL은 0031로 완료.
 - 코호트별·유료/무료 세그먼트 분리 목표.
