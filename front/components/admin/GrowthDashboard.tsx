@@ -5,7 +5,6 @@ import { parseRange } from '@/lib/admin-range'
 import { useAdminStats } from './useAdminStats'
 import { DashboardLoading } from './DashboardLoading'
 import { OkrTiles } from './OkrTiles'
-import { NorthStarMetrics } from './NorthStarMetrics'
 import { CategoryBar } from './CategoryBar'
 import { GrowthChart } from './GrowthChart'
 import { TrendingTags } from './TrendingTags'
@@ -37,8 +36,6 @@ export function GrowthDashboard() {
 
       {!error && stats && (
         <>
-          <NorthStarMetrics />
-
           <GrowthChart data={stats.growth} />
 
           <div className="grid gap-4 sm:grid-cols-2">

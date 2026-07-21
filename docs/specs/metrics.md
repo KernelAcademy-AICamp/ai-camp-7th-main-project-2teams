@@ -96,5 +96,5 @@ RLS: 활성. authenticated는 본인 `user_id`만 insert. **조회는 service_ro
 
 - 수동 재태깅(카드 편집) `tag_assigned{source:'manual'}` — 자동 대비 수동 교정률 측정용.
 
-> 관리자 대시보드 위젯 완료: `GET /api/admin/metrics` + `NorthStarMetrics`(성장 지표 탭, 주간 8주 별자리) — `admin_metrics_weekly`(0031) 소비.
+> 관리자 대시보드 위젯 완료: `GET /api/admin/metrics` + `NorthStarMetrics`(전용 'North Star' 탭 `/admin/northstar`, 주간 8주 별자리) — `admin_metrics_weekly`(0031) 소비. 주간 고정이라 AdminTabs가 이 경로에서 range(1d/7d/30d) 토글을 숨긴다.
 - 코호트별·유료/무료 세그먼트 분리 목표.
