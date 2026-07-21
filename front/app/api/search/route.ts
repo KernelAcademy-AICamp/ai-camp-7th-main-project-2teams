@@ -4,6 +4,7 @@ import { searchSchema } from '@/lib/schemas'
 import { createEmbedding } from '@/lib/ai'
 import { UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { expandSearchQuery } from '@/lib/search-alias'
+import { logEvent } from '@/lib/events'
 
 type SearchRow = Record<string, unknown> & {
   id: string
@@ -86,6 +87,9 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   const results = [...merged.values()]
     .sort((a, b) => scoreOf(b) - scoreOf(a))
     .slice(0, SEARCH_TOP_K)
+
+  // North Star 계측: 검색 성공률(= search_result_clicked / search_performed) 분모.
+  await logEvent(supabase, user.id, 'search_performed', { result_count: results.length })
 
   return NextResponse.json({ results })
 })

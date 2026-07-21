@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger'
 import { fetchMeta, isDeadStatus } from '@/lib/fetchMeta'
 import { isSafeHttpUrl } from '@/lib/ssrf'
 import { normalizeUrl } from '@/lib/normalizeUrl'
+import { logEvents } from '@/lib/events'
 
 const getQuerySchema = z.object({
   tab: z.string().optional(),
@@ -120,6 +121,15 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     }
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // North Star 계측: 저장 + AI 자동분류 결과 기록(커버리지 지표 = auto_category 비율).
+  await logEvents(supabase, user.id, [
+    { type: 'bookmark_saved', meta: { has_content: hasContent } },
+    {
+      type: 'tag_assigned',
+      meta: { source: 'auto', auto_category: category_id !== null, tag_count: tags.length },
+    },
+  ])
 
   // category(대분류명)는 이미 위에서 계산된 top 재사용 — 추가 조인 불필요
   return NextResponse.json({ bookmark: { ...data, category: top } }, { status: 201 })
