@@ -45,6 +45,7 @@ describe('GET /api/admin/metrics', () => {
           search_success: '0.5',
           active_curators: '3',
           retrieved: '12',
+          manual_retags: '2',
         },
       ],
       error: null,
@@ -62,6 +63,7 @@ describe('GET /api/admin/metrics', () => {
       searchSuccess: 0.5,
       activeCurators: 3,
       retrieved: 12,
+      manualRetags: 2,
     })
     // 금지 컬럼 부재
     expect(JSON.stringify(body)).not.toContain('embedding')

@@ -6,6 +6,7 @@ import { bookmarkUpdateSchema } from '@/lib/schemas'
 import { createEmbedding } from '@/lib/ai'
 import { resolveTopCategory, normalizeTags, extractTopCategory } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
+import { logEvent } from '@/lib/events'
 
 // 명시 컬럼 — embedding 누출 방지 (select('*') 금지)
 const SELECT_COLUMNS =
@@ -134,6 +135,18 @@ export const PATCH = withAuth<{ params: Promise<{ id: string }> }>(
 
     if (description !== undefined) {
       await reembedIfDescriptionChanged(ctx.supabase, ctx.user.id, id, data)
+    }
+
+    // North Star 계측: 수동 재태깅(태그·카테고리 편집)만 기록 → 자동 대비 수동 교정률 측정.
+    // 즐겨찾기·설명 단독 수정은 태깅과 무관하므로 제외.
+    if (tags !== undefined || category !== undefined) {
+      await logEvent(ctx.supabase, ctx.user.id, 'tag_assigned', {
+        source: 'manual',
+        auto_category: false,
+        tag_count: Array.isArray(data.tags) ? data.tags.length : 0,
+        category_changed: category !== undefined,
+        tags_changed: tags !== undefined,
+      })
     }
 
     return NextResponse.json({ bookmark: data })
