@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { parseRange } from '@/lib/admin-range'
 import { useAdminStats } from './useAdminStats'
+import { DashboardLoading } from './DashboardLoading'
 import { HealthStats } from './HealthStats'
 import { OpenAiUsage, type Usage } from './OpenAiUsage'
 import { AdminManager } from './AdminManager'
@@ -37,7 +38,7 @@ export function OpsDashboard() {
       {error ? (
         <p className="text-sm text-destructive">{error}</p>
       ) : !stats ? (
-        <p className="text-sm text-text-secondary">불러오는 중…</p>
+        <DashboardLoading />
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2">

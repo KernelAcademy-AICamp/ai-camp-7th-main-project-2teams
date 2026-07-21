@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { parseRange } from '@/lib/admin-range'
 import { useAdminStats } from './useAdminStats'
+import { DashboardLoading } from './DashboardLoading'
 import { OkrTiles } from './OkrTiles'
 import { CategoryBar } from './CategoryBar'
 import { GrowthChart } from './GrowthChart'
@@ -30,7 +31,7 @@ export function GrowthDashboard() {
       ) : stats ? (
         <OkrTiles okr={stats.okr} />
       ) : (
-        <p className="text-sm text-text-secondary">불러오는 중…</p>
+        <DashboardLoading />
       )}
 
       {!error && stats && (
