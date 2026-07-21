@@ -5,9 +5,13 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { ADMIN_RANGES, parseRange, type AdminRange } from '@/lib/admin-range'
 
 const TABS = [
+  { href: '/admin/northstar', label: 'North Star' },
   { href: '/admin/growth', label: '성장 지표' },
   { href: '/admin/ops', label: '운영·개발' },
 ] as const
+
+// range 토글(1d/7d/30d)이 무의미한 탭 — NorthStar는 주간 고정.
+const RANGELESS_PATHS: readonly string[] = ['/admin/northstar']
 
 // 어드민 상단 네비 — 성장/운영 탭 전환 + range 토글 (쿼리스트링 보존)
 export function AdminTabs() {
@@ -45,21 +49,23 @@ export function AdminTabs() {
           })}
         </nav>
       </div>
-      <div className="flex gap-1 rounded-lg border border-line bg-surface-card p-1">
-        {ADMIN_RANGES.map((r) => (
-          <button
-            key={r}
-            type="button"
-            aria-pressed={r === range}
-            onClick={() => setRange(r)}
-            className={`rounded-md px-3 py-1 text-sm transition-colors ${
-              r === range ? 'bg-brand text-white' : 'text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            {r}
-          </button>
-        ))}
-      </div>
+      {!RANGELESS_PATHS.includes(pathname) && (
+        <div className="flex gap-1 rounded-lg border border-line bg-surface-card p-1">
+          {ADMIN_RANGES.map((r) => (
+            <button
+              key={r}
+              type="button"
+              aria-pressed={r === range}
+              onClick={() => setRange(r)}
+              className={`rounded-md px-3 py-1 text-sm transition-colors ${
+                r === range ? 'bg-brand text-white' : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
