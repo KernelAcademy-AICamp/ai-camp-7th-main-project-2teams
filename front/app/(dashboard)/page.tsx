@@ -21,6 +21,19 @@ import { getOnboardingKey, isOnboardingDone } from "@/lib/onboarding";
 import { parseFilterQuery, buildFilterQuery } from "@/lib/filterQuery";
 import { cn } from "@/lib/utils";
 
+// 검색 결과 클릭 계측(비차단). 클릭 후 새 탭/네비게이션에도 전송 살아남게 keepalive.
+function trackResultClick(bookmarkId: string, rank: number): void {
+  void fetch("/api/events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "search_result_clicked",
+      meta: { bookmark_id: bookmarkId, rank },
+    }),
+    keepalive: true,
+  }).catch(() => {});
+}
+
 function DashboardContent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -334,6 +347,8 @@ function DashboardContent() {
                     key={item.id}
                     className="animate-rise opacity-0"
                     style={{ animationDelay: `${Math.min(i * 25, 300)}ms` }}
+                    // North Star 계측: 검색 결과 클릭(= 되찾은 북마크). 검색 중일 때만.
+                    onClickCapture={isSearching ? () => trackResultClick(item.id, i) : undefined}
                   >
                     <BookmarkCard bookmark={item} view={viewMode} />
                   </div>
