@@ -3,7 +3,7 @@ import { z } from 'zod'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth'
 import { bookmarkUpdateSchema } from '@/lib/schemas'
-import { createEmbedding } from '@/lib/ai'
+import { createEmbedding, buildWeakEmbeddingText } from '@/lib/ai'
 import { resolveTopCategory, normalizeTags, extractTopCategory } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
 import { logEvent } from '@/lib/events'
@@ -49,12 +49,13 @@ async function reembedIfDescriptionChanged(
   supabase: SupabaseClient,
   userId: string,
   id: string,
-  bookmark: { title: string; description: string | null },
+  bookmark: { title: string; description: string | null; tags: string[] | null },
 ): Promise<void> {
   try {
+    // description 삭제 시 title 전용(weak-vector)으로 떨어지지 않게 태그 포함 — POST weak 경로와 동일 규약.
     const text = bookmark.description
       ? `${bookmark.title}\n${bookmark.description}`
-      : bookmark.title
+      : buildWeakEmbeddingText(bookmark.title, bookmark.tags ?? [])
     const embedding = await createEmbedding(text)
     const { error: embeddingError } = await supabase
       .from('bookmarks')

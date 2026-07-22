@@ -5,12 +5,17 @@ vi.mock('@/lib/ai', () => ({ createEmbedding }))
 
 const rpc = vi.fn()
 const categorySingle = vi.fn()
+const eventsInsert = vi.fn(async () => ({ error: null }))
 let currentUser: unknown = { id: 'u1' }
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: { getUser: async () => ({ data: { user: currentUser }, error: null }) },
     rpc,
-    from: () => ({ select: () => ({ eq: () => ({ single: categorySingle }) }) }),
+    // insert: logEvent(search_performed) 계측용 — events 테이블 insert가 mock에 없으면 TypeError
+    from: () => ({
+      select: () => ({ eq: () => ({ single: categorySingle }) }),
+      insert: eventsInsert,
+    }),
   }),
 }))
 
@@ -104,6 +109,16 @@ describe('POST /api/search', () => {
     const res = await POST(req({ query: 'x' }))
     const json = await res.json()
     expect(json.results).toEqual([{ id: 'bm1', similarity: 0.8 }])
+  })
+
+  // 0건 쿼리 계측 — alias 누락·어휘 갭 발굴용. 결과 있으면 query 미수집(수집 최소화).
+  it('결과 0건 → search_performed metadata에 query 포함, 결과 있으면 미포함', async () => {
+    await POST(req({ query: '있는쿼리' }))
+    expect(eventsInsert.mock.calls.at(-1)![0][0].meta).toEqual({ result_count: 1 })
+
+    rpc.mockResolvedValue({ data: [], error: null })
+    await POST(req({ query: '없는쿼리' }))
+    expect(eventsInsert.mock.calls.at(-1)![0][0].meta).toEqual({ result_count: 0, query: '없는쿼리' })
   })
 
   // A62: 클라이언트 사이드 페이지네이션(useSearch visibleCount)이 top-60 전체를 슬라이스할 수 있도록

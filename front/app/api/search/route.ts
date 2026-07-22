@@ -89,7 +89,11 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     .slice(0, SEARCH_TOP_K)
 
   // North Star 계측: 검색 성공률(= search_result_clicked / search_performed) 분모.
-  await logEvent(supabase, user.id, 'search_performed', { result_count: results.length })
+  // 0건일 때만 쿼리 원문 수집 — alias 누락·어휘 갭 발굴용. 결과 있는 쿼리는 미수집(수집 최소화).
+  await logEvent(supabase, user.id, 'search_performed', {
+    result_count: results.length,
+    ...(results.length === 0 ? { query: parsed.data.query } : {}),
+  })
 
   return NextResponse.json({ results })
 })

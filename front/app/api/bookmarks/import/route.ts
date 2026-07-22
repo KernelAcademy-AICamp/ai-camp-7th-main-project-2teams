@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth'
-import { generateTags, createEmbedding } from '@/lib/ai'
+import { generateTags, createEmbedding, buildWeakEmbeddingText, generateWeakSummary } from '@/lib/ai'
 import { normalizeTags, extractTopCategory, resolveTopCategory } from '@/lib/tag-alias'
 import { parseNetscapeBookmarks, type ParsedBookmark } from '@/lib/parseNetscapeBookmarks'
 import { parseKakaoChat } from '@/lib/parseKakaoChat'
@@ -242,9 +242,17 @@ export const POST = withAuth(async (req, { user, supabase }) => {
                   ? Promise.resolve(htmlTags)
                   : generateTags({ title, url, description: embeddingContent })
 
+                // content 없으면(weak-vector) 태그를 먼저 받아 임베딩에 포함 — 단건 추가(POST)와 동일 규약.
                 const [tagsResult, embeddingResult] = await Promise.allSettled([
                   tagsPromise,
-                  createEmbedding(embeddingContent ? `${title}\n${embeddingContent}` : title),
+                  embeddingContent
+                    ? createEmbedding(`${title}\n${embeddingContent}`)
+                    : Promise.all([
+                        tagsPromise.catch(() => [] as string[]),
+                        generateWeakSummary({ title, url }),
+                      ]).then(([tags, summary]) =>
+                        createEmbedding(buildWeakEmbeddingText(title, normalizeTags(tags), summary)),
+                      ),
                 ])
 
                 // 임베딩 실패 → 검색 불가 북마크 → 해당 항목만 실패 처리, 전체 중단 금지
