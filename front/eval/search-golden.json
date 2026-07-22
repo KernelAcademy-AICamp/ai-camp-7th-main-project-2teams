@@ -5,7 +5,9 @@
     "cross-lingual",
     "weak-vector",
     "tag-only",
-    "noise"
+    "noise",
+    "conversational",
+    "particle"
   ],
   "bookmarks": [
     {
@@ -120,7 +122,8 @@
       "title": "제텔카스텐 정리법",
       "description": "",
       "tags": [
-        "생산성"
+        "학습",
+        "아티클"
       ]
     },
     {
@@ -202,7 +205,9 @@
       "title": "옵시디언",
       "description": "",
       "tags": [
-        "생산성"
+        "개발",
+        "도구",
+        "Obsidian"
       ]
     },
     {
@@ -211,7 +216,9 @@
       "title": "Zotero",
       "description": "",
       "tags": [
-        "학습"
+        "비즈니스",
+        "도구",
+        "Zotero"
       ]
     }
   ],
@@ -313,6 +320,96 @@
       ],
       "category": "weak-vector",
       "note": "Zotero(고유명사) vs 참고문헌관리(기능) 어휘갭 + description 없음"
+    },
+    {
+      "query": "지난달 저장한 그 pgvector 아티클",
+      "expected_refs": [
+        "b10"
+      ],
+      "category": "conversational",
+      "note": "시간참조+지시어+형식어 노이즈 — 시맨틱 코어는 pgvector"
+    },
+    {
+      "query": "그 리액트 훅 글",
+      "expected_refs": [
+        "b1"
+      ],
+      "category": "conversational"
+    },
+    {
+      "query": "저번에 저장한 피그마 강의",
+      "expected_refs": [
+        "b3"
+      ],
+      "category": "conversational"
+    },
+    {
+      "query": "얼마 전 본 CI/CD 설정 글",
+      "expected_refs": [
+        "b7"
+      ],
+      "category": "conversational",
+      "note": "'본'은 created_at 근사(시나리오3 보류)"
+    },
+    {
+      "query": "지난주에 저장한 넥스트 캐싱 아티클",
+      "expected_refs": [
+        "b2"
+      ],
+      "category": "conversational"
+    },
+    {
+      "query": "그때 봤던 테일윈드 설치 문서",
+      "expected_refs": [
+        "b18"
+      ],
+      "category": "conversational"
+    },
+    {
+      "query": "예전에 저장한 포스트그레스 공식문서",
+      "expected_refs": [
+        "b9"
+      ],
+      "category": "conversational"
+    },
+    {
+      "query": "지난달 저장한 코딩 강의 유튜브",
+      "expected_refs": [
+        "b4"
+      ],
+      "category": "conversational"
+    },
+    {
+      "query": "리액트를 처음 배울 때 본 문서",
+      "expected_refs": [
+        "b1"
+      ],
+      "category": "particle",
+      "note": "조사(를)+대화형 혼합"
+    },
+    {
+      "query": "피그마로 디자인 배우는 법",
+      "expected_refs": [
+        "b3"
+      ],
+      "category": "particle",
+      "note": "조사(로) — alias 토큰 정확일치 실패 케이스"
+    },
+    {
+      "query": "지난달에 저장해둔 pgvector 글",
+      "expected_refs": [
+        "b10"
+      ],
+      "category": "particle",
+      "note": "noise 사전에 없는 행위어 변형(저장해둔)"
+    },
+    {
+      "query": "유튜브에서 봤던 코딩 강의",
+      "expected_refs": [
+        "b4"
+      ],
+      "category": "particle",
+      "note": "조사(에서) 붙은 브랜드명"
     }
   ]
 }

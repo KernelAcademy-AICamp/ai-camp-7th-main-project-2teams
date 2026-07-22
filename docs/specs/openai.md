@@ -80,9 +80,9 @@ return selectConfidentTags(JSON.parse(completion.choices[0].message.content ?? '
 ```typescript
 async function createEmbedding(text: string): Promise<number[]> {
   const response = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
+    model: 'text-embedding-3-large', // 2026-07-22 3-small→3-large 전환 (A/B: recall@10 0.70→0.85)
+    dimensions: 1536, // 기본 3072를 축소 출력 — vector(1536) 스키마·인덱스 유지
     input: text,
-    // dimensions 생략 시 기본 1536
   })
   return response.data[0].embedding
 }

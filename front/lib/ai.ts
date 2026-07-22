@@ -175,11 +175,53 @@ export async function generateTags({
   }
 }
 
+// weak-vector 보강 — content(본문) 없을 때 태그·요약을 임베딩에 포함.
+// title이 고유명사뿐이면("옵시디언") 기능 서술 쿼리("글쓰기 노트 앱")와 어휘 갭으로 검색 전멸(search-golden weak-vector 실측 0/3).
+// 태그만으론 부족 실측(여전히 0/3) — LLM 한 줄 요약 추가.
+export function buildWeakEmbeddingText(title: string, tags: string[], summary = ""): string {
+  return [title, summary || null, tags.length > 0 ? `태그: ${tags.join(", ")}` : null]
+    .filter(Boolean)
+    .join("\n");
+}
+
+// weak 경로 전용 — 페이지가 뭔지 모델 사전지식으로 한 줄 서술(임베딩 어휘 갭 브릿지).
+// 모르는 페이지 환각 방지: 확실치 않으면 빈 문자열 지시. 실패는 빈 문자열 degrade(저장 차단 금지).
+export async function generateWeakSummary({ title, url }: { title: string; url: string }): Promise<string> {
+  if (isMockOpenAI()) return "";
+  try {
+    const completion = await getOpenAI().chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            'URL과 제목만 보고 이 웹페이지/서비스가 무엇인지 확실히 아는 경우에만 기능 중심 한 문장(30자 내외)으로 설명하세요. 확실하지 않으면 빈 문자열. JSON만 반환: {"summary": "..."}',
+        },
+        { role: "user", content: `제목: ${title}\nURL: ${url}` },
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 100,
+      temperature: 0,
+    });
+    const parsed = JSON.parse(completion.choices[0].message.content ?? "{}");
+    return typeof parsed.summary === "string" ? parsed.summary : "";
+  } catch {
+    return "";
+  }
+}
+
+// 2026-07-22 3-small → 3-large 전환 (A/B 실측: recall@10 0.70→0.85, MRR 0.52→0.68, weak쌍 2/3 floor 구제).
+// dimensions: 1536 — 3-large 기본 3072를 축소 출력해 기존 vector(1536) 스키마·인덱스 유지.
+// 주의: 모델 변경 시 저장된 임베딩 전량 재생성 필수(scripts/reembed.ts) — 모델 간 벡터 공간 비호환.
+export const EMBEDDING_MODEL = "text-embedding-3-large";
+export const EMBEDDING_DIMENSIONS = 1536;
+
 export async function createEmbedding(text: string): Promise<number[]> {
   if (isMockOpenAI()) return MOCK_EMBEDDING
 
   const response = await getOpenAI().embeddings.create({
-    model: 'text-embedding-3-small', // 기본 1536 차원
+    model: EMBEDDING_MODEL,
+    dimensions: EMBEDDING_DIMENSIONS,
     input: text,
   })
   return response.data[0].embedding

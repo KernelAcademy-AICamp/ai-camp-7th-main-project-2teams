@@ -5,7 +5,7 @@ const { generateTags, createEmbedding } = vi.hoisted(() => ({
   generateTags: vi.fn(),
   createEmbedding: vi.fn(),
 }))
-vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
+vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding, buildWeakEmbeddingText: (t: string) => t, generateWeakSummary: async () => '' }))
 
 // A52: 임포트가 fetchMeta로 description 조회 — 실네트워크 차단, 기본 빈 메타 반환
 const { fetchMeta } = vi.hoisted(() => ({ fetchMeta: vi.fn() }))

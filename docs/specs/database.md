@@ -36,7 +36,7 @@ CREATE TABLE bookmarks (
   is_dead     BOOLEAN     NOT NULL DEFAULT false,       -- 저장 시점 404/410 감지 (마이그레이션 0021)
   description TEXT,                                     -- 사용자 입력 설명 (A60, 마이그레이션 0013). content(본문) 아님 — 프라이버시 정책과 무관
   thumbnail_url TEXT,                                    -- og:image/YouTube 썸네일 URL만 저장 (마이그레이션 0017), 이미지 자체는 미저장
-  embedding   vector(1536),                              -- text-embedding-3-small (A51 bge-m3 롤백, 마이그레이션 0006)
+  embedding   vector(1536),                              -- text-embedding-3-large dimensions:1536 (2026-07-22 전환, 구 3-small·A51 bge-m3 롤백, 마이그레이션 0006). 모델 변경 시 scripts/reembed.ts 전량 재실행 필수
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT bookmarks_user_url_unique UNIQUE (user_id, url) -- A35: 동일 사용자 URL 중복 저장 방지 (마이그레이션 0003)
 );
@@ -302,7 +302,14 @@ CREATE TABLE IF NOT EXISTS search_trgm_tag_exclusions (
 실측(text-embedding-3-small): exact·synonym·cross-lingual·tag-only·noise 전부 1.0, weak-vector만 0 —
 description 없는 북마크는 title-only 임베딩이라 의미 검색 재현 안 되는 구조적 한계(회귀 아님, known limitation).
 N-2(2026-07-15, 5dfccf3): weak-vector 표본 1→3 확대(n=12→14), 최악 시 overall recall 11/14=0.786.
-회귀 게이트는 이 실패를 전제로 분리: `OVERALL_RECALL_BASELINE=0.75`(0.83에서 분모 확대 재보정), `NON_WEAK_VECTOR_RECALL_BASELINE=0.9`.
+
+N-3~N-5(2026-07-22): 검색 품질 일괄 개선 — 상세는 `lib/__tests__/search-eval.test.ts` 상단 주석.
+- conversational 8건 추가(시간참조·지시어·행위어): 0.25 → `stripConversationalNoise`+토큰 브랜드 치환 후 1.0
+- particle 4건 추가(조사 변형): 0.5 → 조사 제거 alias fallback 후 0.75(잔여 1건 느슨한 라벨 known miss)
+- weak 경로 임베딩 보강: 태그 + LLM 한줄요약(`generateWeakSummary`) 포함
+- **임베딩 모델 전환**: text-embedding-3-large `dimensions:1536`(스키마·인덱스 불변) + `scripts/reembed.ts`
+  전량 재임베딩. A/B 실측(AI/ML 233건) recall@10 0.70→0.85 근거. 사후 weak-vector 0/3→2/3, noise 오탐 0.
+- n=26, overall 실측 0.923. 게이트: `OVERALL_RECALL_BASELINE=0.85`, `NON_WEAK_VECTOR_RECALL_BASELINE=0.9`.
 
 ---
 

@@ -5,7 +5,7 @@ const { generateTags, createEmbedding } = vi.hoisted(() => ({
   generateTags: vi.fn(),
   createEmbedding: vi.fn(),
 }))
-vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
+vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding, buildWeakEmbeddingText: (t: string) => t, generateWeakSummary: async () => '' }))
 
 // logger 모킹 — weak-vector 경고 로그 검증용 (content 평문 노출 없음 확인)
 const { warnSpy } = vi.hoisted(() => ({ warnSpy: vi.fn() }))
