@@ -208,7 +208,8 @@ function DashboardContent() {
 
   return (
     <>
-      {fromExtension && <ExtensionSync />}
+      {/* 익스텐션 설치 시 세션 자동 동기화 — 미설치면 리스너 없어 no-op */}
+      <ExtensionSync />
       <Sidebar mobileOpen={mobileSidebarOpen} onMobileClose={() => setMobileSidebarOpen(false)} />
 
       <main
