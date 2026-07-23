@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>모와바 — 서비스 기획 발표</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ===== VIEWPORT FITTING BASE (skill) ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow-x: hidden; }
+html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+
+.slide {
+    width: 100vw; height: 100vh; height: 100dvh;
+    overflow: hidden; scroll-snap-align: start;
+    display: flex; flex-direction: column; position: relative; z-index: 1;
+}
+.slide-content {
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    max-height: 100%; overflow: hidden; padding: var(--slide-padding);
+    max-width: 1240px; width: 100%; margin: 0 auto;
+}
+
+:root {
+    --title-size: clamp(1.5rem, 5vw, 3.6rem);
+    --h2-size: clamp(1.25rem, 3.4vw, 2.4rem);
+    --h3-size: clamp(1rem, 2.2vw, 1.55rem);
+    --body-size: clamp(0.75rem, 1.45vw, 1.05rem);
+    --small-size: clamp(0.65rem, 1vw, 0.85rem);
+    --mono-size: clamp(0.62rem, 1vw, 0.82rem);
+    --slide-padding: clamp(1.25rem, 5vw, 4.5rem);
+    --content-gap: clamp(0.5rem, 2vw, 1.8rem);
+    --element-gap: clamp(0.25rem, 1vw, 0.9rem);
+
+    /* Mowaba light palette (DESIGN.md) */
+    --bg: #F7F9FB;
+    --bg-tint: #F1F6F5;
+    --card: #FFFFFF;
+    --line: #E2E8F0;
+    --line-soft: #EDF1F5;
+    --primary: #4A90E2;      /* Vibrant Blue */
+    --primary-deep: #005DA7;
+    --deep: #2D3E50;         /* Deep Blue */
+    --mint: #159E86;
+    --mint-soft: #48C9B0;
+    --tertiary: #006859;
+    --warning: #E08A00;
+    --danger: #E24A5B;
+    --text: #1E293B;
+    --text-2: #475569;
+    --text-3: #64748B;
+    --shadow: 0 4px 14px -6px rgba(45,62,80,0.18);
+    --shadow-lg: 0 12px 34px -12px rgba(45,62,80,0.24);
+}
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    -webkit-font-smoothing: antialiased; letter-spacing: -0.01em;
+}
+.bg-atmos {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(1000px 600px at 85% 8%, rgba(72,201,176,0.10), transparent 60%),
+      radial-gradient(900px 620px at 8% 96%, rgba(74,144,226,0.08), transparent 60%),
+      var(--bg);
+}
+.bg-atmos::after {
+    content:""; position:absolute; inset:0; opacity:0.6;
+    background-image: radial-gradient(rgba(45,62,80,0.10) 1px, transparent 1.3px);
+    background-size: 40px 40px;
+    mask-image: linear-gradient(180deg, #000, transparent 85%);
+    -webkit-mask-image: linear-gradient(180deg, #000, transparent 85%);
+}
+
+/* ===== type ===== */
+.eyebrow {
+    font-size: var(--small-size); font-weight: 700; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--mint); margin-bottom: 0.9em;
+    display: inline-flex; align-items: center; gap: 0.6em;
+}
+.eyebrow .n { color: var(--text-3); }
+.eyebrow.blue { color: var(--primary); }
+h1.headline { font-size: var(--title-size); font-weight: 800; line-height: 1.08; letter-spacing: -0.03em; }
+h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; letter-spacing: -0.025em; }
+.headline .accent { color: var(--primary); }
+.headline .accent-mint { color: var(--mint); }
+.sub { font-size: var(--body-size); color: var(--text-3); line-height: 1.55; margin-top: 0.9em; max-width: 64ch; }
+.section-title { margin-bottom: 0.2em; }
+
+/* ===== cards / grid ===== */
+.grid { display: grid; gap: clamp(0.6rem,1.5vw,1.1rem); grid-template-columns: repeat(auto-fit, minmax(min(100%,240px),1fr)); margin-top: var(--content-gap); }
+.two { display: grid; gap: clamp(0.7rem,2vw,1.6rem); grid-template-columns: 1fr 1fr; margin-top: var(--content-gap); align-items: start; }
+@media (max-width:820px){ .two { grid-template-columns: 1fr; } }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 0.9rem; padding: clamp(0.85rem,1.9vw,1.4rem); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 0.4em; }
+.card h3 { font-size: var(--h3-size); font-weight: 700; letter-spacing: -0.02em; }
+.card p { font-size: var(--body-size); color: var(--text-3); line-height: 1.45; }
+.card .kicker { font-size: var(--small-size); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mint); }
+.card.bar { border-left: 4px solid var(--primary); }
+.card.bar.mint { border-left-color: var(--mint-soft); }
+.card.bar.deep { border-left-color: var(--deep); }
+.card.bar.warn { border-left-color: var(--warning); }
+.card.bar.danger { border-left-color: var(--danger); }
+.card .idx { font-family:'JetBrains Mono',monospace; font-weight:500; color: var(--primary); font-size: var(--small-size); }
+
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; padding: clamp(0.9rem,2vw,1.5rem); box-shadow: var(--shadow); }
+.panel.tint { background: linear-gradient(160deg, rgba(72,201,176,0.10), rgba(255,255,255,0.9)); border-color: rgba(21,158,134,0.28); }
+.panel .plabel { font-size: var(--small-size); font-weight: 700; color: var(--mint); letter-spacing: 0.08em; margin-bottom: 0.6em; }
+
+/* pills */
+.pills { display: flex; flex-wrap: wrap; gap: 0.55em; margin-top: var(--content-gap); }
+.pill { font-size: var(--small-size); font-weight: 600; padding: 0.5em 1em; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--text-2); box-shadow: var(--shadow); }
+.pill.blue { color: var(--primary); border-color: rgba(74,144,226,0.35); background: rgba(74,144,226,0.06); }
+.pill.mint { color: var(--mint); border-color: rgba(21,158,134,0.3); background: rgba(72,201,176,0.08); }
+.pill.warn { color: var(--warning); border-color: rgba(224,138,0,0.3); background: rgba(224,138,0,0.07); }
+
+/* TOC */
+.toc { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(0.5rem,1.2vw,0.8rem); margin-top: var(--content-gap); }
+@media (max-width:820px){ .toc { grid-template-columns: 1fr; } }
+.toc-item { display: flex; align-items: center; gap: 0.9em; background: var(--card); border: 1px solid var(--line); border-radius: 0.8rem; padding: clamp(0.6rem,1.3vw,0.95rem) clamp(0.7rem,1.5vw,1.15rem); box-shadow: var(--shadow); }
+.toc-item .num { flex: none; width: clamp(1.7rem,3vw,2.1rem); height: clamp(1.7rem,3vw,2.1rem); border-radius: 999px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: var(--small-size); }
+.toc-item .t { font-weight: 700; font-size: var(--body-size); }
+.toc-item .d { font-size: var(--small-size); color: var(--text-3); }
+.c-blue { background: var(--primary); } .c-mint { background: var(--mint); } .c-deep { background: var(--deep); } .c-warn { background: var(--warning); }
+
+/* flow */
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: clamp(0.35rem,0.9vw,0.7rem); margin-top: var(--content-gap); }
+.flow .node { flex: 1 1 0; min-width: 118px; background: var(--card); border: 1px solid var(--line); border-radius: 0.75rem; padding: clamp(0.6rem,1.4vw,1rem); display: flex; flex-direction: column; gap: 0.3em; box-shadow: var(--shadow); }
+.flow .node .t { font-weight: 700; font-size: var(--small-size); }
+.flow .node .d { font-family:'JetBrains Mono',monospace; font-size: var(--mono-size); color: var(--text-3); line-height: 1.35; }
+.flow .node.k { border-color: rgba(74,144,226,0.4); background: linear-gradient(160deg, rgba(74,144,226,0.09), #fff); }
+.flow .node.km { border-color: rgba(21,158,134,0.35); background: linear-gradient(160deg, rgba(72,201,176,0.10), #fff); }
+.flow .arrow { align-self: center; color: var(--primary); font-size: 1.1em; opacity: 0.6; }
+
+/* 5whys / step list */
+.whys { display: flex; flex-direction: column; gap: clamp(0.4rem,1vw,0.7rem); margin-top: var(--content-gap); }
+.why { display: grid; grid-template-columns: auto 1fr auto 1.35fr; align-items: center; gap: clamp(0.5rem,1.4vw,1.1rem);
+    background: var(--card); border: 1px solid var(--line); border-radius: 0.8rem; padding: clamp(0.5rem,1.2vw,0.85rem) clamp(0.7rem,1.6vw,1.15rem); box-shadow: var(--shadow); }
+.why .w { font-family:'JetBrains Mono',monospace; font-size: var(--mono-size); font-weight: 700; color: var(--primary); }
+.why .q { font-size: var(--small-size); font-weight: 700; color: var(--text); }
+.why .ar { color: var(--mint); opacity: 0.7; font-weight: 700; }
+.why .a { font-size: var(--small-size); color: var(--text-3); line-height: 1.4; }
+.why.last { border-color: rgba(74,144,226,0.4); background: linear-gradient(120deg, rgba(74,144,226,0.08), #fff); }
+.why.last .a { color: var(--text-2); font-weight: 600; }
+@media (max-width:720px){ .why { grid-template-columns: 1fr; gap: 0.25em; } .why .ar { display:none; } }
+
+/* quote */
+.quote-wrap { margin-top: var(--content-gap); }
+.bigquote { font-size: clamp(1.15rem, 3vw, 2.15rem); font-weight: 800; line-height: 1.32; letter-spacing: -0.02em; color: var(--text); position: relative; padding-left: 0.1em; }
+.bigquote .hl { color: var(--primary); }
+.bigquote .hlm { color: var(--mint); }
+.bigquote::before { content: "\201C"; font-size: 2.2em; color: var(--mint-soft); line-height: 0; vertical-align: -0.35em; margin-right: 0.05em; }
+.qattr { font-size: var(--small-size); color: var(--text-3); margin-top: 1em; font-family:'JetBrains Mono',monospace; }
+
+/* persona */
+.persona { display: flex; flex-direction: column; gap: 0.5em; }
+.persona .ptop { display: flex; align-items: baseline; gap: 0.6em; flex-wrap: wrap; }
+.persona .pname { font-size: var(--h3-size); font-weight: 800; letter-spacing: -0.02em; }
+.persona .pmeta { font-family:'JetBrains Mono',monospace; font-size: var(--mono-size); color: var(--text-3); }
+.persona .pquote { font-size: var(--small-size); color: var(--primary-deep); font-weight: 600; font-style: italic; }
+.pblock { margin-top: 0.35em; }
+.pblock .bl { font-size: var(--mono-size); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mint); }
+.pblock ul { list-style: none; margin-top: 0.2em; display: flex; flex-direction: column; gap: 0.15em; }
+.pblock li { font-size: var(--small-size); color: var(--text-3); line-height: 1.4; padding-left: 0.9em; position: relative; }
+.pblock li::before { content: "·"; position: absolute; left: 0.15em; color: var(--primary); font-weight: 700; }
+
+/* big stat */
+.stat-big { font-size: clamp(3.5rem, 11vw, 8rem); font-weight: 900; line-height: 0.88; letter-spacing: -0.05em;
+    background: linear-gradient(120deg, var(--primary), var(--mint-soft)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stat-cap { font-size: var(--body-size); color: var(--text-3); line-height: 1.5; margin-top: 0.5em; }
+.stat-cap b { color: var(--mint); }
+
+/* KPI strip */
+.kpis { display: flex; gap: clamp(1rem,3vw,2.4rem); flex-wrap: wrap; margin-top: 0.3em; }
+.kpis .k { display: flex; flex-direction: column; }
+.kpis .k .n { font-size: clamp(1.4rem,3.4vw,2.3rem); font-weight: 800; letter-spacing: -0.02em; }
+.kpis .k:nth-child(1) .n { color: var(--primary); } .kpis .k:nth-child(2) .n { color: var(--mint); } .kpis .k:nth-child(3) .n { color: var(--warning); }
+.kpis .k .l { font-size: var(--small-size); color: var(--text-3); margin-top: 0.15em; }
+
+/* A/B compare */
+.ab { display: grid; grid-template-columns: 1fr auto 1fr; gap: clamp(0.6rem,1.6vw,1.3rem); margin-top: var(--content-gap); align-items: stretch; }
+@media (max-width:720px){ .ab { grid-template-columns: 1fr; } .ab .vs { display:none; } }
+.ab .side { background: var(--card); border: 1px solid var(--line); border-radius: 0.9rem; padding: clamp(0.8rem,1.8vw,1.3rem); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 0.4em; }
+.ab .side.b { border-color: rgba(74,144,226,0.4); background: linear-gradient(160deg, rgba(74,144,226,0.08), #fff); }
+.ab .side .tag { font-family:'JetBrains Mono',monospace; font-size: var(--mono-size); font-weight: 700; color: #fff; background: var(--text-3); align-self: flex-start; padding: 0.2em 0.7em; border-radius: 999px; }
+.ab .side.b .tag { background: var(--primary); }
+.ab .side h3 { font-size: var(--h3-size); font-weight: 700; }
+.ab .side ul { list-style: none; display: flex; flex-direction: column; gap: 0.2em; }
+.ab .side li { font-size: var(--small-size); color: var(--text-3); padding-left: 0.9em; position: relative; }
+.ab .side li::before { content: "·"; position: absolute; left: 0.15em; color: var(--mint); }
+.ab .vs { align-self: center; font-family:'JetBrains Mono',monospace; font-weight: 700; color: var(--text-3); }
+
+/* roadmap */
+.road { display: flex; flex-wrap: wrap; gap: clamp(0.4rem,1vw,0.8rem); margin-top: var(--content-gap); align-items: stretch; }
+.road .stage { flex: 1 1 0; min-width: 150px; background: var(--card); border: 1px solid var(--line); border-radius: 0.85rem; padding: clamp(0.7rem,1.6vw,1.1rem); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 0.3em; position: relative; }
+.road .stage .st { font-family:'JetBrains Mono',monospace; font-size: var(--mono-size); font-weight: 700; color: var(--primary); }
+.road .stage .sh { font-size: var(--body-size); font-weight: 700; letter-spacing: -0.02em; }
+.road .stage .sd { font-size: var(--small-size); color: var(--text-3); line-height: 1.4; }
+.road .stage.mvp { border-color: rgba(74,144,226,0.45); background: linear-gradient(160deg, rgba(74,144,226,0.09), #fff); }
+.road .stage.mvp .st { color: var(--primary-deep); }
+
+/* checklist */
+.checks { list-style: none; display: flex; flex-direction: column; gap: 0.45em; margin-top: 0.3em; }
+.checks li { font-size: var(--body-size); color: var(--text-2); padding-left: 1.5em; position: relative; line-height: 1.4; }
+.checks li::before { content: "›"; position: absolute; left: 0.3em; color: var(--mint); font-weight: 700; }
+
+/* demo frame */
+.video-frame { margin-top: var(--content-gap); aspect-ratio: 16/9; width: auto; max-height: 46vh; align-self: flex-start;
+    border: 1px solid var(--line); border-radius: 1rem; background: linear-gradient(160deg, #eef4f3, #fff);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8em; position: relative; overflow: hidden; box-shadow: var(--shadow-lg); }
+.play { width: clamp(46px,7vw,68px); height: clamp(46px,7vw,68px); border-radius: 999px; background: var(--primary); display: grid; place-items: center; box-shadow: 0 8px 26px rgba(74,144,226,0.4); }
+.play::after { content:""; border-style: solid; border-width: 0.5em 0 0.5em 0.85em; border-color: transparent transparent transparent #fff; margin-left: 0.2em; }
+.video-cap { font-size: var(--small-size); color: var(--text-3); text-align: center; padding: 0 1em; }
+.video-cap b { color: var(--mint); }
+
+/* cover */
+.cover .slide-content { align-items: center; text-align: center; }
+.cover .sub { max-width: 52ch; }
+.cover .brandline { font-family:'JetBrains Mono',monospace; font-size: var(--small-size); color: var(--text-3); letter-spacing: 0.08em; margin-top: var(--content-gap); }
+.cover .pills { justify-content: center; }
+.cover .slogan { font-family:'JetBrains Mono',monospace; font-size: var(--small-size); letter-spacing: 0.16em; color: var(--mint); text-transform: uppercase; margin-top: 0.4em; }
+
+/* fixed chrome */
+.counter { position: fixed; top: clamp(0.9rem,2.2vh,1.5rem); right: clamp(1rem,3vw,2.4rem); z-index: 20;
+    font-family:'JetBrains Mono',monospace; font-size: var(--small-size); color: var(--text-3);
+    background: rgba(255,255,255,0.75); border: 1px solid var(--line); border-radius: 999px; padding: 0.4em 0.9em; backdrop-filter: blur(8px); }
+.counter b { color: var(--primary); }
+.nav-dots { position: fixed; right: clamp(0.7rem,1.6vw,1.3rem); top: 50%; transform: translateY(-50%); z-index: 20; display: flex; flex-direction: column; gap: 0.6em; }
+.nav-dots button { width: 8px; height: 8px; border-radius: 999px; border: none; padding: 0; cursor: pointer; background: rgba(45,62,80,0.22); transition: all .3s ease; }
+.nav-dots button.on { background: var(--primary); transform: scale(1.5); }
+.progress { position: fixed; top: 0; left: 0; height: 3px; z-index: 25; width: 0; background: linear-gradient(90deg, var(--primary), var(--mint-soft)); transition: width .3s ease; }
+.khint { position: fixed; bottom: clamp(0.7rem,2vh,1.2rem); left: clamp(1rem,3vw,2.4rem); z-index: 20; font-size: var(--small-size); color: var(--text-3); opacity: 0.7; font-family:'JetBrains Mono',monospace; }
+
+/* reveal */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity .55s ease, transform .55s cubic-bezier(0.16,1,0.3,1); }
+.slide.active .reveal { opacity: 1; transform: none; transition-delay: calc(var(--i,0) * 80ms); }
+
+@media (max-height: 600px) { .nav-dots, .khint { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:0.01ms!important; transition-duration:0.2s!important; }
+    html { scroll-behavior: auto; } .reveal { opacity:1; transform:none; }
+}
+</style>
+</head>
+<body>
+<div class="bg-atmos" aria-hidden="true"></div>
+<div class="progress" id="progress"></div>
+<div class="counter" id="counter"><b>01</b> / 18</div>
+<nav class="nav-dots" id="navDots" aria-label="슬라이드 이동"></nav>
+<div class="khint">← / → · 스크롤로 이동</div>
+
+<main>
+
+<!-- 0 COVER -->
+<section class="slide cover">
+  <div class="slide-content">
+    <div class="eyebrow reveal">AI CAMP 7기 2팀 · 서비스 기획 발표</div>
+    <h1 class="headline reveal" style="--i:1">모와바 <span class="accent-mint">Mowaba</span></h1>
+    <div class="slogan reveal" style="--i:2">Save it. Find it.</div>
+    <p class="sub reveal" style="--i:3">북마크는 저장이 아니라 <b style="color:var(--primary)">되찾기</b>가 문제다.<br>AI 자동 태깅과 자연어 검색으로 '저장 → 재발견' 루프를 완성한다.</p>
+    <div class="pills reveal" style="--i:4">
+      <span class="pill blue">Chrome Extension</span>
+      <span class="pill mint">pgvector 자연어 검색</span>
+      <span class="pill">AI 자동 태깅</span>
+    </div>
+    <div class="brandline reveal" style="--i:5">Team 2 · 모와바 · 2026</div>
+  </div>
+</section>
+
+<!-- 1 TOC -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal">TABLE OF CONTENTS</div>
+    <h2 class="headline section-title reveal" style="--i:1">목차</h2>
+    <div class="toc reveal" style="--i:2">
+      <div class="toc-item"><span class="num c-blue">01</span><div><div class="t">배경 및 문제인식</div><div class="d">정보 과부하 · 북마크의 역설</div></div></div>
+      <div class="toc-item"><span class="num c-mint">05</span><div><div class="t">해결방안 — 모와바</div><div class="d">자동 태깅 · 자연어 검색</div></div></div>
+      <div class="toc-item"><span class="num c-blue">02</span><div><div class="t">문제 정의</div><div class="d">5 Whys · 최종 문제정의</div></div></div>
+      <div class="toc-item"><span class="num c-mint">06</span><div><div class="t">실험 및 검증</div><div class="d">A/B 설계 · 태깅 품질 실측</div></div></div>
+      <div class="toc-item"><span class="num c-blue">03</span><div><div class="t">페르소나</div><div class="d">지식노동자 · 큐레이터</div></div></div>
+      <div class="toc-item"><span class="num c-warn">07</span><div><div class="t">리스크 및 고려사항</div><div class="d">품질 · 프라이버시 · 콜드스타트</div></div></div>
+      <div class="toc-item"><span class="num c-blue">04</span><div><div class="t">가설 및 KPI</div><div class="d">재발견 구조 → 검색 사용률</div></div></div>
+      <div class="toc-item"><span class="num c-warn">08</span><div><div class="t">확장 로드맵</div><div class="d">MVP → 수익화 → B2B</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 §01 배경 · trend -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">01</span> — 배경 및 문제인식</div>
+    <h2 class="headline section-title reveal" style="--i:1">저장할 것은 폭발하는데,<br>도구는 <span class="accent">20년째</span> 그대로</h2>
+    <div class="two reveal" style="--i:2">
+      <div style="display:flex;flex-direction:column;gap:clamp(0.5rem,1.2vw,0.9rem)">
+        <div class="card bar"><span class="idx">TREND</span><h3>정보 과부하 시대</h3><p>매일 수십 개의 링크를 저장한다. Notion·Obsidian 등 개인 지식관리(PKM) 도구 사용자도 급증 중.</p></div>
+        <div class="card bar mint"><span class="idx">WHY NOW</span><h3>지금이 기회</h3><p>2025-07 Pocket 종료로 국내 대안 공백. AI 태깅 원가는 유저당 월 $0.02로 급락.</p></div>
+      </div>
+      <div class="panel tint">
+        <div class="plabel">재발견 수요는 실재한다</div>
+        <div class="kpis" style="margin-top:0.3em">
+          <div class="k"><div class="n">44%</div><div class="l">웹 방문이 이전 페이지 재방문</div></div>
+          <div class="k"><div class="n">33%</div><div class="l">웹 검색이 재발견 목적</div></div>
+        </div>
+        <p class="stat-cap" style="margin-top:0.9em">사람들은 저장한 것을 <b>다시 찾고 싶어 한다.</b> 하지만 지금 도구는 그걸 못 받쳐준다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 §01 impact 84% -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">01</span> — 북마크의 역설</div>
+    <div class="two reveal" style="--i:1;align-items:center">
+      <div>
+        <div class="stat-big">84%</div>
+        <p class="stat-cap">다시 찾으려 저장한 북마크의 <b>84%</b>는 재발견되지 못했다.<br><span style="color:var(--text-3)">Bergman, Whittaker &amp; Schooler (2021), n=250</span></p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:clamp(0.5rem,1.2vw,0.9rem)">
+        <div class="card bar warn"><span class="idx">4%</span><h3>폴더는 답이 아니다</h3><p>의도적으로 폴더를 뒤져 찾아낸 건 250건 중 9건(4%)뿐. 우리가 만든 폴더 정리는 재발견에 사실상 기여하지 못한다.</p></div>
+        <div class="card bar deep"><span class="idx">→</span><h3>문제의 본질</h3><p>저장은 쉽다. 진짜 병목은 <b style="color:var(--deep)">'다시 찾기'</b>. 제목만 남고, 내용은 검색되지 않는다.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 §01 3-step friction -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">01</span> — 기존 방식의 한계</div>
+    <h2 class="headline section-title reveal" style="--i:1">저장 · 분류 · 재발견 — <span class="accent">모든 단계에서 마찰</span></h2>
+    <div class="flow reveal" style="--i:2">
+      <div class="node"><div class="t">① 저장</div><div class="d">제목·URL만 남음</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="t">② 분류</div><div class="d">폴더 수동 선택</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="t">③ 재발견</div><div class="d">내용 검색 불가</div></div>
+    </div>
+    <div class="grid reveal" style="--i:3">
+      <div class="card bar"><h3>높은 정리 비용</h3><p>어느 폴더에 넣을지 매번 결정 → 인지 부하. 결국 아무도 정리하지 않는다.</p></div>
+      <div class="card bar mint"><h3>검색의 부재</h3><p>제목만 저장되니 "그때 그 자료"를 키워드로도 못 찾는다.</p></div>
+      <div class="card bar warn"><h3>방치와 중복</h3><p>수백 개가 쌓인 채 방치되고, 같은 링크를 또 저장한다.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 §02 5 Whys -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">02</span> — 문제 정의 · 5 WHYS</div>
+    <h2 class="headline section-title reveal" style="--i:1">왜 저장한 걸 다시 못 찾을까?</h2>
+    <div class="whys reveal" style="--i:2">
+      <div class="why"><span class="w">why 1</span><span class="q">왜 못 찾나?</span><span class="ar">→</span><span class="a">제목만 저장되고 내용은 남지 않아서</span></div>
+      <div class="why"><span class="w">why 2</span><span class="q">왜 내용이 없나?</span><span class="ar">→</span><span class="a">기존 북마크는 본문을 이해·색인하지 않아서</span></div>
+      <div class="why"><span class="w">why 3</span><span class="q">왜 색인이 안 되나?</span><span class="ar">→</span><span class="a">분류가 사용자의 수동 폴더·기억에 의존해서</span></div>
+      <div class="why"><span class="w">why 4</span><span class="q">왜 그게 문제인가?</span><span class="ar">→</span><span class="a">도구가 '의미로 되찾는 구조'를 제공하지 않아서</span></div>
+      <div class="why last"><span class="w">why 5</span><span class="q">왜 중요한 문제인가?</span><span class="ar">→</span><span class="a">재발견이 막히면 저장한 지식이 전부 사장된다</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 §02 final problem quote -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">02</span> — 최종 문제 정의</div>
+    <div class="quote-wrap reveal" style="--i:1">
+      <p class="bigquote">현재 북마크는 저장은 쉽게 하지만, 저장한 정보를 <span class="hl">의미 기반으로 다시 찾을 수 있는 구조</span>를 제공하지 못해 <span class="hlm">재발견과 재사용이 일어나지 않는</span> 문제가 발생한다.</p>
+      <div class="qattr">— 문제 정의 · Bergman(2021) + 재발견 연구 종합</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 §03 personas -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">03</span> — 페르소나</div>
+    <h2 class="headline section-title reveal" style="--i:1">누가 이 문제로 가장 아파하는가</h2>
+    <div class="two reveal" style="--i:2">
+      <div class="panel persona">
+        <div class="ptop"><span class="pname">지식노동자</span><span class="pmeta">개발자 · PM · 리서처</span></div>
+        <div class="pquote">"분명 저장했는데, 어디 뒀는지 기억이 안 나."</div>
+        <div class="pblock"><div class="bl">Pain</div><ul><li>하루 10+ 링크 저장, 나중에 못 찾음</li><li>폴더 정리는 부담, 결국 방치</li></ul></div>
+        <div class="pblock"><div class="bl">Goal</div><ul><li>저장한 자료를 필요할 때 바로 되찾기</li></ul></div>
+      </div>
+      <div class="panel tint persona">
+        <div class="ptop"><span class="pname">콘텐츠 큐레이터</span><span class="pmeta">뉴스레터 · 블로거 · 학생</span></div>
+        <div class="pquote">"리서치 소스 관리가 곧 내 업무야."</div>
+        <div class="pblock"><div class="bl">Pain</div><ul><li>논문·아티클 저장 후 논거를 못 찾음</li><li>키워드조차 기억나지 않음</li></ul></div>
+        <div class="pblock"><div class="bl">Insight</div><ul><li>정보는 쌓였지만 <b>재발견 구조</b>가 없다</li></ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 §04 hypothesis -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">04</span> — 핵심 가설</div>
+    <div class="quote-wrap reveal" style="--i:1">
+      <p class="bigquote"><span class="hl">AI 자동 태깅과 자연어 검색 구조</span>가 제공되면, 사용자가 저장한 정보를 <span class="hlm">다시 찾아 쓰는 행동(재발견)이 증가</span>할 것이다.</p>
+      <div class="qattr">— 이 가설 하나를 검증하는 것이 MVP의 목표</div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 §04 KPI -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">04</span> — KPI 설정</div>
+    <h2 class="headline section-title reveal" style="--i:1">'저장'이 아니라 '되찾는 행동'을 측정한다</h2>
+    <div class="two reveal" style="--i:2">
+      <div class="panel">
+        <div class="plabel">핵심 KPI — 행동 지표</div>
+        <div class="kpis"><div class="k"><div class="n">40%</div><div class="l">MAU 중 자연어 검색 사용률</div></div></div>
+        <p class="stat-cap" style="margin-top:0.7em">검색 사용률 증가 = 재발견 구조가 실제로 작동한다는 신호.</p>
+      </div>
+      <div class="panel tint">
+        <div class="plabel">보조 KPI</div>
+        <div class="kpis" style="gap:clamp(0.8rem,2vw,1.6rem)">
+          <div class="k"><div class="n">70%</div><div class="l">첫 저장 완료율</div></div>
+          <div class="k"><div class="n">30%</div><div class="l">7일 리텐션</div></div>
+          <div class="k"><div class="n">30+</div><div class="l">NPS</div></div>
+        </div>
+        <p class="stat-cap" style="margin-top:0.7em">노출 → 저장 → <b>재발견</b>으로 이어지는 전환 퍼널을 함께 관측.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 §05 solution overview -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">05</span> — 해결방안 · 모와바</div>
+    <h2 class="headline section-title reveal" style="--i:1">폴더 중심에서 <span class="accent">의미 중심</span>으로</h2>
+    <div class="two reveal" style="--i:2">
+      <div style="display:flex;flex-direction:column;gap:clamp(0.5rem,1.2vw,0.9rem)">
+        <div class="card bar"><h3>① 자동 태깅</h3><p>저장하면 AI가 알아서 태그·카테고리 부여.</p></div>
+        <div class="card bar mint"><h3>② 자연어 검색</h3><p>말하듯 검색하면 의미가 비슷한 북마크를 되찾기.</p></div>
+        <div class="card bar deep"><h3>③ 제로-정리 UX</h3><p>폴더 수동 분류를 아예 없앤다.</p></div>
+      </div>
+      <div class="panel tint">
+        <div class="plabel">서비스 구조 — 저장하는 순간 재발견이 준비된다</div>
+        <div class="flow" style="margin-top:0.4em">
+          <div class="node"><div class="t">저장</div><div class="d">1클릭</div></div>
+          <div class="arrow">→</div>
+          <div class="node k"><div class="t">AI 태깅</div><div class="d">GPT-4o-mini</div></div>
+          <div class="arrow">→</div>
+          <div class="node km"><div class="t">임베딩</div><div class="d">1536d</div></div>
+          <div class="arrow">→</div>
+          <div class="node"><div class="t">의미 검색</div><div class="d">pgvector</div></div>
+        </div>
+        <p class="stat-cap" style="margin-top:0.8em">기존은 사람이 분류하고 사람이 기억해야 했다. 모와바는 <b>기계가 의미로 연결</b>한다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 §05 auto tagging -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">05 · 기능 ①</span></div>
+    <h2 class="headline section-title reveal" style="--i:1">AI 자동 태깅</h2>
+    <p class="sub reveal" style="--i:2">저장하면 <b style="color:var(--primary)">1.5초 안에</b> GPT-4o-mini가 본문 앞 2,000자를 읽어 태그 0~3개와 카테고리 1개를 부여한다.</p>
+    <div class="grid reveal" style="--i:3">
+      <div class="card bar"><span class="kicker">분류 체계</span><h3>13개 대분류</h3><p>개발·AI/ML·디자인·비즈니스·학습 등. 대→중→소 계층 태그.</p></div>
+      <div class="card bar mint"><span class="kicker">정밀도 우선</span><h3>confidence 0.6</h3><p>확신 0.6 미만 태그는 자동 제외. 애매하면 붙이지 않는다.</p></div>
+      <div class="card bar warn"><span class="kicker">프라이버시</span><h3>본문 즉시 파기</h3><p>처리 후 원문은 저장·로깅 금지. 저작권·개인정보 대응.</p></div>
+    </div>
+    <div class="pills reveal" style="--i:4">
+      <span class="pill mint">태깅 품질 macro-F1 0.85 · 대분류 0.93 (실측 2026-07)</span>
+      <span class="pill">한국어·영어 혼용 지원</span>
+    </div>
+  </div>
+</section>
+
+<!-- 12 §05 nl search -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">05 · 기능 ②</span></div>
+    <h2 class="headline section-title reveal" style="--i:1">자연어 벡터 검색</h2>
+    <p class="sub reveal" style="--i:2">"리액트 훅 관련 글", "지난달 저장한 그 RAG 아티클" — 제목이 안 맞아도 <b style="color:var(--mint)">의미가 비슷한 북마크</b>를 pgvector가 되찾는다.</p>
+    <div class="flow reveal" style="--i:3">
+      <div class="node"><div class="t">질의 입력</div><div class="d">자연어 · 최대 50자</div></div>
+      <div class="arrow">→</div>
+      <div class="node km"><div class="t">질의 임베딩</div><div class="d">3-small</div></div>
+      <div class="arrow">→</div>
+      <div class="node k"><div class="t">코사인 유사도</div><div class="d">pgvector · HNSW</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="t">임계값 필터</div><div class="d">≥ 0.5 · 상위 20</div></div>
+    </div>
+    <div class="pills reveal" style="--i:4">
+      <span class="pill mint">HNSW 인덱스 → 수천 건도 밀리초 응답</span>
+      <span class="pill">embedding 컬럼은 API 응답 미포함</span>
+    </div>
+  </div>
+</section>
+
+<!-- 13 §05 UIUX + demo -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">05 · UI/UX &amp; 시연</span></div>
+    <h2 class="headline section-title reveal" style="--i:1">저장은 단축키 하나, 검색은 한 문장</h2>
+    <div class="two reveal" style="--i:2;align-items:stretch">
+      <div>
+        <img src="../outputs/gifs/SearchDemo.gif" alt="모와바 자연어 검색 데모" style="display:block;width:100%;max-height:46vh;object-fit:contain;border:1px solid var(--line);border-radius:1rem;box-shadow:var(--shadow-lg);background:#fff;margin-top:var(--content-gap)" />
+        <div class="video-cap" style="margin-top:0.55em;text-align:left"><b>데모</b> — 저장 → 자동 분류 → "그 RAG 아티클" 자연어 검색</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:clamp(0.5rem,1.2vw,0.9rem);justify-content:center">
+        <div class="card bar"><span class="idx">저장</span><h3>익스텐션</h3><p>Cmd+Shift+S 한 번. 현재 탭을 바로 저장.</p></div>
+        <div class="card bar mint"><span class="idx">관리</span><h3>웹앱</h3><p>검색 · 카드 · 사이드바 필터. 그리드/리스트/컴팩트 3종 뷰.</p></div>
+        <div class="card bar deep"><span class="idx">Aha</span><h3>첫 검색 성공</h3><p>말하듯 검색해 바로 되찾는 순간이 핵심 경험.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 §06 A/B + eval -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">06</span> — 실험 및 검증</div>
+    <h2 class="headline section-title reveal" style="--i:1">정보는 같고, <span class="accent">'재발견 구조'만</span> 다르게</h2>
+    <div class="ab reveal" style="--i:2">
+      <div class="side a">
+        <span class="tag">A안</span>
+        <h3>폴더 · 키워드 검색</h3>
+        <ul><li>기존 방식</li><li>제목 기반 매칭</li><li>수동 분류 의존</li></ul>
+      </div>
+      <div class="vs">vs</div>
+      <div class="side b">
+        <span class="tag">B안</span>
+        <h3>모와바 자연어 검색</h3>
+        <ul><li>의미 기반 벡터 검색</li><li>자동 태깅</li><li>구조화된 재발견</li></ul>
+      </div>
+    </div>
+    <div class="pills reveal" style="--i:3">
+      <span class="pill mint">이미 확보한 검증치 — 태깅 macro-F1 0.85 · 대분류 0.93</span>
+      <span class="pill">회귀 게이트 baseline F1 0.82</span>
+      <span class="pill blue">검색 클릭률 · 재발견 소요시간 + 정성 인터뷰 병행</span>
+    </div>
+  </div>
+</section>
+
+<!-- 15 §07 risks -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">07</span> — 리스크 및 고려사항</div>
+    <h2 class="headline section-title reveal" style="--i:1">리스크는 이미 대응 설계에 반영</h2>
+    <div class="two reveal" style="--i:2">
+      <div style="display:flex;flex-direction:column;gap:clamp(0.5rem,1.2vw,0.9rem)">
+        <div class="card bar"><span class="kicker">기능</span><h3>태그 품질 저하</h3><p>골든셋 회귀 게이트로 F1 기준선(0.82) 방어.</p></div>
+        <div class="card bar mint"><span class="kicker">채택</span><h3>콜드스타트</h3><p>빈 북마크 문제 → 파일 임포트로 기존 북마크 일괄 이관.</p></div>
+        <div class="card bar deep"><span class="kicker">비용</span><h3>AI 원가</h3><p>유저당 월 $0.02 저마진 구조 → 수익화 전에도 지속 가능.</p></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:clamp(0.5rem,1.2vw,0.9rem)">
+        <div class="card bar warn"><span class="kicker">정책</span><h3>원문 미저장</h3><p>앞 2,000자만 임베딩 후 즉시 파기 — 저작권·개인정보 대응.</p></div>
+        <div class="card bar danger"><span class="kicker">UX</span><h3>정보 과부하</h3><p>카드엔 핵심 정보만, 상세는 분리해 복잡도 관리.</p></div>
+        <div class="card bar"><span class="kicker">보안</span><h3>키·본문 노출</h3><p>서버 전용 키 격리 · secret-scan hook으로 커밋 차단.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 16 §08 roadmap -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">08</span> — 확장 로드맵</div>
+    <h2 class="headline section-title reveal" style="--i:1">검증 → 수익화 → 구조 → 확장</h2>
+    <div class="road reveal" style="--i:2">
+      <div class="stage mvp"><span class="st">1단계 · MVP</span><span class="sh">태깅 · 검색 검증</span><span class="sd">재발견 행동 증가 확인. 검색 사용률 40%↑면 Go.</span></div>
+      <div class="stage mvp"><span class="st">2단계 · v1.1</span><span class="sh">수익화 (BM)</span><span class="sd">개인 대시보드 · 프리미엄 구독. 태그 편집 · 검색+필터.</span></div>
+      <div class="stage"><span class="st">3단계</span><span class="sh">품질 고도화</span><span class="sd">AI 요약 · 필터 조합 · Firefox 확장.</span></div>
+      <div class="stage"><span class="st">4단계 · v2</span><span class="sh">B2B 확장</span><span class="sd">팀 워크스페이스 · 공유 컬렉션 · 권한.</span></div>
+    </div>
+    <div class="pills reveal" style="--i:3">
+      <span class="pill blue">1~2단계 = MVP 검증 구간</span>
+      <span class="pill mint">Pocket 종료로 열린 국내 공백을 지금 선점</span>
+    </div>
+  </div>
+</section>
+
+<!-- 17 CLOSING -->
+<section class="slide cover">
+  <div class="slide-content">
+    <div class="eyebrow reveal">THANK YOU</div>
+    <h1 class="headline reveal" style="--i:1">저장하는 도구가 아니라,<br><span class="accent">다시 찾는 도구</span>로.</h1>
+    <div class="slogan reveal" style="--i:2">Save it. Find it. — 모와바</div>
+    <div class="brandline reveal" style="--i:3">AI CAMP 7기 2팀 · 경청해 주셔서 감사합니다</div>
+  </div>
+</section>
+
+</main>
+
+<script>
+(function () {
+    'use strict';
+    var slides = Array.from(document.querySelectorAll('.slide'));
+    var dotsNav = document.getElementById('navDots');
+    var progress = document.getElementById('progress');
+    var counter = document.getElementById('counter');
+    var current = 0;
+    var total = slides.length;
+
+    counter.innerHTML = '<b>01</b> / ' + String(total).padStart(2, '0');
+
+    slides.forEach(function (_, i) {
+        var b = document.createElement('button');
+        b.setAttribute('aria-label', (i + 1) + '번 슬라이드');
+        b.addEventListener('click', function () { goTo(i); });
+        dotsNav.appendChild(b);
+    });
+    var dots = Array.from(dotsNav.children);
+
+    function goTo(i) {
+        i = Math.max(0, Math.min(total - 1, i));
+        slides[i].scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function setActive(i) {
+        if (i === current) return;
+        current = i;
+        slides.forEach(function (s, k) { s.classList.toggle('active', k === i); });
+        dots.forEach(function (d, k) { d.classList.toggle('on', k === i); });
+        progress.style.width = (i / (total - 1) * 100) + '%';
+        counter.innerHTML = '<b>' + String(i + 1).padStart(2, '0') + '</b> / ' + String(total).padStart(2, '0');
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+            if (e.isIntersecting && e.intersectionRatio > 0.55) setActive(slides.indexOf(e.target));
+        });
+    }, { threshold: [0.55] });
+    slides.forEach(function (s) { io.observe(s); });
+
+    window.addEventListener('keydown', function (e) {
+        if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].indexOf(e.key) > -1) { e.preventDefault(); goTo(current + 1); }
+        else if (['ArrowUp', 'ArrowLeft', 'PageUp'].indexOf(e.key) > -1) { e.preventDefault(); goTo(current - 1); }
+        else if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+        else if (e.key === 'End') { e.preventDefault(); goTo(total - 1); }
+    });
+
+    var ty = null;
+    window.addEventListener('touchstart', function (e) { ty = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchend', function (e) {
+        if (ty === null) return;
+        var dy = e.changedTouches[0].clientY - ty;
+        if (Math.abs(dy) > 60) goTo(current + (dy < 0 ? 1 : -1));
+        ty = null;
+    }, { passive: true });
+
+    slides[0].classList.add('active');
+    setActive(0);
+})();
+</script>
+</body>
+</html>
