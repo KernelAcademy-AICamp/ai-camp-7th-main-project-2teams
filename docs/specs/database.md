@@ -492,3 +492,60 @@ DELETE FROM admin_users WHERE user_id = '<대상 user.id>';
 service_role 필요(SQL Editor 또는 `createAdminClient()`). 마이그레이션에는 특정 유저를 시드하지 않음(환경 비종속성) — **최초 관리자 부트스트랩**은 이 수동 SQL로. 이후 승격/강등은 `/admin/ops`의 AdminManager UI(`POST`/`DELETE /api/admin/admins`, `withAdmin` 게이팅·본인 강등 방지)로 처리한다. self-service(자기 승격) 경로는 없음.
 
 `front/lib/admin-auth.ts`의 `isAdmin(supabase)`가 호출자 세션으로 인자 없이 `is_admin` RPC를 호출 — RPC 에러 시 fail-closed(false).
+
+---
+
+## 이벤트 로그 — events 테이블 (A68, 마이그레이션 0030)
+
+North Star Input Metrics 계측용 raw 이벤트 적재. 4종: `bookmark_saved` / `tag_assigned` / `search_performed` / `search_result_clicked`. 집계는 조회 시점 GROUP BY(주간). 지표 정의·계측 지점은 `docs/specs/metrics.md` 참조.
+
+```sql
+CREATE TABLE events (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  type       TEXT NOT NULL,
+  meta       JSONB NOT NULL DEFAULT '{}',  -- embedding·content 등 민감정보 절대 금지
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 주간 집계(type·기간, user·기간)가 주 쿼리 → 복합 인덱스
+CREATE INDEX events_type_created_idx ON events (type, created_at DESC);
+CREATE INDEX events_user_created_idx ON events (user_id, created_at DESC);
+
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+
+-- 유저는 본인 이벤트만 insert(클라이언트 클릭 경로). select 정책 없음 = 조회는 service_role(관리자 집계) 전용
+CREATE POLICY events_insert_own ON events
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+```
+
+---
+
+## RPC 함수 — admin_metrics_weekly (A68, 마이그레이션 0031→0032)
+
+주간 North Star 지표 집계. 0031에서 최초 생성, 0032에서 시그니처 변경(drop 후 재생성):
+1. `auto_coverage`를 `meta->>'source' = 'auto'` 태깅으로 한정 — 수동 이벤트 유입으로 자동분류 비율 오염 방지
+2. `manual_retags` 컬럼 추가 — 자동 대비 수동 교정률 측정
+
+```sql
+CREATE FUNCTION admin_metrics_weekly(p_weeks int DEFAULT 8)
+RETURNS TABLE(
+  week            timestamptz,
+  new_saves       bigint,   -- bookmark_saved 수
+  auto_coverage   numeric,  -- source='auto' 태깅 중 auto_category 비율
+  search_success  numeric,  -- search_result_clicked / search_performed (분모 0 → 0)
+  active_curators bigint,   -- 같은 주에 저장 AND 검색 둘 다 한 유저 수
+  retrieved       bigint,   -- search_result_clicked 수
+  manual_retags   bigint    -- source='manual' 태깅 수
+)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+```
+
+`GRANT EXECUTE ... TO service_role` 전용 (`anon`/`authenticated`/`public` REVOKE). 호출 경로: `GET /api/admin/metrics` → `/admin/northstar`. 전체 정의: `supabase/migrations/0032_metrics_manual_retag.sql`.
+
+---
+
+## 백업 테이블 (마이그레이션 외 수동 생성)
+
+`0008_secure_backup_rls.sql`이 RLS를 활성화하는 백업 테이블 3종 — `bookmarks_backup_20260630`, `bookmarks_retag_backup`, `bookmarks_tags_backup_20260701` — 은 마이그레이션이 아닌 SQL Editor 수동 작업으로 생성됨. `CREATE TABLE ... AS SELECT` 스냅샷 성격이라 이 문서의 DDL 관리 대상 아님. 불필요해지면 수동 DROP.
