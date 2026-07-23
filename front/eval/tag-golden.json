@@ -5,7 +5,7 @@
     "description": "useEffect is a React Hook that lets you synchronize a component with an external system.",
     "gold": [
       "개발",
-      "프론트엔드",
+      "공식문서",
       "React"
     ]
   },
@@ -15,7 +15,7 @@
     "description": "Next.js의 캐싱 메커니즘과 최적화 가이드",
     "gold": [
       "개발",
-      "프론트엔드",
+      "아티클",
       "Next.js"
     ]
   },
@@ -25,7 +25,7 @@
     "description": "The official PostgreSQL manual covering SQL, administration and internals.",
     "gold": [
       "개발",
-      "데이터베이스",
+      "공식문서",
       "PostgreSQL"
     ]
   },
@@ -35,7 +35,7 @@
     "description": "Get started with Tailwind CSS utility-first framework.",
     "gold": [
       "개발",
-      "프론트엔드",
+      "공식문서",
       "Tailwind"
     ]
   },
@@ -45,7 +45,7 @@
     "description": "How to deploy and configure applications on Vercel.",
     "gold": [
       "개발",
-      "인프라",
+      "공식문서",
       "Vercel"
     ]
   },
@@ -55,7 +55,7 @@
     "description": "Django 공식 튜토리얼 — 모델·뷰·URL 라우팅.",
     "gold": [
       "개발",
-      "백엔드",
+      "공식문서",
       "Django"
     ]
   },
@@ -65,7 +65,7 @@
     "description": "Learn how to containerize applications with Docker.",
     "gold": [
       "개발",
-      "인프라",
+      "공식문서",
       "Docker"
     ]
   },
@@ -75,7 +75,7 @@
     "description": "The Promise object represents the eventual completion of an asynchronous operation.",
     "gold": [
       "개발",
-      "프론트엔드",
+      "공식문서",
       "JavaScript"
     ]
   },
@@ -85,7 +85,7 @@
     "description": "Kubernetes 핵심 개념 — Pod, Service, Deployment.",
     "gold": [
       "개발",
-      "인프라",
+      "공식문서",
       "Kubernetes"
     ]
   },
@@ -95,7 +95,7 @@
     "description": "Complete reference for the Stripe payments API.",
     "gold": [
       "개발",
-      "백엔드",
+      "공식문서",
       "Stripe"
     ]
   },
@@ -105,8 +105,8 @@
     "description": "We show that retrieval can be practically implemented using dense representations alone for open-domain QA.",
     "gold": [
       "AI/ML",
-      "RAG",
-      "논문"
+      "논문",
+      "RAG"
     ]
   },
   {
@@ -115,8 +115,8 @@
     "description": "Create a message with Claude models via the Anthropic API.",
     "gold": [
       "AI/ML",
-      "LLM",
-      "공식문서"
+      "공식문서",
+      "Claude"
     ]
   },
   {
@@ -125,7 +125,8 @@
     "description": "Mistral 7B large language model model card and weights.",
     "gold": [
       "AI/ML",
-      "LLM"
+      "공식문서",
+      "Mistral"
     ]
   },
   {
@@ -134,7 +135,7 @@
     "description": "LangChain은 LLM 애플리케이션 개발 프레임워크입니다.",
     "gold": [
       "AI/ML",
-      "LLM",
+      "공식문서",
       "LangChain"
     ]
   },
@@ -144,7 +145,7 @@
     "description": "An open source platform for the machine learning lifecycle.",
     "gold": [
       "AI/ML",
-      "MLOps",
+      "공식문서",
       "MLflow"
     ]
   },
@@ -154,7 +155,7 @@
     "description": "이미지 처리·컴퓨터 비전 라이브러리 OpenCV 튜토리얼.",
     "gold": [
       "AI/ML",
-      "컴퓨터비전",
+      "공식문서",
       "OpenCV"
     ]
   },
@@ -164,8 +165,8 @@
     "description": "Vision Transformer (ViT) applies the transformer architecture directly to image patches.",
     "gold": [
       "AI/ML",
-      "컴퓨터비전",
-      "논문"
+      "논문",
+      "컴퓨터비전"
     ]
   },
   {
@@ -174,7 +175,7 @@
     "description": "재사용 가능한 UI 컴포넌트 시스템 구축 가이드",
     "gold": [
       "디자인",
-      "UI/UX",
+      "도구",
       "Figma"
     ]
   },
@@ -184,7 +185,7 @@
     "description": "디자이너를 위한 노코드 웹사이트 빌더.",
     "gold": [
       "디자인",
-      "UI/UX",
+      "도구",
       "Framer"
     ]
   },
@@ -194,7 +195,8 @@
     "description": "디자이너 포트폴리오·UI 디자인 갤러리.",
     "gold": [
       "디자인",
-      "UI/UX"
+      "큐레이션",
+      "Dribbble"
     ]
   },
   {
@@ -203,7 +205,8 @@
     "description": "채용 공고 검색 및 지원.",
     "gold": [
       "비즈니스",
-      "커리어"
+      "도구",
+      "LinkedIn"
     ]
   },
   {
@@ -212,7 +215,8 @@
     "description": "창업·스타트업 운영 노하우 아티클 모음.",
     "gold": [
       "비즈니스",
-      "스타트업"
+      "큐레이션",
+      "Y Combinator"
     ]
   },
   {
@@ -363,7 +367,8 @@
     "title": "인벤 - 게임 그 이상을 추구하다",
     "description": "게임 뉴스·공략·커뮤니티 포털",
     "gold": [
-      "게임"
+      "게임",
+      "포럼"
     ]
   },
   {
@@ -372,7 +377,7 @@
     "description": "Next.js 서버 컴포넌트와 라우팅 정리",
     "gold": [
       "개발",
-      "프론트엔드",
+      "아티클",
       "Next.js"
     ]
   },
@@ -393,7 +398,8 @@
     "title": "Heroicons",
     "description": "Tailwind 제작팀이 만든 무료 SVG 아이콘 세트.",
     "gold": [
-      "디자인"
+      "디자인",
+      "큐레이션"
     ]
   },
   {
@@ -402,7 +408,7 @@
     "description": "구글의 디자인 시스템 가이드라인 — 컴포넌트·색상·타이포.",
     "gold": [
       "디자인",
-      "UI/UX",
+      "공식문서",
       "Material Design"
     ]
   },
@@ -411,7 +417,8 @@
     "title": "Unsplash — 무료 고화질 이미지",
     "description": "상업적으로 이용 가능한 무료 스톡 사진 라이브러리.",
     "gold": [
-      "디자인"
+      "디자인",
+      "큐레이션"
     ]
   },
   {
@@ -420,7 +427,7 @@
     "description": "실제 앱의 화면·플로우를 모은 UI/UX 디자인 레퍼런스.",
     "gold": [
       "디자인",
-      "UI/UX",
+      "큐레이션",
       "Mobbin"
     ]
   },
@@ -430,7 +437,8 @@
     "description": "기업 채용 공고 검색과 이력서 등록 취업 플랫폼.",
     "gold": [
       "비즈니스",
-      "커리어"
+      "도구",
+      "잡코리아"
     ]
   },
   {
@@ -439,7 +447,7 @@
     "description": "퍼포먼스 마케팅 핵심 지표 CPC의 정의와 활용.",
     "gold": [
       "비즈니스",
-      "마케팅",
+      "공식문서",
       "CPC"
     ]
   },
@@ -449,6 +457,7 @@
     "description": "스타트업의 초기 사용자 확보 전략 사례 분석.",
     "gold": [
       "비즈니스",
+      "아티클",
       "스타트업"
     ]
   },
@@ -525,7 +534,7 @@
     "description": "출처를 함께 제공하는 AI 검색·대화 어시스턴트.",
     "gold": [
       "AI/ML",
-      "LLM",
+      "도구",
       "Perplexity"
     ]
   },
@@ -646,7 +655,7 @@
     "description": "React useState 훅 사용법을 예제로 설명하는 단발 강좌.",
     "gold": [
       "개발",
-      "프론트엔드",
+      "강의",
       "React"
     ]
   },
@@ -722,7 +731,7 @@
     "description": "JSON Web Token 구조와 인증 토큰 검증 흐름 설명.",
     "gold": [
       "개발",
-      "보안",
+      "공식문서",
       "JWT"
     ]
   },
@@ -732,7 +741,7 @@
     "description": "React Native로 네이티브 모바일 앱 개발 시작하기.",
     "gold": [
       "개발",
-      "모바일",
+      "공식문서",
       "React Native"
     ]
   },
@@ -742,7 +751,7 @@
     "description": "주제별 오픈소스 프로젝트를 모은 awesome 리스트 저장소.",
     "gold": [
       "개발",
-      "오픈소스"
+      "큐레이션"
     ]
   },
   {
@@ -751,7 +760,7 @@
     "description": "pandas 데이터프레임 조작·집계·분석 가이드.",
     "gold": [
       "AI/ML",
-      "데이터분석",
+      "공식문서",
       "Pandas"
     ]
   },
@@ -761,7 +770,7 @@
     "description": "상업적으로 이용 가능한 무료 한글 글꼴 모음.",
     "gold": [
       "디자인",
-      "그래픽",
+      "큐레이션",
       "폰트"
     ]
   },
@@ -771,7 +780,7 @@
     "description": "브랜드 아이덴티티를 담는 로고 디자인 기본 원칙.",
     "gold": [
       "디자인",
-      "브랜딩",
+      "아티클",
       "로고"
     ]
   },
@@ -781,7 +790,7 @@
     "description": "제품 요구사항 문서(PRD) 구조와 작성 방법.",
     "gold": [
       "비즈니스",
-      "기획",
+      "아티클",
       "PRD"
     ]
   },
@@ -882,6 +891,7 @@
     "description": "프론트엔드 개발자를 위한 실무 강의. React·Next.js·TypeScript 중심 채널.",
     "gold": [
       "개발",
+      "강의",
       "프론트엔드"
     ]
   },
@@ -890,7 +900,8 @@
     "title": "노마드 코더 Nomad Coders - YouTube",
     "description": "웹·앱 풀스택 개발을 클론코딩으로 배우는 프로그래밍 강의 채널.",
     "gold": [
-      "개발"
+      "개발",
+      "강의"
     ]
   },
   {
@@ -927,7 +938,7 @@
     "description": "실무 UI/UX 디자인과 Figma 활용법을 소개하는 채널.",
     "gold": [
       "디자인",
-      "UI/UX"
+      "강의"
     ]
   },
   {
@@ -983,7 +994,8 @@
     "title": "토스 기술 블로그, 토스 테크",
     "description": "토스 개발팀의 프론트엔드·백엔드·인프라 기술 아티클 모음.",
     "gold": [
-      "개발"
+      "개발",
+      "아티클"
     ]
   },
   {
@@ -991,7 +1003,8 @@
     "title": "우아한형제들 기술블로그",
     "description": "배달의민족 개발자들이 쓰는 서버·프론트엔드 기술 블로그.",
     "gold": [
-      "개발"
+      "개발",
+      "아티클"
     ]
   },
   {
@@ -1018,7 +1031,7 @@
     "description": "IT 업계 트렌드·일하는 방식을 다루는 종합 매거진.",
     "gold": [
       "콘텐츠",
-      "블로그"
+      "아티클"
     ]
   },
   {
@@ -1027,7 +1040,7 @@
     "description": "모바일 플랫폼별 UI 가이드라인 차이를 정리한 디자인 아티클.",
     "gold": [
       "디자인",
-      "UI/UX"
+      "아티클"
     ]
   },
   {
@@ -1036,7 +1049,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "도구",
+      "Claude"
     ]
   },
   {
@@ -1045,7 +1059,8 @@
     "description": "Gemini은 Google이 만든 대화형 AI 어시스턴트로, 텍스트·이미지·코드 생성을 지원합니다.",
     "gold": [
       "AI/ML",
-      "LLM"
+      "도구",
+      "Gemini"
     ],
     "source": "extension"
   },
@@ -1055,7 +1070,8 @@
     "description": "",
     "gold": [
       "비즈니스",
-      "데이터"
+      "도구",
+      "KOSIS"
     ]
   },
   {
@@ -1063,7 +1079,8 @@
     "title": "https://www.behance.net/",
     "description": "Behance — 크리에이티브 디자인 포트폴리오 공유 플랫폼.",
     "gold": [
-      "디자인"
+      "디자인",
+      "큐레이션"
     ],
     "source": "extension"
   },
@@ -1073,7 +1090,8 @@
     "description": "",
     "gold": [
       "비즈니스",
-      "커리어"
+      "도구",
+      "사람인"
     ]
   },
   {
@@ -1101,8 +1119,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
-      "강의"
+      "강의",
+      "NotebookLM"
     ]
   },
   {
@@ -1110,7 +1128,8 @@
     "title": "I'm Wonism!",
     "description": "",
     "gold": [
-      "콘텐츠"
+      "콘텐츠",
+      "아티클"
     ],
     "source": "webapp"
   },
@@ -1120,7 +1139,8 @@
     "description": "Creatify — AI로 광고·마케팅 영상을 자동 생성하는 도구.",
     "gold": [
       "비즈니스",
-      "마케팅"
+      "도구",
+      "Creatify"
     ],
     "source": "extension"
   },
@@ -1129,7 +1149,9 @@
     "title": "Leonardo AI",
     "description": "Leonardo AI — 생성형 AI 이미지·아트 제작 플랫폼.",
     "gold": [
-      "AI/ML"
+      "AI/ML",
+      "도구",
+      "Leonardo"
     ],
     "source": "extension"
   },
@@ -1139,8 +1161,8 @@
     "description": "ElevenLabs — AI 음성 합성 및 텍스트 음성 변환(TTS) API 플랫폼.",
     "gold": [
       "AI/ML",
-      "음성합성",
-      "API"
+      "도구",
+      "ElevenLabs"
     ],
     "source": "extension"
   },
@@ -1168,8 +1190,8 @@
     "description": "",
     "gold": [
       "개발",
-      "보안",
-      "API"
+      "강의",
+      "보안"
     ]
   },
   {
@@ -1205,7 +1227,8 @@
     "description": "",
     "gold": [
       "개발",
-      "인프라"
+      "강의",
+      "CI/CD"
     ]
   },
   {
@@ -1214,8 +1237,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
-      "강의"
+      "강의",
+      "Graphify"
     ]
   },
   {
@@ -1224,8 +1247,8 @@
     "description": "",
     "gold": [
       "개발",
-      "프론트엔드",
-      "템플릿"
+      "큐레이션",
+      "Claude Code"
     ]
   },
   {
@@ -1234,8 +1257,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
-      "클로드"
+      "강의",
+      "Claude Code"
     ]
   },
   {
@@ -1254,7 +1277,7 @@
     "description": "",
     "gold": [
       "개발",
-      "자동화",
+      "강의",
       "n8n"
     ]
   },
@@ -1274,7 +1297,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "큐레이션"
     ]
   },
   {
@@ -1292,8 +1315,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
-      "강의"
+      "강의",
+      "Claude Code"
     ]
   },
   {
@@ -1302,7 +1325,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "강의"
     ]
   },
   {
@@ -1311,7 +1334,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "강의",
+      "Claude Code"
     ]
   },
   {
@@ -1320,7 +1344,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "강의"
     ]
   },
   {
@@ -1330,7 +1354,7 @@
     "gold": [
       "AI/ML",
       "강의",
-      "OpenAI Codex"
+      "Codex"
     ]
   },
   {
@@ -1349,7 +1373,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "강의",
+      "하네스"
     ]
   },
   {
@@ -1368,8 +1393,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "강의",
-      "아이디어"
+      "강의"
     ]
   },
   {
@@ -1387,8 +1411,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
-      "강의"
+      "강의",
+      "Claude Code"
     ]
   },
   {
@@ -1407,7 +1431,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
+      "강의",
       "프롬프트"
     ]
   },
@@ -1426,6 +1450,7 @@
     "description": "",
     "gold": [
       "개발",
+      "강의",
       "보안"
     ]
   },
@@ -1435,7 +1460,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "강의"
     ]
   },
   {
@@ -1444,8 +1469,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
-      "강의"
+      "강의",
+      "Claude Code"
     ]
   },
   {
@@ -1463,7 +1488,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "강의"
     ]
   },
   {
@@ -1472,7 +1497,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "강의",
+      "하네스"
     ]
   },
   {
@@ -1512,7 +1538,7 @@
     "gold": [
       "개발",
       "강의",
-      "클로드"
+      "Claude Code"
     ]
   },
   {
@@ -1541,7 +1567,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
+      "강의",
       "Codex"
     ]
   },
@@ -1551,7 +1577,7 @@
     "description": "",
     "gold": [
       "개발",
-      "프론트엔드",
+      "강의",
       "시스템디자인"
     ]
   },
@@ -1571,7 +1597,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "가이드"
+      "아티클"
     ]
   },
   {
@@ -1579,8 +1605,8 @@
     "title": "운전하면서 코딩을 할 수 있는 방법(Feat.아이언맨 자비스)",
     "description": "",
     "gold": [
-      "라이프스타일",
-      "운전"
+      "AI/ML",
+      "강의"
     ]
   },
   {
@@ -1598,7 +1624,7 @@
     "description": "",
     "gold": [
       "개발",
-      "인프라"
+      "강의"
     ]
   },
   {
@@ -1607,7 +1633,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "강의",
+      "Obsidian"
     ]
   },
   {
@@ -1616,7 +1643,8 @@
     "description": "",
     "gold": [
       "비즈니스",
-      "기획"
+      "큐레이션",
+      "템플릿"
     ]
   },
   {
@@ -1625,7 +1653,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "강의"
     ]
   },
   {
@@ -1634,7 +1662,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "공식문서",
+      "Omnigent"
     ]
   },
   {
@@ -1663,7 +1692,7 @@
     "gold": [
       "AI/ML",
       "강의",
-      "하네스 엔지니어링"
+      "하네스"
     ]
   },
   {
@@ -1692,8 +1721,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
-      "가이드"
+      "아티클",
+      "Claude"
     ]
   },
   {
@@ -1712,8 +1741,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
-      "가이드"
+      "아티클",
+      "Claude Code"
     ]
   },
   {
@@ -1722,7 +1751,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
+      "강의",
       "헤르메스"
     ]
   },
@@ -1733,7 +1762,7 @@
     "gold": [
       "AI/ML",
       "강의",
-      "헤르메스 에이전트"
+      "헤르메스"
     ]
   },
   {
@@ -1742,7 +1771,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "비용절감"
+      "강의"
     ]
   },
   {
@@ -1751,7 +1780,8 @@
     "description": "",
     "gold": [
       "비즈니스",
-      "커리어"
+      "도구",
+      "NARRIVO"
     ]
   },
   {
@@ -1760,7 +1790,7 @@
     "description": "",
     "gold": [
       "개발",
-      "프론트엔드",
+      "강의",
       "바이브코딩"
     ]
   },
@@ -1770,8 +1800,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM",
-      "강의"
+      "강의",
+      "Claude Code"
     ]
   },
   {
@@ -1780,6 +1810,7 @@
     "description": "",
     "gold": [
       "비즈니스",
+      "큐레이션",
       "템플릿"
     ]
   },
@@ -1800,7 +1831,7 @@
     "gold": [
       "AI/ML",
       "강의",
-      "AGENTS"
+      "AGENTS.md"
     ]
   },
   {
@@ -1817,7 +1848,7 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "아티클"
     ]
   },
   {
@@ -1826,8 +1857,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "RAG",
-      "LLM"
+      "아티클",
+      "RAG"
     ]
   },
   {
@@ -1836,8 +1867,8 @@
     "description": "",
     "gold": [
       "개발",
-      "프론트엔드",
-      "옵시디언"
+      "강의",
+      "Obsidian"
     ]
   },
   {
@@ -1846,7 +1877,8 @@
     "description": "",
     "gold": [
       "비즈니스",
-      "기획"
+      "큐레이션",
+      "템플릿"
     ]
   },
   {
@@ -1873,7 +1905,9 @@
     "title": "클로바노트",
     "description": "",
     "gold": [
-      "커뮤니티"
+      "AI/ML",
+      "도구",
+      "클로바노트"
     ],
     "source": "webapp"
   },
@@ -1910,7 +1944,7 @@
     "description": "",
     "gold": [
       "콘텐츠",
-      "블로그"
+      "아티클"
     ]
   },
   {
@@ -1938,7 +1972,8 @@
     "description": "정부 및 공공기관이 보유한 공공데이터를 개방하는 통합 창구입니다.",
     "gold": [
       "비즈니스",
-      "데이터"
+      "도구",
+      "공공데이터포털"
     ]
   },
   {
@@ -1947,7 +1982,8 @@
     "description": "",
     "gold": [
       "AI/ML",
-      "LLM"
+      "도구",
+      "ChatGPT"
     ]
   },
   {
@@ -1956,7 +1992,8 @@
     "description": "Suno is building a future where anyone can make great music.",
     "gold": [
       "AI/ML",
-      "음악생성"
+      "도구",
+      "Suno"
     ]
   }
 ]

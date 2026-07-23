@@ -120,6 +120,8 @@ export const TAG_ALIAS: Record<string, string> = {
   // 기타 툴명 한/영·오타 통일
   커서: 'Cursor', 커서Ai: 'Cursor', 커서AI: 'Cursor',
   헤르메스: 'Hermes Agent', '헤르메스 에이전트': 'Hermes Agent', 에르메스: 'Hermes Agent',
+  '에르메스 에이전트': 'Hermes Agent', 헤르메스에이전트: 'Hermes Agent', 에르메스에이전트: 'Hermes Agent',
+  Hermes: 'Hermes Agent', 'hermes agent': 'Hermes Agent', hermesagent: 'Hermes Agent',
   하네스: '하네스엔지니어링', '하네스 엔지니어링': '하네스엔지니어링',
   노션: 'Notion', 리액트: 'React', 자바스크립트: 'JavaScript', JIRA: 'Jira',
   'UX/UI': 'UI/UX',
