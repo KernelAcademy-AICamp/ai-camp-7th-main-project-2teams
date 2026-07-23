@@ -30,7 +30,13 @@ export function AdminTabs() {
   return (
     <div className="flex items-end justify-between border-b border-line pb-4">
       <div>
-        <div className="text-xs font-medium tracking-wide text-text-secondary">내부 운영</div>
+        <div className="flex items-center gap-2 text-xs font-medium tracking-wide text-text-secondary">
+          <Link href="/" className="transition-colors hover:text-text-primary">
+            ← 메인으로
+          </Link>
+          <span aria-hidden="true">·</span>
+          <span>내부 운영</span>
+        </div>
         <nav className="mt-1 flex gap-4" aria-label="어드민 섹션">
           {TABS.map((t) => {
             const active = pathname === t.href
