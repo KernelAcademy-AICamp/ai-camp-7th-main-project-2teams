@@ -311,6 +311,9 @@ N-3~N-5(2026-07-22): 검색 품질 일괄 개선 — 상세는 `lib/__tests__/se
   전량 재임베딩. A/B 실측(AI/ML 233건) recall@10 0.70→0.85 근거. 사후 weak-vector 0/3→2/3, noise 오탐 0.
 - n=26, overall 실측 0.923. 게이트: `OVERALL_RECALL_BASELINE=0.85`, `NON_WEAK_VECTOR_RECALL_BASELINE=0.9`.
 
+라이브 재검증(2026-07-23): 골든셋 재실행 → overall 0.923(24/26) 재현, miss 패턴 동일(weak-vector 1 + particle 1),
+게이트 통과. DB 카운트(read-only): 전체 1,020건·embedding 보유 100%·weak 경로(description 없음) 260건.
+
 ---
 
 ## 카테고리 구조
