@@ -31,29 +31,29 @@ html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
     --body-size: clamp(0.75rem, 1.45vw, 1.05rem);
     --small-size: clamp(0.65rem, 1vw, 0.85rem);
     --mono-size: clamp(0.62rem, 1vw, 0.82rem);
-    --slide-padding: clamp(1.25rem, 5vw, 4.5rem);
-    --content-gap: clamp(0.5rem, 2vw, 1.8rem);
-    --element-gap: clamp(0.25rem, 1vw, 0.9rem);
+    --slide-padding: clamp(1.75rem, 6.5vw, 6rem);
+    --content-gap: clamp(0.8rem, 2.8vw, 2.6rem);
+    --element-gap: clamp(0.3rem, 1vw, 1rem);
 
-    /* Mowaba light palette (DESIGN.md) */
-    --bg: #F7F9FB;
-    --bg-tint: #F1F6F5;
+    /* 미니멀 2색 시스템 — 잉크 + 강조 블루 하나 (원칙: 색은 둘이면 충분) */
+    --bg: #FAFAF8;
+    --bg-tint: #F3F4F1;
     --card: #FFFFFF;
-    --line: #E2E8F0;
-    --line-soft: #EDF1F5;
-    --primary: #4A90E2;      /* Vibrant Blue */
-    --primary-deep: #005DA7;
-    --deep: #2D3E50;         /* Deep Blue */
-    --mint: #159E86;
-    --mint-soft: #48C9B0;
-    --tertiary: #006859;
-    --warning: #E08A00;
-    --danger: #E24A5B;
-    --text: #1E293B;
-    --text-2: #475569;
-    --text-3: #64748B;
-    --shadow: 0 4px 14px -6px rgba(45,62,80,0.18);
-    --shadow-lg: 0 12px 34px -12px rgba(45,62,80,0.24);
+    --line: #E7E7E1;
+    --line-soft: #EFEFEA;
+    --primary: #2E6FD6;      /* 유일 강조색 */
+    --primary-deep: #2E6FD6;
+    --deep: #1A1D21;         /* 잉크 (구 색 띠 → 중립) */
+    --mint: #6B7280;         /* 중립화 */
+    --mint-soft: #9AA0A8;
+    --tertiary: #6B7280;
+    --warning: #6B7280;      /* semantic 색 제거 → 중립 */
+    --danger: #6B7280;
+    --text: #1A1D21;
+    --text-2: #52565C;
+    --text-3: #9AA0A8;
+    --shadow: none;          /* 진한 그림자 빼기 → hairline 테두리로 */
+    --shadow-lg: none;
 }
 
 body {
@@ -63,17 +63,7 @@ body {
 }
 .bg-atmos {
     position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background:
-      radial-gradient(1000px 600px at 85% 8%, rgba(72,201,176,0.10), transparent 60%),
-      radial-gradient(900px 620px at 8% 96%, rgba(74,144,226,0.08), transparent 60%),
-      var(--bg);
-}
-.bg-atmos::after {
-    content:""; position:absolute; inset:0; opacity:0.6;
-    background-image: radial-gradient(rgba(45,62,80,0.10) 1px, transparent 1.3px);
-    background-size: 40px 40px;
-    mask-image: linear-gradient(180deg, #000, transparent 85%);
-    -webkit-mask-image: linear-gradient(180deg, #000, transparent 85%);
+    background: var(--bg);   /* 플랫 지면 — 텍스처·클립아트 빼기 */
 }
 
 /* ===== type ===== */
@@ -100,15 +90,12 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
 .card h3 { font-size: var(--h3-size); font-weight: 700; letter-spacing: -0.02em; }
 .card p { font-size: var(--body-size); color: var(--text-3); line-height: 1.45; }
 .card .kicker { font-size: var(--small-size); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mint); }
-.card.bar { border-left: 4px solid var(--primary); }
-.card.bar.mint { border-left-color: var(--mint-soft); }
-.card.bar.deep { border-left-color: var(--deep); }
-.card.bar.warn { border-left-color: var(--warning); }
-.card.bar.danger { border-left-color: var(--danger); }
+/* 색 띠 빼기 — 좌측 컬러바 제거, 중립 카드로 통일 */
+.card.bar, .card.bar.mint, .card.bar.deep, .card.bar.warn, .card.bar.danger { border-left: 1px solid var(--line); }
 .card .idx { font-family:'JetBrains Mono',monospace; font-weight:500; color: var(--primary); font-size: var(--small-size); }
 
 .panel { background: var(--card); border: 1px solid var(--line); border-radius: 1rem; padding: clamp(0.9rem,2vw,1.5rem); box-shadow: var(--shadow); }
-.panel.tint { background: linear-gradient(160deg, rgba(72,201,176,0.10), rgba(255,255,255,0.9)); border-color: rgba(21,158,134,0.28); }
+.panel.tint { background: var(--bg-tint); border-color: var(--line); }
 .panel .plabel { font-size: var(--small-size); font-weight: 700; color: var(--mint); letter-spacing: 0.08em; margin-bottom: 0.6em; }
 
 /* pills */
@@ -169,8 +156,8 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
 .pblock li::before { content: "·"; position: absolute; left: 0.15em; color: var(--primary); font-weight: 700; }
 
 /* big stat */
-.stat-big { font-size: clamp(3.5rem, 11vw, 8rem); font-weight: 900; line-height: 0.88; letter-spacing: -0.05em;
-    background: linear-gradient(120deg, var(--primary), var(--mint-soft)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stat-big { font-size: clamp(4rem, 13vw, 9.5rem); font-weight: 800; line-height: 0.86; letter-spacing: -0.05em;
+    color: var(--primary); font-variant-numeric: tabular-nums; }
 .stat-cap { font-size: var(--body-size); color: var(--text-3); line-height: 1.5; margin-top: 0.5em; }
 .stat-cap b { color: var(--mint); }
 
@@ -178,7 +165,7 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
 .kpis { display: flex; gap: clamp(1rem,3vw,2.4rem); flex-wrap: wrap; margin-top: 0.3em; }
 .kpis .k { display: flex; flex-direction: column; }
 .kpis .k .n { font-size: clamp(1.4rem,3.4vw,2.3rem); font-weight: 800; letter-spacing: -0.02em; }
-.kpis .k:nth-child(1) .n { color: var(--primary); } .kpis .k:nth-child(2) .n { color: var(--mint); } .kpis .k:nth-child(3) .n { color: var(--warning); }
+.kpis .k .n { color: var(--text); } .kpis .k:first-child .n { color: var(--primary); } /* 강조는 첫 지표 하나만 */
 .kpis .k .l { font-size: var(--small-size); color: var(--text-3); margin-top: 0.15em; }
 
 /* A/B compare */
@@ -232,7 +219,7 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
 .nav-dots { position: fixed; right: clamp(0.7rem,1.6vw,1.3rem); top: 50%; transform: translateY(-50%); z-index: 20; display: flex; flex-direction: column; gap: 0.6em; }
 .nav-dots button { width: 8px; height: 8px; border-radius: 999px; border: none; padding: 0; cursor: pointer; background: rgba(45,62,80,0.22); transition: all .3s ease; }
 .nav-dots button.on { background: var(--primary); transform: scale(1.5); }
-.progress { position: fixed; top: 0; left: 0; height: 3px; z-index: 25; width: 0; background: linear-gradient(90deg, var(--primary), var(--mint-soft)); transition: width .3s ease; }
+.progress { position: fixed; top: 0; left: 0; height: 2px; z-index: 25; width: 0; background: var(--primary); transition: width .3s ease; }
 .khint { position: fixed; bottom: clamp(0.7rem,2vh,1.2rem); left: clamp(1rem,3vw,2.4rem); z-index: 20; font-size: var(--small-size); color: var(--text-3); opacity: 0.7; font-family:'JetBrains Mono',monospace; }
 
 /* reveal */
