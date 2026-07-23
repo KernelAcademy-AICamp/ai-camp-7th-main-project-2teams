@@ -4,6 +4,7 @@ import { searchSchema } from '@/lib/schemas'
 import { createEmbedding } from '@/lib/ai'
 import { UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { expandSearchQuery } from '@/lib/search-alias'
+import { logEvent } from '@/lib/events'
 
 type SearchRow = Record<string, unknown> & {
   id: string
@@ -86,6 +87,13 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   const results = [...merged.values()]
     .sort((a, b) => scoreOf(b) - scoreOf(a))
     .slice(0, SEARCH_TOP_K)
+
+  // North Star 계측: 검색 성공률(= search_result_clicked / search_performed) 분모.
+  // 0건일 때만 쿼리 원문 수집 — alias 누락·어휘 갭 발굴용. 결과 있는 쿼리는 미수집(수집 최소화).
+  await logEvent(supabase, user.id, 'search_performed', {
+    result_count: results.length,
+    ...(results.length === 0 ? { query: parsed.data.query } : {}),
+  })
 
   return NextResponse.json({ results })
 })

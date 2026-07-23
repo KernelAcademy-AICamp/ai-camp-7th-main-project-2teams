@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { withAuth } from '@/lib/auth'
 import { bookmarkCreateSchema } from '@/lib/schemas'
-import { generateTags, createEmbedding } from '@/lib/ai'
+import { generateTags, createEmbedding, buildWeakEmbeddingText, generateWeakSummary } from '@/lib/ai'
 import { normalizeTags, extractTopCategory, UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
 import { fetchMeta, isDeadStatus } from '@/lib/fetchMeta'
 import { isSafeHttpUrl } from '@/lib/ssrf'
 import { normalizeUrl } from '@/lib/normalizeUrl'
+import { logEvents } from '@/lib/events'
 
 const getQuerySchema = z.object({
   tab: z.string().optional(),
@@ -65,9 +66,19 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   if (!hasContent) logger.warn('[weak-vector]', { url, title, user_id: user.id, reason: 'content 없음 — title 전용 임베딩' })
 
   // 태깅 + 임베딩 병렬 실행 → 응답시간 단축. embeddingContent는 이 스코프 안에서만 사용 후 파기.
+  // content 없으면(weak-vector) 태그를 먼저 받아 임베딩에 포함 — 직렬화 지연은 content 실패 경로에서만.
+  // 태깅까지 실패하면 기존처럼 title 전용으로 degrade.
+  const tagsPromise = generateTags({ title, url, description: embeddingContent })
   const [tagsResult, embeddingResult] = await Promise.allSettled([
-    generateTags({ title, url, description: embeddingContent }),
-    createEmbedding(hasContent ? `${title}\n${embeddingContent}` : title),
+    tagsPromise,
+    hasContent
+      ? createEmbedding(`${title}\n${embeddingContent}`)
+      : Promise.all([
+          tagsPromise.catch(() => [] as string[]), // 태깅 실패 → 태그 없이 진행
+          generateWeakSummary({ title, url }), // 실패 시 내부에서 '' degrade
+        ]).then(([tags, summary]) =>
+          createEmbedding(buildWeakEmbeddingText(title, normalizeTags(tags), summary)),
+        ),
   ])
 
   // 임베딩 실패 = 검색 불가 → 검색 못 하는 북마크 저장 안 함(502).
@@ -120,6 +131,15 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     }
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  // North Star 계측: 저장 + AI 자동분류 결과 기록(커버리지 지표 = auto_category 비율).
+  await logEvents(supabase, user.id, [
+    { type: 'bookmark_saved', meta: { has_content: hasContent } },
+    {
+      type: 'tag_assigned',
+      meta: { source: 'auto', auto_category: category_id !== null, tag_count: tags.length },
+    },
+  ])
 
   // category(대분류명)는 이미 위에서 계산된 top 재사용 — 추가 조인 불필요
   return NextResponse.json({ bookmark: { ...data, category: top } }, { status: 201 })

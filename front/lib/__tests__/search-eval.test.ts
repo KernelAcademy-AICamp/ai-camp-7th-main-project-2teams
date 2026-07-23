@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { scoreQuery, aggregateSearch, type SearchScore } from '../search-eval'
-import { createEmbedding } from '../ai'
+import { createEmbedding, buildWeakEmbeddingText, generateWeakSummary } from '../ai'
 import { expandSearchQuery } from '../search-alias'
 
 // 지표 함수 단위 테스트 — 항상 실행 (OpenAI/DB 미호출).
@@ -70,7 +70,16 @@ describe('aggregateSearch', () => {
 // n=12→14. weak-vector 전건 miss 최악 시 non-weak 11/14=0.786 → overall baseline 0.83→0.75 재보정.
 // 회귀 아니라 알려진 약점 표본 증가에 따른 분모 확대(태깅 골든셋 0.82→0.76과 동일 논리).
 // 진짜 품질 게이트는 NON_WEAK_VECTOR_RECALL_BASELINE(weak-vector 제외 0.90) — 그대로 유지.
-const OVERALL_RECALL_BASELINE = 0.75 // 비-weak 11/14=0.786 − 마진(weak-vector 3건 miss 전제)
+// N-3(2026-07-22): conversational 8건 추가(시간참조·지시어·행위어 쿼리). 도입 시 실측 0.25(2/8) →
+// stripConversationalNoise + 토큰 단위 브랜드 치환(search-alias.ts) 후 1.0(8/8). 게이트 정식 편입.
+// N-4(2026-07-22): particle 4건 추가(조사 변형). 도입 시 0.5(2/4) → 조사 제거 alias fallback 후 0.75(3/4).
+// 잔여 1건("리액트를 처음 배울 때 본 문서"↔useEffect 레퍼런스)은 라벨 자체가 느슨한 known miss.
+// weak-vector도 임베딩 태그·요약 보강으로 코사인 0.23→0.43(2배)까지 올렸으나 floor 0.5 미달 지속 —
+// 3-small 분리력 한계(노이즈 밴드 0.3~0.48와 겹침), 모델 A/B 대상.
+// N-5(2026-07-22): 임베딩 모델 3-large(dimensions:1536) 전환 + 전량 재임베딩(1000건, 실패 0).
+// weak-vector 0/3→2/3(옵시디언·Zotero floor 통과 — A/B 예측 적중), noise 오탐 0 유지. 실측 24/26=0.923.
+// n=26. 최악(weak 1 + particle 1 miss) 24/26=0.923 − 마진.
+const OVERALL_RECALL_BASELINE = 0.85
 const NON_WEAK_VECTOR_RECALL_BASELINE = 0.9 // weak-vector 제외 실측 1.0 − 마진
 interface GoldenBookmark {
   ref: string
@@ -115,7 +124,13 @@ async function runSearchGolden(
 
   try {
     for (const b of golden.bookmarks) {
-      const embedding = await createEmbedding(`${b.title}\n${b.description}`)
+      // 프로덕션 규약 미러: description(content 대역) 있으면 title+description,
+      // 없으면 weak 경로(title+LLM 한줄요약+태그) — app/api/bookmarks/route.ts와 동일.
+      const embedding = await createEmbedding(
+        b.description
+          ? `${b.title}\n${b.description}`
+          : buildWeakEmbeddingText(b.title, b.tags, await generateWeakSummary({ title: b.title, url: b.url })),
+      )
       const { data, error } = await supabase
         .from('bookmarks')
         .insert({ user_id: userId, url: b.url, title: b.title, description: b.description, tags: b.tags, embedding })

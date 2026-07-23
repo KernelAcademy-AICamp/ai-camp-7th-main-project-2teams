@@ -44,6 +44,39 @@ describe('expandSearchQuery', () => {
     expect(expandSearchQuery('  피그마  ')).toEqual(['피그마', 'Figma'])
   })
 
+  // 대화형 쿼리 — 시간참조·지시어·행위어 노이즈 제거 (search-golden conversational 실측 2/8 대응)
+  it('시간참조·지시어·행위어 토큰 제거 후 확장', () => {
+    expect(expandSearchQuery('지난달 저장한 그 pgvector 아티클')).toEqual(['pgvector 아티클'])
+    expect(expandSearchQuery('그 리액트 훅 글')).toEqual(['리액트 훅 글', 'React 훅 글'])
+  })
+
+  it('노이즈 제거 후 문장 속 브랜드 토큰도 원어 변형 추가', () => {
+    expect(expandSearchQuery('그때 봤던 테일윈드 설치 문서')).toEqual([
+      '테일윈드 설치 문서',
+      'Tailwind 설치 문서',
+    ])
+  })
+
+  it('노이즈 토큰만으로 이뤄진 쿼리는 원문 유지 (빈 쿼리 방지)', () => {
+    expect(expandSearchQuery('지난달 본')).toEqual(['지난달 본'])
+  })
+
+  // 조사 붙은 브랜드 토큰 — 정확일치 실패 시 조사 제거 후 alias 재조회 (search-golden particle 실측 2/4 대응)
+  it('조사 붙은 브랜드 토큰도 원어 변형 생성', () => {
+    expect(expandSearchQuery('피그마로 디자인 배우는 법')).toEqual([
+      '피그마로 디자인 배우는 법',
+      'Figma 디자인 배우는 법',
+    ])
+    expect(expandSearchQuery('리액트를 처음 배울 때 본 문서')).toEqual([
+      '리액트를 처음 배울 때 문서',
+      'React 처음 배울 때 문서',
+    ])
+  })
+
+  it('조사 제거 결과가 사전에 없으면 원토큰 유지 (오절단 방지)', () => {
+    expect(expandSearchQuery('한글로 검색')).toEqual(['한글로 검색'])
+  })
+
   it('사전에 등록된 모든 한글 키는 유효한 영문 값을 가짐', () => {
     for (const [ko, en] of Object.entries(SEARCH_ALIAS)) {
       expect(ko.length).toBeGreaterThan(0)

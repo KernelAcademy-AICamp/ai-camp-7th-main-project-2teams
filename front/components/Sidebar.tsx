@@ -49,11 +49,19 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const fetchUser = useUserStore((s) => s.fetchUser);
   const [email, setEmail] = useState<string | null>(null);
   const [emailLoaded, setEmailLoaded] = useState(false);
+  // 어드민 여부 — is_admin() RPC는 호출자 본인만 조회(admin-auth.ts 참조).
+  // 링크 노출용 UI 판별일 뿐, 실제 접근 제어는 /admin layout 404 게이트가 담당.
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
   useEffect(() => {
     fetchUser().then((user) => {
       setEmail(user?.email ?? null);
       setEmailLoaded(true);
+      if (user) {
+        createClient()
+          .rpc("is_admin")
+          .then(({ data }) => setIsAdminUser(data === true));
+      }
     });
   }, [fetchUser]);
 
@@ -290,6 +298,18 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
                   설정
                 </Link>
               </li>
+              {isAdminUser && (
+                <li>
+                  <Link
+                    href="/admin"
+                    onClick={() => setPopupOpen(false)}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm text-text-primary hover:bg-slate-50"
+                  >
+                    <span className="text-text-secondary">›</span>
+                    어드민
+                  </Link>
+                </li>
+              )}
               <li>
                 <button
                   onClick={handleSignOut}

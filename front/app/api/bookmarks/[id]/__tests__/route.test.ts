@@ -37,9 +37,11 @@ const categoriesUpsertSpy = vi.fn()
 const selectArgSpy = vi.fn()
 const deleteSpy = vi.fn()
 const eqSpy = vi.fn() // .eq(col, val) 인자 기록 — user_id 격리 검증용
+const eventInsertSpy = vi.fn() // events.insert 인자 기록 — 수동 재태깅 계측 검증용
 
 vi.mock('@/lib/ai', () => ({
   createEmbedding: vi.fn(async () => [0.1, 0.2, 0.3]),
+  buildWeakEmbeddingText: (t: string) => t,
 }))
 
 // bookmarks.update 체인: 메인 업데이트는 .eq().eq().select().single(),
@@ -110,6 +112,14 @@ vi.mock('@/lib/supabase/server', () => ({
           },
         }
       }
+      if (table === 'events') {
+        return {
+          insert(rows: unknown) {
+            eventInsertSpy(rows)
+            return Promise.resolve({ error: null })
+          },
+        }
+      }
       return {
         update(payload: Record<string, unknown>) {
           bookmarksUpdateSpy(payload)
@@ -148,6 +158,7 @@ describe('PATCH /api/bookmarks/:id', () => {
     categoriesUpsertSpy.mockReset()
     selectArgSpy.mockReset()
     eqSpy.mockReset()
+    eventInsertSpy.mockReset()
     vi.mocked(createEmbedding).mockClear()
     updateResult = { data: baseBookmarkRow(), error: null }
     embeddingUpdateResult = { error: null }
@@ -227,6 +238,29 @@ describe('PATCH /api/bookmarks/:id', () => {
     expect(bookmarksUpdateSpy.mock.calls[0][0]).toEqual({ tags: ['프론트엔드'] })
     expect(categoriesUpsertSpy).not.toHaveBeenCalled()
     expect(createEmbedding).not.toHaveBeenCalled()
+  })
+
+  it('태그 변경 → tag_assigned{source:manual} 계측 1건 적재', async () => {
+    updateResult = { data: { ...baseBookmarkRow(), tags: ['프론트엔드'] }, error: null }
+    await PATCH(patchReq({ tags: ['프론트엔드'] }), { params })
+    expect(eventInsertSpy).toHaveBeenCalledTimes(1)
+    const rows = eventInsertSpy.mock.calls[0][0] as Array<Record<string, unknown>>
+    expect(rows[0]).toMatchObject({
+      user_id: 'u1',
+      type: 'tag_assigned',
+      meta: { source: 'manual', tags_changed: true, tag_count: 1 },
+    })
+  })
+
+  it('is_favorite 단독 수정 → 계측 미적재 (태깅 무관)', async () => {
+    await PATCH(patchReq({ is_favorite: true }), { params })
+    expect(eventInsertSpy).not.toHaveBeenCalled()
+  })
+
+  it('description 단독 수정 → 계측 미적재', async () => {
+    updateResult = { data: { ...baseBookmarkRow(), description: 'd' }, error: null }
+    await PATCH(patchReq({ description: 'd' }), { params })
+    expect(eventInsertSpy).not.toHaveBeenCalled()
   })
 
   it('카테고리만 변경(유효한 대분류) → categories upsert 후 category_id 반영', async () => {

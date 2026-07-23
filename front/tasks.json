@@ -724,6 +724,19 @@
         "A7"
       ],
       "testStrategy": "비관리자 계정으로 /admin 접속 → 404 확인. 관리자 계정 → OKR 타일·카테고리 랭킹막대(BarList)·성장/트렌딩/건강·OpenAI 사용량 위젯 노출, range 탭 전환 시 URL·데이터 갱신 확인. 카테고리 막대 클릭 → ?category= 쿼리 반영·모달 표시·새로고침 시 복원 확인. AdminManager 승격(422 미존재)·강등(본인 강등 400) 확인. API 응답에 embedding/content/user_id 미포함 검증. 상세: docs/specs/e2e/admin.md."
+    },
+    {
+      "id": "A68",
+      "title": "North Star 이벤트 계측 4종 + 집계·대시보드",
+      "description": "PRD 원래 범위 밖 — PM이 발의한 그로스 계측 인프라. North Star(주간 되찾은 북마크 수) 파이프라인 전 단계: 이벤트 계측 → 집계 → 대시보드.",
+      "details": "①계측: supabase/migrations/0030_events.sql — events 테이블(RLS: authenticated 본인 insert만, 조회 service_role 전용). front/lib/events.ts — 계측 헬퍼(실패 삼킴으로 UX 비차단, CLIENT_LOGGABLE 화이트리스트). 서버 이벤트 bookmark_saved·tag_assigned(POST /api/bookmarks)·search_performed(POST /api/search)는 서버 성공 시점에만 기록 → 위조 차단. search_result_clicked만 클라 수집(POST /api/events, fetch keepalive). 수동 재태깅 tag_assigned{source:'manual'}은 PATCH /api/bookmarks/:id 태그·카테고리 편집 시. ②집계: admin_metrics_weekly(0031, 주간 5지표 별자리; 0032에서 manual_retags 컬럼 + auto_coverage를 source=auto로 한정). ③대시보드: GET /api/admin/metrics + 전용 'North Star' 탭(front/app/admin/northstar, NorthStarMetrics — range 무관 주간 8주 고정). docs/specs/metrics.md에 NSM·매핑·실측 전환 절차 문서화. A67(관리자 대시보드)의 OKR 타일 데이터원. PR #270·#271·#272·#273·#274.",
+      "priority": "medium",
+      "status": "done",
+      "dependencies": [
+        "A5",
+        "A7"
+      ],
+      "testStrategy": "북마크 저장 → events에 bookmark_saved+tag_assigned 2행 적재. 검색 실행 → search_performed(meta.result_count). 검색 결과 클릭 → search_result_clicked(meta.bookmark_id·rank). 카드 태그/카테고리 편집 → tag_assigned{source:manual}. anon 키 insert → 401(RLS). POST /api/events에 비화이트리스트 type → 400. admin_metrics_weekly service_role 200(manual_retags 포함)·anon 401. API 응답에 embedding/content 미포함 검증."
     }
   ]
 }

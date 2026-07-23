@@ -81,44 +81,64 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-### 북마크 목록 훅 예시 (A9)
+### 북마크 목록 훅 예시 (A9, A62 무한 스크롤 전환)
 
 ```typescript
 // hooks/useBookmarks.ts
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query'
 
-interface Bookmark {
+export interface Bookmark {
   id: string
   title: string
   url: string
-  description: string | null      // 사용자 입력 설명 (A60)
-  thumbnail_url: string | null    // og:image/YouTube 썸네일 URL (/api/thumbnail 프록시로 표시)
+  description?: string | null     // 사용자 입력 설명 (A60)
   tags: string[]
   category_id: string | null
-  category: string | null         // categories.name 조인 (GET /api/account 등)
+  category?: string | null        // category_id → 이름 조인 (GET /api/bookmarks만 제공) — 카드 수정 모달 default 선택용
   is_favorite: boolean
+  folder_hint: string[] | null    // 파일 임포트 시 원본 폴더 경로, 익스텐션 저장은 null
+  thumbnail_url?: string | null   // og:image/YouTube 썸네일 원본 URL — 직접 렌더링 금지, /api/thumbnail 프록시 경유
   is_dead: boolean                // 저장 시점 404/410 감지 — 카드에 "링크 끊김" 배지(비차단)
-  folder_hint: string[] | null   // 파일 임포트 시 원본 폴더 경로, 익스텐션 저장은 null
   created_at: string
 }
 
-export function useBookmarks(filters: {
-  tab?: 'all' | 'favorites' | 'categories' | 'folders'
+interface BookmarksFilters {
+  tab?: string
   category?: string
-  folder?: string    // 내 폴더 탭 선택 시 folder_hint[0] 값
+  folder?: string[]  // 루트부터 선택 노드까지 전체 경로 — API 전달 시 '/'로 조인(동명이인 폴더 구분)
   tag?: string
-  sort?: 'created_at' | 'similarity'
-}) {
-  return useQuery({
+}
+
+export interface BookmarksPage {
+  bookmarks: Bookmark[]
+  total: number
+}
+
+const PAGE_SIZE = 20 // GET /api/bookmarks limit 기본값과 동일 — 백엔드 계약 그대로 소비
+
+// A62: useQuery → useInfiniteQuery. GET /api/bookmarks의 page/limit/total을 소비.
+export function useBookmarks(filters: BookmarksFilters) {
+  return useInfiniteQuery({
     queryKey: ['bookmarks', filters],
-    queryFn: async (): Promise<{ bookmarks: Bookmark[]; total: number }> => {
+    queryFn: async ({ pageParam }): Promise<BookmarksPage> => {
+      const { folder, ...rest } = filters
       const params = new URLSearchParams(
-        Object.fromEntries(Object.entries(filters).filter(([, v]) => v != null)) as Record<string, string>
+        Object.fromEntries(Object.entries(rest).filter(([, v]) => v != null)) as Record<string, string>
       )
+      if (folder && folder.length > 0) params.set('folder', folder.join('/'))
+      params.set('page', String(pageParam))
+      params.set('limit', String(PAGE_SIZE))
       const res = await fetch(`/api/bookmarks?${params}`)
       if (!res.ok) throw new Error('Failed to fetch')
       return res.json()
     },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.flatMap((p) => p.bookmarks).length
+      return loaded < lastPage.total ? allPages.length + 1 : undefined
+    },
+    staleTime: 1000 * 60,
+    gcTime: 1000 * 60 * 5,
     placeholderData: keepPreviousData,
   })
 }
@@ -551,15 +571,19 @@ front/
 │   │   │   └── route.ts          # GET — 썸네일 프록시(SSRF 가드), DB/스토리지 영구 저장 없음
 │   │   ├── account/
 │   │   │   └── route.ts          # DELETE(A14) + GET(A15, category:categories(name) join)
+│   │   ├── events/
+│   │   │   └── route.ts          # POST — A68 클라이언트 이벤트 적재 (CLIENT_LOGGABLE 화이트리스트만)
 │   │   └── admin/                # A67 — 내부 운영 대시보드 API (withAdmin 게이팅, 비관리자 404)
 │   │       ├── stats/route.ts        # GET — OKR·카테고리·성장·트렌딩·건강 집계 + 태그 드릴다운
 │   │       ├── openai-usage/route.ts # GET — OpenAI 사용량 위젯
+│   │       ├── metrics/route.ts      # GET — A68 admin_metrics_weekly RPC 주간 지표
 │   │       └── admins/route.ts       # GET 목록 + POST 승격(email) + DELETE 강등(본인 강등 방지)
 │   ├── admin/                     # A67 — 관리자 대시보드 (성장/운영 라우트 분리)
 │   │   ├── layout.tsx             # 공통 게이트(isAdmin, 비관리자 404) + AdminTabs 네비, 하위 페이지 공유
 │   │   ├── page.tsx               # /admin → /admin/growth redirect
 │   │   ├── growth/page.tsx        # 마케팅·그로스(OKR·성장추이·카테고리·트렌딩)
-│   │   └── ops/page.tsx           # 운영·개발(건강·OpenAI 사용량·관리자 관리)
+│   │   ├── ops/page.tsx           # 운영·개발(건강·OpenAI 사용량·관리자 관리)
+│   │   └── northstar/page.tsx     # A68 — North Star 주간 지표 대시보드
 │   ├── onboarding/                # A26 — 온보딩 별도 페이지 (MVP)
 │   │   ├── page.tsx
 │   │   ├── OnboardingContent.tsx  # 스텝 UI + 노출 제어
@@ -578,6 +602,7 @@ front/
 │   ├── auth.ts                    # withAuth HOF (A3)
 │   ├── admin-auth.ts              # withAdmin HOF (A67) — withAuth 위 is_admin() 게이팅, 비관리자 404
 │   ├── admin-range.ts             # A67 — range(1d/7d/30d) 파싱 + rangeToInterval
+│   ├── events.ts                  # A68 — logEvent(s) 헬퍼. 이벤트 4종, CLIENT_LOGGABLE 화이트리스트, 실패 시 UX 비차단
 │   ├── schemas.ts                 # bookmarkSchema, searchSchema, bookmarkUpdateSchema(A60: is_favorite/tags/category/description)
 │   ├── parseNetscapeBookmarks.ts  # HTML 임포트 파싱 (A29). 자체 내보내기분은 TAGS/DATA_CATEGORY 속성 복원
 │   ├── parseKakaoChat.ts         # 카카오톡 채팅 내보내기 CSV(Date,User,Message) 파싱 — Message 내 URL만 추출, 대화 본문 미보관

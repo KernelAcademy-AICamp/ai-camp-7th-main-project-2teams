@@ -3,7 +3,7 @@
 # 북마크 AI 관리 서비스
 
 ![MVP](https://img.shields.io/badge/MVP-25%2F25_done-2f8f5f?style=flat-square)
-![Tasks](https://img.shields.io/badge/Tasks-63%2F64_done-2f8f5f?style=flat-square)
+![Tasks](https://img.shields.io/badge/Tasks-66%2F67_done-2f8f5f?style=flat-square)
 ![Web](https://img.shields.io/badge/Web-Next.js_16-111111?style=flat-square)
 ![Extension](https://img.shields.io/badge/Extension-Manifest_V3-2f6fbb?style=flat-square)
 ![DB](https://img.shields.io/badge/DB-pgvector-6a4fa0?style=flat-square)
@@ -20,10 +20,10 @@ AI Camp 7기 메인 프로젝트 (2팀).
 | ---------- | -------------------------------------- |
 | 웹앱 + API | Next.js 16 App Router (Route Handlers) |
 | 익스텐션   | Chrome Extension Manifest V3           |
-| 인증       | Supabase Auth + Google OAuth 전용      |
+| 인증       | Supabase Auth + Google · Kakao OAuth   |
 | DB         | PostgreSQL + pgvector 0.7+ (Supabase)  |
 | AI 태깅    | OpenAI `gpt-4o-mini`                   |
-| AI 임베딩  | OpenAI `text-embedding-3-small`        |
+| AI 임베딩  | OpenAI `text-embedding-3-large`        |
 | 호스팅     | Vercel (웹앱) + Supabase (DB/Auth)     |
 
 ---
@@ -35,16 +35,16 @@ flowchart LR
   User(("사용자"))
   Ext["Chrome Extension<br/>Manifest V3"]
   Web["Next.js 16 Web App<br/>Route Handlers"]
-  Auth["Supabase Auth<br/>Google OAuth"]
+  Auth["Supabase Auth<br/>Google · Kakao OAuth"]
   DB[("Supabase Postgres<br/>+ pgvector")]
-  AI["OpenAI<br/>gpt-4o-mini · text-embedding-3-small"]
+  AI["OpenAI<br/>gpt-4o-mini · text-embedding-3-large"]
 
   User -->|북마크 저장| Ext
   User -->|검색 · 열람| Web
   Ext -->|"POST /api/bookmarks"| Web
   Web --> Auth
   Web -->|태깅 · 임베딩| AI
-  Web -->|"CRUD + 벡터 검색"| DB
+  Web -->|"CRUD + 하이브리드 검색<br/>(벡터+트라이그램 RRF)"| DB
   Auth -.세션.-> Ext
 ```
 
@@ -54,7 +54,7 @@ flowchart LR
 
 ## 진행 현황
 
-`tasks/README.md` §구현 순서 기준, MVP 핵심 의존관계만 축약. 전체 65개 태스크는 `tasks/README.md` 참조.
+`tasks/README.md` §구현 순서 기준, MVP 핵심 의존관계만 축약. 전체 67개 태스크는 `tasks/README.md` 참조.
 
 ```mermaid
 flowchart TD
@@ -85,11 +85,12 @@ front/              # Next.js 웹앱 + API Route Handlers
       search/
       account/
     (dashboard)/    # 인증 필요 페이지
-    login/          # Google OAuth 버튼
+    admin/          # 관리자 대시보드 (growth · ops · northstar)
+    login/          # Google · Kakao OAuth 버튼
     auth/callback/  # OAuth 콜백 핸들러
     privacy/
     terms/
-  tasks.json        # 웹앱 태스크 A1~A16, A26~A65
+  tasks.json        # 웹앱 태스크 A1~A16, A26~A68 (A51 삭제)
 
 extension/          # Chrome Extension
   manifest.json
@@ -102,14 +103,14 @@ docs/
   specs/            # 기술 스펙 (database, nextjs-supabase, extension, openai, shadcn,
                      # design-system, tag-taxonomy, alias, testing, dev-flow,
                      # backfill, automation, onboarding-modal,
-                     # import-progress-background-jobs, tag-eval-redesign)
+                     # import-progress-background-jobs, tag-eval-redesign, metrics)
 
 scripts/
   prd.md            # PRD
   feature-spec.md / ia-design.md / requirements-definition.md / research.md 등 기획 문서
 
 tasks/
-  README.md         # 전체 태스크 인덱스 (A1~A65) + 알려진 이슈/백로그
+  README.md         # 전체 태스크 인덱스 (A1~A68) + 알려진 이슈/백로그
 ```
 
 ---
@@ -137,3 +138,4 @@ tasks/
 | 온보딩 모달 스펙            | `docs/specs/onboarding-modal.md`                 |
 | 임포트 진행률/백그라운드 잡 스펙 | `docs/specs/import-progress-background-jobs.md` |
 | 태그 평가 리디자인 스펙     | `docs/specs/tag-eval-redesign.md`                |
+| 지표(North Star) 스펙       | `docs/specs/metrics.md`                          |

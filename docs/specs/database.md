@@ -36,7 +36,7 @@ CREATE TABLE bookmarks (
   is_dead     BOOLEAN     NOT NULL DEFAULT false,       -- 저장 시점 404/410 감지 (마이그레이션 0021)
   description TEXT,                                     -- 사용자 입력 설명 (A60, 마이그레이션 0013). content(본문) 아님 — 프라이버시 정책과 무관
   thumbnail_url TEXT,                                    -- og:image/YouTube 썸네일 URL만 저장 (마이그레이션 0017), 이미지 자체는 미저장
-  embedding   vector(1536),                              -- text-embedding-3-small (A51 bge-m3 롤백, 마이그레이션 0006)
+  embedding   vector(1536),                              -- text-embedding-3-large dimensions:1536 (2026-07-22 전환, 구 3-small·A51 bge-m3 롤백, 마이그레이션 0006). 모델 변경 시 scripts/reembed.ts 전량 재실행 필수
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT bookmarks_user_url_unique UNIQUE (user_id, url) -- A35: 동일 사용자 URL 중복 저장 방지 (마이그레이션 0003)
 );
@@ -302,7 +302,17 @@ CREATE TABLE IF NOT EXISTS search_trgm_tag_exclusions (
 실측(text-embedding-3-small): exact·synonym·cross-lingual·tag-only·noise 전부 1.0, weak-vector만 0 —
 description 없는 북마크는 title-only 임베딩이라 의미 검색 재현 안 되는 구조적 한계(회귀 아님, known limitation).
 N-2(2026-07-15, 5dfccf3): weak-vector 표본 1→3 확대(n=12→14), 최악 시 overall recall 11/14=0.786.
-회귀 게이트는 이 실패를 전제로 분리: `OVERALL_RECALL_BASELINE=0.75`(0.83에서 분모 확대 재보정), `NON_WEAK_VECTOR_RECALL_BASELINE=0.9`.
+
+N-3~N-5(2026-07-22): 검색 품질 일괄 개선 — 상세는 `lib/__tests__/search-eval.test.ts` 상단 주석.
+- conversational 8건 추가(시간참조·지시어·행위어): 0.25 → `stripConversationalNoise`+토큰 브랜드 치환 후 1.0
+- particle 4건 추가(조사 변형): 0.5 → 조사 제거 alias fallback 후 0.75(잔여 1건 느슨한 라벨 known miss)
+- weak 경로 임베딩 보강: 태그 + LLM 한줄요약(`generateWeakSummary`) 포함
+- **임베딩 모델 전환**: text-embedding-3-large `dimensions:1536`(스키마·인덱스 불변) + `scripts/reembed.ts`
+  전량 재임베딩. A/B 실측(AI/ML 233건) recall@10 0.70→0.85 근거. 사후 weak-vector 0/3→2/3, noise 오탐 0.
+- n=26, overall 실측 0.923. 게이트: `OVERALL_RECALL_BASELINE=0.85`, `NON_WEAK_VECTOR_RECALL_BASELINE=0.9`.
+
+라이브 재검증(2026-07-23): 골든셋 재실행 → overall 0.923(24/26) 재현, miss 패턴 동일(weak-vector 1 + particle 1),
+게이트 통과. DB 카운트(read-only): 전체 1,020건·embedding 보유 100%·weak 경로(description 없음) 260건.
 
 ---
 
@@ -485,3 +495,60 @@ DELETE FROM admin_users WHERE user_id = '<대상 user.id>';
 service_role 필요(SQL Editor 또는 `createAdminClient()`). 마이그레이션에는 특정 유저를 시드하지 않음(환경 비종속성) — **최초 관리자 부트스트랩**은 이 수동 SQL로. 이후 승격/강등은 `/admin/ops`의 AdminManager UI(`POST`/`DELETE /api/admin/admins`, `withAdmin` 게이팅·본인 강등 방지)로 처리한다. self-service(자기 승격) 경로는 없음.
 
 `front/lib/admin-auth.ts`의 `isAdmin(supabase)`가 호출자 세션으로 인자 없이 `is_admin` RPC를 호출 — RPC 에러 시 fail-closed(false).
+
+---
+
+## 이벤트 로그 — events 테이블 (A68, 마이그레이션 0030)
+
+North Star Input Metrics 계측용 raw 이벤트 적재. 4종: `bookmark_saved` / `tag_assigned` / `search_performed` / `search_result_clicked`. 집계는 조회 시점 GROUP BY(주간). 지표 정의·계측 지점은 `docs/specs/metrics.md` 참조.
+
+```sql
+CREATE TABLE events (
+  id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  type       TEXT NOT NULL,
+  meta       JSONB NOT NULL DEFAULT '{}',  -- embedding·content 등 민감정보 절대 금지
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 주간 집계(type·기간, user·기간)가 주 쿼리 → 복합 인덱스
+CREATE INDEX events_type_created_idx ON events (type, created_at DESC);
+CREATE INDEX events_user_created_idx ON events (user_id, created_at DESC);
+
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+
+-- 유저는 본인 이벤트만 insert(클라이언트 클릭 경로). select 정책 없음 = 조회는 service_role(관리자 집계) 전용
+CREATE POLICY events_insert_own ON events
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+```
+
+---
+
+## RPC 함수 — admin_metrics_weekly (A68, 마이그레이션 0031→0032)
+
+주간 North Star 지표 집계. 0031에서 최초 생성, 0032에서 시그니처 변경(drop 후 재생성):
+1. `auto_coverage`를 `meta->>'source' = 'auto'` 태깅으로 한정 — 수동 이벤트 유입으로 자동분류 비율 오염 방지
+2. `manual_retags` 컬럼 추가 — 자동 대비 수동 교정률 측정
+
+```sql
+CREATE FUNCTION admin_metrics_weekly(p_weeks int DEFAULT 8)
+RETURNS TABLE(
+  week            timestamptz,
+  new_saves       bigint,   -- bookmark_saved 수
+  auto_coverage   numeric,  -- source='auto' 태깅 중 auto_category 비율
+  search_success  numeric,  -- search_result_clicked / search_performed (분모 0 → 0)
+  active_curators bigint,   -- 같은 주에 저장 AND 검색 둘 다 한 유저 수
+  retrieved       bigint,   -- search_result_clicked 수
+  manual_retags   bigint    -- source='manual' 태깅 수
+)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+```
+
+`GRANT EXECUTE ... TO service_role` 전용 (`anon`/`authenticated`/`public` REVOKE). 호출 경로: `GET /api/admin/metrics` → `/admin/northstar`. 전체 정의: `supabase/migrations/0032_metrics_manual_retag.sql`.
+
+---
+
+## 백업 테이블 (마이그레이션 외 수동 생성)
+
+`0008_secure_backup_rls.sql`이 RLS를 활성화하는 백업 테이블 3종 — `bookmarks_backup_20260630`, `bookmarks_retag_backup`, `bookmarks_tags_backup_20260701` — 은 마이그레이션이 아닌 SQL Editor 수동 작업으로 생성됨. `CREATE TABLE ... AS SELECT` 스냅샷 성격이라 이 문서의 DDL 관리 대상 아님. 불필요해지면 수동 DROP.

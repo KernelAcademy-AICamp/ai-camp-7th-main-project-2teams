@@ -94,7 +94,12 @@ function flashBadge(text, color) {
 // 몇 초 걸리는데, 프라미스를 리턴 안 하면 그 사이 SW가 유휴 종료되어 배지 콜백이 못 불림.
 chrome.commands.onCommand.addListener(async (command) => {
   if (command !== 'save-bookmark') return
-  const result = await saveCurrentTab()
+  // 저장 중 표시 — AI 태깅으로 수 초 걸리는 동안 무반응처럼 보이는 문제 방지.
+  // setTimeout 없이 유지, 완료 시 결과 flashBadge가 덮어씀.
+  chrome.action.setBadgeText({ text: '…' })
+  chrome.action.setBadgeBackgroundColor({ color: '#94a3b8' }) // slate — 진행 중
+  // 네트워크 예외로 reject되면 배지가 '…'로 고정되므로 error 객체로 흡수
+  const result = await saveCurrentTab().catch((e) => ({ error: String(e) }))
   if (result?.duplicate) {
     flashBadge('!', '#f1c40f') // Mowaba warning
   } else if (result?.error) {

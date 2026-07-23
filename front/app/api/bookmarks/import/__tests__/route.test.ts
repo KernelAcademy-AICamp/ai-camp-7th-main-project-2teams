@@ -5,7 +5,7 @@ const { generateTags, createEmbedding } = vi.hoisted(() => ({
   generateTags: vi.fn(),
   createEmbedding: vi.fn(),
 }))
-vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding }))
+vi.mock('@/lib/ai', () => ({ generateTags, createEmbedding, buildWeakEmbeddingText: (t: string) => t, generateWeakSummary: async () => '' }))
 
 // A52: 임포트가 fetchMeta로 description 조회 — 실네트워크 차단, 기본 빈 메타 반환
 const { fetchMeta } = vi.hoisted(() => ({ fetchMeta: vi.fn() }))
@@ -362,6 +362,28 @@ describe('POST /api/bookmarks/import', () => {
     const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
     const inserted = calls.find((c) => c[0].url === 'https://kakao-import-test.com/article')
     expect(inserted?.[0].title).toBe('Kakao 실제 제목')
+  })
+
+  it('카카오 CSV 유튜브 공유링크(youtu.be·?si=) → normalizeUrl이 형태를 바꿔도 fetchMeta title로 승격', async () => {
+    // 회귀: placeholder title은 원본 URL, dedupeBatch가 url만 canonical로 교체하면 title!==url이 되어
+    // 승격 조건이 깨지던 버그. 유튜브 공유링크는 normalizeUrl이 항상 youtube.com/watch?v= 로 바꿔 반드시 걸림.
+    const csv = [
+      'Date,User,Message',
+      '2023-09-15 03:39:04,"김재균","https://youtu.be/dQw4w9WgXcQ?si=shareToken123"',
+    ].join('\n')
+    fetchMeta.mockResolvedValue({
+      title: '유튜브 실제 제목',
+      description: '',
+      content: '',
+    })
+
+    const res = await POST(makeReq(makeFile(csv, 'chat.csv')))
+    const events = await readAllEvents(res)
+    expect(readFinalResult(events).imported).toBe(1)
+
+    const calls: Array<Array<Record<string, unknown>>> = insertSpy.mock.calls
+    const inserted = calls.find((c) => c[0].url === 'https://youtube.com/watch?v=dQw4w9WgXcQ')
+    expect(inserted?.[0].title).toBe('유튜브 실제 제목')
   })
 
   it('HTML 임포트(title!==url) → fetchMeta title이 달라도 원래 파싱된 title 유지(승격 안 함)', async () => {

@@ -18,7 +18,7 @@ AI Camp 7기 메인 프로젝트 (2팀). GitHub Classroom 과제 저장소.
 ```
 front/       # Next.js 16 App Router (웹앱 + API Route Handlers)
 extension/   # Chrome Extension Manifest V3
-docs/        # 기술 스펙 문서 (specs/)
+docs/        # 기술 스펙 문서 (specs/) + 발표자료·평가 계획 등
 scripts/     # PRD 등 기획 문서
 tasks/       # 태스크 인덱스
 ```
@@ -40,7 +40,7 @@ tasks/       # 태스크 인덱스
 ## 핵심 결정 사항
 
 - **별도 서버 없음**: API는 `front/app/api/` Route Handler로 처리. Vercel 서버리스 배포.
-- **태스크 ID 체계**: A1~A16 (front), A17~A25 (extension). `tasks/README.md` 참조.
+- **태스크 ID 체계**: A1~A16·A26~A68 (front, A51 삭제), A17~A25 (extension). `tasks/README.md` 참조.
 - **인증**: Google, Kakao OAuth (Supabase Auth, A63). 이메일/비밀번호 로그인 없음.
 - **환경변수**: `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`는 `NEXT_PUBLIC_` 접두어 금지 — 서버사이드 전용.
 - **embedding 컬럼**: API 응답에 절대 포함하지 않음.

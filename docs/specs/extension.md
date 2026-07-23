@@ -12,7 +12,8 @@ extension/
 ├── build.js               # esbuild — dist/background.js, dist/content.js 번들 (define으로 env 주입)
 ├── lib/
 │   ├── config.js          # SUPABASE_URL/ANON_KEY/WEB_APP_URL — 빌드 타임 define, 로컬 fallback
-│   └── supabase.js        # chrome.storage.local 어댑터 + supabase 클라이언트 (싱글톤)
+│   ├── supabase.js        # chrome.storage.local 어댑터 + supabase 클라이언트 (싱글톤)
+│   └── formatBookmarkPreview.js  # 카테고리/태그 미리보기 텍스트 — popup 토스트·백그라운드 알림 공용 (A22)
 ├── background/
 │   └── index.js           # Service Worker (A18, A20, A21, A24) — dist/background.js로 빌드
 ├── content/
@@ -35,7 +36,7 @@ extension/
   "name": "Mowaba",
   "version": "0.1.0",
   "description": "AI 북마크 관리 — 자동 태깅 및 자연어 검색",
-  "permissions": ["activeTab", "storage", "scripting"],
+  "permissions": ["activeTab", "storage", "scripting", "notifications"],
   "host_permissions": [
     "http://localhost:3000/*",
     "https://*.vercel.app/*"
@@ -67,7 +68,7 @@ extension/
 }
 ```
 
-> `host_permissions`/content_scripts `matches`는 웹앱 도메인(localhost·vercel.app)으로 최소화 — `<all_urls>`/`tabs`/`history`/`bookmarks` 미사용. 외부 페이지 본문 수집은 `activeTab`+`scripting`으로 커버(아래 §탭 정보 수집 참조).
+> `host_permissions`/content_scripts `matches`는 웹앱 도메인(localhost·vercel.app)으로 최소화 — `<all_urls>`/`tabs`/`history`/`bookmarks` 미사용. 외부 페이지 본문 수집은 `activeTab`+`scripting`으로 커버(아래 §탭 정보 수집 참조). `notifications`는 단축키 저장 성공 시 태그 미리보기 알림 전용(아래 §단축키 저장 피드백).
 
 ---
 
@@ -219,10 +220,50 @@ async function saveCurrentTab() {
   return res.json()
 }
 
-chrome.commands.onCommand.addListener((command) => {
-  if (command === 'save-bookmark') saveCurrentTab()
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command !== 'save-bookmark') return
+  // 진행 중 배지 — 완료 시 결과 flashBadge가 덮어씀
+  chrome.action.setBadgeText({ text: '…' })
+  chrome.action.setBadgeBackgroundColor({ color: '#94a3b8' })
+  const result = await saveCurrentTab().catch((e) => ({ error: String(e) }))
+  if (result?.duplicate) {
+    flashBadge('!', '#f1c40f')       // warning
+  } else if (result?.error) {
+    flashBadge('!', '#e74c3c')       // danger
+  } else {
+    flashBadge('✓', '#48c9b0')       // mint
+    // 배지는 텍스트를 못 담아 태그 미리보기(A22)를 알림으로 표시 — 성공 시에만
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL('icons/icon128.png'),
+      title: '저장 완료',
+      message: formatBookmarkPreview(result?.bookmark),
+    })
+  }
 })
 ```
+
+### 단축키 저장 피드백 (배지 + 알림)
+
+팝업이 닫힌 상태의 단축키 저장은 토스트를 못 띄우므로 액션 배지로 상태 표시:
+
+| 상태 | 배지 | 색 |
+|------|------|-----|
+| 진행 중 | `…` | slate (`#94a3b8`) |
+| 성공 | `✓` | mint (`#48c9b0`) + `chrome.notifications` 태그 미리보기 |
+| 중복 | `!` | warning (`#f1c40f`) |
+| 실패 | `!` | danger (`#e74c3c`) |
+
+```javascript
+// background/index.js — 결과 배지 2초 후 자동 소거
+function flashBadge(text, color) {
+  chrome.action.setBadgeText({ text })
+  chrome.action.setBadgeBackgroundColor({ color })
+  setTimeout(() => chrome.action.setBadgeText({ text: '' }), 2000)
+}
+```
+
+> 리스너는 async로 두고 `await`까지 마쳐야 크롬이 Service Worker를 살려둠 — 서버 AI 태깅 fetch가 수 초 걸리는 동안 프라미스를 리턴하지 않으면 SW 유휴 종료로 배지 콜백이 유실된다.
 
 ---
 
@@ -285,14 +326,15 @@ async function signOutAndPurge() {
 - **duplicate**: 서버 안내 메시지 그대로 노출(A59), 3초 후 자동 닫힘 — error와 톤 구분
 
 ```javascript
-// popup.js — 저장 완료 토스트
-function showToast(state) {
-  if (state.type === 'success') {
-    const category = state.bookmark?.category_id ? `[${state.bookmark.category_id}] ` : ''
-    const tags = state.bookmark?.tags?.length ? state.bookmark.tags.join(' · ') : '태그 없음'
-    // '✓ 저장 완료' + `${category}${tags}` 렌더 후 3초 뒤 자동 닫힘(hidden 처리, 팝업 자체는 유지)
-  }
+// lib/formatBookmarkPreview.js — popup 토스트·백그라운드 알림 공용 (A22)
+export function formatBookmarkPreview(bookmark) {
+  const category = bookmark?.category ? `[${bookmark.category}] ` : ''  // 카테고리 이름 (category_id 아님)
+  const tags = bookmark?.tags?.length ? bookmark.tags.join(' · ') : '태그 없음'
+  return `${category}${tags}`
 }
+
+// popup.js — 저장 완료 토스트: '✓ 저장 완료' + formatBookmarkPreview(state.bookmark)
+// 렌더 후 3초 뒤 자동 닫힘(hidden 처리, 팝업 자체는 유지)
 ```
 
 ---

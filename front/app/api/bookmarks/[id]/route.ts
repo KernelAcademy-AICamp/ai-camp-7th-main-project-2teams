@@ -3,9 +3,10 @@ import { z } from 'zod'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth'
 import { bookmarkUpdateSchema } from '@/lib/schemas'
-import { createEmbedding } from '@/lib/ai'
+import { createEmbedding, buildWeakEmbeddingText } from '@/lib/ai'
 import { resolveTopCategory, normalizeTags, extractTopCategory } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
+import { logEvent } from '@/lib/events'
 
 // 명시 컬럼 — embedding 누출 방지 (select('*') 금지)
 const SELECT_COLUMNS =
@@ -48,12 +49,13 @@ async function reembedIfDescriptionChanged(
   supabase: SupabaseClient,
   userId: string,
   id: string,
-  bookmark: { title: string; description: string | null },
+  bookmark: { title: string; description: string | null; tags: string[] | null },
 ): Promise<void> {
   try {
+    // description 삭제 시 title 전용(weak-vector)으로 떨어지지 않게 태그 포함 — POST weak 경로와 동일 규약.
     const text = bookmark.description
       ? `${bookmark.title}\n${bookmark.description}`
-      : bookmark.title
+      : buildWeakEmbeddingText(bookmark.title, bookmark.tags ?? [])
     const embedding = await createEmbedding(text)
     const { error: embeddingError } = await supabase
       .from('bookmarks')
@@ -134,6 +136,18 @@ export const PATCH = withAuth<{ params: Promise<{ id: string }> }>(
 
     if (description !== undefined) {
       await reembedIfDescriptionChanged(ctx.supabase, ctx.user.id, id, data)
+    }
+
+    // North Star 계측: 수동 재태깅(태그·카테고리 편집)만 기록 → 자동 대비 수동 교정률 측정.
+    // 즐겨찾기·설명 단독 수정은 태깅과 무관하므로 제외.
+    if (tags !== undefined || category !== undefined) {
+      await logEvent(ctx.supabase, ctx.user.id, 'tag_assigned', {
+        source: 'manual',
+        auto_category: false,
+        tag_count: Array.isArray(data.tags) ? data.tags.length : 0,
+        category_changed: category !== undefined,
+        tags_changed: tags !== undefined,
+      })
     }
 
     return NextResponse.json({ bookmark: data })
