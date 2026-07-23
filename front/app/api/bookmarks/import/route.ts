@@ -56,7 +56,11 @@ function dedupeBatch(
   for (const item of items) {
     const url = normalizeUrl(item.url)
     if (candidates.has(url)) duplicate++
-    candidates.set(url, { ...item, url })
+    // 카톡 CSV는 title=url placeholder(parseKakaoChat) — url을 canonical로 바꾸면 title(원본)과
+    // 어긋나 아래 승격 조건(parsedTitle === url)이 깨진다. placeholder면 title도 canonical로 통일.
+    // 유튜브 공유링크(youtu.be·?si=)는 normalizeUrl이 항상 형태를 바꿔 이 케이스에 반드시 걸림.
+    const title = item.title === item.url ? url : item.title
+    candidates.set(url, { ...item, url, title })
   }
   return { candidates, duplicate }
 }
