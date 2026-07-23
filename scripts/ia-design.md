@@ -129,7 +129,7 @@ Web App
   - 리스트 뷰 `[MVP]`
   - 컴팩트 뷰 `[MVP]` — A50
 - 카드 `[MVP]`
-  - 태그 칩 `[MVP]` — 최대 3개, confidence 0.6↑, 골든셋 macro-F1 0.85
+  - 태그 칩 `[MVP]` — 최대 3개, confidence 0.6↑, 골든셋 macro-F1 0.76 (n=213)
   - 즐겨찾기 버튼 `[MVP]`
   - 메뉴 버튼 `[MVP]`
     - 메뉴 모달 `[MVP]`

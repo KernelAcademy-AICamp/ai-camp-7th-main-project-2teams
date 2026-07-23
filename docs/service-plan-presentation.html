@@ -471,7 +471,7 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
       <div class="card bar warn"><span class="kicker">프라이버시</span><h3>본문 즉시 파기</h3><p>처리 후 원문은 저장·로깅 금지. 저작권·개인정보 대응.</p></div>
     </div>
     <div class="pills reveal" style="--i:4">
-      <span class="pill mint">태깅 품질 macro-F1 0.85 · 대분류 0.93 (실측 2026-07)</span>
+      <span class="pill mint">태깅 품질 macro-F1 0.76 · 대분류 0.84 (골든셋 n=213 실측)</span>
       <span class="pill">한국어·영어 혼용 지원</span>
     </div>
   </div>
@@ -481,19 +481,20 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
 <section class="slide">
   <div class="slide-content">
     <div class="eyebrow reveal"><span class="n">05 · 기능 ②</span></div>
-    <h2 class="headline section-title reveal" style="--i:1">자연어 벡터 검색</h2>
-    <p class="sub reveal" style="--i:2">"리액트 훅 관련 글", "지난달 저장한 그 RAG 아티클" — 제목이 안 맞아도 <b style="color:var(--mint)">의미가 비슷한 북마크</b>를 pgvector가 되찾는다.</p>
+    <h2 class="headline section-title reveal" style="--i:1">자연어 <span class="accent">하이브리드</span> 검색</h2>
+    <p class="sub reveal" style="--i:2">"리액트 훅 관련 글", "지난달 저장한 그 RAG 아티클" — 제목이 안 맞아도, <b style="color:var(--mint)">의미(벡터)와 키워드(트라이그램)를 함께</b> 따져 되찾는다.</p>
     <div class="flow reveal" style="--i:3">
       <div class="node"><div class="t">질의 입력</div><div class="d">자연어 · 최대 50자</div></div>
       <div class="arrow">→</div>
-      <div class="node km"><div class="t">질의 임베딩</div><div class="d">3-small</div></div>
+      <div class="node km"><div class="t">질의 임베딩</div><div class="d">3-large · 1536d</div></div>
       <div class="arrow">→</div>
-      <div class="node k"><div class="t">코사인 유사도</div><div class="d">pgvector · HNSW</div></div>
+      <div class="node k"><div class="t">하이브리드 검색</div><div class="d">벡터 cosine + 트라이그램</div></div>
       <div class="arrow">→</div>
-      <div class="node"><div class="t">임계값 필터</div><div class="d">≥ 0.5 · 상위 20</div></div>
+      <div class="node"><div class="t">RRF 병합</div><div class="d">순위 융합 · 상위 20</div></div>
     </div>
     <div class="pills reveal" style="--i:4">
       <span class="pill mint">HNSW 인덱스 → 수천 건도 밀리초 응답</span>
+      <span class="pill blue">3-large 전환 → 검색 recall 0.85→0.92 (골든셋 n=26)</span>
       <span class="pill">embedding 컬럼은 API 응답 미포함</span>
     </div>
   </div>
@@ -523,6 +524,7 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
   <div class="slide-content">
     <div class="eyebrow reveal"><span class="n">06</span> — 실험 및 검증</div>
     <h2 class="headline section-title reveal" style="--i:1">정보는 같고, <span class="accent">'재발견 구조'만</span> 다르게</h2>
+    <p class="sub reveal" style="--i:1;margin-top:0.5em">주제형 중분류가 형식축과 충돌해 F1 0.746까지 <b style="color:var(--warning)">회귀한 것을 골든셋 계측으로 포착</b> → 중분류를 <b style="color:var(--primary)">2축 닫힌 enum으로 재설계</b>해 환각을 차단, 회귀 게이트를 재통과시켰다.</p>
     <div class="ab reveal" style="--i:2">
       <div class="side a">
         <span class="tag">A안</span>
@@ -537,10 +539,11 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
       </div>
     </div>
     <div class="pills reveal" style="--i:3">
-      <span class="pill mint">이미 확보한 검증치 — 태깅 macro-F1 0.85 · 대분류 0.93</span>
-      <span class="pill">회귀 게이트 baseline F1 0.82</span>
+      <span class="pill mint">확보한 검증치 — 태깅 macro-F1 0.76 · 대분류 0.84 (n=213)</span>
+      <span class="pill">회귀 게이트 통과 · baseline F1 0.76</span>
       <span class="pill blue">검색 클릭률 · 재발견 소요시간 + 정성 인터뷰 병행</span>
     </div>
+    <p class="stat-cap reveal" style="--i:4;margin-top:0.6em;font-size:var(--small-size)">품질은 골든셋 기준 실측 · <b>운영 지표(검색 사용률·리텐션)는 2026-08-04 이후 실측 관측 예정</b>.</p>
   </div>
 </section>
 
@@ -551,7 +554,7 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
     <h2 class="headline section-title reveal" style="--i:1">리스크는 이미 대응 설계에 반영</h2>
     <div class="two reveal" style="--i:2">
       <div style="display:flex;flex-direction:column;gap:clamp(0.5rem,1.2vw,0.9rem)">
-        <div class="card bar"><span class="kicker">기능</span><h3>태그 품질 저하</h3><p>골든셋 회귀 게이트로 F1 기준선(0.82) 방어.</p></div>
+        <div class="card bar"><span class="kicker">기능</span><h3>태그 품질 저하</h3><p>골든셋 회귀 게이트로 F1 기준선(0.76) 방어.</p></div>
         <div class="card bar mint"><span class="kicker">채택</span><h3>콜드스타트</h3><p>빈 북마크 문제 → 파일 임포트로 기존 북마크 일괄 이관.</p></div>
         <div class="card bar deep"><span class="kicker">비용</span><h3>AI 원가</h3><p>유저당 월 $0.02 저마진 구조 → 수익화 전에도 지속 가능.</p></div>
       </div>
@@ -571,9 +574,9 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
     <h2 class="headline section-title reveal" style="--i:1">검증 → 수익화 → 구조 → 확장</h2>
     <div class="road reveal" style="--i:2">
       <div class="stage mvp"><span class="st">1단계 · MVP</span><span class="sh">태깅 · 검색 검증</span><span class="sd">재발견 행동 증가 확인. 검색 사용률 40%↑면 Go.</span></div>
-      <div class="stage mvp"><span class="st">2단계 · v1.1</span><span class="sh">수익화 (BM)</span><span class="sd">개인 대시보드 · 프리미엄 구독. 태그 편집 · 검색+필터.</span></div>
-      <div class="stage"><span class="st">3단계</span><span class="sh">품질 고도화</span><span class="sd">AI 요약 · 필터 조합 · Firefox 확장.</span></div>
-      <div class="stage"><span class="st">4단계 · v2</span><span class="sh">B2B 확장</span><span class="sd">팀 워크스페이스 · 공유 컬렉션 · 권한.</span></div>
+      <div class="stage mvp"><span class="st">2단계 · v1.1</span><span class="sh">경험 고도화</span><span class="sd">태그 편집 · 검색+필터 조합 · 개인 대시보드. 프리미엄 게이트 인프라 착수(A64).</span></div>
+      <div class="stage"><span class="st">3단계 · v2.0</span><span class="sh">수익화 · 확장</span><span class="sd">프리미엄 구독 결제 · AI 요약 · Firefox 확장.</span></div>
+      <div class="stage"><span class="st">4단계 · v2+</span><span class="sh">B2B 확장</span><span class="sd">팀 워크스페이스 · 공유 컬렉션 · 권한.</span></div>
     </div>
     <div class="pills reveal" style="--i:3">
       <span class="pill blue">1~2단계 = MVP 검증 구간</span>
