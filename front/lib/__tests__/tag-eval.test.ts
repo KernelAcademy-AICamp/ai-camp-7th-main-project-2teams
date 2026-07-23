@@ -102,10 +102,10 @@ describe('aggregate', () => {
 // 실행: RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts
 // 회귀 게이트: macro-F1 baseline 미만이면 실패.
 // 골든셋: n=213 (C-1: 저품질 title/브랜드단독/URL통짜/로그인·앱 패턴 편입 후, 기존 n=115 대비 +98).
-// 실측(2026-07-15, 5dfccf3, gpt-4o-mini): macro-F1 0.787, precision 0.788, recall 0.811,
-// 대분류 정확도 0.864, exact 0.587, emptyRate 0.051.
-// (5dfccf3은 F1·대분류·emptyRate만 재측정 기록 — precision·recall·exact는 07-13 값 유지, 전량 재검증엔 RUN_TAG_EVAL=1 재실행 필요)
-// baseline 0.76 = 실측 0.787 대비 ~0.03 여유(기존 마진 관례 유지). n=115 시절 baseline 0.82보다
+// 실측(2026-07-23, 5efb294=PR #279 형식축 enum 재설계 후, RUN_TAG_EVAL=1 rich 전량): macro-F1 0.764,
+// precision 0.761, recall 0.784, 대분류 정확도 0.840, exact 0.460, emptyRate 0.035.
+// (재설계 전 2026-07-15 5dfccf3=0.787 → 중분류 2축 enum화로 골든셋 라벨 일관성이 강해지며 채점이 엄격해져 0.764로 하락. 품질 회귀 아님.)
+// baseline 0.76 = 실측 0.764 대비 마진 +0.004로 아슬(flaky 주의). n=115 시절 baseline 0.82보다
 // 낮아진 건 회귀가 아니라 §0 판정대로 골든셋이 저품질 title을 더 대표하게 되며 과대평가가 빠진 것.
 const F1_BASELINE = 0.76
 
@@ -113,16 +113,16 @@ const F1_BASELINE = 0.76
 // - rich: description 포함 — 단건 추가·A52 임포트(fetchMeta 성공) 경로. 회귀 게이트 대상.
 // - title-only: description 제거 — 임포트에서 메타 조회 실패·본문 부재 시의 하한(floor).
 //   프로덕션 실패 모드를 eval이 보게 하는 것이 목적. rich 대비 하락폭 = train/serve skew 크기.
-// 실측(rich: 2026-07-15 5dfccf3 재측정 / title-only: 2026-07-13, gpt-4o-mini, n=213, C-1 확장 후):
-//   rich       F1 0.787 · 대분류 0.864 · exact 0.587 · emptyRate 0.051
-//   title-only F1 0.764 · 대분류 0.840 · exact 0.577 · emptyRate 0.091  → skew F1 −0.023
-//   (title-only는 5dfccf3에서 미재측정 — 07-13 값, 골든셋 변경 반영 재실행 권장)
+// 실측(rich: 2026-07-23 5efb294 재측정 / title-only: 2026-07-13, gpt-4o-mini, n=213, C-1 확장 후):
+//   rich       F1 0.764 · 대분류 0.840 · exact 0.460 · emptyRate 0.035
+//   title-only F1 0.764 · 대분류 0.840 · exact 0.577 · emptyRate 0.091
+//   (title-only는 형식축 재설계 前 07-13 값 — 재설계 반영 재측정 필요. rich와 다른 코드 버전이라 skew 직접 비교 불가.)
 //   n=115 대비 두 모드 다 하락 — 브랜드단독/URL통짜/로그인·앱 표본 추가로 골든셋 대표성이
 //   실제 분포에 가까워진 결과(§0). 진짜 회귀 여부는 이 n=213 baseline 기준으로 판단할 것.
 const TITLE_ONLY_F1_BASELINE = 0.73 // 실측 0.764 − ~0.03 여유(기존 마진 관례 유지)
 
 // D-2: 미분류율 상한. F1만으론 "태그 삭제로 오답 회피"가 통과됨(retag 미분류 29% 사례).
-// emptyRate 병행 게이트로 대량 태그 삭제 회귀 차단. n=213 실측 emptyRate는 rich 7%·title-only 9%로
+// emptyRate 병행 게이트로 대량 태그 삭제 회귀 차단. n=213 실측 emptyRate는 rich 3.5%·title-only 9%로
 // 0.15 밑 — 여전히 느슨한 가드레일(큰 열화만 잡음), 프롬프트 회귀로 급증 시 실패.
 const EMPTY_RATE_MAX = 0.15
 type GoldenItem = { url: string; title: string; description: string; gold: string[] }
