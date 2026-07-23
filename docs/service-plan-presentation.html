@@ -474,6 +474,18 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
       <span class="pill mint">태깅 품질 macro-F1 0.76 · 대분류 0.84 (골든셋 n=213 실측)</span>
       <span class="pill">한국어·영어 혼용 지원</span>
     </div>
+    <div class="panel tint reveal" style="--i:5;margin-top:var(--content-gap)">
+      <div class="plabel">품질은 한 번 재고 끝이 아니다 — 계측 → 개선 루프로 방어</div>
+      <div class="flow" style="margin-top:0.4em">
+        <div class="node km"><div class="t">골든셋 n=213</div><div class="d">라벨 실측 채점</div></div>
+        <div class="arrow">→</div>
+        <div class="node k"><div class="t">품질 퇴행 방지 게이트</div><div class="d">F1 ≥ 0.76 통과</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">오답·환각 노출</div><div class="d">중분류 충돌 발견</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">프롬프트·enum 개선</div><div class="d">2축 재설계로 차단</div></div>
+      </div>
+    </div>
   </div>
 </section>
 
