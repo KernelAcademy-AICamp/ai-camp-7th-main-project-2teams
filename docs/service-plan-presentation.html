@@ -471,7 +471,7 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
       <div class="card bar warn"><span class="kicker">프라이버시</span><h3>본문 즉시 파기</h3><p>처리 후 원문은 저장·로깅 금지. 저작권·개인정보 대응.</p></div>
     </div>
     <div class="pills reveal" style="--i:4">
-      <span class="pill mint">태깅 품질 macro-F1 0.76 · 대분류 0.84 (골든셋 n=213 실측)</span>
+      <span class="pill mint">태깅 품질 macro-F1 0.78 · 대분류 0.88 (골든셋 n=213 실측)</span>
       <span class="pill">한국어·영어 혼용 지원</span>
     </div>
     <div class="panel tint reveal" style="--i:5;margin-top:var(--content-gap)">
@@ -479,7 +479,7 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
       <div class="flow" style="margin-top:0.4em">
         <div class="node km"><div class="t">골든셋 n=213</div><div class="d">라벨 실측 채점</div></div>
         <div class="arrow">→</div>
-        <div class="node k"><div class="t">품질 퇴행 방지 게이트</div><div class="d">F1 ≥ 0.76 통과</div></div>
+        <div class="node k"><div class="t">품질 퇴행 방지 게이트</div><div class="d">F1 ≥ 0.74 통과</div></div>
         <div class="arrow">→</div>
         <div class="node"><div class="t">오답·환각 노출</div><div class="d">중분류 충돌 발견</div></div>
         <div class="arrow">→</div>
@@ -551,8 +551,8 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
       </div>
     </div>
     <div class="pills reveal" style="--i:3">
-      <span class="pill mint">확보한 검증치 — 태깅 macro-F1 0.76 · 대분류 0.84 (n=213)</span>
-      <span class="pill">회귀 게이트 통과 · baseline F1 0.76</span>
+      <span class="pill mint">확보한 검증치 — 태깅 macro-F1 0.78 · 대분류 0.88 (n=213)</span>
+      <span class="pill">회귀 게이트 통과 · baseline F1 0.74</span>
       <span class="pill blue">검색 클릭률 · 재발견 소요시간 + 정성 인터뷰 병행</span>
     </div>
     <p class="stat-cap reveal" style="--i:4;margin-top:0.6em;font-size:var(--small-size)">품질은 골든셋 기준 실측 · <b>운영 지표(검색 사용률·리텐션)는 2026-08-04 이후 실측 관측 예정</b>.</p>
@@ -566,7 +566,7 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
     <h2 class="headline section-title reveal" style="--i:1">리스크는 이미 대응 설계에 반영</h2>
     <div class="two reveal" style="--i:2">
       <div style="display:flex;flex-direction:column;gap:clamp(0.5rem,1.2vw,0.9rem)">
-        <div class="card bar"><span class="kicker">기능</span><h3>태그 품질 저하</h3><p>골든셋 회귀 게이트로 F1 기준선(0.76) 방어.</p></div>
+        <div class="card bar"><span class="kicker">기능</span><h3>태그 품질 저하</h3><p>골든셋 회귀 게이트로 F1 기준선(0.74) 방어.</p></div>
         <div class="card bar mint"><span class="kicker">채택</span><h3>콜드스타트</h3><p>빈 북마크 문제 → 파일 임포트로 기존 북마크 일괄 이관.</p></div>
         <div class="card bar deep"><span class="kicker">비용</span><h3>AI 원가</h3><p>유저당 월 $0.02 저마진 구조 → 수익화 전에도 지속 가능.</p></div>
       </div>
