@@ -50,16 +50,21 @@ export const POST = withAuth(async (req, { user, supabase }) => {
 
   // description·thumbnail_url은 content 유무와 무관하게 항상 필요 → fetchMeta 항상 호출
   // (기존: content 있으면 스킵 → thumbnail_url이 익스텐션 경로에서 항상 null이었던 버그 수정).
-  // title은 익스텐션이 이미 캡처했으면(content 있으면) document.title을 더 신뢰 — meta.title로 덮지 않음.
+  // 단, await하지 않고 병렬 시작 — 익스텐션 content가 있으면 임베딩/태깅 입력이 meta와 무관하므로
+  // AI 호출과 겹쳐 실행해 직렬 대기(최대 5초 FETCH_TIMEOUT)를 제거한다. 응답 조립 시점에 resolve 회수.
   const hasExtensionContent = content.trim() !== ''
-  const meta = await fetchMeta(url)
-  if (!hasExtensionContent && meta.title) title = meta.title
-  const description = meta.description || null
-  const thumbnailUrl = isSafeHttpUrl(meta.thumbnailUrl) ? meta.thumbnailUrl : null
-  // 404/410만 죽은 링크로 판정 — 카드에 비차단 경고 배지 표시용
-  const isDead = isDeadStatus(meta.httpStatus)
+  const metaPromise = fetchMeta(url)
   // 임베딩 입력 — 익스텐션 content(og:description+body, 2000자 상한) 우선, 없으면 서버 추출본으로 대체.
-  const embeddingContent = hasExtensionContent ? content : meta.content
+  // content 없으면(weak-vector) 임베딩·title이 meta에 의존 → 이 경로에서만 meta를 먼저 대기.
+  // title은 익스텐션이 이미 캡처했으면(content 있으면) document.title을 더 신뢰 — meta.title로 덮지 않음.
+  let embeddingContent: string
+  if (hasExtensionContent) {
+    embeddingContent = content
+  } else {
+    const earlyMeta = await metaPromise
+    if (earlyMeta.title) title = earlyMeta.title
+    embeddingContent = earlyMeta.content
+  }
 
   // A37: PDF·chrome:// 등 content script 차단 + 서버 추출도 실패 → embedding=title만(약한 벡터). 허용 degradation.
   const hasContent = embeddingContent.trim() !== ''
@@ -88,6 +93,13 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   const embedding = embeddingResult.value
   // 태깅 실패는 빈 태그로 degrade — 저장 자체는 진행.
   const rawTags = tagsResult.status === 'fulfilled' ? tagsResult.value : []
+
+  // meta는 위에서 병렬로 이미 진행 — 익스텐션 경로에선 AI 대기 동안 fetch가 끝나 여기선 대개 즉시 resolve.
+  const meta = await metaPromise
+  const description = meta.description || null
+  const thumbnailUrl = isSafeHttpUrl(meta.thumbnailUrl) ? meta.thumbnailUrl : null
+  // 404/410만 죽은 링크로 판정 — 카드에 비차단 경고 배지 표시용
+  const isDead = isDeadStatus(meta.httpStatus)
 
   // 대분류 추출 + 제거 → tags는 중·소분류 전용. 대분류명이 중간 위치여도 정확히 분리됨.
   const { category: top, midTags: tags } = extractTopCategory(normalizeTags(rawTags))
