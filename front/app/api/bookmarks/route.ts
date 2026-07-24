@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { z } from 'zod'
 import { withAuth } from '@/lib/auth'
 import { bookmarkCreateSchema } from '@/lib/schemas'
@@ -33,6 +33,15 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   // 중복 방지: 정규화된 canonical URL로 저장 (trailing slash·fragment·트래킹파라미터 흡수)
   const url = normalizeUrl(parsed.data.url)
 
+  // description·thumbnail_url은 content 유무와 무관하게 항상 필요 → fetchMeta 항상 호출
+  // (기존: content 있으면 스킵 → thumbnail_url이 익스텐션 경로에서 항상 null이었던 버그 수정).
+  // 단, await하지 않고 병렬 시작 — 익스텐션 content가 있으면 임베딩/태깅 입력이 meta와 무관하므로
+  // AI 호출과 겹쳐 실행해 직렬 대기(최대 5초 FETCH_TIMEOUT)를 제거한다. 응답 조립 시점에 resolve 회수.
+  // 중복 선검사(DB)와도 병렬 — fetchMeta는 내부 catch로 절대 reject하지 않아 409 조기 반환 시
+  // 부동 promise로 버려도 안전(중복 URL에 외부 fetch 1회 낭비는 허용, AI 비용은 여전히 0).
+  const hasExtensionContent = content.trim() !== ''
+  const metaPromise = fetchMeta(url)
+
   // 중복 선검사 — 이미 저장된 URL이면 409 (AI 호출 전이라 비용 절약).
   // 조용한 덮어쓰기 대신 명시적 안내. 경합은 아래 insert의 unique 위반(23505)으로 이중 방어.
   const { data: existing } = await supabase
@@ -47,13 +56,6 @@ export const POST = withAuth(async (req, { user, supabase }) => {
       { status: 409 },
     )
   }
-
-  // description·thumbnail_url은 content 유무와 무관하게 항상 필요 → fetchMeta 항상 호출
-  // (기존: content 있으면 스킵 → thumbnail_url이 익스텐션 경로에서 항상 null이었던 버그 수정).
-  // 단, await하지 않고 병렬 시작 — 익스텐션 content가 있으면 임베딩/태깅 입력이 meta와 무관하므로
-  // AI 호출과 겹쳐 실행해 직렬 대기(최대 5초 FETCH_TIMEOUT)를 제거한다. 응답 조립 시점에 resolve 회수.
-  const hasExtensionContent = content.trim() !== ''
-  const metaPromise = fetchMeta(url)
   // 임베딩 입력 — 익스텐션 content(og:description+body, 2000자 상한) 우선, 없으면 서버 추출본으로 대체.
   // content 없으면(weak-vector) 임베딩·title이 meta에 의존 → 이 경로에서만 meta를 먼저 대기.
   // title은 익스텐션이 이미 캡처했으면(content 있으면) document.title을 더 신뢰 — meta.title로 덮지 않음.
@@ -145,13 +147,21 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   }
 
   // North Star 계측: 저장 + AI 자동분류 결과 기록(커버리지 지표 = auto_category 비율).
-  await logEvents(supabase, user.id, [
+  // 응답 경로에서 제거 — after()로 응답 전송 후 flush(DB 1 라운드트립 절감). logEvents는 실패를
+  // 내부에서 삼키므로 늦게 실행돼도 UX 영향 없음. 테스트 등 Next 요청 컨텍스트 밖에서는
+  // after()가 throw → 기존처럼 동기 대기로 폴백.
+  const flushEvents = logEvents(supabase, user.id, [
     { type: 'bookmark_saved', meta: { has_content: hasContent } },
     {
       type: 'tag_assigned',
       meta: { source: 'auto', auto_category: category_id !== null, tag_count: tags.length },
     },
   ])
+  try {
+    after(flushEvents)
+  } catch {
+    await flushEvents
+  }
 
   // category(대분류명)는 이미 위에서 계산된 top 재사용 — 추가 조인 불필요
   return NextResponse.json({ bookmark: { ...data, category: top } }, { status: 201 })
