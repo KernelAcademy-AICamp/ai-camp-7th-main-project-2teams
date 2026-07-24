@@ -386,11 +386,13 @@ function DashboardContent() {
 }
 
 function DashboardFallback() {
+  // 그리드 열 수·개수를 DashboardContent의 isPending 스켈레톤(grid 뷰)과 일치시킴 —
+  // 불일치 시 새로고침 순간 fallback(구 4열)이 실제 스켈레톤(5열) 앞에 잠깐 깜빡였음.
   return (
     <>
       <div className="w-52 shrink-0" />
-      <div className="grid flex-1 grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {Array.from({ length: 6 }).map((_, i) => (
+      <div className="grid flex-1 grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+        {Array.from({ length: 15 }).map((_, i) => (
           <BookmarkSkeleton key={i} />
         ))}
       </div>
