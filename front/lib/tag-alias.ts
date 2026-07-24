@@ -107,7 +107,7 @@ export const TAG_ALIAS: Record<string, string> = {
   certificate: '자격증', certification: '자격증',
   // 보안 (인증=보안 중분류)
   인증: '보안', auth: '보안', authentication: '보안',
-  // 기획 (제품관리=기획 중분류)
+  // 기획 — v2에선 소분류(주제). 표기 통일용(제품관리·프로덕트 → 기획). 대분류는 비즈니스(프롬프트 경계규칙).
   제품관리: '기획', 프로덕트: '기획', 'product management': '기획',
   // 소분류 표기 통일
   파이썬: 'Python', 도커: 'Docker', 쿠버네티스: 'Kubernetes',
