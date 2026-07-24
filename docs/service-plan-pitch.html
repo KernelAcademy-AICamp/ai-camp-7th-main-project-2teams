@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>모와바 — 서비스 기획 발표 (피치)</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --paper: #FAFAF8;
+    --ink: #17191C;
+    --muted: #9AA0A8;
+    --faint: #C7CAD0;
+    --hair: rgba(23,25,28,0.09);
+    --accent: #2E6FD6;         /* 강조색 하나 */
+
+    --pad: clamp(2rem, 7vw, 7rem);
+    --hero: clamp(4.5rem, 19vw, 16rem);
+    --head: clamp(1.7rem, 5.2vw, 4rem);
+    --lead: clamp(1.05rem, 2.1vw, 1.5rem);
+    --label: clamp(0.68rem, 1.05vw, 0.8rem);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+            "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  }
+
+  html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font); background: var(--paper); color: var(--ink);
+    -webkit-font-smoothing: antialiased; letter-spacing: -0.015em;
+    word-break: keep-all; overflow-wrap: break-word;  /* 한국어 어절 중간 줄바꿈 방지 */
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  .slide {
+    min-height: 100vh; min-height: 100dvh; scroll-snap-align: start;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: var(--pad); position: relative;
+  }
+  .wrap { max-width: 62rem; width: 100%; }   /* 왼쪽 기준선 공유 = 정렬 */
+
+  .eyebrow {
+    font-size: var(--label); font-weight: 600; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: clamp(1.2rem, 3.5vw, 2.6rem);
+    display: flex; align-items: center; gap: 0.7em;
+  }
+  .eyebrow .step { color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* 헤드라인 = 결론 문장 */
+  .head {
+    font-size: var(--head); font-weight: 800; line-height: 1.13;
+    letter-spacing: -0.03em; text-wrap: balance; max-width: 20ch;
+  }
+  .accent { color: var(--accent); }
+
+  .hero {
+    font-size: var(--hero); font-weight: 800; line-height: 0.86;
+    letter-spacing: -0.045em; color: var(--accent);
+    font-variant-numeric: tabular-nums; margin-top: clamp(1rem, 3vw, 2rem);
+  }
+  .hero .unit { font-size: 0.4em; font-weight: 700; }
+
+  .lead {
+    font-size: var(--lead); line-height: 1.55; color: var(--ink);
+    max-width: 32ch; margin-top: clamp(1.2rem, 3.2vw, 2.4rem); text-wrap: balance;
+  }
+  .lead.mut { color: var(--muted); }
+  .meta { font-size: var(--label); color: var(--muted); margin-top: 1.3rem; }
+
+  /* 정렬·반복: 동일 셀 3개 */
+  .row { display: grid; grid-template-columns: repeat(3, 1fr);
+         gap: clamp(1rem, 3vw, 2.6rem); margin-top: clamp(1.6rem, 4vw, 3rem); }
+  @media (max-width: 640px){ .row { grid-template-columns: 1fr; } }
+  .cell { border-top: 1px solid var(--hair); padding-top: 0.9rem; }
+  .cell .n { font-size: var(--label); font-weight: 600; color: var(--muted);
+             font-variant-numeric: tabular-nums; letter-spacing: 0.05em; }
+  .cell .t { font-size: clamp(1.25rem, 2.8vw, 1.85rem); font-weight: 700;
+             letter-spacing: -0.02em; margin-top: 0.5rem; }
+  .cell .d { font-size: var(--label); color: var(--muted); margin-top: 0.4rem; line-height: 1.5; }
+
+  /* 표지 */
+  .cover .brand { font-size: clamp(3rem, 12vw, 8rem); font-weight: 800; letter-spacing: -0.04em; line-height: 0.95; }
+  .cover .brand .en { color: var(--muted); font-weight: 700; }
+  .cover .tag { font-size: var(--label); letter-spacing: 0.2em; text-transform: uppercase;
+                color: var(--accent); margin-top: 1.4rem; }
+
+  .counter { position: fixed; bottom: clamp(1rem,3vh,2rem); right: clamp(1.4rem,4vw,3rem);
+             font-size: var(--label); color: var(--muted); font-variant-numeric: tabular-nums; letter-spacing: 0.1em; }
+  .counter b { color: var(--ink); font-weight: 700; }
+  .progress { position: fixed; top: 0; left: 0; height: 2px; width: 0; background: var(--accent); z-index: 10; transition: width .3s ease; }
+</style>
+</head>
+<body>
+
+<div class="progress" id="pg"></div>
+
+<main>
+  <!-- 표지 -->
+  <section class="slide cover">
+    <div class="wrap">
+      <div class="eyebrow">AI CAMP 7기 2팀 · 서비스 기획 발표</div>
+      <div class="brand">모와바 <span class="en">Mowaba</span></div>
+      <p class="lead">저장이 아니라, <span class="accent">되찾기</span>를 푼다.</p>
+      <div class="tag">Save it · Find it</div>
+    </div>
+  </section>
+
+  <!-- 문제 1 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">문제 · 01</span></div>
+      <h2 class="head">다시 찾으려 저장한 북마크의 84%는 사라진다.</h2>
+      <div class="hero">84<span class="unit">%</span></div>
+      <p class="meta">Bergman, Whittaker &amp; Schooler (2021) · n=250 · 재발견 실패율</p>
+    </div>
+  </section>
+
+  <!-- 문제 2 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">문제 · 02</span></div>
+      <h2 class="head">진짜 병목은 저장이 아니라 <span class="accent">‘다시 찾기’</span>다.</h2>
+      <div class="row">
+        <div class="cell"><div class="n">01 저장</div><div class="t">제목만 남음</div><div class="d">내용은 사라진다</div></div>
+        <div class="cell"><div class="n">02 분류</div><div class="t">폴더 수동 선택</div><div class="d">매번 인지 부하</div></div>
+        <div class="cell"><div class="n">03 재발견</div><div class="t">검색 불가</div><div class="d">키워드로도 못 찾음</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 고객 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">고객 · 03</span></div>
+      <h2 class="head">하루 10개씩 저장하고 못 찾는 <span class="accent">지식노동자</span>가 우리 고객이다.</h2>
+      <p class="lead">개발자 · PM · 리서처 — "분명 저장했는데, 어디 뒀는지 기억이 안 나."</p>
+      <p class="meta">폴더 정리는 부담, 결국 방치 · 저장한 자료를 필요할 때 바로 되찾고 싶다</p>
+    </div>
+  </section>
+
+  <!-- 솔루션 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">솔루션 · 04</span></div>
+      <h2 class="head">저장하는 순간, <span class="accent">되찾기가 준비</span>된다.</h2>
+      <div class="row">
+        <div class="cell"><div class="n">01</div><div class="t">저장</div><div class="d">1클릭 · 단축키 하나</div></div>
+        <div class="cell"><div class="n">02</div><div class="t">자동 태깅</div><div class="d">AI가 알아서 분류</div></div>
+        <div class="cell"><div class="n">03</div><div class="t">되찾기</div><div class="d">말하듯 검색</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 솔루션 기능 1 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">솔루션 · 05</span> — 자동 태깅</div>
+      <h2 class="head">저장하면 AI가 <span class="accent">알아서</span> 분류한다.</h2>
+      <p class="lead mut">본문을 읽어 형식·대상 2축 태그와 카테고리를 부여. 폴더 수동 정리를 아예 없앤다.</p>
+      <p class="meta">13개 대분류 · 중분류는 닫힌 enum으로 환각 차단 · 본문은 처리 후 즉시 파기</p>
+    </div>
+  </section>
+
+  <!-- 솔루션 기능 2 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">솔루션 · 06</span> — 자연어 검색</div>
+      <h2 class="head">제목이 안 맞아도, <span class="accent">의미로 되찾는다.</span></h2>
+      <p class="lead mut">"지난달 그 RAG 아티클" 처럼 말하듯 검색. 의미(벡터)와 키워드를 함께 따진다.</p>
+      <p class="meta">하이브리드 검색(pgvector + 트라이그램 · RRF 병합) · 임베딩 3-large</p>
+    </div>
+  </section>
+
+  <!-- 검증 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">검증 · 07</span></div>
+      <h2 class="head">품질은 이미 <span class="accent">실측</span>으로 검증됐다.</h2>
+      <div class="hero">0.76</div>
+      <p class="meta">태깅 macro-F1 0.76 · 대분류 0.84 · 골든셋 n=213 실측 · 검색 recall 0.923 (n=26) · 품질 퇴행 방지 게이트로 회귀 차단</p>
+    </div>
+  </section>
+
+  <!-- 비즈니스 1 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">비즈니스 · 08</span> — 시장</div>
+      <h2 class="head">Pocket 종료로 국내 대안 <span class="accent">공백</span>이 열렸다.</h2>
+      <p class="lead">2025-07 Pocket 서비스 종료. 무료 · AI · 자연어 검색을 모두 갖춘 국내 서비스는 지금 없다.</p>
+      <p class="meta">난민 시장을 임포트 원클릭으로 선점 · 최근접 경쟁 mymind는 자연어 검색이 아직 베타</p>
+    </div>
+  </section>
+
+  <!-- 비즈니스 2 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">비즈니스 · 09</span> — 모델</div>
+      <h2 class="head">원가는 유저당 월 <span class="accent">$0.02</span>, 가격은 가치로 매긴다.</h2>
+      <p class="lead mut">AI 변동비가 사실상 0 → 가격 하한 제약 없음. Freemium으로 시작해 프리미엄 전환.</p>
+      <p class="meta">Free / Pro ₩5,900월 · 원가 무관, 얼마나 되찾게 해주는가로 설계</p>
+    </div>
+  </section>
+
+  <!-- 요청 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">요청 · 10</span></div>
+      <h2 class="head">MVP로 이 가설 하나를 <span class="accent">검증</span>하게 해주세요.</h2>
+      <p class="lead">"자동 태깅 + 자연어 검색이 재발견 행동을 늘린다." — 검색 사용률이 MAU의 40%를 넘으면 Go.</p>
+      <p class="meta">모와바 · 저장하는 도구가 아니라, 다시 찾는 도구로.</p>
+    </div>
+  </section>
+</main>
+
+<div class="counter"><b id="cur">01</b> / 11</div>
+
+<script>
+  (function () {
+    var slides = Array.from(document.querySelectorAll('.slide'));
+    var cur = document.getElementById('cur');
+    var pg = document.getElementById('pg');
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (e.isIntersecting && e.intersectionRatio > 0.6) {
+          var i = slides.indexOf(e.target);
+          cur.textContent = String(i + 1).padStart(2, '0');
+          pg.style.width = (i / (slides.length - 1) * 100) + '%';
+        }
+      });
+    }, { threshold: [0.6] });
+    slides.forEach(function (s) { io.observe(s); });
+
+    var i = 0;
+    function go(n){ i = Math.max(0, Math.min(slides.length - 1, n)); slides[i].scrollIntoView(); }
+    addEventListener('keydown', function (e) {
+      if (['ArrowDown','ArrowRight',' ','PageDown'].includes(e.key)) { e.preventDefault(); go(i+1); }
+      else if (['ArrowUp','ArrowLeft','PageUp'].includes(e.key)) { e.preventDefault(); go(i-1); }
+    });
+  })();
+</script>
+</body>
+</html>
