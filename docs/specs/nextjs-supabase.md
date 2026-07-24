@@ -283,6 +283,8 @@ export const bookmarkUpdateSchema = z
 
 // 임포트(A29)는 공유 스키마 없음 — multipart/form-data라 app/api/bookmarks/import/route.ts의
 // 로컬 fileSchema(File 크기·타입 검증)로 처리. schemas.ts에는 두지 않음.
+// 목록 조회 쿼리 파라미터 검증도 로컬 스키마 — app/api/bookmarks/route.ts의 getQuerySchema
+// (tab/category/tag/folder: string optional, page: coerce int ≥1 default 1, limit: coerce int 1~100 default 20).
 
 export type BookmarkInput = z.infer<typeof bookmarkSchema>
 export type BookmarkCreateInput = z.infer<typeof bookmarkCreateSchema>
@@ -475,7 +477,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // api 제외: API 라우트는 withAuth가 401 JSON. 미들웨어 302 시 fetch 클라이언트가 HTML 로그인 페이지 수신.
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  // demo 제외: /welcome 랜딩의 public/demo 정적 자산이 로그인 리다이렉트에 걸리지 않도록.
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|demo).*)'],
 }
 ```
 
@@ -593,7 +596,10 @@ front/
 │   ├── auth/callback/route.ts     # A4 — OAuth 콜백 핸들러
 │   ├── privacy/page.tsx           # A12
 │   ├── terms/page.tsx             # A13
-│   └── goodbye/page.tsx
+│   ├── goodbye/page.tsx
+│   ├── robots.ts                  # SEO — robots 메타
+│   ├── sitemap.ts                 # SEO — sitemap 생성
+│   └── icon.png                   # 파비콘
 ├── lib/
 │   ├── supabase/
 │   │   ├── server.ts
@@ -604,11 +610,22 @@ front/
 │   ├── admin-range.ts             # A67 — range(1d/7d/30d) 파싱 + rangeToInterval
 │   ├── events.ts                  # A68 — logEvent(s) 헬퍼. 이벤트 4종, CLIENT_LOGGABLE 화이트리스트, 실패 시 UX 비차단
 │   ├── schemas.ts                 # bookmarkSchema, searchSchema, bookmarkUpdateSchema(A60: is_favorite/tags/category/description)
+│   ├── ai.ts                      # generateTags(태깅 프롬프트)·createEmbedding·weak-vector 보강
+│   ├── openai.ts                  # OpenAI 클라이언트 (서버 전용)
+│   ├── fetchMeta.ts               # 외부 URL title/description/og:image/본문 추출 (YouTube oEmbed 포함)
+│   ├── normalizeUrl.ts            # canonical URL 정규화 (중복 방지 키)
+│   ├── ssrf.ts                    # isSafeHttpUrl — 썸네일 등 외부 URL SSRF 가드
+│   ├── logger.ts                  # maskSensitive 로거 (content 평문 금지, A8)
+│   ├── tag-alias.ts               # 태그 정규화 사전 + 대분류 추출 (normalizeTags·extractTopCategory)
+│   ├── search-alias.ts            # 검색 교차언어(한↔영 브랜드) alias 사전
+│   ├── tag-eval.ts / search-eval.ts # eval 지표 함수 (scoreTags·aggregate·scoreQuery)
+│   ├── filterQuery.ts / folderTree.ts / backfillUrlPlan.ts / onboarding.ts / site.ts / utils.ts / youtube.ts
 │   ├── parseNetscapeBookmarks.ts  # HTML 임포트 파싱 (A29). 자체 내보내기분은 TAGS/DATA_CATEGORY 속성 복원
 │   ├── parseKakaoChat.ts         # 카카오톡 채팅 내보내기 CSV(Date,User,Message) 파싱 — Message 내 URL만 추출, 대화 본문 미보관
 │   ├── formatNetscapeBookmarks.ts # 설정 페이지 HTML 내보내기 — TAGS/DATA_CATEGORY 포함, 재임포트 시 태그·카테고리 복원
 │   └── formatKakaoChatCsv.ts     # 설정 페이지 CSV 내보내기 — 카카오톡 내보내기와 동일 포맷(Date,User,Message)으로 직렬화, parseKakaoChat으로 재임포트 가능
 ├── store/
-│   └── filterStore.ts             # tab, category, folder, sortOrder, viewMode 등
+│   ├── filterStore.ts             # tab, category, folder, sortOrder, viewMode 등
+│   └── userStore.ts               # 인증 사용자 캐시 (zustand)
 └── proxy.ts                        # 구 middleware.ts (Next.js 16)
 ```
