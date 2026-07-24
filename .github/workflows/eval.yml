@@ -1,0 +1,33 @@
+name: Eval
+
+# 태깅 품질에 영향 주는 파일이 바뀐 PR에서만 실행되는 회귀 게이트 (실 OpenAI 호출, PR당 ~$0.1 · 약 12분).
+# - required check 아님: paths 필터로 미실행돼도 머지 안 막힘 (ci.yml의 데드락 방지 주석 참조).
+# - baseline은 run 간 분산(±0.013 관측) 아래로 잡혀 있어 오탐 없음 — front/lib/__tests__/tag-eval.test.ts 주석 참조.
+# - search eval은 프로덕션 Supabase에 쓰기(throwaway user 생성)가 필요해 CI 제외 — 수동 실행 유지(docs/eval-set-plan.md).
+on:
+  pull_request:
+    paths:
+      - 'front/lib/ai.ts'
+      - 'front/lib/tag-alias.ts'
+      - 'front/lib/tag-eval.ts'
+      - 'front/eval/tag-golden.json'
+      - 'front/lib/__tests__/tag-eval.test.ts'
+
+jobs:
+  tag-eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+      - working-directory: front
+        run: npm ci
+      - name: 태깅 골든셋 회귀 게이트 (rich + title-only, n=213×2)
+        working-directory: front
+        run: RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        timeout-minutes: 25

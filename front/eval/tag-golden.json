@@ -234,7 +234,7 @@
     "title": "100 Days of Code: Python Bootcamp",
     "description": "파이썬 입문부터 실전까지 100일 코딩 강의.",
     "gold": [
-      "학습",
+      "개발",
       "강의",
       "Python"
     ]
@@ -244,7 +244,7 @@
     "title": "Machine Learning | Coursera",
     "description": "Andrew Ng의 머신러닝 입문 강의.",
     "gold": [
-      "학습",
+      "AI/ML",
       "강의"
     ]
   },
@@ -516,7 +516,7 @@
     "title": "네이버 비즈니스 스쿨",
     "description": "소상공인·마케팅 실무 온라인 강의 플랫폼.",
     "gold": [
-      "학습",
+      "비즈니스",
       "강의"
     ]
   },
@@ -664,7 +664,7 @@
     "title": "Next.js 풀스택 완주반 (30강 커리큘럼)",
     "description": "입문부터 배포까지 순서대로 배우는 Next.js 강의 시리즈.",
     "gold": [
-      "학습",
+      "개발",
       "강의",
       "Next.js"
     ]
@@ -799,7 +799,7 @@
     "title": "Refactoring - Martin Fowler",
     "description": "리팩터링 기술서 소개와 목차.",
     "gold": [
-      "학습",
+      "개발",
       "책"
     ]
   },
@@ -1199,7 +1199,7 @@
     "title": "VREW, 블로그 애드센스보다 쉬운 쿠팡 파트너스 유튜브영상 만들기 [무료강의 6강]",
     "description": "",
     "gold": [
-      "학습",
+      "비즈니스",
       "강의"
     ]
   },
@@ -1266,7 +1266,7 @@
     "title": "Every Data Structure Simply Explained in 25 Minutes!",
     "description": "",
     "gold": [
-      "학습",
+      "개발",
       "강의",
       "데이터구조"
     ]
@@ -1286,9 +1286,9 @@
     "title": "클로드 코드 업무 자동화 A to Z 1시간 무료 강의ㅣ대기업 금융권 현직자 멘토",
     "description": "",
     "gold": [
-      "학습",
+      "AI/ML",
       "강의",
-      "업무자동화"
+      "Claude Code"
     ]
   },
   {
@@ -1420,7 +1420,7 @@
     "title": "\"당신이 원하던 n8n 2026 버전 마스터클래스!\" 8시간 완전정복 기초강의",
     "description": "",
     "gold": [
-      "학습",
+      "개발",
       "강의",
       "n8n"
     ]
@@ -1556,7 +1556,7 @@
     "title": "Everything I'd Learn to Ship My First PROFITABLE App in 2026 (beginner friendly)",
     "description": "",
     "gold": [
-      "학습",
+      "개발",
       "강의",
       "앱개발"
     ]
@@ -1586,7 +1586,7 @@
     "title": "Do THIS Instead of Watching Endless Tutorials - How I'd Learn AWS FAST (2026)",
     "description": "",
     "gold": [
-      "학습",
+      "개발",
       "강의",
       "AWS"
     ]
@@ -1671,7 +1671,7 @@
     "title": "I'm Launching a 10+ Hour Backend System Design Course on YouTube",
     "description": "",
     "gold": [
-      "학습",
+      "개발",
       "강의",
       "백엔드"
     ]
