@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AreaChart, Area, Tooltip, XAxis, YAxis, ResponsiveContainer } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts'
 
 export type WeeklyMetric = {
   week: string
@@ -148,64 +148,84 @@ function PerUserDotPlot({ weeks, dots }: { weeks: string[]; dots: PerUserDot[] }
     })),
   }))
 
-  // 유저 수가 적고 대부분 0건이라 한 차트에 겹치면 0선에 점이 쌓여 해석 불가 —
-  // 유저당 미니 차트 1행(스몰 멀티플)로 분리. y축 최대는 전 유저 공유(비교 가능성 유지).
-  const yMax = Math.max(...dots.map((d) => d.count), 4)
+  // 상단 NSM area 차트가 이미 "추이"를 담당 — 유저별 뷰가 시간축을 또 그리면 축소 복제가 된다.
+  // 여기선 질문을 바꾼다: "이번 주 누가 되찾았고, 지난 주 대비 늘었나" — 덤벨 도트
+  // (행=유저, x=건수, 회색 점=지난 주 → 컬러 점=이번 주). 시점 2개만 남기고 시간축 제거.
+  const [prevWeek, currWeek] = weeks.slice(-2)
+  const countOf = (user: string, week: string | undefined) =>
+    week === undefined ? 0 : (byLabel.get(`${user}|${fmtWeek(week)}`) ?? 0)
+  const rows = series.map((s) => ({
+    user: s.user,
+    prev: countOf(s.user, prevWeek),
+    curr: countOf(s.user, currWeek),
+    total: s.data.reduce((sum, d) => sum + d.count, 0),
+  }))
+  const xMax = Math.max(...rows.flatMap((r) => [r.prev, r.curr]), 4)
+  const pct = (v: number) => (v / xMax) * 100
 
   return (
     <div className="mt-4">
-      <h3 className="mb-2 text-xs font-medium text-text-secondary">
-        유저별 주간 되찾기 (익명 · U1=최다 사용자 · 동일 스케일)
+      <h3 className="mb-1 text-xs font-medium text-text-secondary">
+        유저별 되찾기 — 지난 주 → 이번 주 (익명 · U1=최다 사용자)
       </h3>
-      <div className="space-y-2">
-        {series.map((s) => {
-          const color = DOT_COLORS[s.user] ?? '#9aa0a8'
-          const total = s.data.reduce((sum, d) => sum + d.count, 0)
+      <div className="mb-2 flex items-center gap-3 text-[10px] text-text-secondary">
+        <span className="flex items-center gap-1">
+          <span aria-hidden className="inline-block h-2 w-2 rounded-full border border-[#94a3b8] bg-transparent" />
+          지난 주{prevWeek ? ` (${fmtWeek(prevWeek)}~)` : ''}
+        </span>
+        <span className="flex items-center gap-1">
+          <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-text-primary" />
+          이번 주{currWeek ? ` (${fmtWeek(currWeek)}~)` : ''}
+        </span>
+      </div>
+      <div className="space-y-3">
+        {rows.map((r) => {
+          const color = DOT_COLORS[r.user] ?? '#9aa0a8'
+          const lo = Math.min(r.prev, r.curr)
+          const hi = Math.max(r.prev, r.curr)
+          const delta = r.curr - r.prev
           return (
-            <div key={s.user} className="flex items-center gap-2">
-              <div className="w-14 shrink-0 text-right">
+            <div key={r.user} className="flex items-center gap-2">
+              <div className="w-16 shrink-0 text-right">
+                <span className="text-xs font-medium text-text-primary">{r.user}</span>
+                <div className="text-[10px] tabular-nums text-text-secondary">8주 {r.total}건</div>
+              </div>
+              {/* 트랙: 0..xMax 스케일 공유. 점 겹침(prev==curr)은 이번 주 점이 위에 오도록 순서 고정 */}
+              <div className="relative h-6 min-w-0 flex-1">
+                <div aria-hidden className="absolute inset-x-0 top-1/2 h-px bg-line" />
+                <div
+                  aria-hidden
+                  className="absolute top-1/2 h-0.5 -translate-y-1/2"
+                  style={{ left: `${pct(lo)}%`, width: `${pct(hi) - pct(lo)}%`, backgroundColor: color, opacity: 0.35 }}
+                />
                 <span
                   aria-hidden
-                  className="mr-1 inline-block h-2 w-2 rounded-full"
-                  style={{ backgroundColor: color }}
+                  className="absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-surface-card"
+                  style={{ left: `${pct(r.prev)}%`, borderColor: '#94a3b8' }}
                 />
-                <span className="text-xs font-medium text-text-primary">{s.user}</span>
-                <div className="text-[10px] tabular-nums text-text-secondary">{total}건</div>
+                <span
+                  aria-hidden
+                  className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white"
+                  style={{ left: `${pct(r.curr)}%`, backgroundColor: color }}
+                />
               </div>
-              <div className="h-16 min-w-0 flex-1">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={s.data} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fontSize: 10, fill: '#94a3b8' }}
-                      tickLine={false}
-                      axisLine={false}
-                      interval="preserveStartEnd"
-                    />
-                    <YAxis domain={[0, yMax]} hide />
-                    <Tooltip
-                      cursor={{ strokeDasharray: '3 3' }}
-                      formatter={(value) => [`${value}건`, '되찾기']}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="count"
-                      stroke={color}
-                      strokeWidth={2}
-                      fill={color}
-                      fillOpacity={0.12}
-                      dot={{ r: 3.5, fill: color, stroke: '#ffffff', strokeWidth: 2 }}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="w-20 shrink-0 text-xs tabular-nums text-text-primary">
+                {r.curr}건
+                <span className={`ml-1 text-[10px] ${delta > 0 ? 'text-mint' : delta < 0 ? 'text-warning' : 'text-text-secondary'}`}>
+                  {delta > 0 ? `▲${delta}` : delta < 0 ? `▼${-delta}` : '—'}
+                </span>
               </div>
             </div>
           )
         })}
       </div>
+      <div aria-hidden className="mt-1 flex justify-between pl-[4.5rem] pr-20 text-[10px] tabular-nums text-text-secondary">
+        <span>0</span>
+        <span>{xMax}</span>
+      </div>
       <p className="sr-only">
-        {series
-          .map((s) => `${s.user}: ${s.data.map((d) => `${d.label} ${d.count}건`).join(', ')}`)
+        {rows
+          .map((r) => `${r.user}: 지난 주 ${r.prev}건, 이번 주 ${r.curr}건, 8주 합계 ${r.total}건`)
           .join('; ')}
       </p>
     </div>
