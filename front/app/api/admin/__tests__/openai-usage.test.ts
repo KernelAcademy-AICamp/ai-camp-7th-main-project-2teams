@@ -12,6 +12,16 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
+// 실사용 추정용 events 조회 mock — from('events').select().in().gte() 체인
+let eventsResult: { data: unknown; error: { message: string } | null } = { data: [], error: null }
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: () => ({
+    from: () => ({
+      select: () => ({ in: () => ({ gte: async () => eventsResult }) }),
+    }),
+  }),
+}))
+
 import { GET } from '../openai-usage/route'
 
 function req(qs = '') {
@@ -21,6 +31,7 @@ function req(qs = '') {
 describe('GET /api/admin/openai-usage', () => {
   beforeEach(() => {
     currentUser = { id: 'admin-1' }
+    eventsResult = { data: [], error: null }
   })
   afterEach(() => {
     vi.restoreAllMocks()
@@ -99,5 +110,43 @@ describe('GET /api/admin/openai-usage', () => {
     vi.spyOn(global, 'fetch').mockResolvedValue(new Response('not-json', { status: 200 }))
     const res = await GET(req('?range=30d'))
     expect((await res.json()).available).toBe(false)
+  })
+
+  it('estimated: events 기반 실사용 추정 — 유저별 익명 집계 + user_id 미노출', async () => {
+    // 키 미설정(청구액 불가)이어도 추정은 계산됨
+    // uuid-a: 저장 2 → $0.0013, uuid-b: 저장 1+검색 1 → $0.00067 → U1=uuid-a
+    eventsResult = {
+      data: [
+        { user_id: 'uuid-a', type: 'bookmark_saved' },
+        { user_id: 'uuid-a', type: 'bookmark_saved' },
+        { user_id: 'uuid-b', type: 'bookmark_saved' },
+        { user_id: 'uuid-b', type: 'search_performed' },
+      ],
+      error: null,
+    }
+    const res = await GET(req('?range=30d'))
+    const body = await res.json()
+    expect(body.available).toBe(false) // 키 없음 — 추정만 존재
+    expect(body.estimated.saves).toBe(3)
+    expect(body.estimated.searches).toBe(1)
+    expect(body.estimated.productionCostUsd).toBeCloseTo(3 * 0.00065 + 1 * 0.00002)
+    expect(body.estimated.perUser).toEqual([
+      { user: 'U1', costUsd: expect.closeTo(0.0013) },
+      { user: 'U2', costUsd: expect.closeTo(0.00067) },
+    ])
+    expect(JSON.stringify(body)).not.toContain('uuid-')
+  })
+
+  it('estimated: events 조회 실패 → null degrade, 청구액 응답은 유지', async () => {
+    process.env.OPENAI_ADMIN_KEY = 'sk-admin-test'
+    eventsResult = { data: null, error: { message: 'events down' } }
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ data: [{ results: [{ amount: { value: 2 } }] }] }), { status: 200 }),
+    )
+    const res = await GET(req('?range=30d'))
+    const body = await res.json()
+    expect(body.available).toBe(true)
+    expect(body.totalCostUsd).toBeCloseTo(2)
+    expect(body.estimated).toBeNull()
   })
 })

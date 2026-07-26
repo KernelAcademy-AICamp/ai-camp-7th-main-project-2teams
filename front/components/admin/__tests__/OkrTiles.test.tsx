@@ -22,7 +22,7 @@ describe('OpenAiUsage', () => {
   it('available=false면 조회 불가 표기 (무음 실패 금지)', () => {
     render(
       <OpenAiUsage
-        usage={{ available: false, totalCostUsd: 0, totalTokens: 0, byModel: [] }}
+        usage={{ available: false, totalCostUsd: 0, totalTokens: 0, byModel: [], estimated: null }}
         activeUsers={10}
       />
     )
@@ -32,7 +32,7 @@ describe('OpenAiUsage', () => {
   it('유저당 비용 = 총비용/활성사용자, $0.02 가정선 표시', () => {
     render(
       <OpenAiUsage
-        usage={{ available: true, totalCostUsd: 2, totalTokens: 0, byModel: [] }}
+        usage={{ available: true, totalCostUsd: 2, totalTokens: 0, byModel: [], estimated: null }}
         activeUsers={10}
       />
     )
