@@ -223,11 +223,47 @@ function PerUserDotPlot({ weeks, dots }: { weeks: string[]; dots: PerUserDot[] }
         <span>0</span>
         <span>{xMax}</span>
       </div>
-      <p className="sr-only">
-        {rows
-          .map((r) => `${r.user}: 지난 주 ${r.prev}건, 이번 주 ${r.curr}건, 8주 합계 ${r.total}건`)
-          .join('; ')}
-      </p>
+      {/* 표 뷰 — 정확한 숫자가 필요할 때 + 접근성(차트 SVG 대체 데이터). sr-only 대신 실제 표로 공개 */}
+      <details className="mt-2">
+        <summary className="cursor-pointer text-[11px] text-text-secondary hover:text-text-primary">
+          표로 보기
+        </summary>
+        <table className="mt-2 w-full text-xs tabular-nums">
+          <caption className="sr-only">유저별 되찾기 — 지난 주·이번 주·증감·8주 합계</caption>
+          <thead>
+            <tr className="border-b border-line text-left text-[11px] text-text-secondary">
+              <th scope="col" className="py-1 font-medium">유저</th>
+              <th scope="col" className="py-1 text-right font-medium">지난 주</th>
+              <th scope="col" className="py-1 text-right font-medium">이번 주</th>
+              <th scope="col" className="py-1 text-right font-medium">증감</th>
+              <th scope="col" className="py-1 text-right font-medium">8주 합계</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const delta = r.curr - r.prev
+              return (
+                <tr key={r.user} className="border-b border-line/50 text-text-primary">
+                  <th scope="row" className="py-1 text-left font-medium">
+                    <span
+                      aria-hidden
+                      className="mr-1.5 inline-block h-2 w-2 rounded-full"
+                      style={{ backgroundColor: DOT_COLORS[r.user] ?? '#9aa0a8' }}
+                    />
+                    {r.user}
+                  </th>
+                  <td className="py-1 text-right">{r.prev}</td>
+                  <td className="py-1 text-right">{r.curr}</td>
+                  <td className={`py-1 text-right ${delta > 0 ? 'text-mint' : delta < 0 ? 'text-warning' : 'text-text-secondary'}`}>
+                    {delta > 0 ? `+${delta}` : delta}
+                  </td>
+                  <td className="py-1 text-right">{r.total}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </details>
     </div>
   )
 }
