@@ -18,6 +18,9 @@ AI 출력은 배포 후 "느낌"으로 판단할 수 없다. 프롬프트 한 �
 - 태깅: `RUN_TAG_EVAL=1 npx vitest run lib/__tests__/tag-eval.test.ts`
 - 검색: `RUN_SEARCH_EVAL=1 npx vitest run lib/__tests__/search-eval.test.ts`
 
+태깅 실행 결과는 `front/eval/history.jsonl`에 자동 append(1줄 1실행) — run 간 분산·모델 드리프트를
+데이터로 추적한다. 프롬프트·골든셋 변경 PR에서 갱신분을 함께 커밋할 것.
+
 두 평가 모두 **골든셋(정답 데이터) + 지표 + baseline 상수**로 구성. 골든셋은
 `front/eval/tag-golden.json`(213건), `front/eval/search-golden.json`(북마크 20·질의 26).
 
