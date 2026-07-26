@@ -1,17 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import {
-  AreaChart,
-  Area,
-  ScatterChart,
-  Scatter,
-  Legend,
-  Tooltip,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-} from 'recharts'
+import { AreaChart, Area, Tooltip, XAxis, YAxis, ResponsiveContainer } from 'recharts'
 
 export type WeeklyMetric = {
   week: string
@@ -158,47 +148,60 @@ function PerUserDotPlot({ weeks, dots }: { weeks: string[]; dots: PerUserDot[] }
     })),
   }))
 
+  // 유저 수가 적고 대부분 0건이라 한 차트에 겹치면 0선에 점이 쌓여 해석 불가 —
+  // 유저당 미니 차트 1행(스몰 멀티플)로 분리. y축 최대는 전 유저 공유(비교 가능성 유지).
+  const yMax = Math.max(...dots.map((d) => d.count), 4)
+
   return (
     <div className="mt-4">
-      <h3 className="mb-1 text-xs font-medium text-text-secondary">
-        유저별 주간 되찾기 (익명 · U1=최다 사용자)
+      <h3 className="mb-2 text-xs font-medium text-text-secondary">
+        유저별 주간 되찾기 (익명 · U1=최다 사용자 · 동일 스케일)
       </h3>
-      <div className="h-44 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-            <XAxis
-              dataKey="label"
-              type="category"
-              allowDuplicatedCategory={false}
-              tick={{ fontSize: 11, fill: '#64748b' }}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              dataKey="count"
-              tick={{ fontSize: 11, fill: '#64748b' }}
-              tickLine={false}
-              axisLine={false}
-              width={28}
-              allowDecimals={false}
-            />
-            <Tooltip
-              cursor={{ strokeDasharray: '3 3' }}
-              formatter={(value) => [`${value}건`, '되찾기']}
-            />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-            {series.map((s) => (
-              <Scatter
-                key={s.user}
-                name={s.user}
-                data={s.data}
-                fill={DOT_COLORS[s.user] ?? '#9aa0a8'}
-                stroke="#ffffff"
-                strokeWidth={2}
-              />
-            ))}
-          </ScatterChart>
-        </ResponsiveContainer>
+      <div className="space-y-2">
+        {series.map((s) => {
+          const color = DOT_COLORS[s.user] ?? '#9aa0a8'
+          const total = s.data.reduce((sum, d) => sum + d.count, 0)
+          return (
+            <div key={s.user} className="flex items-center gap-2">
+              <div className="w-14 shrink-0 text-right">
+                <span
+                  aria-hidden
+                  className="mr-1 inline-block h-2 w-2 rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+                <span className="text-xs font-medium text-text-primary">{s.user}</span>
+                <div className="text-[10px] tabular-nums text-text-secondary">{total}건</div>
+              </div>
+              <div className="h-16 min-w-0 flex-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={s.data} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 10, fill: '#94a3b8' }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis domain={[0, yMax]} hide />
+                    <Tooltip
+                      cursor={{ strokeDasharray: '3 3' }}
+                      formatter={(value) => [`${value}건`, '되찾기']}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="count"
+                      stroke={color}
+                      strokeWidth={2}
+                      fill={color}
+                      fillOpacity={0.12}
+                      dot={{ r: 3.5, fill: color, stroke: '#ffffff', strokeWidth: 2 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )
+        })}
       </div>
       <p className="sr-only">
         {series
