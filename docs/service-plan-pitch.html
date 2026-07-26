@@ -79,6 +79,18 @@
   .cell .t { font-size: clamp(1.25rem, 2.8vw, 1.85rem); font-weight: 700;
              letter-spacing: -0.02em; margin-top: 0.5rem; }
   .cell .d { font-size: var(--label); color: var(--muted); margin-top: 0.4rem; line-height: 1.5; }
+  /* 운영 모니터링 슬라이드 — 어드민 스크린샷 프레임 */
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(0.8rem, 2vw, 1.5rem); margin-top: 1.5rem; }
+  @media (max-width: 640px){ .shots { grid-template-columns: 1fr; } }
+  .shot { margin: 0; min-height: 8rem; }
+  .shot img { width: 100%; display: block; border: 1px solid var(--hair); border-radius: 0.6rem;
+    box-shadow: 0 8px 24px rgba(23,25,28,0.08); }
+  .shot figcaption { font-size: var(--label); color: var(--muted); margin-top: 0.55rem; line-height: 1.5; }
+  /* 발표자 대본 — N 키로 토글 */
+  .note { display: none; font-size: clamp(0.8rem, 1.3vw, 0.95rem); color: var(--ink);
+    background: rgba(46,111,214,0.06); border-left: 3px solid var(--accent);
+    padding: 0.8rem 1rem; margin-top: 1.4rem; max-width: 46rem; line-height: 1.7; border-radius: 0 0.4rem 0.4rem 0; }
+  body.notes .note { display: block; }
 
   /* 표지 */
   .cover .brand { font-size: clamp(3rem, 12vw, 8rem); font-weight: 800; letter-spacing: -0.04em; line-height: 0.95; }
@@ -104,6 +116,7 @@
       <div class="brand">모와바 <span class="en">Mowaba</span></div>
       <p class="lead">저장이 아니라, <span class="accent">되찾기</span>를 푼다.</p>
       <div class="tag">Save it · Find it</div>
+      <p class="note">안녕하세요, AI 캠프 7기 2팀입니다. 저희가 만든 서비스는 북마크 AI 관리 서비스, 모와바입니다. 흔한 '저장 도구'가 아닙니다 — 저희는 저장이 아니라 '되찾기'라는 문제를 풉니다.</p>
     </div>
   </section>
 
@@ -114,6 +127,7 @@
       <h2 class="head">다시 찾으려 저장한 북마크의 84%는 사라진다.</h2>
       <div class="hero">84<span class="unit">%</span></div>
       <p class="meta">Bergman, Whittaker &amp; Schooler (2021) · n=250 · 재발견 실패율</p>
+      <p class="note">숫자 하나로 시작하겠습니다. 84%. 다시 보려고 저장한 북마크 중에서, 끝내 다시 찾지 못하는 비율입니다. 250명을 추적한 연구 결과인데요 — 저장은 다들 하는데, 되찾는 데서 실패하고 있다는 뜻입니다.</p>
     </div>
   </section>
 
@@ -127,6 +141,7 @@
         <div class="cell"><div class="n">02 분류</div><div class="t">폴더 수동 선택</div><div class="d">매번 인지 부하</div></div>
         <div class="cell"><div class="n">03 재발견</div><div class="t">검색 불가</div><div class="d">키워드로도 못 찾음</div></div>
       </div>
+      <p class="note">왜 못 찾을까요? 저장 시점엔 제목만 남고 내용은 사라집니다. 분류는 폴더를 매번 수동으로 골라야 해서 결국 방치되고요. 그 결과 재발견 단계에선 키워드 검색조차 안 됩니다. 병목은 저장이 아니라 이 세 번째 단계입니다.</p>
     </div>
   </section>
 
@@ -137,6 +152,7 @@
       <h2 class="head">하루 10개씩 저장하고 못 찾는 <span class="accent">지식노동자</span>가 우리 고객이다.</h2>
       <p class="lead">개발자 · PM · 리서처 — "분명 저장했는데, 어디 뒀는지 기억이 안 나."</p>
       <p class="meta">폴더 정리는 부담, 결국 방치 · 저장한 자료를 필요할 때 바로 되찾고 싶다</p>
+      <p class="note">이 문제를 가장 아프게 겪는 사람은 하루에도 열 개씩 저장하는 지식노동자입니다. 개발자, PM, 리서처 — '분명 저장했는데 어디 뒀는지 기억이 안 나'는 경험, 다들 있으실 겁니다.</p>
     </div>
   </section>
 
@@ -150,6 +166,7 @@
         <div class="cell"><div class="n">02</div><div class="t">자동 태깅</div><div class="d">AI가 알아서 분류</div></div>
         <div class="cell"><div class="n">03</div><div class="t">되찾기</div><div class="d">말하듯 검색</div></div>
       </div>
+      <p class="note">모와바의 답은 단순합니다. 저장하는 순간, 되찾기가 준비됩니다. 사용자는 1클릭으로 저장만 하면 되고, 분류는 AI가, 검색은 말하듯 하면 됩니다. 이 세 단계를 차례로 보여드리겠습니다.</p>
     </div>
   </section>
 
@@ -160,6 +177,7 @@
       <h2 class="head">저장하면 AI가 <span class="accent">알아서</span> 분류한다.</h2>
       <p class="lead mut">본문을 읽어 형식·대상 2축 태그와 카테고리를 부여. 폴더 수동 정리를 아예 없앤다.</p>
       <p class="meta">13개 대분류 · 중분류는 닫힌 enum으로 환각 차단 · 본문은 처리 후 즉시 파기</p>
+      <p class="note">첫째, 자동 태깅. 저장하면 AI가 본문을 읽고 카테고리와 태그를 알아서 붙입니다. 13개 대분류 체계에, 중분류는 닫힌 목록으로 강제해서 AI가 멋대로 만들어내는 환각 태그를 차단했습니다. 본문은 처리 즉시 파기 — 개인정보도 안전합니다.</p>
     </div>
   </section>
 
@@ -170,6 +188,7 @@
       <h2 class="head">제목이 안 맞아도, <span class="accent">의미로 되찾는다.</span></h2>
       <p class="lead mut">"지난달 그 RAG 아티클" 처럼 말하듯 검색. 의미(벡터)와 키워드를 함께 따진다.</p>
       <p class="meta">하이브리드 검색(pgvector + 트라이그램 · RRF 병합) · 임베딩 3-large</p>
+      <p class="note">둘째, 자연어 검색. '지난달에 본 그 RAG 아티클'처럼 말하듯 검색하면, 제목이 달라도 의미로 찾아냅니다. 벡터 검색과 키워드 검색을 함께 돌려 합치는 하이브리드 방식입니다.</p>
     </div>
   </section>
 
@@ -178,43 +197,67 @@
     <div class="wrap">
       <div class="eyebrow"><span class="step">검증 · 07</span></div>
       <h2 class="head">품질은 이미 <span class="accent">실측</span>으로 검증됐다.</h2>
-      <div class="hero">0.76</div>
-      <p class="meta">태깅 macro-F1 0.76 · 대분류 0.84 · 골든셋 n=213 실측 · 검색 recall 0.923 (n=26) · 품질 퇴행 방지 게이트로 회귀 차단</p>
+      <div class="hero">0.78</div>
+      <p class="meta">태깅 macro-F1 0.78 · 대분류 0.88 · 골든셋 n=213 실측 · 검색 recall 0.923 (n=26) · 품질 퇴행 방지 게이트로 회귀 차단</p>
+      <p class="note">그래서 품질이 얼마나 되냐 — 느낌이 아니라 실측으로 답하겠습니다. 정답을 직접 라벨링한 골든셋 213건으로 채점한 태깅 F1이 0.78, 대분류 정확도 88%입니다. 검색은 26개 질의에서 재현율 92.3%. 그리고 이 수치가 떨어지면 머지가 차단되는 회귀 게이트를 걸어놨습니다.</p>
+    </div>
+  </section>
+
+  <!-- 검증 2 — 운영 모니터링 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">검증 · 08</span> — 운영 모니터링</div>
+      <h2 class="head">지표는 배포 후에도 <span class="accent">계속 감시</span>된다.</h2>
+      <div class="shots">
+        <figure class="shot">
+          <img src="assets/admin-northstar.png" alt="North Star 주간 지표 대시보드 스크린샷" />
+          <figcaption>North Star 주간 지표 — 저장 → 자동분류 → 검색 → 클릭 퍼널</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="assets/admin-growth.png" alt="성장 대시보드 스크린샷" />
+          <figcaption>성장 대시보드 — 활성 사용자 · 저장 완료율 · 저장/가입 일별 추이</figcaption>
+        </figure>
+      </div>
+      <p class="meta">개발 단계: 골든셋 회귀 게이트(F1 ≥ 0.74)가 품질 퇴행을 자동 차단 · 운영 단계: 자동분류 커버리지·검색 클릭률을 어드민 대시보드로 주간 추적 — 실화면</p>
+      <p class="note">검증은 일회성이 아닙니다. 지금 보시는 게 실제 운영 중인 어드민 대시보드입니다. 왼쪽은 North Star 주간 지표 — 저장부터 자동분류 커버리지, 검색, 클릭까지 퍼널로 추적하고, 오른쪽은 성장 추이입니다. 개발 단계엔 골든셋 게이트가, 배포 후엔 이 대시보드가 품질을 지킵니다.</p>
     </div>
   </section>
 
   <!-- 비즈니스 1 -->
   <section class="slide">
     <div class="wrap">
-      <div class="eyebrow"><span class="step">비즈니스 · 08</span> — 시장</div>
+      <div class="eyebrow"><span class="step">비즈니스 · 09</span> — 시장</div>
       <h2 class="head">Pocket 종료로 국내 대안 <span class="accent">공백</span>이 열렸다.</h2>
       <p class="lead">2025-07 Pocket 서비스 종료. 무료 · AI · 자연어 검색을 모두 갖춘 국내 서비스는 지금 없다.</p>
       <p class="meta">난민 시장을 임포트 원클릭으로 선점 · 최근접 경쟁 mymind는 자연어 검색이 아직 베타</p>
+      <p class="note">시장 타이밍도 좋습니다. 작년 7월 Pocket이 종료되면서 갈 곳 잃은 사용자들이 생겼는데, 무료에 AI 자동 분류, 자연어 검색까지 갖춘 국내 서비스는 아직 없습니다. 원클릭 임포트로 이 공백을 선점합니다.</p>
     </div>
   </section>
 
   <!-- 비즈니스 2 -->
   <section class="slide">
     <div class="wrap">
-      <div class="eyebrow"><span class="step">비즈니스 · 09</span> — 모델</div>
+      <div class="eyebrow"><span class="step">비즈니스 · 10</span> — 모델</div>
       <h2 class="head">원가는 유저당 월 <span class="accent">$0.02</span>, 가격은 가치로 매긴다.</h2>
       <p class="lead mut">AI 변동비가 사실상 0 → 가격 하한 제약 없음. Freemium으로 시작해 프리미엄 전환.</p>
       <p class="meta">Free / Pro ₩5,900월 · 원가 무관, 얼마나 되찾게 해주는가로 설계</p>
+      <p class="note">비용 걱정은 없습니다. AI 원가는 유저당 월 2센트 — 사실상 0입니다. 가격 하한 제약이 없으니 Freemium으로 시작해서, 얼마나 잘 되찾게 해주는가라는 가치 기준으로 프리미엄 전환을 설계합니다.</p>
     </div>
   </section>
 
   <!-- 요청 -->
   <section class="slide">
     <div class="wrap">
-      <div class="eyebrow"><span class="step">요청 · 10</span></div>
+      <div class="eyebrow"><span class="step">요청 · 11</span></div>
       <h2 class="head">MVP로 이 가설 하나를 <span class="accent">검증</span>하게 해주세요.</h2>
       <p class="lead">"자동 태깅 + 자연어 검색이 재발견 행동을 늘린다." — 검색 사용률이 MAU의 40%를 넘으면 Go.</p>
       <p class="meta">모와바 · 저장하는 도구가 아니라, 다시 찾는 도구로.</p>
+      <p class="note">마지막으로, 저희가 검증하려는 가설은 하나입니다. '자동 태깅과 자연어 검색이 재발견 행동을 늘린다.' 검색 사용률이 MAU의 40%를 넘으면 Go입니다. 모와바 — 저장하는 도구가 아니라, 다시 찾는 도구로. 감사합니다.</p>
     </div>
   </section>
 </main>
 
-<div class="counter"><b id="cur">01</b> / 11</div>
+<div class="counter"><b id="cur">01</b> / 12 · N 대본</div>
 
 <script>
   (function () {
@@ -237,6 +280,7 @@
     addEventListener('keydown', function (e) {
       if (['ArrowDown','ArrowRight',' ','PageDown'].includes(e.key)) { e.preventDefault(); go(i+1); }
       else if (['ArrowUp','ArrowLeft','PageUp'].includes(e.key)) { e.preventDefault(); go(i-1); }
+      else if (e.key === 'n' || e.key === 'N') { document.body.classList.toggle('notes'); }
     });
   })();
 </script>
