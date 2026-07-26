@@ -1,7 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts'
+import {
+  AreaChart,
+  Area,
+  ScatterChart,
+  Scatter,
+  Legend,
+  Tooltip,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+} from 'recharts'
 
 export type WeeklyMetric = {
   week: string
@@ -12,6 +22,13 @@ export type WeeklyMetric = {
   retrieved: number
   manualRetags: number
 }
+
+// 유저별 주간 되찾기 도트 — user는 익명 키(U1·U2·기타), 서버가 user_id를 노출하지 않음
+export type PerUserDot = { week: string; user: string; count: number }
+
+// 도트 시리즈 고정 색 — validate_palette.js 통과(CVD ΔE 24.1 · normal 29.4).
+// '기타'는 중립 회색(범주 아님, 잔여 합산). 색은 순서가 아니라 키에 고정.
+const DOT_COLORS: Record<string, string> = { U1: '#4a90e2', U2: '#e8833a', 기타: '#9aa0a8' }
 
 const LOAD_ERROR = 'North Star 지표를 불러오지 못했습니다'
 
@@ -42,6 +59,7 @@ function tilesFrom(m: WeeklyMetric): Tile[] {
 // North Star 주간 지표 위젯 — /api/admin/metrics(admin_metrics_weekly) 소비. 주간 고정(range 무관).
 export function NorthStarMetrics() {
   const [metrics, setMetrics] = useState<WeeklyMetric[] | null>(null)
+  const [perUser, setPerUser] = useState<PerUserDot[]>([])
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -61,6 +79,7 @@ export function NorthStarMetrics() {
         }
         setError(null)
         setMetrics(body.metrics)
+        setPerUser(Array.isArray(body.perUser) ? body.perUser : [])
       })
       .catch(() => {
         if (alive) setError(LOAD_ERROR)
@@ -114,8 +133,78 @@ export function NorthStarMetrics() {
           <p className="sr-only">
             {metrics.map((m) => `${fmtWeek(m.week)} 되찾은 북마크 ${m.retrieved}`).join('; ')}
           </p>
+
+          {/* 유저별 주간 되찾기 도트 — NSM을 유저 단위로 분해 (PM 1순위 지표).
+              8주 축은 metrics와 공유, (유저,주) 조합 없으면 0점 표시 — "되찾기 없음"도 정보. */}
+          {perUser.length > 0 && (
+            <PerUserDotPlot weeks={metrics.map((m) => m.week)} dots={perUser} />
+          )}
         </>
       )}
     </section>
+  )
+}
+
+// 유저별 주간 되찾기 스트립 도트. 색은 익명 키에 고정(DOT_COLORS), 흰 테두리 2px로 겹침 구분.
+function PerUserDotPlot({ weeks, dots }: { weeks: string[]; dots: PerUserDot[] }) {
+  const users = [...new Set(dots.map((d) => d.user))]
+  // 주 버킷 문자열 포맷 차이(RPC 'T00:00:00Z' vs JS toISOString '.000Z') 흡수 — 라벨(월/일)로 매칭
+  const byLabel = new Map(dots.map((d) => [`${d.user}|${fmtWeek(d.week)}`, d.count]))
+  const series = users.map((user) => ({
+    user,
+    data: weeks.map((w) => ({
+      label: fmtWeek(w),
+      count: byLabel.get(`${user}|${fmtWeek(w)}`) ?? 0,
+    })),
+  }))
+
+  return (
+    <div className="mt-4">
+      <h3 className="mb-1 text-xs font-medium text-text-secondary">
+        유저별 주간 되찾기 (익명 · U1=최다 사용자)
+      </h3>
+      <div className="h-44 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <ScatterChart margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+            <XAxis
+              dataKey="label"
+              type="category"
+              allowDuplicatedCategory={false}
+              tick={{ fontSize: 11, fill: '#64748b' }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              dataKey="count"
+              tick={{ fontSize: 11, fill: '#64748b' }}
+              tickLine={false}
+              axisLine={false}
+              width={28}
+              allowDecimals={false}
+            />
+            <Tooltip
+              cursor={{ strokeDasharray: '3 3' }}
+              formatter={(value) => [`${value}건`, '되찾기']}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            {series.map((s) => (
+              <Scatter
+                key={s.user}
+                name={s.user}
+                data={s.data}
+                fill={DOT_COLORS[s.user] ?? '#9aa0a8'}
+                stroke="#ffffff"
+                strokeWidth={2}
+              />
+            ))}
+          </ScatterChart>
+        </ResponsiveContainer>
+      </div>
+      <p className="sr-only">
+        {series
+          .map((s) => `${s.user}: ${s.data.map((d) => `${d.label} ${d.count}건`).join(', ')}`)
+          .join('; ')}
+      </p>
+    </div>
   )
 }
