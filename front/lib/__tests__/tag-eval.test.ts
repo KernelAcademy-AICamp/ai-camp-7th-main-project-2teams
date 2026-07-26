@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, appendFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { scoreTags, aggregate, type TagScore } from '../tag-eval'
 import { generateTags } from '../ai'
@@ -146,6 +146,18 @@ function loadGolden(): GoldenItem[] {
   return JSON.parse(readFileSync(join(__dirname, '../../eval/tag-golden.json'), 'utf-8'))
 }
 
+// 측정 이력 축적(#3) — 실행마다 eval/history.jsonl에 1줄 append. run 간 분산·드리프트를
+// 주석 고고학 대신 데이터로 추적한다(baseline 재조정 근거가 됐던 0.755~0.768 밴드가 배경).
+// 프롬프트/골든셋 변경 PR에서 함께 커밋할 것. 기록 실패는 평가를 막지 않는다(무시).
+function appendHistory(mode: 'rich' | 'title-only', agg: ReturnType<typeof aggregate>): void {
+  try {
+    const line = JSON.stringify({ ts: new Date().toISOString(), mode, ...agg })
+    appendFileSync(join(__dirname, '../../eval/history.jsonl'), line + '\n')
+  } catch {
+    // 기록은 부가 기능 — 실패해도 게이트 판정에 영향 없음
+  }
+}
+
 // 골든셋 전체를 지정 입력 조건으로 채점. includeDescription=false면 임포트 굶김 재현.
 async function runGolden(
   golden: GoldenItem[],
@@ -177,6 +189,7 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
 
       const agg = aggregate(await runGolden(loadGolden(), true))
       console.log('\n=== 집계 [rich] ===', JSON.stringify(agg, null, 2))
+      appendHistory('rich', agg)
       expect(agg.f1).toBeGreaterThanOrEqual(F1_BASELINE)
       expect(agg.emptyRate).toBeLessThanOrEqual(EMPTY_RATE_MAX) // D-2: 미분류 급증 차단
     },
@@ -190,6 +203,7 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
 
       const agg = aggregate(await runGolden(loadGolden(), false))
       console.log('\n=== 집계 [title-only] ===', JSON.stringify(agg, null, 2))
+      appendHistory('title-only', agg)
       // 임포트 굶김 경로 회귀 게이트 — 이 값이 떨어지면 임포트 태깅 품질 저하.
       expect(agg.f1).toBeGreaterThanOrEqual(TITLE_ONLY_F1_BASELINE)
       expect(agg.emptyRate).toBeLessThanOrEqual(EMPTY_RATE_MAX) // D-2: retag 입력 조건 미분류 급증 차단
