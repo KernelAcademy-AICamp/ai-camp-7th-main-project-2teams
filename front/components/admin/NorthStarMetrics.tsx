@@ -133,7 +133,7 @@ export function NorthStarMetrics() {
 }
 
 // 유저별 주간 되찾기 스트립 도트. 색은 익명 키에 고정(dotColor), 흰 테두리 2px로 겹침 구분.
-export function PerUserDotPlot({ weeks, dots }: { weeks: string[]; dots: PerUserDot[] }) {
+function PerUserDotPlot({ weeks, dots }: { weeks: string[]; dots: PerUserDot[] }) {
   const users = [...new Set(dots.map((d) => d.user))]
   // 주 버킷 문자열 포맷 차이(RPC 'T00:00:00Z' vs JS toISOString '.000Z') 흡수 — 라벨(월/일)로 매칭
   const byLabel = new Map(dots.map((d) => [`${d.user}|${fmtWeek(d.week)}`, d.count]))
