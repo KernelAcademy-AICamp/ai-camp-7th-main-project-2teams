@@ -3,7 +3,13 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { scoreQuery, aggregateSearch, type SearchScore } from '../search-eval'
-import { createEmbedding, buildEmbeddingText, buildWeakEmbeddingText, generateWeakSummary } from '../ai'
+import {
+  createEmbedding,
+  buildEmbeddingText,
+  buildWeakEmbeddingText,
+  generateWeakSummary,
+  generateBilingualSummary,
+} from '../ai'
 import { expandSearchQuery } from '../search-alias'
 
 // 지표 함수 단위 테스트 — 항상 실행 (OpenAI/DB 미호출).
@@ -88,11 +94,15 @@ describe('aggregateSearch', () => {
 // 실패 3건(b21 debounce·b22 indexing·b23 retrospective)은 사전 등재 브랜드가 없어 앵커가 빈 문자열.
 // 즉 앵커는 브랜드 축만 해결하며, 순수 개념어 축은 임베딩 입력에 반대 언어 요약을 넣는
 // 후속 작업(비동기 후처리) 영역으로 남는다. 그때 concept baseline을 상향한다.
-const OVERALL_RECALL_BASELINE = 0.8 // 실측 0.844 − 마진(concept 3 + weak 1 + particle 1 known miss)
+// N-7(2026-07-27): 이중언어 요약(generateBilingualSummary)을 after()로 응답 뒤에 붙여 재임베딩.
+// concept 0.5→0.833(5/6), overall 0.844→0.906. 앵커가 못 잡던 b22(indexing)·b23(retrospective)이
+// 요약으로 구제됨. 잔여 1건 b21("이벤트 연타 제어 방법"↔Debouncing/Throttling)은 쿼리 표현 자체가
+// 비표준이라 라벨이 느슨한 known miss — particle 잔여 1건과 같은 성격.
+const OVERALL_RECALL_BASELINE = 0.86 // 실측 0.906 − 마진(concept 1 + weak 1 + particle 1 known miss)
 // 알려진 약점 카테고리 — 코어 회귀 게이트에서 제외. 각 카테고리는 자체 개선 트랙을 가진다.
 const KNOWN_WEAK_CATEGORIES = ['weak-vector', 'cross-lingual-concept']
 const CORE_RECALL_BASELINE = 0.9 // 약점 카테고리 제외 실측 0.957(22/23, particle 1건 known miss) − 마진
-const CROSS_LINGUAL_CONCEPT_BASELINE = 0.45 // 실측 0.5(3/6) − 마진. 앵커가 브랜드 축만 커버하는 현 상태 고정
+const CROSS_LINGUAL_CONCEPT_BASELINE = 0.78 // 실측 0.833(5/6) − 마진. 앵커+이중언어 요약 적용 후
 interface GoldenBookmark {
   ref: string
   url: string
@@ -140,7 +150,12 @@ async function runSearchGolden(
       // 없으면 weak 경로(title+LLM 한줄요약+태그) — app/api/bookmarks/route.ts와 동일.
       const embedding = await createEmbedding(
         b.description
-          ? buildEmbeddingText(b.title, b.url, b.description)
+          ? buildEmbeddingText(
+              b.title,
+              b.url,
+              b.description,
+              await generateBilingualSummary({ title: b.title, url: b.url }),
+            )
           : buildWeakEmbeddingText(b.title, b.tags, await generateWeakSummary({ title: b.title, url: b.url })),
       )
       const { data, error } = await supabase

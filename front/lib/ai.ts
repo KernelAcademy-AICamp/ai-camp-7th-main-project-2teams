@@ -211,11 +211,59 @@ export const EMBEDDING_CONTENT_LIMIT = 2000;
 // title+본문이 한 언어로만 채워지면 벡터가 그 언어 공간에 갇혀 교차언어 검색이 실패한다.
 // 앵커는 사전 조회뿐이라 추가 API 호출·지연이 없다(저장 응답시간 불변).
 // 주의: 이 함수의 출력 규약을 바꾸면 저장된 임베딩 전량 재생성 필요(scripts/reembed.ts).
-export function buildEmbeddingText(title: string, url: string, content: string): string {
+export function buildEmbeddingText(
+  title: string,
+  url: string,
+  content: string,
+  summary = "",
+): string {
   const anchor = buildBrandAnchor(title, url);
-  return [anchor || null, title, content.trim().slice(0, EMBEDDING_CONTENT_LIMIT) || null]
+  return [
+    anchor || null,
+    summary || null,
+    title,
+    content.trim().slice(0, EMBEDDING_CONTENT_LIMIT) || null,
+  ]
     .filter(Boolean)
     .join("\n");
+}
+
+// 이중언어 요약 — 브랜드 앵커가 못 잡는 "개념어" 교차언어 축을 메운다.
+// (골든셋 cross-lingual-concept 실측: 사전 등재 브랜드가 없는 문서 3건 전건 miss)
+// 한/영 한 줄씩 생성해 임베딩 입력에 넣으면 벡터가 두 언어 개념 공간에 동시에 놓인다.
+// generateWeakSummary와 같은 title+url 기반 — content를 쓰지 않아 본문 파기 규약과 무관.
+// 저장 응답 경로에서 호출 금지: 반드시 after()로 응답 뒤에 실행(저장 지연 불변 요구).
+// 실패는 빈 값 degrade — 앵커·본문만으로 임베딩은 계속 만들어진다.
+export async function generateBilingualSummary({
+  title,
+  url,
+}: {
+  title: string;
+  url: string;
+}): Promise<string> {
+  if (isMockOpenAI()) return "";
+  try {
+    const completion = await getOpenAI().chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            'URL과 제목만 보고 이 웹페이지/서비스가 무엇인지 확실히 아는 경우에만 기능 중심으로 한국어 한 문장과 영어 한 문장을 각각 30자/60자 내외로 작성하세요. 두 문장은 같은 내용의 번역이 아니라 각 언어에서 자연스러운 검색 표현이어야 합니다. 확실하지 않으면 둘 다 빈 문자열. JSON만 반환: {"ko": "...", "en": "..."}',
+        },
+        { role: "user", content: `제목: ${title}\nURL: ${url}` },
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 200,
+      temperature: 0,
+    });
+    const parsed = JSON.parse(completion.choices[0].message.content ?? "{}");
+    const ko = typeof parsed.ko === "string" ? parsed.ko.trim() : "";
+    const en = typeof parsed.en === "string" ? parsed.en.trim() : "";
+    return [ko, en].filter(Boolean).join("\n");
+  } catch {
+    return "";
+  }
 }
 
 export async function createEmbedding(text: string): Promise<number[]> {

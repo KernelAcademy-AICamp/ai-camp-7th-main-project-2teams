@@ -11,6 +11,7 @@ import { createClient } from '@supabase/supabase-js'
 import {
   createEmbedding,
   generateWeakSummary,
+  generateBilingualSummary,
   buildEmbeddingText,
   buildWeakEmbeddingText,
   EMBEDDING_MODEL,
@@ -45,7 +46,17 @@ async function main() {
     try {
       const tagsLine = r.tags?.length ? `태그: ${r.tags.join(', ')}` : null
       const text = r.description
-        ? [buildEmbeddingText(r.title, r.url, r.description), tagsLine].filter(Boolean).join('\n')
+        ? [
+            buildEmbeddingText(
+              r.title,
+              r.url,
+              r.description,
+              await generateBilingualSummary({ title: r.title, url: r.url }),
+            ),
+            tagsLine,
+          ]
+            .filter(Boolean)
+            .join('\n')
         : buildWeakEmbeddingText(
             r.title,
             r.tags ?? [],

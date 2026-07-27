@@ -8,6 +8,7 @@ import {
   buildEmbeddingText,
   buildWeakEmbeddingText,
   generateWeakSummary,
+  generateBilingualSummary,
 } from '@/lib/ai'
 import { normalizeTags, extractTopCategory, UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
@@ -28,6 +29,32 @@ const getQuerySchema = z.object({
 // 저장 + AI 태깅 + 임베딩. content(본문)는 DB 저장·로그 금지 — 임베딩 계산 후 즉시 파기.
 // description(og:description)은 기본 저장(카드 표시·검색용) — content와는 별개 값.
 // maskSensitive() 경유 필수 (lib/logger.ts), 응답에 embedding 미포함.
+// 응답 후 임베딩 보강 — 이중언어 요약을 얻어 재임베딩한다. 저장 응답 경로에서 부르지 말 것.
+// 실패는 전부 삼킨다: 보강은 부가 기능이고 최초 임베딩만으로도 검색은 동작한다.
+async function enrichEmbedding(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  userId: string,
+  id: string,
+  title: string,
+  url: string,
+  content: string,
+): Promise<void> {
+  try {
+    const summary = await generateBilingualSummary({ title, url })
+    if (!summary) return // 모델이 모르는 페이지 — 보강 없이 최초 임베딩 유지
+    const embedding = await createEmbedding(buildEmbeddingText(title, url, content, summary))
+    const { error } = await supabase
+      .from('bookmarks')
+      .update({ embedding })
+      .eq('id', id)
+      .eq('user_id', userId)
+    if (error) logger.error('[enrich-embedding-fail]', { id, message: error.message })
+  } catch (err) {
+    logger.error('[enrich-embedding-fail]', err)
+  }
+}
+
 export const POST = withAuth(async (req, { user, supabase }) => {
   const parsed = bookmarkCreateSchema.safeParse(await req.json())
   if (!parsed.success) {
@@ -167,6 +194,19 @@ export const POST = withAuth(async (req, { user, supabase }) => {
     after(flushEvents)
   } catch {
     await flushEvents
+  }
+
+  // 이중언어 요약 보강 — 브랜드 앵커가 못 잡는 개념어 교차언어 축(골든셋 cross-lingual-concept).
+  // 저장 응답 경로 밖(after)에서만 실행 — LLM 1회가 추가되지만 응답은 이미 나간 뒤라 저장 지연 불변.
+  // 실패·미실행 시 최초 임베딩(앵커+본문) 그대로 유지 — best-effort degrade.
+  // 결과적으로 저장 직후 짧은 구간은 보강 전 벡터로 검색된다(eventual consistency).
+  const bookmarkId = (data as { id: string }).id
+  const enrich = enrichEmbedding(supabase, user.id, bookmarkId, title, url, embeddingContent)
+  try {
+    after(enrich)
+  } catch {
+    // Next 요청 컨텍스트 밖(테스트 등) — 보강을 건너뛴다. 동기 대기하면 저장 지연이 생겨 금지.
+    void enrich.catch(() => {})
   }
 
   // category(대분류명)는 이미 위에서 계산된 top 재사용 — 추가 조인 불필요
