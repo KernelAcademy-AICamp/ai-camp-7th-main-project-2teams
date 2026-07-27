@@ -58,8 +58,8 @@ describe('aggregateSearch', () => {
 // 실행: RUN_SEARCH_EVAL=1 npx vitest run lib/__tests__/search-eval.test.ts
 // 필요 env: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY
 // 흐름: 골든셋(front/eval/search-golden.json) 전용 throwaway auth user 생성 →
-//   북마크 18건 삽입(title+description 임베딩, front/lib/ai.ts:171과 동일 규약) →
-//   쿼리 12건에 대해 app/api/search/route.ts와 동일한 하이브리드 검색(expandSearchQuery
+//   북마크 20건 삽입(title+description 임베딩, front/lib/ai.ts:171과 동일 규약) →
+//   쿼리 26건에 대해 app/api/search/route.ts와 동일한 하이브리드 검색(expandSearchQuery
 //   교차언어 확장 → match_bookmarks RPC 병렬 호출 → similarity 기준 병합/정렬) 재현 →
 //   scoreQuery로 채점 → finally에서 북마크·테스트 유저 삭제.
 // 실측(2026-07-13, text-embedding-3-small, n=12): recall=mrr=hitRate=0.917(11/12).
@@ -80,7 +80,7 @@ describe('aggregateSearch', () => {
 // weak-vector 0/3→2/3(옵시디언·Zotero floor 통과 — A/B 예측 적중), noise 오탐 0 유지. 실측 24/26=0.923.
 // n=26. 최악(weak 1 + particle 1 miss) 24/26=0.923 − 마진.
 const OVERALL_RECALL_BASELINE = 0.85
-const NON_WEAK_VECTOR_RECALL_BASELINE = 0.9 // weak-vector 제외 실측 1.0 − 마진
+const NON_WEAK_VECTOR_RECALL_BASELINE = 0.9 // weak-vector 제외 실측 0.957(22/23, particle 1건 known miss) − 마진
 interface GoldenBookmark {
   ref: string
   url: string

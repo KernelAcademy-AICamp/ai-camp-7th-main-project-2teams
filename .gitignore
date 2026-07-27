@@ -27,6 +27,9 @@ playwright-report/
 # retag 자동 백업 스냅샷 (user 데이터 id·tags 포함 — 커밋 금지)
 front/scripts/backups/
 
+# eval 골든셋 백업 스냅샷 (수동 백업 아티팩트 — 커밋 금지)
+front/eval/*.backup-*.json
+
 # git worktree 작업 디렉토리
 .worktrees/
 

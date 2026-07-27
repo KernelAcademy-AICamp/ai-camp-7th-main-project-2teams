@@ -9,7 +9,7 @@ import { HealthStats } from './HealthStats'
 import { OpenAiUsage, type Usage } from './OpenAiUsage'
 import { AdminManager } from './AdminManager'
 
-const EMPTY_USAGE: Usage = { available: false, totalCostUsd: 0, totalTokens: 0, byModel: [] }
+const EMPTY_USAGE: Usage = { available: false, totalCostUsd: 0, totalTokens: 0, byModel: [], estimated: null }
 
 // 운영·개발 지표 — 데이터 건전성, OpenAI 사용량, 관리자 관리
 export function OpsDashboard() {

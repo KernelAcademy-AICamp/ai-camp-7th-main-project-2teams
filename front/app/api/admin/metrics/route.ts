@@ -16,6 +16,43 @@ type MetricRow = {
   manual_retags: number | string
 }
 
+// date_trunc('week')와 동일한 월요일 시작 UTC 주 버킷 — RPC 주차와 라벨이 맞도록.
+function weekStartIso(d: Date): string {
+  const day = (d.getUTCDay() + 6) % 7 // 월=0
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day)).toISOString()
+}
+
+// 유저별 주간 되찾기 도트용 — NSM(retrieved)을 유저 단위로 분해. RPC 확장(마이그레이션) 대신
+// events 직접 집계(볼륨 소량). user_id는 응답에 절대 미포함 — 총량 내림차순으로 U1·U2 익명 키 부여,
+// 3순위 이하는 '기타'로 합산. ponytail: 고정 2색 도트 전제, 유저 늘어 색 구분이 필요해지면 확장.
+type PerUserDot = { week: string; user: string; count: number }
+function aggregatePerUser(rows: Array<{ user_id: string; created_at: string }>): PerUserDot[] {
+  const byUserWeek = new Map<string, Map<string, number>>()
+  for (const r of rows) {
+    const week = weekStartIso(new Date(r.created_at))
+    const weeks = byUserWeek.get(r.user_id) ?? new Map<string, number>()
+    weeks.set(week, (weeks.get(week) ?? 0) + 1)
+    byUserWeek.set(r.user_id, weeks)
+  }
+  const total = (m: Map<string, number>) => [...m.values()].reduce((s, v) => s + v, 0)
+  const ranked = [...byUserWeek.entries()].sort((a, b) => total(b[1]) - total(a[1]))
+  const dots = new Map<string, number>() // `${key}|${week}` → count ('기타' 합산 대비)
+  ranked.forEach(([, weeks], i) => {
+    const key = i < 2 ? `U${i + 1}` : '기타'
+    for (const [week, count] of weeks) {
+      const k = `${key}|${week}`
+      dots.set(k, (dots.get(k) ?? 0) + count)
+    }
+  })
+  const userOrder: Record<string, number> = { U1: 0, U2: 1, 기타: 2 }
+  return [...dots.entries()]
+    .map(([k, count]) => {
+      const [user, week] = k.split('|')
+      return { week, user, count }
+    })
+    .sort((a, b) => a.week.localeCompare(b.week) || userOrder[a.user] - userOrder[b.user])
+}
+
 export const GET = withAdmin(async () => {
   const admin = createAdminClient()
   const { data, error } = await admin.rpc('admin_metrics_weekly', { p_weeks: WEEKS })
@@ -30,5 +67,17 @@ export const GET = withAdmin(async () => {
     retrieved: Number(r.retrieved),
     manualRetags: Number(r.manual_retags),
   }))
-  return NextResponse.json({ metrics })
+
+  // 도트 분해는 보조 지표 — 실패해도 핵심 metrics 응답은 유지(빈 배열 degrade).
+  const since = new Date(Date.now() - WEEKS * 7 * 86_400_000).toISOString()
+  const { data: clicks, error: clickError } = await admin
+    .from('events')
+    .select('user_id, created_at')
+    .eq('type', 'search_result_clicked')
+    .gte('created_at', since)
+  const perUser = clickError
+    ? []
+    : aggregatePerUser((clicks ?? []) as Array<{ user_id: string; created_at: string }>)
+
+  return NextResponse.json({ metrics, perUser })
 })

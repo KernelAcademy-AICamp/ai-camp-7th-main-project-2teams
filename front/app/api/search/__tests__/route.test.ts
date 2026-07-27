@@ -5,7 +5,10 @@ vi.mock('@/lib/ai', () => ({ createEmbedding }))
 
 const rpc = vi.fn()
 const categorySingle = vi.fn()
-const eventsInsert = vi.fn(async () => ({ error: null }))
+// 인자 타입 명시 — 미지정 시 calls가 [] 튜플로 추론돼 아래 meta 검증에서 tsc 오류(TS2493)
+const eventsInsert = vi.fn<
+  (rows: Array<{ type: string; meta: Record<string, unknown> }>) => Promise<{ error: null }>
+>(async () => ({ error: null }))
 let currentUser: unknown = { id: 'u1' }
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
