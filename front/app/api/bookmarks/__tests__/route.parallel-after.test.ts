@@ -22,6 +22,7 @@ const { generateTags, createEmbedding } = vi.hoisted(() => ({
 vi.mock('@/lib/ai', () => ({
   generateTags,
   createEmbedding,
+  buildEmbeddingText: (title: string, _url: string, content: string) => `${title}\n${content}`,
   buildWeakEmbeddingText: (t: string) => t,
   generateWeakSummary: async () => '',
 }))

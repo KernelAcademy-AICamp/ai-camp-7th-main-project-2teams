@@ -1,4 +1,5 @@
 import { getOpenAI } from "./openai";
+import { buildBrandAnchor } from "./search-alias";
 
 // e2e 전용: 실제 OpenAI 호출 회피(비용·지연·flaky 제거). 결정적 목 값 반환.
 // 프로덕션 환경엔 절대 미설정 — nightly authed e2e 워크플로에서만 '1'.
@@ -202,6 +203,20 @@ export async function generateWeakSummary({ title, url }: { title: string; url: 
 // 주의: 모델 변경 시 저장된 임베딩 전량 재생성 필수(scripts/reembed.ts) — 모델 간 벡터 공간 비호환.
 export const EMBEDDING_MODEL = "text-embedding-3-large";
 export const EMBEDDING_DIMENSIONS = 1536;
+
+// strong 경로(본문 있음) 임베딩 입력 상한 — 앵커가 긴 본문에 희석되는 것을 막는다.
+export const EMBEDDING_CONTENT_LIMIT = 2000;
+
+// strong 경로 임베딩 입력 조립. 앵커를 본문보다 앞에 두는 이유는 희석 방지 —
+// title+본문이 한 언어로만 채워지면 벡터가 그 언어 공간에 갇혀 교차언어 검색이 실패한다.
+// 앵커는 사전 조회뿐이라 추가 API 호출·지연이 없다(저장 응답시간 불변).
+// 주의: 이 함수의 출력 규약을 바꾸면 저장된 임베딩 전량 재생성 필요(scripts/reembed.ts).
+export function buildEmbeddingText(title: string, url: string, content: string): string {
+  const anchor = buildBrandAnchor(title, url);
+  return [anchor || null, title, content.trim().slice(0, EMBEDDING_CONTENT_LIMIT) || null]
+    .filter(Boolean)
+    .join("\n");
+}
 
 export async function createEmbedding(text: string): Promise<number[]> {
   if (isMockOpenAI()) return MOCK_EMBEDDING;

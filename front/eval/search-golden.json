@@ -7,7 +7,8 @@
     "tag-only",
     "noise",
     "conversational",
-    "particle"
+    "particle",
+    "cross-lingual-concept"
   ],
   "bookmarks": [
     {
@@ -220,6 +221,47 @@
         "도구",
         "Zotero"
       ]
+    },
+    {
+      "ref": "b21",
+      "url": "https://example.invalid/debounce-throttle",
+      "title": "Debouncing and Throttling Explained",
+      "description": "A practical guide to rate-limiting event handlers in JavaScript applications.",
+      "tags": [
+        "개발",
+        "프론트엔드",
+        "JavaScript"
+      ]
+    },
+    {
+      "ref": "b22",
+      "url": "https://example.invalid/database-indexing",
+      "title": "Understanding Database Indexing",
+      "description": "How B-tree indexes speed up reads and when they hurt write performance.",
+      "tags": [
+        "개발",
+        "데이터베이스"
+      ]
+    },
+    {
+      "ref": "b23",
+      "url": "https://example.invalid/retrospective",
+      "title": "회고 문화 정착기",
+      "description": "팀 단위 회고를 도입하고 정착시킨 6개월간의 기록",
+      "tags": [
+        "기획",
+        "협업"
+      ]
+    },
+    {
+      "ref": "b24",
+      "url": "https://example.invalid/incident-response",
+      "title": "장애 대응 매뉴얼",
+      "description": "서비스 장애 발생 시 초기 대응 절차와 사후 원인 분석 방법",
+      "tags": [
+        "개발",
+        "인프라"
+      ]
     }
   ],
   "queries": [
@@ -410,6 +452,54 @@
       ],
       "category": "particle",
       "note": "조사(에서) 붙은 브랜드명"
+    },
+    {
+      "query": "이벤트 연타 제어 방법",
+      "expected_refs": [
+        "b21"
+      ],
+      "category": "cross-lingual-concept",
+      "note": "한→영. 사전 미커버 개념어(연타 제어↔rate-limiting), 문서 전체가 영문"
+    },
+    {
+      "query": "데이터베이스 색인 원리",
+      "expected_refs": [
+        "b22"
+      ],
+      "category": "cross-lingual-concept",
+      "note": "한→영. 색인↔indexing, 문서 전체가 영문"
+    },
+    {
+      "query": "관계형 데이터베이스 관리 문서",
+      "expected_refs": [
+        "b9"
+      ],
+      "category": "cross-lingual-concept",
+      "note": "한→영. 기존 유일한 순수 영문 북마크(title+description 모두 영어)"
+    },
+    {
+      "query": "team retrospective culture",
+      "expected_refs": [
+        "b23"
+      ],
+      "category": "cross-lingual-concept",
+      "note": "영→한. 문서 전체가 한글, 영문 브랜드명 없음"
+    },
+    {
+      "query": "incident response procedure",
+      "expected_refs": [
+        "b24"
+      ],
+      "category": "cross-lingual-concept",
+      "note": "영→한. 문서 전체가 한글, 영문 브랜드명 없음"
+    },
+    {
+      "query": "vector similarity search implementation",
+      "expected_refs": [
+        "b10"
+      ],
+      "category": "cross-lingual-concept",
+      "note": "영→한. synonym 쿼리 '임베딩 유사도 검색 구현'의 영문판 — 한/영 대칭 비교용"
     }
   ]
 }

@@ -41,6 +41,7 @@ const eventInsertSpy = vi.fn() // events.insert 인자 기록 — 수동 재태�
 
 vi.mock('@/lib/ai', () => ({
   createEmbedding: vi.fn(async () => [0.1, 0.2, 0.3]),
+  buildEmbeddingText: (title: string, _url: string, content: string) => `${title}\n${content}`,
   buildWeakEmbeddingText: (t: string) => t,
 }))
 

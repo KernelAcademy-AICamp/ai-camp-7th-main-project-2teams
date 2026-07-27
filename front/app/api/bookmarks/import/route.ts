@@ -2,7 +2,13 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth'
-import { generateTags, createEmbedding, buildWeakEmbeddingText, generateWeakSummary } from '@/lib/ai'
+import {
+  generateTags,
+  createEmbedding,
+  buildEmbeddingText,
+  buildWeakEmbeddingText,
+  generateWeakSummary,
+} from '@/lib/ai'
 import { normalizeTags, extractTopCategory, resolveTopCategory } from '@/lib/tag-alias'
 import { parseNetscapeBookmarks, type ParsedBookmark } from '@/lib/parseNetscapeBookmarks'
 import { parseKakaoChat } from '@/lib/parseKakaoChat'
@@ -250,7 +256,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
                 const [tagsResult, embeddingResult] = await Promise.allSettled([
                   tagsPromise,
                   embeddingContent
-                    ? createEmbedding(`${title}\n${embeddingContent}`)
+                    ? createEmbedding(buildEmbeddingText(title, url, embeddingContent))
                     : Promise.all([
                         tagsPromise.catch(() => [] as string[]),
                         generateWeakSummary({ title, url }),

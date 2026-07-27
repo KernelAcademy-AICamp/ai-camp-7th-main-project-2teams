@@ -8,7 +8,13 @@
 //   DRY=1            쓰기 없이 대상 집계만 출력
 //   REEMBED_LIMIT=N  앞 N개만 처리(0=전체)
 import { createClient } from '@supabase/supabase-js'
-import { createEmbedding, generateWeakSummary, buildWeakEmbeddingText, EMBEDDING_MODEL } from '../lib/ai'
+import {
+  createEmbedding,
+  generateWeakSummary,
+  buildEmbeddingText,
+  buildWeakEmbeddingText,
+  EMBEDDING_MODEL,
+} from '../lib/ai'
 
 const DRY = process.env.DRY === '1'
 const LIMIT = Number(process.env.REEMBED_LIMIT ?? '0')
@@ -39,7 +45,7 @@ async function main() {
     try {
       const tagsLine = r.tags?.length ? `태그: ${r.tags.join(', ')}` : null
       const text = r.description
-        ? [r.title, r.description, tagsLine].filter(Boolean).join('\n')
+        ? [buildEmbeddingText(r.title, r.url, r.description), tagsLine].filter(Boolean).join('\n')
         : buildWeakEmbeddingText(
             r.title,
             r.tags ?? [],

@@ -2,7 +2,13 @@ import { NextResponse, after } from 'next/server'
 import { z } from 'zod'
 import { withAuth } from '@/lib/auth'
 import { bookmarkCreateSchema } from '@/lib/schemas'
-import { generateTags, createEmbedding, buildWeakEmbeddingText, generateWeakSummary } from '@/lib/ai'
+import {
+  generateTags,
+  createEmbedding,
+  buildEmbeddingText,
+  buildWeakEmbeddingText,
+  generateWeakSummary,
+} from '@/lib/ai'
 import { normalizeTags, extractTopCategory, UNCATEGORIZED_LABEL } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
 import { fetchMeta, isDeadStatus } from '@/lib/fetchMeta'
@@ -79,7 +85,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   const [tagsResult, embeddingResult] = await Promise.allSettled([
     tagsPromise,
     hasContent
-      ? createEmbedding(`${title}\n${embeddingContent}`)
+      ? createEmbedding(buildEmbeddingText(title, url, embeddingContent))
       : Promise.all([
           tagsPromise.catch(() => [] as string[]), // 태깅 실패 → 태그 없이 진행
           generateWeakSummary({ title, url }), // 실패 시 내부에서 '' degrade

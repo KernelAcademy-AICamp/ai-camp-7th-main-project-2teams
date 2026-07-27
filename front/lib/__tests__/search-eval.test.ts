@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { scoreQuery, aggregateSearch, type SearchScore } from '../search-eval'
-import { createEmbedding, buildWeakEmbeddingText, generateWeakSummary } from '../ai'
+import { createEmbedding, buildEmbeddingText, buildWeakEmbeddingText, generateWeakSummary } from '../ai'
 import { expandSearchQuery } from '../search-alias'
 
 // 지표 함수 단위 테스트 — 항상 실행 (OpenAI/DB 미호출).
@@ -79,8 +79,20 @@ describe('aggregateSearch', () => {
 // N-5(2026-07-22): 임베딩 모델 3-large(dimensions:1536) 전환 + 전량 재임베딩(1000건, 실패 0).
 // weak-vector 0/3→2/3(옵시디언·Zotero floor 통과 — A/B 예측 적중), noise 오탐 0 유지. 실측 24/26=0.923.
 // n=26. 최악(weak 1 + particle 1 miss) 24/26=0.923 − 마진.
-const OVERALL_RECALL_BASELINE = 0.85
-const NON_WEAK_VECTOR_RECALL_BASELINE = 0.9 // weak-vector 제외 실측 0.957(22/23, particle 1건 known miss) − 마진
+// N-6(2026-07-27): cross-lingual-concept 6건 추가(b21~b24 신규 + b9·b10 재사용).
+// 기존 cross-lingual 5건은 전부 SEARCH_ALIAS 등재 브랜드 단독 쿼리라 사전이 커버하는 영역만
+// 재고 있었다 — 사전으로 못 잡는 "개념어" 교차언어(한→영: 색인↔indexing / 영→한: retrospective↔회고)를
+// 양방향으로 측정하는 카테고리. 임베딩 입력에 반대 언어 앵커가 없는 strong 경로의 구조적 약점 대상.
+// n=26→32. 브랜드 앵커(lib/ai.ts buildEmbeddingText) 동시 도입 후 실측 overall 0.844,
+// concept 0.5(3/6). 성공 3건(b9·b10·b24) 중 b9·b10은 title에 원어 브랜드가 있어 앵커가 걸린 경우 —
+// 실패 3건(b21 debounce·b22 indexing·b23 retrospective)은 사전 등재 브랜드가 없어 앵커가 빈 문자열.
+// 즉 앵커는 브랜드 축만 해결하며, 순수 개념어 축은 임베딩 입력에 반대 언어 요약을 넣는
+// 후속 작업(비동기 후처리) 영역으로 남는다. 그때 concept baseline을 상향한다.
+const OVERALL_RECALL_BASELINE = 0.8 // 실측 0.844 − 마진(concept 3 + weak 1 + particle 1 known miss)
+// 알려진 약점 카테고리 — 코어 회귀 게이트에서 제외. 각 카테고리는 자체 개선 트랙을 가진다.
+const KNOWN_WEAK_CATEGORIES = ['weak-vector', 'cross-lingual-concept']
+const CORE_RECALL_BASELINE = 0.9 // 약점 카테고리 제외 실측 0.957(22/23, particle 1건 known miss) − 마진
+const CROSS_LINGUAL_CONCEPT_BASELINE = 0.45 // 실측 0.5(3/6) − 마진. 앵커가 브랜드 축만 커버하는 현 상태 고정
 interface GoldenBookmark {
   ref: string
   url: string
@@ -128,7 +140,7 @@ async function runSearchGolden(
       // 없으면 weak 경로(title+LLM 한줄요약+태그) — app/api/bookmarks/route.ts와 동일.
       const embedding = await createEmbedding(
         b.description
-          ? `${b.title}\n${b.description}`
+          ? buildEmbeddingText(b.title, b.url, b.description)
           : buildWeakEmbeddingText(b.title, b.tags, await generateWeakSummary({ title: b.title, url: b.url })),
       )
       const { data, error } = await supabase
@@ -210,13 +222,17 @@ describe.runIf(process.env.RUN_SEARCH_EVAL === '1')('골든셋 평가 (실 Supab
       expect(agg.n).toBe(loadGolden().queries.length)
       expect(agg.recall).toBeGreaterThanOrEqual(OVERALL_RECALL_BASELINE)
 
-      const nonWeakVector = Object.entries(agg.byCategory)
-        .filter(([category]) => category !== 'weak-vector')
+      const core = Object.entries(agg.byCategory)
+        .filter(([category]) => !KNOWN_WEAK_CATEGORIES.includes(category))
         .map(([, score]) => score)
-      const nonWeakVectorRecall =
-        nonWeakVector.reduce((sum, s) => sum + s.recall * s.n, 0) /
-        nonWeakVector.reduce((sum, s) => sum + s.n, 0)
-      expect(nonWeakVectorRecall).toBeGreaterThanOrEqual(NON_WEAK_VECTOR_RECALL_BASELINE)
+      const coreRecall =
+        core.reduce((sum, s) => sum + s.recall * s.n, 0) / core.reduce((sum, s) => sum + s.n, 0)
+      expect(coreRecall).toBeGreaterThanOrEqual(CORE_RECALL_BASELINE)
+
+      // 약점 카테고리도 자체 바닥은 지킨다 — 코어 게이트에서 뺐다고 무한 하락을 허용하지 않는다.
+      expect(agg.byCategory['cross-lingual-concept'].recall).toBeGreaterThanOrEqual(
+        CROSS_LINGUAL_CONCEPT_BASELINE,
+      )
     },
     120_000,
   )
