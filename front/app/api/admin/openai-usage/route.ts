@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { parseRange, RANGE_DAYS } from '@/lib/admin-range'
+import { logger } from '@/lib/logger'
 
 // 실사용 추정(청구액에서 개발·eval 비용 분리) — Costs API는 단일 프로젝트라 호출 주체 구분 불가.
 // events 건수 × 단가로 프로덕션 사용분을 추정한다. 단가 근거:
@@ -41,7 +42,13 @@ async function estimateProductionUsage(sinceIso: string): Promise<EstimatedUsage
       .select('user_id, type')
       .in('type', ['bookmark_saved', 'search_performed'])
       .gte('created_at', sinceIso)
-    if (error) return null
+    // 로깅 없이 null을 반환하면 "이벤트 0건"과 "쿼리 실패"가 UI·로그 어디서도 구분 불가
+    if (error) {
+      logger.warn('[openai-usage] events 조회 실패 — 실사용 추정 degrade', {
+        error: error.message,
+      })
+      return null
+    }
 
     const rows = (data ?? []) as Array<{ user_id: string; type: string }>
     const byUser = new Map<string, { saves: number; searches: number }>()
@@ -71,7 +78,10 @@ async function estimateProductionUsage(sinceIso: string): Promise<EstimatedUsage
       searches,
       perUser,
     }
-  } catch {
+  } catch (err) {
+    logger.error('[openai-usage] 실사용 추정 실패', {
+      error: err instanceof Error ? err.message : String(err),
+    })
     return null
   }
 }

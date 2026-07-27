@@ -47,11 +47,25 @@ describe('POST /api/admin/admins', () => {
   })
 
   it('미존재 유저 422', async () => {
-    rpc.mockResolvedValue({ data: null, error: { message: 'user not found', code: 'no_data_found' } })
+    // PostgREST는 plpgsql no_data_found를 SQLSTATE 'P0002'로 전달한다.
+    // 조건 이름('no_data_found')이 code로 오지 않으므로 목도 실제 응답 형태를 따른다.
+    rpc.mockResolvedValue({ data: null, error: { message: 'user not found', code: 'P0002' } })
     const res = await POST(
       new Request('http://x/api/admin/admins', { method: 'POST', body: JSON.stringify({ email: 'ghost@b.com' }) }),
     )
     expect(res.status).toBe(422)
+  })
+
+  // P0002 외의 RPC 오류가 '이메일 없음'으로 오진단되던 회귀를 막는다 (a13dbef)
+  it('RPC 자체 오류는 422가 아니라 500', async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: 'column reference "email" is ambiguous', code: '42702' },
+    })
+    const res = await POST(
+      new Request('http://x/api/admin/admins', { method: 'POST', body: JSON.stringify({ email: 'new@b.com' }) }),
+    )
+    expect(res.status).toBe(500)
   })
 })
 

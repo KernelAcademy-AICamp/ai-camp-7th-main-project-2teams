@@ -134,7 +134,15 @@ const F1_BASELINE = 0.74
 //    근거가 현행 코드 실측 0.748(마진 +0.018)로 갱신됨.)
 //   n=115 대비 두 모드 다 하락 — 브랜드단독/URL통짜/로그인·앱 표본 추가로 골든셋 대표성이
 //   실제 분포에 가까워진 결과(§0). 진짜 회귀 여부는 이 n=213 baseline 기준으로 판단할 것.
-const TITLE_ONLY_F1_BASELINE = 0.73 // 실측 0.748 − ~0.02 여유(분산 고려, F1_BASELINE 하향 논리와 동일)
+//
+// 재실측(2026-07-27, CI run 30231147247 — 주제 우선 정책 반영 코드로 첫 CI 완주):
+//   rich       F1 0.7818 · precision 0.7770 · recall 0.8020 · 대분류 0.8732 · exact 0.4789
+//   title-only F1 0.7505 · precision 0.7496 · recall 0.7668 · 대분류 0.8310 · exact 0.4695
+//   → skew = rich−title +0.031. 07-25 실측(+0.007)보다 벌어졌으나 두 값 모두 상승했고
+//     baseline 대비 마진은 rich +0.042 / title-only +0.021로 충분 — baseline 값은 유지.
+//     (07-25 title-only 0.748은 정책 반영 前 측정이라는 지적이 있었으나, 정책 後 0.7505로
+//      사실상 동일 → 0.73의 근거는 유효함이 확인됨.)
+const TITLE_ONLY_F1_BASELINE = 0.73 // 실측 0.748·0.7505 − ~0.02 여유(분산 고려, F1_BASELINE 하향 논리와 동일)
 
 // D-2: 미분류율 상한. F1만으론 "태그 삭제로 오답 회피"가 통과됨(retag 미분류 29% 사례).
 // emptyRate 병행 게이트로 대량 태그 삭제 회귀 차단. n=213 실측 emptyRate는 rich 3.0%·title-only 6.6%로
@@ -158,13 +166,19 @@ function appendHistory(mode: 'rich' | 'title-only', agg: ReturnType<typeof aggre
   }
 }
 
+// 호출 간격. 순차 호출인데도 항목당 ~2.8k 토큰 × 0.84초 ≈ 200k TPM으로 조직 한도
+// (gpt-4o-mini 200k TPM)에 정확히 붙는다. 실제로 rich 직후 title-only가 이어지는 지점에서
+// 429(Used 197820 / Limit 200000)로 죽었다 — 품질 회귀가 아니라 한도 포화였다.
+// 400ms를 끼우면 분당 ~55요청 ≈ 155k TPM으로 내려가 여유가 생긴다(스위트당 179s → ~265s).
+const PACING_MS = 400
+
 // 골든셋 전체를 지정 입력 조건으로 채점. includeDescription=false면 임포트 굶김 재현.
 async function runGolden(
   golden: GoldenItem[],
   includeDescription: boolean,
 ): Promise<TagScore[]> {
   const scores: TagScore[] = []
-  for (const item of golden) {
+  for (const [i, item] of golden.entries()) {
     const predicted = await generateTags({
       title: item.title,
       url: item.url,
@@ -176,6 +190,7 @@ async function runGolden(
     console.log(
       `[${includeDescription ? 'rich' : 'title'}] F1=${s.f1.toFixed(2)} exact=${s.exact} | pred=[${predicted}] gold=[${item.gold}] | ${item.url}`,
     )
+    if (i < golden.length - 1) await new Promise((r) => setTimeout(r, PACING_MS))
   }
   return scores
 }
