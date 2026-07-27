@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import { useFilterStore } from '@/store/filterStore'
 import type { Bookmark, BookmarksPage } from './useBookmarks'
 import { patchSearchResult, restoreSearchResults } from './useSearch'
 
@@ -39,6 +40,11 @@ export function applyOptimisticToggle(
       bookmarks: page.bookmarks.map((b) => (b.id === id ? { ...b, is_favorite } : b)),
     })),
   }
+}
+
+/** 낙관적 업데이트 후 목록이 전부 비었는지 — 테스트 가능하도록 export */
+export function isEmptyAfter(data: InfiniteData<BookmarksPage>): boolean {
+  return data.pages.every((p) => p.bookmarks.length === 0)
 }
 
 export function useToggleFavorite() {
@@ -83,6 +89,14 @@ export function useToggleFavorite() {
         }
 
         queryClient.setQueryData(queryKey, updated)
+
+        // 지금 보고 있는 목록이 이 해제로 비었다면 즉시 '전체'로 전환한다.
+        // categories 재조회 후 Sidebar가 전환하기를 기다리면, 그 왕복 동안 빈 목록이
+        // 화면에 렌더돼 깜빡임이 보인다. 여기서 끊어야 빈 목록 자체가 그려지지 않는다.
+        if (isInFavoritesTab && !is_favorite && isEmptyAfter(updated)) {
+          const { category, setCategory } = useFilterStore.getState()
+          if (category !== null && filters?.category === category) setCategory(null)
+        }
       }
 
       // 검색 결과는 ['bookmarks'] 캐시와 별도로 보관되므로 따로 갱신 — 누락 시 검색 화면에서
