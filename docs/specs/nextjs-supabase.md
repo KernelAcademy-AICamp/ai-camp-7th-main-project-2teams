@@ -597,6 +597,9 @@ front/
 │   ├── privacy/page.tsx           # A12
 │   ├── terms/page.tsx             # A13
 │   ├── goodbye/page.tsx
+│   ├── not-found.tsx              # 404 페이지 (App Router 규약)
+│   ├── error.tsx                  # 500 — 하위 세그먼트 렌더 오류 바운더리. error.message 미노출(내부 정보 누출 방지)
+│   ├── global-error.tsx           # 500 — 루트 레이아웃 자체 실패 시 최후 화면. layout.tsx를 대체하므로 html·body 직접 렌더
 │   ├── robots.ts                  # SEO — robots 메타
 │   ├── sitemap.ts                 # SEO — sitemap 생성
 │   └── icon.png                   # 파비콘
@@ -608,6 +611,7 @@ front/
 │   ├── auth.ts                    # withAuth HOF (A3)
 │   ├── admin-auth.ts              # withAdmin HOF (A67) — withAuth 위 is_admin() 게이팅, 비관리자 404
 │   ├── admin-range.ts             # A67 — range(1d/7d/30d) 파싱 + rangeToInterval
+│   ├── admin-user-labels.ts       # A67 — 익명 사용자 라벨(U1·U2·기타) 단일 출처. 랭킹 기준=추정 비용, 창 56일 고정(위젯 range와 분리)
 │   ├── events.ts                  # A68 — logEvent(s) 헬퍼. 이벤트 4종, CLIENT_LOGGABLE 화이트리스트, 실패 시 UX 비차단
 │   ├── schemas.ts                 # bookmarkSchema, searchSchema, bookmarkUpdateSchema(A60: is_favorite/tags/category/description)
 │   ├── ai.ts                      # generateTags(태깅 프롬프트)·createEmbedding·weak-vector 보강

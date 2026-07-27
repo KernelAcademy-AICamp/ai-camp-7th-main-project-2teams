@@ -429,6 +429,7 @@ RETURNS TABLE(user_id uuid, email text, granted_at timestamptz)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$ ... $$;
 
 -- 이메일로 승격: email→id 해석 후 upsert. 미존재 시 예외(errcode = no_data_found).
+-- 0033에서 ambiguous 참조 수정 (아래 설명 참조).
 CREATE OR REPLACE FUNCTION admin_grant_by_email(p_email text, p_granted_by uuid)
 RETURNS TABLE(user_id uuid, email text)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$ ... $$;
@@ -454,6 +455,12 @@ REVOKE EXECUTE ON FUNCTION admin_revoke(uuid) FROM anon, authenticated, public;
 ```
 
 전체 정의: `supabase/migrations/0028_admin_v2_stats_functions.sql`(성장/트렌딩/건강), `supabase/migrations/0029_admin_management_functions.sql`(관리자 목록/승격/강등). `p_interval`은 기존 `rangeToInterval` 반환값(`'1 day'`/`'7 days'`/`'30 days'`)을 그대로 받음 — 0026 함수와 호출 규약 동일. `admin_grant_by_email`/`admin_revoke`는 `POST`/`DELETE /api/admin/admins`(`withAdmin` 게이팅, 본인 강등 방지)에서만 호출.
+
+> **0033 — `admin_grant_by_email` ambiguous 수정**: 0029 버전은 `RETURNS TABLE(user_id, email)`의
+> 출력 변수명이 본문 컬럼 참조와 충돌해 42702 `column reference "email" is ambiguous`로 **항상 실패**했다
+> (이메일 존재 여부 무관). `supabase/migrations/0033_fix_admin_grant_by_email_ambiguous.sql`에서
+> ①`where lower(u.email)` — `auth.users` alias로 한정, ②`on conflict do nothing` — `user_id`가 PK이므로
+> conflict target 생략. 시그니처·권한 규약(service_role 전용 GRANT + anon/authenticated/public REVOKE) 불변.
 
 ---
 
