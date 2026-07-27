@@ -7,7 +7,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   return (
     <html lang="ko" className="font-sans">
       <body className="antialiased">
-        <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-surface px-4 text-center">
+        <main className="flex min-h-dvh w-full flex-col items-center justify-center gap-6 bg-surface px-6 py-12 text-center">
           <p className="font-mono text-sm font-bold tracking-widest text-text-secondary">500</p>
 
           <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">화면을 표시하지 못했습니다</h1>

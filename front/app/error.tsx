@@ -5,7 +5,7 @@ import Link from "next/link";
 /** 하위 세그먼트 렌더 오류 바운더리. error.message는 노출하지 않는다(내부 정보 누출 방지). */
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-surface px-4 text-center">
+    <main className="flex min-h-dvh w-full flex-col items-center justify-center gap-6 bg-surface px-6 py-12 text-center">
       <p className="font-mono text-sm font-bold tracking-widest text-text-secondary">500</p>
 
       <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">불러오지 못한 페이지입니다</h1>
