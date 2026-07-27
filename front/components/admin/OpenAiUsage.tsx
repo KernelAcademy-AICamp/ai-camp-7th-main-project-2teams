@@ -1,3 +1,5 @@
+import { dotColor } from '@/lib/admin-user-labels'
+
 export type Usage = {
   available: boolean
   totalCostUsd: number
@@ -12,8 +14,6 @@ export type Usage = {
 }
 
 const ASSUMED_COST_PER_USER = 0.02 // business-viability.md §2.1 가정선
-// 도트 색 — NorthStarMetrics와 동일 규약(validate_palette 통과), 키 고정
-const DOT_COLORS: Record<string, string> = { U1: '#4a90e2', U2: '#e8833a', 기타: '#9aa0a8' }
 
 export function OpenAiUsage({ usage, activeUsers }: { usage: Usage; activeUsers: number }) {
   if (!usage.available) {
@@ -69,7 +69,7 @@ export function OpenAiUsage({ usage, activeUsers }: { usage: Usage; activeUsers:
               <span
                 aria-hidden
                 className="inline-block h-2 w-2 rounded-full ring-2 ring-white"
-                style={{ backgroundColor: DOT_COLORS[u.user] ?? '#9aa0a8' }}
+                style={{ backgroundColor: dotColor(u.user) }}
               />
               {u.user} ${u.costUsd.toFixed(4)}
             </li>

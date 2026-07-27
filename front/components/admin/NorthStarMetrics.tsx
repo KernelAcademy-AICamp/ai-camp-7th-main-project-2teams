@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts'
+import { dotColor } from '@/lib/admin-user-labels'
 
 export type WeeklyMetric = {
   week: string
@@ -15,10 +16,6 @@ export type WeeklyMetric = {
 
 // 유저별 주간 되찾기 도트 — user는 익명 키(U1·U2·기타), 서버가 user_id를 노출하지 않음
 export type PerUserDot = { week: string; user: string; count: number }
-
-// 도트 시리즈 고정 색 — validate_palette.js 통과(CVD ΔE 24.1 · normal 29.4).
-// '기타'는 중립 회색(범주 아님, 잔여 합산). 색은 순서가 아니라 키에 고정.
-const DOT_COLORS: Record<string, string> = { U1: '#4a90e2', U2: '#e8833a', 기타: '#9aa0a8' }
 
 const LOAD_ERROR = 'North Star 지표를 불러오지 못했습니다'
 
@@ -135,8 +132,8 @@ export function NorthStarMetrics() {
   )
 }
 
-// 유저별 주간 되찾기 스트립 도트. 색은 익명 키에 고정(DOT_COLORS), 흰 테두리 2px로 겹침 구분.
-function PerUserDotPlot({ weeks, dots }: { weeks: string[]; dots: PerUserDot[] }) {
+// 유저별 주간 되찾기 스트립 도트. 색은 익명 키에 고정(dotColor), 흰 테두리 2px로 겹침 구분.
+export function PerUserDotPlot({ weeks, dots }: { weeks: string[]; dots: PerUserDot[] }) {
   const users = [...new Set(dots.map((d) => d.user))]
   // 주 버킷 문자열 포맷 차이(RPC 'T00:00:00Z' vs JS toISOString '.000Z') 흡수 — 라벨(월/일)로 매칭
   const byLabel = new Map(dots.map((d) => [`${d.user}|${fmtWeek(d.week)}`, d.count]))
@@ -166,7 +163,7 @@ function PerUserDotPlot({ weeks, dots }: { weeks: string[]; dots: PerUserDot[] }
   return (
     <div className="mt-4">
       <h3 className="mb-1 text-xs font-medium text-text-secondary">
-        유저별 되찾기 — 지난 주 → 이번 주 (익명 · U1=최다 사용자)
+        유저별 되찾기 — 지난 주 → 이번 주 (익명 · U1=사용량 1위, 전 위젯 공통 라벨)
       </h3>
       <div className="mb-2 flex items-center gap-3 text-[10px] text-text-secondary">
         <span className="flex items-center gap-1">
@@ -180,7 +177,7 @@ function PerUserDotPlot({ weeks, dots }: { weeks: string[]; dots: PerUserDot[] }
       </div>
       <div className="space-y-3">
         {rows.map((r) => {
-          const color = DOT_COLORS[r.user] ?? '#9aa0a8'
+          const color = dotColor(r.user)
           const lo = Math.min(r.prev, r.curr)
           const hi = Math.max(r.prev, r.curr)
           const delta = r.curr - r.prev
@@ -248,7 +245,7 @@ function PerUserDotPlot({ weeks, dots }: { weeks: string[]; dots: PerUserDot[] }
                     <span
                       aria-hidden
                       className="mr-1.5 inline-block h-2 w-2 rounded-full"
-                      style={{ backgroundColor: DOT_COLORS[r.user] ?? '#9aa0a8' }}
+                      style={{ backgroundColor: dotColor(r.user) }}
                     />
                     {r.user}
                   </th>

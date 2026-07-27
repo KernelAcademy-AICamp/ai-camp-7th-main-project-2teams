@@ -13,13 +13,13 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 const rpc = vi.fn()
-// events 조회(perUser 도트): from('events').select().eq().gte() 체인 — 테스트별 결과 제어
-let clicksResult: { data: unknown; error: { message: string } | null } = { data: [], error: null }
+// events 조회(클릭 도트 + 라벨 랭킹용 저장·검색): from('events').select().in().gte() 체인
+let eventsResult: { data: unknown; error: { message: string } | null } = { data: [], error: null }
 vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => ({
     rpc,
     from: () => ({
-      select: () => ({ eq: () => ({ gte: async () => clicksResult }) }),
+      select: () => ({ in: () => ({ gte: async () => eventsResult }) }),
     }),
   }),
 }))
@@ -34,7 +34,7 @@ describe('GET /api/admin/metrics', () => {
   beforeEach(() => {
     currentUser = { id: 'admin-1' }
     rpc.mockReset()
-    clicksResult = { data: [], error: null }
+    eventsResult = { data: [], error: null }
   })
 
   it('비관리자는 404', async () => {
@@ -93,18 +93,22 @@ describe('GET /api/admin/metrics', () => {
     expect(body.perUser).toEqual([])
   })
 
-  it('perUser: 주간·유저별 집계 + 최다 사용자=U1 + 3순위 이하 기타 합산 + user_id 미노출', async () => {
+  it('perUser: 주간·유저별 집계 + 3순위 이하 기타 합산 + user_id 미노출', async () => {
     rpc.mockResolvedValue({ data: [], error: null })
-    // uuid-b가 3건으로 최다 → U1, uuid-a 2건 → U2, uuid-c·d는 기타로 합산
-    clicksResult = {
+    // 라벨은 사용량(저장·검색) 비용 랭킹: uuid-b 저장 2 → U1, uuid-a 저장 1 → U2, 나머지 기타
+    const clickedAt = (d: string) => ({ type: 'search_result_clicked', created_at: d })
+    eventsResult = {
       data: [
-        { user_id: 'uuid-a', created_at: '2026-07-20T10:00:00Z' }, // 월요일 주 시작
-        { user_id: 'uuid-a', created_at: '2026-07-22T10:00:00Z' }, // 같은 주
-        { user_id: 'uuid-b', created_at: '2026-07-21T10:00:00Z' },
-        { user_id: 'uuid-b', created_at: '2026-07-14T10:00:00Z' }, // 전 주
-        { user_id: 'uuid-b', created_at: '2026-07-15T10:00:00Z' },
-        { user_id: 'uuid-c', created_at: '2026-07-21T10:00:00Z' },
-        { user_id: 'uuid-d', created_at: '2026-07-21T10:00:00Z' },
+        { user_id: 'uuid-b', type: 'bookmark_saved', created_at: '2026-07-20T09:00:00Z' },
+        { user_id: 'uuid-b', type: 'bookmark_saved', created_at: '2026-07-21T09:00:00Z' },
+        { user_id: 'uuid-a', type: 'bookmark_saved', created_at: '2026-07-20T09:00:00Z' },
+        { user_id: 'uuid-a', ...clickedAt('2026-07-20T10:00:00Z') }, // 월요일 주 시작
+        { user_id: 'uuid-a', ...clickedAt('2026-07-22T10:00:00Z') }, // 같은 주
+        { user_id: 'uuid-b', ...clickedAt('2026-07-21T10:00:00Z') },
+        { user_id: 'uuid-b', ...clickedAt('2026-07-14T10:00:00Z') }, // 전 주
+        { user_id: 'uuid-b', ...clickedAt('2026-07-15T10:00:00Z') },
+        { user_id: 'uuid-c', ...clickedAt('2026-07-21T10:00:00Z') },
+        { user_id: 'uuid-d', ...clickedAt('2026-07-21T10:00:00Z') },
       ],
       error: null,
     }
@@ -123,6 +127,39 @@ describe('GET /api/admin/metrics', () => {
     expect(JSON.stringify(body)).not.toContain('uuid-')
   })
 
+  it('perUser: 라벨은 클릭 수가 아니라 사용량 비용 랭킹 (위젯 간 U1 일치)', async () => {
+    rpc.mockResolvedValue({ data: [], error: null })
+    // uuid-heavy는 클릭 1건뿐이지만 저장 5건으로 사용량 1위 → U1
+    // uuid-clicker는 클릭 3건이어도 검색 1건뿐이라 U2
+    eventsResult = {
+      data: [
+        ...Array.from({ length: 5 }, () => ({
+          user_id: 'uuid-heavy',
+          type: 'bookmark_saved',
+          created_at: '2026-07-20T09:00:00Z',
+        })),
+        { user_id: 'uuid-clicker', type: 'search_performed', created_at: '2026-07-20T09:00:00Z' },
+        {
+          user_id: 'uuid-heavy',
+          type: 'search_result_clicked',
+          created_at: '2026-07-20T10:00:00Z',
+        },
+        ...Array.from({ length: 3 }, () => ({
+          user_id: 'uuid-clicker',
+          type: 'search_result_clicked',
+          created_at: '2026-07-20T10:00:00Z',
+        })),
+      ],
+      error: null,
+    }
+
+    const body = await (await GET(req())).json()
+    expect(body.perUser).toEqual([
+      { week: '2026-07-20T00:00:00.000Z', user: 'U1', count: 1 },
+      { week: '2026-07-20T00:00:00.000Z', user: 'U2', count: 3 },
+    ])
+  })
+
   it('perUser: events 조회 실패 → 빈 배열 degrade, metrics는 정상 반환', async () => {
     rpc.mockResolvedValue({
       data: [
@@ -138,7 +175,7 @@ describe('GET /api/admin/metrics', () => {
       ],
       error: null,
     })
-    clicksResult = { data: null, error: { message: 'events down' } }
+    eventsResult = { data: null, error: { message: 'events down' } }
 
     const res = await GET(req())
     const body = await res.json()
