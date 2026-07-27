@@ -3,7 +3,7 @@ import { z } from 'zod'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/auth'
 import { bookmarkUpdateSchema } from '@/lib/schemas'
-import { createEmbedding, buildEmbeddingText, buildWeakEmbeddingText } from '@/lib/ai'
+import { createEmbedding, buildWeakEmbeddingText } from '@/lib/ai'
 import { resolveTopCategory, normalizeTags, extractTopCategory } from '@/lib/tag-alias'
 import { logger } from '@/lib/logger'
 import { logEvent } from '@/lib/events'
@@ -49,16 +49,13 @@ async function reembedIfDescriptionChanged(
   supabase: SupabaseClient,
   userId: string,
   id: string,
-  bookmark: { url: string; title: string; description: string | null; tags: string[] | null },
+  bookmark: { title: string; description: string | null; tags: string[] | null },
 ): Promise<void> {
   try {
     // description 삭제 시 title 전용(weak-vector)으로 떨어지지 않게 태그 포함 — POST weak 경로와 동일 규약.
-    // 브랜드 앵커는 title·URL 파생이라 여기서도 붙인다 — 안 붙이면 description 수정만으로
-    // POST 때 심은 앵커가 사라져 교차언어 검색이 조용히 퇴화한다.
-    // 유저가 기입한 description 문자열 자체는 변형하지 않는다.
     const text = bookmark.description
-      ? buildEmbeddingText(bookmark.title, bookmark.url, bookmark.description)
-      : buildWeakEmbeddingText(bookmark.title, bookmark.url, bookmark.tags ?? [])
+      ? `${bookmark.title}\n${bookmark.description}`
+      : buildWeakEmbeddingText(bookmark.title, bookmark.tags ?? [])
     const embedding = await createEmbedding(text)
     const { error: embeddingError } = await supabase
       .from('bookmarks')

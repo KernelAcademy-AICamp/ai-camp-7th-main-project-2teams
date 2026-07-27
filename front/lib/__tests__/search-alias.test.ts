@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { expandSearchQuery, buildBrandAnchor, SEARCH_ALIAS } from '../search-alias'
+import { expandSearchQuery, SEARCH_ALIAS } from '../search-alias'
 
 describe('expandSearchQuery', () => {
   it('한글 브랜드명 → [원문, 영문]', () => {
@@ -167,46 +167,5 @@ describe('expandSearchQuery', () => {
       expect(ko.length).toBeGreaterThan(0)
       expect(en.length).toBeGreaterThan(0)
     }
-  })
-})
-
-// 인덱싱 앵커 — 임베딩 입력에 한/영을 병기해 벡터를 양방향으로 만든다
-describe('buildBrandAnchor', () => {
-  it('영문 title → 한글 병기', () => {
-    expect(buildBrandAnchor('Figma Design Basics', 'https://figma.com/blog')).toBe('Figma 피그마')
-  })
-
-  it('한글 title → 영문 병기', () => {
-    expect(buildBrandAnchor('피그마 디자인 기초', 'https://example.invalid/a')).toBe('Figma 피그마')
-  })
-
-  it('title에 없어도 URL 도메인으로 앵커 생성', () => {
-    expect(buildBrandAnchor('Design Basics', 'https://www.figma.com/blog')).toBe('Figma 피그마')
-  })
-
-  it('조사 붙은 한글 브랜드 토큰도 인식', () => {
-    expect(buildBrandAnchor('피그마로 배우는 디자인', 'https://example.invalid/a')).toBe('Figma 피그마')
-  })
-
-  it('여러 브랜드는 모두 병기 (중복 제거)', () => {
-    const anchor = buildBrandAnchor('React + Next.js 가이드', 'https://nextjs.org/docs')
-    expect(anchor).toContain('React 리액트')
-    expect(anchor).toContain('Next.js 넥스트')
-  })
-
-  it('한글 부분일치 오매칭 방지 — 토스트는 토스가 아님', () => {
-    expect(buildBrandAnchor('토스트 메시지 디자인', 'https://example.invalid/a')).toBe('')
-  })
-
-  it('영문 부분일치 오매칭 방지 — 단어 경계 적용', () => {
-    expect(buildBrandAnchor('Javascriptural nonsense', 'https://example.invalid/a')).toBe('')
-  })
-
-  it('사전에 없는 브랜드는 앵커 없음', () => {
-    expect(buildBrandAnchor('머신러닝 입문', 'https://example.invalid/a')).toBe('')
-  })
-
-  it('잘못된 URL이어도 예외 없이 title 기준으로 동작', () => {
-    expect(buildBrandAnchor('노션 사용법', 'not-a-url')).toBe('Notion 노션')
   })
 })

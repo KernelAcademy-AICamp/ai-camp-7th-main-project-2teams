@@ -22,7 +22,6 @@ const { generateTags, createEmbedding } = vi.hoisted(() => ({
 vi.mock('@/lib/ai', () => ({
   generateTags,
   createEmbedding,
-  buildEmbeddingText: (title: string, _url: string, content: string) => `${title}\n${content}`,
   buildWeakEmbeddingText: (t: string) => t,
   generateWeakSummary: async () => '',
 }))
@@ -173,9 +172,7 @@ describe('POST /api/bookmarks · after() 후처리', () => {
     const res = await POST(req({ title: 'T', url: 'https://a.com', content: '본문' }))
 
     expect(res.status).toBe(201)
-    // 후처리는 전부 after()에 위임 — 계측 flush + 이중언어 요약 임베딩 보강 2건.
-    // 이 개수가 늘면 응답 경로 밖으로 옮긴 작업이 추가됐다는 뜻이라 의도 확인이 필요하다.
-    expect(afterSpy).toHaveBeenCalledTimes(2)
+    expect(afterSpy).toHaveBeenCalledTimes(1) // 후처리는 after()에 위임
     expect(eventsInsertSpy).toHaveBeenCalledTimes(1) // 발사는 됐고 대기만 안 함
     gate.resolve()
   })

@@ -9,13 +9,7 @@
 //   REEMBED_LIMIT=N           앞 N개만 처리(0=전체)
 //   REEMBED_SINCE=YYYY-MM-DD  created_at 하한(미지정 시 전량)
 import { createClient } from '@supabase/supabase-js'
-import {
-  createEmbedding,
-  generateBilingualSummary,
-  buildEmbeddingText,
-  buildWeakEmbeddingText,
-  EMBEDDING_MODEL,
-} from '../lib/ai'
+import { createEmbedding, generateWeakSummary, buildWeakEmbeddingText, EMBEDDING_MODEL } from '../lib/ai'
 
 const DRY = process.env.DRY === '1'
 const LIMIT = Number(process.env.REEMBED_LIMIT ?? '0')
@@ -50,22 +44,11 @@ async function main() {
     try {
       const tagsLine = r.tags?.length ? `태그: ${r.tags.join(', ')}` : null
       const text = r.description
-        ? [
-            buildEmbeddingText(
-              r.title,
-              r.url,
-              r.description,
-              await generateBilingualSummary({ title: r.title, url: r.url }),
-            ),
-            tagsLine,
-          ]
-            .filter(Boolean)
-            .join('\n')
+        ? [r.title, r.description, tagsLine].filter(Boolean).join('\n')
         : buildWeakEmbeddingText(
             r.title,
-            r.url,
             r.tags ?? [],
-            await generateBilingualSummary({ title: r.title, url: r.url }),
+            await generateWeakSummary({ title: r.title, url: r.url }),
           )
       const embedding = await createEmbedding(text)
       const { error: upErr } = await supabase.from('bookmarks').update({ embedding }).eq('id', r.id)

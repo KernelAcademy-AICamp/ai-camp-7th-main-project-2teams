@@ -3,12 +3,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { scoreQuery, aggregateSearch, type SearchScore } from '../search-eval'
-import {
-  createEmbedding,
-  buildEmbeddingText,
-  buildWeakEmbeddingText,
-  generateBilingualSummary,
-} from '../ai'
+import { createEmbedding, buildWeakEmbeddingText, generateWeakSummary } from '../ai'
 import { expandSearchQuery } from '../search-alias'
 
 // 지표 함수 단위 테스트 — 항상 실행 (OpenAI/DB 미호출).
@@ -88,26 +83,26 @@ describe('aggregateSearch', () => {
 // 기존 cross-lingual 5건은 전부 SEARCH_ALIAS 등재 브랜드 단독 쿼리라 사전이 커버하는 영역만
 // 재고 있었다 — 사전으로 못 잡는 "개념어" 교차언어(한→영: 색인↔indexing / 영→한: retrospective↔회고)를
 // 양방향으로 측정하는 카테고리. 임베딩 입력에 반대 언어 앵커가 없는 strong 경로의 구조적 약점 대상.
-// n=26→32. 브랜드 앵커(lib/ai.ts buildEmbeddingText) 동시 도입 후 실측 overall 0.844,
-// concept 0.5(3/6). 성공 3건(b9·b10·b24) 중 b9·b10은 title에 원어 브랜드가 있어 앵커가 걸린 경우 —
-// 실패 3건(b21 debounce·b22 indexing·b23 retrospective)은 사전 등재 브랜드가 없어 앵커가 빈 문자열.
-// 즉 앵커는 브랜드 축만 해결하며, 순수 개념어 축은 임베딩 입력에 반대 언어 요약을 넣는
-// 후속 작업(비동기 후처리) 영역으로 남는다. 그때 concept baseline을 상향한다.
-// N-7(2026-07-27): 이중언어 요약(generateBilingualSummary)을 after()로 응답 뒤에 붙여 재임베딩.
-// concept 0.5→0.833(5/6), overall 0.844→0.906. 앵커가 못 잡던 b22(indexing)·b23(retrospective)이
-// 요약으로 구제됨. 잔여 1건 b21("이벤트 연타 제어 방법"↔Debouncing/Throttling)은 쿼리 표현 자체가
-// 비표준이라 라벨이 느슨한 known miss — particle 잔여 1건과 같은 성격.
-// N-8(2026-07-27): weak 경로도 앵커+이중언어 요약으로 통일(buildWeakEmbeddingText에 url 추가).
-// 골든셋 weak-vector는 0.667 불변 — 이득 미검출(b19 옵시디언은 이미 alias 등재라 앵커가 새 정보를
-// 주지 못하고, b11 제텔카스텐은 사전 미등재+모델이 모르는 페이지라 요약도 비었을 가능성).
-// 동시에 concept이 0.833→0.667로 흔들렸는데 b23(strong 경로)은 이번 변경 대상이 아니므로 회귀가
-// 아니라 **측정 변동성**이다: 요약이 LLM 생성이라 temperature=0에서도 실행마다 결과가 달라진다.
-// → baseline은 단일 실측이 아니라 관측 범위의 하한으로 잡는다(concept 2회 관측: 0.833/0.667).
-const OVERALL_RECALL_BASELINE = 0.85 // 관측 0.906/0.875 − 마진
+// n=26→32. 이 카테고리는 "임베딩 입력에 반대 언어 신호를 심는" 개선을 재기 위한 계측 자산으로
+// 남긴다 — 개선 구현 자체는 롤백됐고(아래), 골든셋만 유지된다.
+//
+// 롤백 이력(2026-07-27): 브랜드 앵커 + 이중언어 요약을 임베딩 입력에 넣는 구현을 만들어
+// concept 0.5→0.833까지 올렸으나 되돌렸다. 이유는 임베딩 입력에 LLM 생성 텍스트가 들어가면서
+// **골든셋이 결정적이지 않게 된 것**: 같은 코드로 2회 실행에 concept 0.833/0.667로 흔들렸고,
+// 원인을 좁혀보니 b23 요약이 5회 중 2종으로 갈렸다(b21·b22는 1종으로 안정). b23이 relevance
+// floor 경계에 있어 요약 문구 차이가 통과/실패를 가른다. 게이트를 관측 하한까지 낮춰야 해서
+// 회귀 감지력이 오히려 떨어졌다. 재착수 조건과 시나리오는
+// docs/superpowers/plans/2026-07-27-cross-lingual-search.md 참조.
+//
+// 롤백 후 재실측(2026-07-27): overall 0.8125, concept 0.333(2/6).
+// 성공 2건은 b24(incident response↔장애 대응)·b10(vector search↔pgvector) — 3-large가 자력으로
+// 잡는 범위다. 나머지 4건은 임베딩 입력에 반대 언어 신호가 없으면 전멸한다.
+// 개선 폭 기록: concept 0.333(현재) → 0.5(앵커) → 0.833(앵커+요약). 재착수 시 이 수치가 목표.
+const OVERALL_RECALL_BASELINE = 0.78 // 롤백 후 실측 0.8125 − 마진
 // 알려진 약점 카테고리 — 코어 회귀 게이트에서 제외. 각 카테고리는 자체 개선 트랙을 가진다.
 const KNOWN_WEAK_CATEGORIES = ['weak-vector', 'cross-lingual-concept']
 const CORE_RECALL_BASELINE = 0.9 // 약점 카테고리 제외 실측 0.957(22/23, particle 1건 known miss) − 마진
-const CROSS_LINGUAL_CONCEPT_BASELINE = 0.6 // 관측 0.833/0.667(요약 변동성) 하한 − 마진. 도입 전 0.5
+const CROSS_LINGUAL_CONCEPT_BASELINE = 0.3 // 롤백 후 실측 0.333(2/6) − 마진. 개선 시 0.833까지 확인됨
 interface GoldenBookmark {
   ref: string
   url: string
@@ -155,18 +150,9 @@ async function runSearchGolden(
       // 없으면 weak 경로(title+LLM 한줄요약+태그) — app/api/bookmarks/route.ts와 동일.
       const embedding = await createEmbedding(
         b.description
-          ? buildEmbeddingText(
-              b.title,
-              b.url,
-              b.description,
-              await generateBilingualSummary({ title: b.title, url: b.url }),
-            )
-          : buildWeakEmbeddingText(
-              b.title,
-              b.url,
-              b.tags,
-              await generateBilingualSummary({ title: b.title, url: b.url }),
-            ),
+          ? `${b.title}
+${b.description}`
+          : buildWeakEmbeddingText(b.title, b.tags, await generateWeakSummary({ title: b.title, url: b.url })),
       )
       const { data, error } = await supabase
         .from('bookmarks')
