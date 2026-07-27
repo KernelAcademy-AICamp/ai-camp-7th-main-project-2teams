@@ -26,6 +26,14 @@
 - 방식: title/url로 게임명 식별 → 기존 tags에 게임명만 추가(다른 태그 유지)
 - category-backfill과 스코프 안 겹침(게임 카테고리 전용, 소분류만)
 
+### cross-lingual-search-alias
+
+- 위치: `.claude/skills/cross-lingual-search-alias/SKILL.md`
+- 대상: `front/lib/search-alias.ts`의 `SEARCH_ALIAS` 사전에 없는 한/영 브랜드명 쌍
+- 배경: 임베딩이 음차 표기(피그마)와 원어(Figma)를 가깝게 두지 못함(실측 코사인 0.09~0.44, relevance floor 0.4 미달). 사전이 쿼리를 원어까지 확장해 우회하는데, 새 북마크가 쌓이면 사전에 없는 브랜드명이 계속 생김
+- 방식: 북마크 `tags`/`title` distinct 순회 → 사전 미등재 브랜드명 식별 → `SEARCH_ALIAS`에 항목 추가(코드 수정, DB 미변경)
+- 다른 두 스킬과 달리 데이터가 아닌 **코드 사전**을 갱신 — 재태깅·재임베딩 없음
+
 ## 스크립트 (일회성 ops)
 
 ### backfill-extract-top-category.ts
@@ -65,6 +73,19 @@
 - 배경: `is_dead`는 신규 저장 시점(`POST /api/bookmarks`)부터만 기록됨 — 기존 저장분은 전부 `false`로 시작해 실제 죽은 링크 여부가 반영 안 됨
 - 방식: `fetchMeta()` 전체 재호출 대신 상태 코드만 가볍게 확인(HEAD 우선, 405/501이면 GET 폴백) → `isDeadStatus()`(404/410만 dead)로 판정 → 값이 바뀌는 행만 갱신
 - 실행: 기본 dry-run, `--apply` 플래그로 실제 반영. 재실행 시 이미 반영된 행은 건너뜀(idempotent)
+
+### reembed.ts
+
+- 위치: `front/scripts/reembed.ts`
+- 대상: 전체 `bookmarks`(또는 `REEMBED_SINCE` 이후 생성분)
+- 배경: 임베딩 모델 전환(3-small → 3-large, `lib/ai.ts` `EMBEDDING_MODEL`) 시 모델 간 벡터 공간이 비호환 — 검색 쿼리 임베딩과 좌표계를 맞추려면 전량 재생성 필수. 임베딩 입력 규약(title+description+태그)이 바뀔 때도 동일
+- 방식: `title + description + 태그` 재조합 → `createEmbedding()` 재호출 → `embedding` 갱신. description 없으면 weak 경로(title + LLM 한줄요약 + 태그, `POST /api/bookmarks` weak 경로와 동일 규약)
+- 실행: `source .env` 후 `npx tsx scripts/reembed.ts`
+  - `DRY=1` — 쓰기 없이 대상 집계만 출력
+  - `REEMBED_LIMIT=N` — 앞 N개만 처리(0=전체)
+  - `REEMBED_SINCE=YYYY-MM-DD` — `created_at` 하한(미지정 시 전량). 신규 저장분만 재처리할 때 사용
+- 백업 없음 — 임베딩은 원본(title·description·tags)에서 언제든 재생성 가능. 롤백 = 구 모델로 재실행
+- 다른 스크립트와 달리 폐기 대상 아님 — 모델·입력 규약이 바뀔 때마다 재사용
 
 ## 신규 백필 추가 규칙
 
