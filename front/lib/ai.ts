@@ -203,6 +203,8 @@ export async function generateWeakSummary({ title, url }: { title: string; url: 
 export const EMBEDDING_MODEL = "text-embedding-3-large";
 export const EMBEDDING_DIMENSIONS = 1536;
 
+
+
 export async function createEmbedding(text: string): Promise<number[]> {
   if (isMockOpenAI()) return MOCK_EMBEDDING;
 

@@ -79,8 +79,30 @@ describe('aggregateSearch', () => {
 // N-5(2026-07-22): 임베딩 모델 3-large(dimensions:1536) 전환 + 전량 재임베딩(1000건, 실패 0).
 // weak-vector 0/3→2/3(옵시디언·Zotero floor 통과 — A/B 예측 적중), noise 오탐 0 유지. 실측 24/26=0.923.
 // n=26. 최악(weak 1 + particle 1 miss) 24/26=0.923 − 마진.
-const OVERALL_RECALL_BASELINE = 0.85
-const NON_WEAK_VECTOR_RECALL_BASELINE = 0.9 // weak-vector 제외 실측 0.957(22/23, particle 1건 known miss) − 마진
+// N-6(2026-07-27): cross-lingual-concept 6건 추가(b21~b24 신규 + b9·b10 재사용).
+// 기존 cross-lingual 5건은 전부 SEARCH_ALIAS 등재 브랜드 단독 쿼리라 사전이 커버하는 영역만
+// 재고 있었다 — 사전으로 못 잡는 "개념어" 교차언어(한→영: 색인↔indexing / 영→한: retrospective↔회고)를
+// 양방향으로 측정하는 카테고리. 임베딩 입력에 반대 언어 앵커가 없는 strong 경로의 구조적 약점 대상.
+// n=26→32. 이 카테고리는 "임베딩 입력에 반대 언어 신호를 심는" 개선을 재기 위한 계측 자산으로
+// 남긴다 — 개선 구현 자체는 롤백됐고(아래), 골든셋만 유지된다.
+//
+// 롤백 이력(2026-07-27): 브랜드 앵커 + 이중언어 요약을 임베딩 입력에 넣는 구현을 만들어
+// concept 0.5→0.833까지 올렸으나 되돌렸다. 이유는 임베딩 입력에 LLM 생성 텍스트가 들어가면서
+// **골든셋이 결정적이지 않게 된 것**: 같은 코드로 2회 실행에 concept 0.833/0.667로 흔들렸고,
+// 원인을 좁혀보니 b23 요약이 5회 중 2종으로 갈렸다(b21·b22는 1종으로 안정). b23이 relevance
+// floor 경계에 있어 요약 문구 차이가 통과/실패를 가른다. 게이트를 관측 하한까지 낮춰야 해서
+// 회귀 감지력이 오히려 떨어졌다. 재착수 조건과 시나리오는
+// docs/superpowers/plans/2026-07-27-cross-lingual-search.md 참조.
+//
+// 롤백 후 재실측(2026-07-27): overall 0.8125, concept 0.333(2/6).
+// 성공 2건은 b24(incident response↔장애 대응)·b10(vector search↔pgvector) — 3-large가 자력으로
+// 잡는 범위다. 나머지 4건은 임베딩 입력에 반대 언어 신호가 없으면 전멸한다.
+// 개선 폭 기록: concept 0.333(현재) → 0.5(앵커) → 0.833(앵커+요약). 재착수 시 이 수치가 목표.
+const OVERALL_RECALL_BASELINE = 0.78 // 롤백 후 실측 0.8125 − 마진
+// 알려진 약점 카테고리 — 코어 회귀 게이트에서 제외. 각 카테고리는 자체 개선 트랙을 가진다.
+const KNOWN_WEAK_CATEGORIES = ['weak-vector', 'cross-lingual-concept']
+const CORE_RECALL_BASELINE = 0.9 // 약점 카테고리 제외 실측 0.957(22/23, particle 1건 known miss) − 마진
+const CROSS_LINGUAL_CONCEPT_BASELINE = 0.3 // 롤백 후 실측 0.333(2/6) − 마진. 개선 시 0.833까지 확인됨
 interface GoldenBookmark {
   ref: string
   url: string
@@ -128,7 +150,8 @@ async function runSearchGolden(
       // 없으면 weak 경로(title+LLM 한줄요약+태그) — app/api/bookmarks/route.ts와 동일.
       const embedding = await createEmbedding(
         b.description
-          ? `${b.title}\n${b.description}`
+          ? `${b.title}
+${b.description}`
           : buildWeakEmbeddingText(b.title, b.tags, await generateWeakSummary({ title: b.title, url: b.url })),
       )
       const { data, error } = await supabase
@@ -210,13 +233,17 @@ describe.runIf(process.env.RUN_SEARCH_EVAL === '1')('골든셋 평가 (실 Supab
       expect(agg.n).toBe(loadGolden().queries.length)
       expect(agg.recall).toBeGreaterThanOrEqual(OVERALL_RECALL_BASELINE)
 
-      const nonWeakVector = Object.entries(agg.byCategory)
-        .filter(([category]) => category !== 'weak-vector')
+      const core = Object.entries(agg.byCategory)
+        .filter(([category]) => !KNOWN_WEAK_CATEGORIES.includes(category))
         .map(([, score]) => score)
-      const nonWeakVectorRecall =
-        nonWeakVector.reduce((sum, s) => sum + s.recall * s.n, 0) /
-        nonWeakVector.reduce((sum, s) => sum + s.n, 0)
-      expect(nonWeakVectorRecall).toBeGreaterThanOrEqual(NON_WEAK_VECTOR_RECALL_BASELINE)
+      const coreRecall =
+        core.reduce((sum, s) => sum + s.recall * s.n, 0) / core.reduce((sum, s) => sum + s.n, 0)
+      expect(coreRecall).toBeGreaterThanOrEqual(CORE_RECALL_BASELINE)
+
+      // 약점 카테고리도 자체 바닥은 지킨다 — 코어 게이트에서 뺐다고 무한 하락을 허용하지 않는다.
+      expect(agg.byCategory['cross-lingual-concept'].recall).toBeGreaterThanOrEqual(
+        CROSS_LINGUAL_CONCEPT_BASELINE,
+      )
     },
     120_000,
   )

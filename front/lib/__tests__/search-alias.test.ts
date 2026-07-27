@@ -77,6 +77,91 @@ describe('expandSearchQuery', () => {
     expect(expandSearchQuery('한글로 검색')).toEqual(['한글로 검색'])
   })
 
+  // 2026-07-27 alias 동기화 — 북마크 tags/title에 한글 음차·원어가 동시 존재하는 쌍
+  it('챗지피티·챗GPT ↔ ChatGPT', () => {
+    expect(expandSearchQuery('챗지피티')).toEqual(['챗지피티', 'ChatGPT'])
+    expect(expandSearchQuery('챗GPT')).toEqual(['챗GPT', 'ChatGPT'])
+    expect(expandSearchQuery('chatgpt')).toEqual(['chatgpt', '챗지피티'])
+  })
+
+  it('나노바나나 ↔ Nano Banana', () => {
+    expect(expandSearchQuery('나노바나나')).toEqual(['나노바나나', 'Nano Banana'])
+    expect(expandSearchQuery('나노 바나나')).toEqual(['나노 바나나', 'Nano Banana'])
+    expect(expandSearchQuery('Nano Banana')).toEqual(['Nano Banana', '나노바나나'])
+  })
+
+  it('프레이머 ↔ Framer', () => {
+    expect(expandSearchQuery('프레이머')).toEqual(['프레이머', 'Framer'])
+    expect(expandSearchQuery('framer')).toEqual(['framer', '프레이머'])
+  })
+
+  it('파이썬 ↔ Python', () => {
+    expect(expandSearchQuery('파이썬')).toEqual(['파이썬', 'Python'])
+    expect(expandSearchQuery('python')).toEqual(['python', '파이썬'])
+  })
+
+  it('인스타그램·인스타 ↔ Instagram', () => {
+    expect(expandSearchQuery('인스타그램')).toEqual(['인스타그램', 'Instagram'])
+    expect(expandSearchQuery('인스타')).toEqual(['인스타', 'Instagram'])
+    expect(expandSearchQuery('instagram')).toEqual(['instagram', '인스타그램'])
+  })
+
+  it('링크드인 ↔ LinkedIn', () => {
+    expect(expandSearchQuery('링크드인')).toEqual(['링크드인', 'LinkedIn'])
+    expect(expandSearchQuery('linkedin')).toEqual(['linkedin', '링크드인'])
+  })
+
+  it('브루 ↔ Vrew', () => {
+    expect(expandSearchQuery('브루')).toEqual(['브루', 'Vrew'])
+    expect(expandSearchQuery('vrew')).toEqual(['vrew', '브루'])
+  })
+
+  // DB 전수 재탐색(전 사용자 1039건)에서 추가 — 순수 교차언어 실측상 음차만으로 top-60 미진입
+  it('마켓컬리 ↔ Kurly', () => {
+    expect(expandSearchQuery('마켓컬리')).toEqual(['마켓컬리', 'Kurly'])
+  })
+
+  it('제로초 ↔ ZeroCho', () => {
+    expect(expandSearchQuery('제로초')).toEqual(['제로초', 'ZeroCho'])
+    expect(expandSearchQuery('zerocho')).toEqual(['zerocho', '제로초'])
+  })
+
+  it('하네스엔지니어링 ↔ Harness Engineering', () => {
+    expect(expandSearchQuery('하네스엔지니어링')).toEqual(['하네스엔지니어링', 'Harness Engineering'])
+  })
+
+  it('컬리 키는 마켓컬리 추가 후에도 기존 매핑 유지', () => {
+    expect(expandSearchQuery('컬리')).toEqual(['컬리', 'Kurly'])
+    expect(expandSearchQuery('kurly')).toEqual(['kurly', '컬리'])
+  })
+
+  // 역방향 대비 — 북마크에 한글 표기만 있는 브랜드. 영문 쿼리가 한글까지 확장돼야 잡힌다
+  it('영문 쿼리 → 한글 표기 역방향 확장', () => {
+    expect(expandSearchQuery('Filmora')).toEqual(['Filmora', '필모라'])
+    expect(expandSearchQuery('streamlit')).toEqual(['streamlit', '스트림릿'])
+    expect(expandSearchQuery('Tistory')).toEqual(['Tistory', '티스토리'])
+    expect(expandSearchQuery('CLOVA Note')).toEqual(['CLOVA Note', '클로바노트'])
+    expect(expandSearchQuery('amazon')).toEqual(['amazon', '아마존'])
+  })
+
+  it('한글 표기만 있는 브랜드도 정방향 확장', () => {
+    expect(expandSearchQuery('뤼튼')).toEqual(['뤼튼', 'Wrtn'])
+    expect(expandSearchQuery('미리캔버스')).toEqual(['미리캔버스', 'MiriCanvas'])
+    expect(expandSearchQuery('카카오')).toEqual(['카카오', 'Kakao'])
+    expect(expandSearchQuery('토스')).toEqual(['토스', 'Toss'])
+  })
+
+  it('토스 alias가 토스트 같은 인접 토큰을 오매칭하지 않음', () => {
+    expect(expandSearchQuery('토스트 메시지')).toEqual(['토스트 메시지'])
+  })
+
+  it('문장 속 신규 브랜드 토큰도 조사 제거 후 확장', () => {
+    expect(expandSearchQuery('파이썬으로 크롤링하기')).toEqual([
+      '파이썬으로 크롤링하기',
+      'Python 크롤링하기',
+    ])
+  })
+
   it('사전에 등록된 모든 한글 키는 유효한 영문 값을 가짐', () => {
     for (const [ko, en] of Object.entries(SEARCH_ALIAS)) {
       expect(ko.length).toBeGreaterThan(0)
