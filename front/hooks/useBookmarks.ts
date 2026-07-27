@@ -36,8 +36,10 @@ const PAGE_SIZE = 20
 
 // A62: useQuery → useInfiniteQuery. GET /api/bookmarks는 이미 page/limit/total을 지원했으나
 // 프론트가 소비하지 않던 갭을 메운다(신규 backend 구현 아님).
-export function useBookmarks(filters: BookmarksFilters) {
+// enabled=false면 요청하지 않는다 — 조건부 프리페치용(같은 queryKey는 캐시 공유).
+export function useBookmarks(filters: BookmarksFilters, enabled = true) {
   return useInfiniteQuery({
+    enabled,
     queryKey: ['bookmarks', filters],
     queryFn: async ({ pageParam }): Promise<BookmarksPage> => {
       const { folder, ...rest } = filters
