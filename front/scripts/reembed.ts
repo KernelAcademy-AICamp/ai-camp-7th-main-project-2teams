@@ -5,8 +5,9 @@
 // (title + LLM 한줄요약 + 태그, app/api/bookmarks/route.ts weak 경로와 동일 규약).
 // 백업 없음 — 임베딩은 원본(title·description·tags)에서 언제든 재생성 가능. 롤백 = 구 모델로 재실행.
 // 환경변수:
-//   DRY=1            쓰기 없이 대상 집계만 출력
-//   REEMBED_LIMIT=N  앞 N개만 처리(0=전체)
+//   DRY=1                     쓰기 없이 대상 집계만 출력
+//   REEMBED_LIMIT=N           앞 N개만 처리(0=전체)
+//   REEMBED_SINCE=YYYY-MM-DD  created_at 하한(미지정 시 전량)
 import { createClient } from '@supabase/supabase-js'
 import {
   createEmbedding,
@@ -19,6 +20,7 @@ import {
 
 const DRY = process.env.DRY === '1'
 const LIMIT = Number(process.env.REEMBED_LIMIT ?? '0')
+const SINCE = process.env.REEMBED_SINCE ?? ''
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,10 +31,13 @@ const supabase = createClient(
 type Row = { id: string; url: string; title: string; description: string | null; tags: string[] | null }
 
 async function main() {
-  const { data, error } = await supabase
+  let query = supabase
     .from('bookmarks')
     .select('id, url, title, description, tags')
     .order('created_at', { ascending: true })
+  // 규약 변경분을 소급 적용할 범위를 좁힐 때 사용. 지정 없으면 기존대로 전량.
+  if (SINCE) query = query.gte('created_at', SINCE)
+  const { data, error } = await query
   if (error) throw error
 
   const rows = (LIMIT > 0 ? data!.slice(0, LIMIT) : data!) as Row[]
