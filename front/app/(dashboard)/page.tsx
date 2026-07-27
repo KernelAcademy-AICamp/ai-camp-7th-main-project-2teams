@@ -147,6 +147,11 @@ function DashboardContent() {
     tab: tab === "favorites" ? "favorites" : undefined,
   });
 
+  // 즐겨찾기 탭에서 카테고리를 보는 동안 '전체' 목록을 미리 받아둔다 — 마지막 항목 해제로
+  // 전체 전환될 때(useToggleFavorite) 네트워크 대기 없이 캐시에서 즉시 그려진다.
+  // 같은 queryKey를 쓰므로 캐시는 본 목록과 공유되고, 조건 불충족 시엔 요청하지 않는다.
+  useBookmarks({ tab: "favorites" }, tab === "favorites" && category !== null);
+
   const {
     mutate: search,
     isPending: isSearchPending,
@@ -275,7 +280,20 @@ function DashboardContent() {
           </div>
         )}
 
-        {!isPending && !isBookmarkError && items.length === 0 && (
+        {/* 목록 전환(카테고리 해제 → 전체 등) 중 캐시가 비어 empty 문구가 잠깐 스치는 것 방지.
+            items가 있을 때의 우상단 갱신 배지와 달리, 표시할 목록 자체가 없는 구간을 담당한다. */}
+        {!isPending && !isBookmarkError && items.length === 0 && isRefetching && (
+          <div
+            role="status"
+            aria-label="목록 갱신 중"
+            className="flex flex-1 flex-col items-center justify-center gap-2 py-20 text-sm text-gray-500"
+          >
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-brand" />
+            불러오는 중
+          </div>
+        )}
+
+        {!isPending && !isBookmarkError && items.length === 0 && !isRefetching && (
           <div className="flex flex-1 flex-col items-center justify-center py-20 text-center">
             {isSearching ? (
               isSearchError && !isSearchPending ? (

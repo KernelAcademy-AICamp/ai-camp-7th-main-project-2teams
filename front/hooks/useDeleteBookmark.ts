@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import type { BookmarksPage } from './useBookmarks'
+import { patchSearchResult, restoreSearchResults } from './useSearch'
 
 /** DELETE /api/bookmarks/:id 호출 — 테스트 가능하도록 export */
 export async function fetchDeleteBookmark(id: string): Promise<{ success: true }> {
@@ -51,7 +52,10 @@ export function useDeleteBookmark() {
         queryClient.setQueryData(queryKey, applyOptimisticDelete(data, id) ?? data)
       }
 
-      return { previousData }
+      // 검색 결과는 ['bookmarks'] 캐시와 별도 보관 — 삭제한 북마크가 검색 화면에 남지 않도록 제거
+      const previousSearch = patchSearchResult(queryClient, id, () => null)
+
+      return { previousData, previousSearch }
     },
 
     onError: (_err, _id, context) => {
@@ -61,6 +65,7 @@ export function useDeleteBookmark() {
           queryClient.setQueryData(queryKey, data)
         }
       }
+      restoreSearchResults(queryClient, context?.previousSearch)
     },
 
     onSettled: () => {

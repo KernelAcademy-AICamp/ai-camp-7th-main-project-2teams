@@ -107,6 +107,8 @@ export function useImportBookmarks() {
       queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
       // 임포트로 folder_hint가 생길 수 있으므로 폴더 목록도 무효화 → 사이드바 즉시 반영
       queryClient.invalidateQueries({ queryKey: ['folders'] })
+      // AI 자동 분류로 새 카테고리가 생기므로 카테고리 목록도 무효화 → 사이드바 즉시 반영
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
     },
   })
 }

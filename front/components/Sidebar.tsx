@@ -113,6 +113,13 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     }
   }, [tab, folder, folderTree, setFolder]);
 
+  // 선택 중이던 카테고리가 목록에서 사라지면(즐겨찾기 탭 마지막 항목 해제, 북마크 삭제 등)
+  // 활성 항목 없이 빈 목록만 남으므로 '전체'로 되돌린다. categoriesData 도착 후에만 판정.
+  useEffect(() => {
+    if (tab === "folders" || category === null || !categoriesData) return;
+    if (!categories.includes(category)) setCategory(null);
+  }, [tab, category, categories, categoriesData, setCategory]);
+
   const handleAll = () => {
     setCategory(null);
     setTag(null);

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, type InfiniteData } from '@tanstack/react-query'
-import { fetchToggleFavorite, applyOptimisticToggle } from '../useToggleFavorite'
+import { fetchToggleFavorite, applyOptimisticToggle, isEmptyAfter } from '../useToggleFavorite'
 import type { Bookmark, BookmarksPage } from '../useBookmarks'
 
 // useBookmarks가 useInfiniteQuery라 캐시는 InfiniteData<BookmarksPage> — 페이지 1개짜리로 시드.
@@ -212,5 +212,23 @@ describe('낙관적 업데이트 + 롤백 통합 (QueryClient)', () => {
     expect(cached?.pages[0].bookmarks).toHaveLength(1)
     expect(cached?.pages[0].bookmarks[0].id).toBe('2')
     expect(cached?.pages[0].total).toBe(1)
+  })
+})
+
+// --- (4) isEmptyAfter — 마지막 항목 해제 시 '전체' 자동 전환의 판정 조건 ---
+describe('isEmptyAfter', () => {
+  it('모든 페이지가 비면 true', () => {
+    expect(isEmptyAfter({ pages: [{ bookmarks: [], total: 0 }], pageParams: [1] })).toBe(true)
+  })
+
+  it('한 페이지라도 항목이 남으면 false', () => {
+    const data: InfiniteData<BookmarksPage> = {
+      pages: [
+        { bookmarks: [], total: 1 },
+        { bookmarks: [makeBookmark('2', true)], total: 1 },
+      ],
+      pageParams: [1, 2],
+    }
+    expect(isEmptyAfter(data)).toBe(false)
   })
 })

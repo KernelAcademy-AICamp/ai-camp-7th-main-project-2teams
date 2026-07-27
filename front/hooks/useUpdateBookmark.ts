@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { resolveTopCategory } from '@/lib/tag-alias'
 import type { Bookmark, BookmarksPage } from './useBookmarks'
+import { patchSearchResult, restoreSearchResults } from './useSearch'
 
 export interface UpdateBookmarkFields {
   tags?: string[]
@@ -43,18 +44,20 @@ export function applyOptimisticUpdate(
     ...old,
     pages: old.pages.map((page) => ({
       ...page,
-      bookmarks: page.bookmarks.map((b) => {
-        if (b.id !== id) return b
-        return {
-          ...b,
-          ...(fields.tags !== undefined ? { tags: fields.tags } : {}),
-          ...(fields.description !== undefined ? { description: fields.description } : {}),
-          ...(fields.category !== undefined
-            ? { category: fields.category ? resolveTopCategory(fields.category) : null }
-            : {}),
-        }
-      }),
+      bookmarks: page.bookmarks.map((b) => (b.id === id ? applyFieldsToBookmark(b, fields) : b)),
     })),
+  }
+}
+
+/** 북마크 1건에 변경 필드를 얹는다. 목록 캐시·검색 결과 캐시가 공유 — 표시값이 어긋나지 않게 단일 출처 */
+export function applyFieldsToBookmark<T extends Bookmark>(bookmark: T, fields: UpdateBookmarkFields): T {
+  return {
+    ...bookmark,
+    ...(fields.tags !== undefined ? { tags: fields.tags } : {}),
+    ...(fields.description !== undefined ? { description: fields.description } : {}),
+    ...(fields.category !== undefined
+      ? { category: fields.category ? resolveTopCategory(fields.category) : null }
+      : {}),
   }
 }
 
@@ -126,7 +129,11 @@ export function useUpdateBookmark() {
         queryClient.setQueryData(queryKey, updated)
       }
 
-      return { previousData }
+      // 검색 결과는 ['bookmarks'] 캐시와 별도 보관 — 태그·카테고리 수정이 검색 화면에도 즉시 보이게.
+      // ponytail: 검색 결과는 어떤 필터로 뽑혔는지 캐시에 없어 필터 불일치 제거는 하지 않는다(값만 갱신).
+      const previousSearch = patchSearchResult(queryClient, id, (b) => applyFieldsToBookmark(b, fields))
+
+      return { previousData, previousSearch }
     },
 
     onError: (_err, _variables, context) => {
@@ -136,6 +143,7 @@ export function useUpdateBookmark() {
           queryClient.setQueryData(queryKey, data)
         }
       }
+      restoreSearchResults(queryClient, context?.previousSearch)
     },
 
     onSuccess: ({ bookmark }, { id }) => {
@@ -154,6 +162,8 @@ export function useUpdateBookmark() {
         }
         queryClient.setQueryData(queryKey, updated)
       }
+      // 검색 결과에도 서버 응답 반영 — category_id 등 낙관적으로 못 채운 필드 동기화
+      patchSearchResult(queryClient, id, (b) => ({ ...b, ...bookmark }))
     },
 
     onSettled: () => {
