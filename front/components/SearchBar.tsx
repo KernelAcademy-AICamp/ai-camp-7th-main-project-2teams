@@ -35,13 +35,17 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
       isMounted.current = true
       return
     }
+    // debounce 미정착 구간에서는 실행하지 않는다. onSearch/onClear는 부모에서 탭·필터가 바뀌면
+    // 아이덴티티가 변해 이펙트를 재실행시키는데, 이때 debounced에 남은 옛 검색어로 onSearch가
+    // 불리면 탭 전환으로 비운 입력창이 되살아난다.
+    if (debounced !== value) return
     const query = debounced.trim()
     if (query) {
       onSearch(query)
     } else {
       onClear()
     }
-  }, [debounced, onSearch, onClear])
+  }, [debounced, value, onSearch, onClear])
 
   // 최근 검색 저장은 자동검색(debounce) 트리거와 분리 — 타이핑 중 짧은 pause마다 여러 항목이
   // 쌓이는 문제를 막기 위해 사용자가 검색을 "완료"했다고 볼 수 있는 시점(Enter/blur)에만 기록.

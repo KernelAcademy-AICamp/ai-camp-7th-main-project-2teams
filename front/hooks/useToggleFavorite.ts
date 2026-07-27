@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import type { Bookmark, BookmarksPage } from './useBookmarks'
+import { patchSearchResult, restoreSearchResults } from './useSearch'
 
 export interface ToggleFavoriteVariables {
   id: string
@@ -84,7 +85,11 @@ export function useToggleFavorite() {
         queryClient.setQueryData(queryKey, updated)
       }
 
-      return { previousData }
+      // 검색 결과는 ['bookmarks'] 캐시와 별도로 보관되므로 따로 갱신 — 누락 시 검색 화면에서
+      // 별 아이콘이 반응하지 않는다.
+      const previousSearch = patchSearchResult(queryClient, id, (b) => ({ ...b, is_favorite }))
+
+      return { previousData, previousSearch }
     },
 
     onError: (_err, _variables, context) => {
@@ -94,12 +99,18 @@ export function useToggleFavorite() {
           queryClient.setQueryData(queryKey, data)
         }
       }
+      restoreSearchResults(queryClient, context?.previousSearch)
     },
 
     onSettled: () => {
-      // bookmarks는 onMutate 낙관적 업데이트로 이미 정확 — 재조회 불필요 (전체 리스트 refetch 방지)
-      // 즐겨찾기 탭 카테고리 목록만 즉시 갱신 (staleTime 60s 대기 없이 반영)
+      // 즐겨찾기 탭 카테고리 목록 즉시 갱신 (staleTime 60s 대기 없이 반영)
       queryClient.invalidateQueries({ queryKey: ['categories'] })
+
+      // 낙관적 업데이트는 캐시에 이미 있는 항목만 수정한다 — 즐겨찾기 추가 시
+      // 즐겨찾기 탭 캐시에는 그 북마크가 없어 목록에 나타나지 않는다.
+      // refetchType: 'none'으로 stale 표시만 하여 현재 보는 목록은 재조회하지 않고,
+      // 탭 전환 시 마운트 refetch로 신규 항목이 채워지게 한다.
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'], refetchType: 'none' })
     },
   })
 }
