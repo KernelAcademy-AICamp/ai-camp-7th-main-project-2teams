@@ -68,8 +68,11 @@ export const GET = withAdmin(async () => {
   }))
 
   // 도트 분해는 보조 지표 — 실패해도 핵심 metrics 응답은 유지(빈 배열 degrade).
-  // 클릭(도트 값)과 저장·검색(익명 라벨 랭킹)을 한 쿼리로 가져온다 — 라벨 창은 8주와 동일(56일).
-  const since = new Date(Date.now() - LABEL_WINDOW_DAYS * 86_400_000).toISOString()
+  // 클릭(도트 값)과 저장·검색(익명 라벨 랭킹)을 한 쿼리로 가져온다.
+  // 두 용도의 창이 다를 수 있으므로 더 넓은 쪽에 맞춘다 — WEEKS만 늘리면 뒷주 도트가 조용히 비고,
+  // 반대로 좁히면 라벨 랭킹이 다른 위젯과 어긋난다. 축 밖 클릭은 컴포넌트가 버린다.
+  const windowDays = Math.max(WEEKS * 7, LABEL_WINDOW_DAYS)
+  const since = new Date(Date.now() - windowDays * 86_400_000).toISOString()
   const { data: events, error: eventError } = await admin
     .from('events')
     .select('user_id, type, created_at')
