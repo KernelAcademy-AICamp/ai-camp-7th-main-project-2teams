@@ -3,14 +3,21 @@ import { withAdmin } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { parseRange, RANGE_DAYS } from '@/lib/admin-range'
 import { logger } from '@/lib/logger'
+import {
+  COST_EVENT_TYPES,
+  COST_PER_SAVE_USD,
+  COST_PER_SEARCH_USD,
+  LABEL_WINDOW_DAYS,
+  labelOf,
+  labelOrder,
+  labelUsersByCost,
+} from '@/lib/admin-user-labels'
 
 // 실사용 추정(청구액에서 개발·eval 비용 분리) — Costs API는 단일 프로젝트라 호출 주체 구분 불가.
-// events 건수 × 단가로 프로덕션 사용분을 추정한다. 단가 근거:
+// events 건수 × 단가로 프로덕션 사용분을 추정한다. 단가 근거(단가·라벨 규약은 admin-user-labels.ts 단일 출처):
 //   저장 1건 = gpt-4o-mini 태깅(~2.7k in/$0.15 · ~0.2k out/$0.60 per 1M) + 3-large 임베딩(~1k/$0.13 per 1M) ≈ $0.00065
 //   검색 1건 = 확장 쿼리 임베딩 2~3회 소량 토큰 ≈ $0.00002
 // ponytail: 상수 추정 — 정밀 분리가 필요해지면 OpenAI 프로젝트 분리(prod/dev 키)로 승격.
-const COST_PER_SAVE_USD = 0.00065
-const COST_PER_SEARCH_USD = 0.00002
 
 type EstimatedUsage = {
   productionCostUsd: number
@@ -34,14 +41,19 @@ function unavailable(range: string, estimated: EstimatedUsage | null = null): Us
 }
 
 // events 기반 실사용 추정 — 실패 시 null degrade(청구액 표시는 유지).
-async function estimateProductionUsage(sinceIso: string): Promise<EstimatedUsage | null> {
+// 라벨 창(56일)까지 한 번에 조회하고 range 구간은 코드에서 잘라 쓴다 — 라벨은 range와 무관해야
+// 다른 위젯의 U1과 같은 사람을 가리킨다(#305). range는 최대 30일이라 항상 라벨 창 안쪽.
+async function estimateProductionUsage(
+  rangeSinceIso: string,
+  labelSinceIso: string,
+): Promise<EstimatedUsage | null> {
   try {
     const admin = createAdminClient()
     const { data, error } = await admin
       .from('events')
-      .select('user_id, type')
-      .in('type', ['bookmark_saved', 'search_performed'])
-      .gte('created_at', sinceIso)
+      .select('user_id, type, created_at')
+      .in('type', [...COST_EVENT_TYPES])
+      .gte('created_at', labelSinceIso)
     // 로깅 없이 null을 반환하면 "이벤트 0건"과 "쿼리 실패"가 UI·로그 어디서도 구분 불가
     if (error) {
       logger.warn('[openai-usage] events 조회 실패 — 실사용 추정 degrade', {
@@ -50,25 +62,20 @@ async function estimateProductionUsage(sinceIso: string): Promise<EstimatedUsage
       return null
     }
 
-    const rows = (data ?? []) as Array<{ user_id: string; type: string }>
-    const byUser = new Map<string, { saves: number; searches: number }>()
-    for (const r of rows) {
-      const u = byUser.get(r.user_id) ?? { saves: 0, searches: 0 }
-      if (r.type === 'bookmark_saved') u.saves += 1
-      else u.searches += 1
-      byUser.set(r.user_id, u)
-    }
-    const costOf = (u: { saves: number; searches: number }) =>
-      u.saves * COST_PER_SAVE_USD + u.searches * COST_PER_SEARCH_USD
+    const windowRows = (data ?? []) as Array<{ user_id: string; type: string; created_at: string }>
+    // 라벨은 창 전체(56일) 기준 — 비용 표시는 선택된 range 기준
+    const labels = labelUsersByCost(windowRows)
+    const rows = windowRows.filter((r) => r.created_at >= rangeSinceIso)
 
-    const ranked = [...byUser.values()].sort((a, b) => costOf(b) - costOf(a))
-    const perUser: EstimatedUsage['perUser'] = []
-    ranked.forEach((u, i) => {
-      const cost = costOf(u)
-      if (i < 2) perUser.push({ user: `U${i + 1}`, costUsd: cost })
-      else if (perUser[2]) perUser[2].costUsd += cost
-      else perUser.push({ user: '기타', costUsd: cost })
-    })
+    const costByLabel = new Map<string, number>()
+    for (const r of rows) {
+      const label = labelOf(labels, r.user_id)
+      const cost = r.type === 'bookmark_saved' ? COST_PER_SAVE_USD : COST_PER_SEARCH_USD
+      costByLabel.set(label, (costByLabel.get(label) ?? 0) + cost)
+    }
+    const perUser: EstimatedUsage['perUser'] = [...costByLabel.entries()]
+      .map(([user, costUsd]) => ({ user, costUsd }))
+      .sort((a, b) => labelOrder(a.user) - labelOrder(b.user))
 
     const saves = rows.filter((r) => r.type === 'bookmark_saved').length
     const searches = rows.length - saves
@@ -103,7 +110,10 @@ export const GET = withAdmin(async (req) => {
   const startTime = bucket - RANGE_DAYS[range] * 86400
 
   // 실사용 추정은 청구액 조회 가능 여부와 무관 — admin 키 없어도 계산.
-  const estimated = await estimateProductionUsage(new Date(startTime * 1000).toISOString())
+  const estimated = await estimateProductionUsage(
+    new Date(startTime * 1000).toISOString(),
+    new Date((bucket - LABEL_WINDOW_DAYS * 86400) * 1000).toISOString(),
+  )
 
   // OPENAI_API_KEY(태깅/임베딩용)와 분리된 Organization Admin 전용 키.
   // Costs/Usage API는 organization-level 권한이 필요해 별도 스코프 키를 사용한다.

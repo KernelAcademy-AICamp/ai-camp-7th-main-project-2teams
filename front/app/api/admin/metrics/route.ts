@@ -2,6 +2,13 @@ import { NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
+import {
+  COST_EVENT_TYPES,
+  LABEL_WINDOW_DAYS,
+  labelOf,
+  labelOrder,
+  labelUsersByCost,
+} from '@/lib/admin-user-labels'
 
 // North Star 주간 지표(집계 함수 admin_metrics_weekly, 0031). service_role 전용 RPC라 admin 클라이언트로 호출.
 // range(1d/7d/30d)와 무관 — NSM은 주간 고정. 최근 8주.
@@ -24,34 +31,25 @@ function weekStartIso(d: Date): string {
 }
 
 // 유저별 주간 되찾기 도트용 — NSM(retrieved)을 유저 단위로 분해. RPC 확장(마이그레이션) 대신
-// events 직접 집계(볼륨 소량). user_id는 응답에 절대 미포함 — 총량 내림차순으로 U1·U2 익명 키 부여,
-// 3순위 이하는 '기타'로 합산. ponytail: 고정 2색 도트 전제, 유저 늘어 색 구분이 필요해지면 확장.
+// events 직접 집계(볼륨 소량). user_id는 응답에 절대 미포함 — 익명 라벨은 admin-user-labels의
+// 공용 매핑(비용 랭킹)을 그대로 쓴다. 여기서 클릭 수로 다시 랭킹하면 다른 위젯의 U1과 다른
+// 사람을 가리키게 된다(#305).
 type PerUserDot = { week: string; user: string; count: number }
-function aggregatePerUser(rows: Array<{ user_id: string; created_at: string }>): PerUserDot[] {
-  const byUserWeek = new Map<string, Map<string, number>>()
+function aggregatePerUser(
+  rows: Array<{ user_id: string; created_at: string }>,
+  labels: ReadonlyMap<string, string>,
+): PerUserDot[] {
+  const dots = new Map<string, number>() // `${label}|${week}` → count ('기타' 합산 대비)
   for (const r of rows) {
-    const week = weekStartIso(new Date(r.created_at))
-    const weeks = byUserWeek.get(r.user_id) ?? new Map<string, number>()
-    weeks.set(week, (weeks.get(week) ?? 0) + 1)
-    byUserWeek.set(r.user_id, weeks)
+    const k = `${labelOf(labels, r.user_id)}|${weekStartIso(new Date(r.created_at))}`
+    dots.set(k, (dots.get(k) ?? 0) + 1)
   }
-  const total = (m: Map<string, number>) => [...m.values()].reduce((s, v) => s + v, 0)
-  const ranked = [...byUserWeek.entries()].sort((a, b) => total(b[1]) - total(a[1]))
-  const dots = new Map<string, number>() // `${key}|${week}` → count ('기타' 합산 대비)
-  ranked.forEach(([, weeks], i) => {
-    const key = i < 2 ? `U${i + 1}` : '기타'
-    for (const [week, count] of weeks) {
-      const k = `${key}|${week}`
-      dots.set(k, (dots.get(k) ?? 0) + count)
-    }
-  })
-  const userOrder: Record<string, number> = { U1: 0, U2: 1, 기타: 2 }
   return [...dots.entries()]
     .map(([k, count]) => {
       const [user, week] = k.split('|')
       return { week, user, count }
     })
-    .sort((a, b) => a.week.localeCompare(b.week) || userOrder[a.user] - userOrder[b.user])
+    .sort((a, b) => a.week.localeCompare(b.week) || labelOrder(a.user) - labelOrder(b.user))
 }
 
 export const GET = withAdmin(async () => {
@@ -70,17 +68,25 @@ export const GET = withAdmin(async () => {
   }))
 
   // 도트 분해는 보조 지표 — 실패해도 핵심 metrics 응답은 유지(빈 배열 degrade).
-  const since = new Date(Date.now() - WEEKS * 7 * 86_400_000).toISOString()
-  const { data: clicks, error: clickError } = await admin
+  // 클릭(도트 값)과 저장·검색(익명 라벨 랭킹)을 한 쿼리로 가져온다.
+  // 두 용도의 창이 다를 수 있으므로 더 넓은 쪽에 맞춘다 — WEEKS만 늘리면 뒷주 도트가 조용히 비고,
+  // 반대로 좁히면 라벨 랭킹이 다른 위젯과 어긋난다. 축 밖 클릭은 컴포넌트가 버린다.
+  const windowDays = Math.max(WEEKS * 7, LABEL_WINDOW_DAYS)
+  const since = new Date(Date.now() - windowDays * 86_400_000).toISOString()
+  const { data: events, error: eventError } = await admin
     .from('events')
-    .select('user_id, created_at')
-    .eq('type', 'search_result_clicked')
+    .select('user_id, type, created_at')
+    .in('type', [...COST_EVENT_TYPES, 'search_result_clicked'])
     .gte('created_at', since)
   // degrade는 하되 무음은 금지 — 로그가 없으면 "클릭 0건"과 "쿼리 실패"를 구분할 수 없다
-  if (clickError) logger.warn('[admin/metrics] perUser 집계 실패', { error: clickError.message })
-  const perUser = clickError
+  if (eventError) logger.warn('[admin/metrics] perUser 집계 실패', { error: eventError.message })
+  const rows = (events ?? []) as Array<{ user_id: string; type: string; created_at: string }>
+  const perUser = eventError
     ? []
-    : aggregatePerUser((clicks ?? []) as Array<{ user_id: string; created_at: string }>)
+    : aggregatePerUser(
+        rows.filter((r) => r.type === 'search_result_clicked'),
+        labelUsersByCost(rows.filter((r) => r.type !== 'search_result_clicked')),
+      )
 
   return NextResponse.json({ metrics, perUser })
 })

@@ -280,16 +280,6 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
             <ul className="flex flex-col">
               <li>
                 <Link
-                  href="/profile"
-                  onClick={() => setPopupOpen(false)}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm text-text-primary hover:bg-slate-50"
-                >
-                  <span className="text-text-secondary">›</span>
-                  프로필 정보
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/settings"
                   onClick={() => setPopupOpen(false)}
                   className="flex items-center gap-1.5 px-3 py-2 text-sm text-text-primary hover:bg-slate-50"
