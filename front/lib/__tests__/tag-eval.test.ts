@@ -158,13 +158,19 @@ function appendHistory(mode: 'rich' | 'title-only', agg: ReturnType<typeof aggre
   }
 }
 
+// 호출 간격. 순차 호출인데도 항목당 ~2.8k 토큰 × 0.84초 ≈ 200k TPM으로 조직 한도
+// (gpt-4o-mini 200k TPM)에 정확히 붙는다. 실제로 rich 직후 title-only가 이어지는 지점에서
+// 429(Used 197820 / Limit 200000)로 죽었다 — 품질 회귀가 아니라 한도 포화였다.
+// 400ms를 끼우면 분당 ~55요청 ≈ 155k TPM으로 내려가 여유가 생긴다(스위트당 179s → ~265s).
+const PACING_MS = 400
+
 // 골든셋 전체를 지정 입력 조건으로 채점. includeDescription=false면 임포트 굶김 재현.
 async function runGolden(
   golden: GoldenItem[],
   includeDescription: boolean,
 ): Promise<TagScore[]> {
   const scores: TagScore[] = []
-  for (const item of golden) {
+  for (const [i, item] of golden.entries()) {
     const predicted = await generateTags({
       title: item.title,
       url: item.url,
@@ -176,6 +182,7 @@ async function runGolden(
     console.log(
       `[${includeDescription ? 'rich' : 'title'}] F1=${s.f1.toFixed(2)} exact=${s.exact} | pred=[${predicted}] gold=[${item.gold}] | ${item.url}`,
     )
+    if (i < golden.length - 1) await new Promise((r) => setTimeout(r, PACING_MS))
   }
   return scores
 }
