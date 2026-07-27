@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
 
 // North Star 주간 지표(집계 함수 admin_metrics_weekly, 0031). service_role 전용 RPC라 admin 클라이언트로 호출.
 // range(1d/7d/30d)와 무관 — NSM은 주간 고정. 최근 8주.
@@ -75,6 +76,8 @@ export const GET = withAdmin(async () => {
     .select('user_id, created_at')
     .eq('type', 'search_result_clicked')
     .gte('created_at', since)
+  // degrade는 하되 무음은 금지 — 로그가 없으면 "클릭 0건"과 "쿼리 실패"를 구분할 수 없다
+  if (clickError) logger.warn('[admin/metrics] perUser 집계 실패', { error: clickError.message })
   const perUser = clickError
     ? []
     : aggregatePerUser((clicks ?? []) as Array<{ user_id: string; created_at: string }>)
