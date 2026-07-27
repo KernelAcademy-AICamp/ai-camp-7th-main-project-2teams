@@ -11,7 +11,6 @@
 import { createClient } from '@supabase/supabase-js'
 import {
   createEmbedding,
-  generateWeakSummary,
   generateBilingualSummary,
   buildEmbeddingText,
   buildWeakEmbeddingText,
@@ -64,8 +63,9 @@ async function main() {
             .join('\n')
         : buildWeakEmbeddingText(
             r.title,
+            r.url,
             r.tags ?? [],
-            await generateWeakSummary({ title: r.title, url: r.url }),
+            await generateBilingualSummary({ title: r.title, url: r.url }),
           )
       const embedding = await createEmbedding(text)
       const { error: upErr } = await supabase.from('bookmarks').update({ embedding }).eq('id', r.id)

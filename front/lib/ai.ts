@@ -166,8 +166,20 @@ export async function generateTags({ title, url, description }: TaggingInput): P
 // weak-vector 보강 — content(본문) 없을 때 태그·요약을 임베딩에 포함.
 // title이 고유명사뿐이면("옵시디언") 기능 서술 쿼리("글쓰기 노트 앱")와 어휘 갭으로 검색 전멸(search-golden weak-vector 실측 0/3).
 // 태그만으론 부족 실측(여전히 0/3) — LLM 한 줄 요약 추가.
-export function buildWeakEmbeddingText(title: string, tags: string[], summary = ""): string {
-  return [title, summary || null, tags.length > 0 ? `태그: ${tags.join(", ")}` : null]
+// 앵커·요약을 title 앞에 두는 이유는 strong 경로와 동일 — 반대 언어 신호를 앞쪽에 고정한다.
+export function buildWeakEmbeddingText(
+  title: string,
+  url: string,
+  tags: string[],
+  summary = "",
+): string {
+  const anchor = buildBrandAnchor(title, url);
+  return [
+    anchor || null,
+    summary || null,
+    title,
+    tags.length > 0 ? `태그: ${tags.join(", ")}` : null,
+  ]
     .filter(Boolean)
     .join("\n");
 }

@@ -39,11 +39,17 @@ async function enrichEmbedding(
   title: string,
   url: string,
   content: string,
+  tags: string[],
 ): Promise<void> {
   try {
     const summary = await generateBilingualSummary({ title, url })
     if (!summary) return // 모델이 모르는 페이지 — 보강 없이 최초 임베딩 유지
-    const embedding = await createEmbedding(buildEmbeddingText(title, url, content, summary))
+    // weak(본문 없음) 경로는 태그가 유일한 의미 신호 — 보강 시에도 반드시 유지한다.
+    const embedding = await createEmbedding(
+      content.trim()
+        ? buildEmbeddingText(title, url, content, summary)
+        : buildWeakEmbeddingText(title, url, tags, summary),
+    )
     const { error } = await supabase
       .from('bookmarks')
       .update({ embedding })
@@ -117,7 +123,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
           tagsPromise.catch(() => [] as string[]), // 태깅 실패 → 태그 없이 진행
           generateWeakSummary({ title, url }), // 실패 시 내부에서 '' degrade
         ]).then(([tags, summary]) =>
-          createEmbedding(buildWeakEmbeddingText(title, normalizeTags(tags), summary)),
+          createEmbedding(buildWeakEmbeddingText(title, url, normalizeTags(tags), summary)),
         ),
   ])
 
@@ -201,7 +207,7 @@ export const POST = withAuth(async (req, { user, supabase }) => {
   // 실패·미실행 시 최초 임베딩(앵커+본문) 그대로 유지 — best-effort degrade.
   // 결과적으로 저장 직후 짧은 구간은 보강 전 벡터로 검색된다(eventual consistency).
   const bookmarkId = (data as { id: string }).id
-  const enrich = enrichEmbedding(supabase, user.id, bookmarkId, title, url, embeddingContent)
+  const enrich = enrichEmbedding(supabase, user.id, bookmarkId, title, url, embeddingContent, tags)
   try {
     after(enrich)
   } catch {

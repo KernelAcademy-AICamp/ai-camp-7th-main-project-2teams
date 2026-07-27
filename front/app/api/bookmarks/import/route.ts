@@ -261,7 +261,9 @@ export const POST = withAuth(async (req, { user, supabase }) => {
                         tagsPromise.catch(() => [] as string[]),
                         generateWeakSummary({ title, url }),
                       ]).then(([tags, summary]) =>
-                        createEmbedding(buildWeakEmbeddingText(title, normalizeTags(tags), summary)),
+                        createEmbedding(
+                          buildWeakEmbeddingText(title, url, normalizeTags(tags), summary),
+                        ),
                       ),
                 ])
 

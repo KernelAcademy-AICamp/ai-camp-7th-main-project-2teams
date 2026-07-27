@@ -58,7 +58,7 @@ async function reembedIfDescriptionChanged(
     // 유저가 기입한 description 문자열 자체는 변형하지 않는다.
     const text = bookmark.description
       ? buildEmbeddingText(bookmark.title, bookmark.url, bookmark.description)
-      : buildWeakEmbeddingText(bookmark.title, bookmark.tags ?? [])
+      : buildWeakEmbeddingText(bookmark.title, bookmark.url, bookmark.tags ?? [])
     const embedding = await createEmbedding(text)
     const { error: embeddingError } = await supabase
       .from('bookmarks')
