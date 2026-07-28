@@ -1,5 +1,8 @@
 // category-backfill 스킬 일회성 실행 스크립트. front/에서:
-// node --experimental-strip-types --env-file=.env scripts/category-backfill.ts
+// node --env-file=.env ./node_modules/.bin/vite-node scripts/category-backfill.ts
+// (--experimental-strip-types는 ERR_MODULE_NOT_FOUND로 죽는다 — lib/ai.ts가 './openai'를
+//  확장자 없이 import해 Node ESM이 해석 못 함. vite-node는 테스트와 같은 해석기라 통과.)
+// 중단돼도 재실행 안전 — 이미 분류된 행은 category_id가 채워져 대상에서 빠진다.
 import { createClient } from '@supabase/supabase-js'
 import { generateTags } from '../lib/ai.ts'
 import { normalizeTags, extractTopCategory } from '../lib/tag-alias.ts'
@@ -84,6 +87,11 @@ async function processRow(row: Row, categoryCache: Map<string, string>): Promise
   return 'reclassified'
 }
 
+// 호출 간격. 순차 호출인데도 항목당 ~2.9k 토큰이 붙어 gpt-4o-mini 200k TPM에 그대로 닿는다
+// (2026-07-28 실측: Used 199334 / Limit 200000으로 429 사망, 처리 0건).
+// tag-eval.test.ts의 PACING_MS와 같은 값·같은 이유.
+const PACING_MS = 400
+
 async function run() {
   const { data: rows, error } = await supabase
     .from('bookmarks')
@@ -103,12 +111,14 @@ async function run() {
   for (const row of group2) {
     const result = await processRow(row, categoryCache)
     stats.group2[result === 'reclassified' ? 'ok' : 'skip']++
+    await new Promise((r) => setTimeout(r, PACING_MS))
   }
 
   console.log('\n-- 그룹1 --')
   for (const row of group1) {
     const result = await processRow(row, categoryCache)
     stats.group1[result === 'reclassified' ? 'ok' : 'skip']++
+    await new Promise((r) => setTimeout(r, PACING_MS))
   }
 
   console.log('\n=== 결과 ===')
