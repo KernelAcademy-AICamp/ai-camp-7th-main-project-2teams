@@ -385,7 +385,7 @@
     "url": "https://github.com/login",
     "title": "Sign in to GitHub",
     "description": "",
-    "gold": []
+    "gold": ["개발", "도구", "GitHub"]
   },
   {
     "url": "https://example.com/checkout/error",

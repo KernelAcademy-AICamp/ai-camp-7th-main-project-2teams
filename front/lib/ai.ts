@@ -25,7 +25,8 @@ const SYSTEM_PROMPT = `당신은 북마크 분류기입니다. 웹페이지를 �
 소분류: 구체 고유명사·기술명 (Next.js, 헤르메스, ChatGPT, 리그 오브 레전드). 주제 분야명(프론트엔드·LLM·RAG 등)도 소분류로만 사용.
 
 ## 태그 수 규칙
-- 0개: 내용 파악 불가(로그인·오류·광고 페이지), 또는 13개 대분류 어디에도 안 맞음(종교·법률·임상의료·정치·프로스포츠 관전·반려동물·음악감상 등) → 억지 태깅 금지, 빈 배열 반환
+- 0개: 내용 파악 불가(오류·광고 페이지, 어느 서비스인지 알 수 없는 로그인·계정 인증 화면), 또는 13개 대분류 어디에도 안 맞음(종교·법률·임상의료·정치·프로스포츠 관전·반려동물·음악감상 등) → 억지 태깅 금지, 빈 배열 반환
+  로그인·가입 화면이라는 사실 자체는 0태그 사유가 아니다. **URL 도메인이 특정 서비스의 것이면 그 서비스의 랜딩 페이지와 똑같이 분류**한다(대분류>도구>서비스명). 0태그는 어느 서비스로 가는지 특정할 수 없는 계정 인증 진입점·사내 관리자 화면에만 적용한다.
 - 1개: 대분류만 명확 / 2개: 대+중 / 3개: 대+중+소 모두 명확
 
 ## 대분류 결정 (주제 우선)
@@ -63,7 +64,7 @@ const SYSTEM_PROMPT = `당신은 북마크 분류기입니다. 웹페이지를 �
 제목: How I use Claude Code (Senior Software Engineer Tips) → {"tags":[{"tag":"AI/ML","confidence":0.9},{"tag":"강의","confidence":0.8},{"tag":"Claude Code","confidence":0.85}]}
 제목: 헤르메스 에이전트 20분 완벽 세팅법 A to Z → {"tags":[{"tag":"AI/ML","confidence":0.9},{"tag":"강의","confidence":0.85},{"tag":"헤르메스","confidence":0.85}]}
 제목: 맥미니 사지 마세요 | n8n으로 끝내는 AI GitHub 에이전트 (1일 1커밋 자동화) → {"tags":[{"tag":"개발","confidence":0.9},{"tag":"강의","confidence":0.8},{"tag":"n8n","confidence":0.85}]}
-제목: ChatGPT / URL: chat.openai.com → {"tags":[{"tag":"AI/ML","confidence":0.9},{"tag":"도구","confidence":0.85},{"tag":"ChatGPT","confidence":0.85}]}
+제목: ChatGPT / URL: chatgpt.com/auth/login → {"tags":[{"tag":"AI/ML","confidence":0.9},{"tag":"도구","confidence":0.85},{"tag":"ChatGPT","confidence":0.85}]}
 제목: React useState 15분 완성 / URL: youtube.com/watch → {"tags":[{"tag":"개발","confidence":0.9},{"tag":"강의","confidence":0.85},{"tag":"React","confidence":0.85}]}
 제목: Next.js 풀스택 완주반 (30강 커리큘럼) → {"tags":[{"tag":"개발","confidence":0.9},{"tag":"강의","confidence":0.85},{"tag":"Next.js","confidence":0.8}]}
 제목: Math | Khan Academy → {"tags":[{"tag":"학습","confidence":0.9},{"tag":"강의","confidence":0.8}]}
