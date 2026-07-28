@@ -208,7 +208,8 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
       expect(agg.f1).toBeGreaterThanOrEqual(F1_BASELINE)
       expect(agg.emptyRate).toBeLessThanOrEqual(EMPTY_RATE_MAX) // D-2: 미분류 급증 차단
     },
-    600_000, // 골든셋 213건 순차 OpenAI 호출 — 항목당 ~1.5s ≈ 320s, 여유 포함 10분
+    7_200_000, // 07-27 실측 rich 347s / title-only 4981s(429 백오프로 항목당 23s까지 늘어남).
+    // 상한 10분은 title-only를 상시 죽였다 — 최악 실측의 ~1.4배로 상향.
   )
 
   it(
@@ -223,6 +224,6 @@ describe.runIf(process.env.RUN_TAG_EVAL === '1')('골든셋 평가 (실 OpenAI)'
       expect(agg.f1).toBeGreaterThanOrEqual(TITLE_ONLY_F1_BASELINE)
       expect(agg.emptyRate).toBeLessThanOrEqual(EMPTY_RATE_MAX) // D-2: retag 입력 조건 미분류 급증 차단
     },
-    600_000, // rich 패스와 동일 — 213건 순차 호출
+    7_200_000, // rich 패스와 동일 상한
   )
 })

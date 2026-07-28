@@ -63,6 +63,9 @@ export const TAG_ALIAS: Record<string, string> = {
   'Retrieval-Augmented Generation': 'RAG', 'retrieval-augmented generation': 'RAG',
   // 프레임워크 소분류 표기 통일 (모델이 'Tailwind CSS' 등 풀네임 반환)
   'Tailwind CSS': 'Tailwind', tailwind: 'Tailwind',
+  // 제휴마케팅 브랜드 — 원문 제목에 붙여쓰기/띄어쓰기가 혼재해 모델 출력도 갈린다.
+  // resolveAlias는 내부 공백을 정규화하지 않아 별개 토큰이 되므로 띄어쓰기형으로 통일.
+  쿠팡파트너스: '쿠팡 파트너스', 'coupang partners': '쿠팡 파트너스',
   // 컴퓨터비전
   CV: '컴퓨터비전', 'computer vision': '컴퓨터비전', 비전: '컴퓨터비전',
   // MLOps

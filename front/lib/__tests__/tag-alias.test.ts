@@ -16,6 +16,13 @@ describe('alias 키 충돌 방지', () => {
 })
 
 describe('normalizeTags', () => {
+  // 제목 표기가 갈리는 브랜드 — 붙여쓰기 출력이 gold(띄어쓰기)와 다른 토큰으로 채점되던 것 차단.
+  it('쿠팡파트너스 표기 흔들림 → 띄어쓰기형으로 통일', () => {
+    expect(normalizeTags(['쿠팡파트너스'])).toEqual(['쿠팡 파트너스'])
+    expect(normalizeTags(['coupang partners'])).toEqual(['쿠팡 파트너스'])
+    expect(normalizeTags(['쿠팡파트너스', '쿠팡 파트너스'])).toEqual(['쿠팡 파트너스'])
+  })
+
   it('영문/약어 → 한국어 정규화', () => {
     expect(normalizeTags(['dev', 'frontend', 'Next.js'])).toEqual([
       '개발',
