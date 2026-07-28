@@ -203,10 +203,21 @@
     </div>
   </section>
 
+  <!-- 검증 1-2 — 검증 방법론 -->
+  <section class="slide">
+    <div class="wrap">
+      <div class="eyebrow"><span class="step">검증 · 08</span> — 어떻게 재는가</div>
+      <h2 class="head">개선처럼 보였는데 <span class="accent">버린 것</span>이 2건.</h2>
+      <div class="hero">2건 기각</div>
+      <p class="meta">측정 — 골든셋 215건을 본문 있음 / 제목만 두 조건으로 각각 채점 · 게이트 — LLM 비결정성 밴드(±0.013) 아래에 임계값 배치 · 절개 — 변경이 둘이면 하나씩 분리 측정</p>
+      <p class="note">품질을 어떻게 재는지 말씀드리겠습니다. 세 가지를 고정했습니다. 첫째 측정 — 정답지를 저희가 직접 라벨링한 215건으로 만들고, 본문이 있을 때와 제목만 있을 때를 따로 채점합니다. 임포트에서 메타 조회가 실패하는 경우가 실사용에 흔한데, 잘 되는 조건만 재면 그 실패가 안 보이기 때문입니다. 둘째 게이트 — 수치가 떨어지면 머지가 막힙니다. 여기서 중요한 건 임계값 위치인데, 같은 코드로 세 번 돌려도 F1이 0.768, 0.755, 0.7595로 출렁입니다. LLM이라 그렇습니다. 그래서 임계값을 이 출렁임 밴드 아래에 뒀습니다. 밴드 한복판에 두면 품질이 그대로여도 절반 확률로 실패하는 동전던지기가 됩니다. 셋째 절개 — 변경이 두 개면 하나씩 되돌려가며 따로 잽니다. 실제로 프롬프트와 태그 사전을 같이 바꿨는데, 사전만 되돌려 재보니 예상과 반대였습니다. 사전은 올렸고 프롬프트가 내렸습니다. 안 나눴으면 잘못된 쪽을 버렸을 겁니다. 그래서 오늘 개선안 두 건을 실측으로 기각했습니다. 로그인 페이지가 미분류로 떨어지는 문제를 고치려고 예제를 하나 추가했더니 4건 다 회수됐습니다. 성공처럼 보였는데 전체 F1은 0.789에서 0.773으로 떨어졌습니다. 뜯어보니 새 예제가 특정 태그 가중을 키워 다른 태그를 잠식하고 있었습니다. 그래서 버리고, 예제를 늘리는 대신 기존 예제의 URL만 바꾸는 방식으로 다시 만들어 대분류 정확도를 0.874까지 올리고 미분류율을 절반으로 줄였습니다. 개선했다는 말은 누구나 할 수 있습니다. 저희는 개선한 줄 알았다가 실측이 아니라고 해서 버린 기록을 문서로 남깁니다.</p>
+    </div>
+  </section>
+
   <!-- 검증 2 — 운영 모니터링 -->
   <section class="slide">
     <div class="wrap">
-      <div class="eyebrow"><span class="step">검증 · 08</span> — 운영 모니터링</div>
+      <div class="eyebrow"><span class="step">검증 · 09</span> — 운영 모니터링</div>
       <h2 class="head">지표는 배포 후에도 <span class="accent">계속 감시</span>된다.</h2>
       <div class="shots">
         <figure class="shot">
@@ -226,7 +237,7 @@
   <!-- 비즈니스 1 -->
   <section class="slide">
     <div class="wrap">
-      <div class="eyebrow"><span class="step">비즈니스 · 09</span> — 시장</div>
+      <div class="eyebrow"><span class="step">비즈니스 · 10</span> — 시장</div>
       <h2 class="head">Pocket 종료로 국내 대안 <span class="accent">공백</span>이 열렸다.</h2>
       <p class="lead">2025-07 Pocket 서비스 종료. 무료 · AI · 자연어 검색을 모두 갖춘 국내 서비스는 지금 없다.</p>
       <p class="meta">난민 시장을 임포트 원클릭으로 선점 · 최근접 경쟁 mymind는 자연어 검색이 아직 베타</p>
@@ -237,7 +248,7 @@
   <!-- 비즈니스 2 -->
   <section class="slide">
     <div class="wrap">
-      <div class="eyebrow"><span class="step">비즈니스 · 10</span> — 모델</div>
+      <div class="eyebrow"><span class="step">비즈니스 · 11</span> — 모델</div>
       <h2 class="head">원가는 유저당 월 <span class="accent">$0.02</span>, 가격은 가치로 매긴다.</h2>
       <p class="lead mut">AI 변동비가 사실상 0 → 가격 하한 제약 없음. Freemium으로 시작해 프리미엄 전환.</p>
       <p class="meta">Free / Pro ₩5,900월 · 원가 무관, 얼마나 되찾게 해주는가로 설계</p>
@@ -248,7 +259,7 @@
   <!-- 요청 -->
   <section class="slide">
     <div class="wrap">
-      <div class="eyebrow"><span class="step">요청 · 11</span></div>
+      <div class="eyebrow"><span class="step">요청 · 12</span></div>
       <h2 class="head">MVP로 이 가설 하나를 <span class="accent">검증</span>하게 해주세요.</h2>
       <p class="lead">"자동 태깅 + 자연어 검색이 재발견 행동을 늘린다." — 검색 사용률이 MAU의 40%를 넘으면 Go.</p>
       <p class="meta">모와바 · 저장하는 도구가 아니라, 다시 찾는 도구로.</p>

@@ -249,7 +249,7 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
 <body>
 <div class="bg-atmos" aria-hidden="true"></div>
 <div class="progress" id="progress"></div>
-<div class="counter" id="counter"><b>01</b> / 18</div>
+<div class="counter" id="counter"><b>01</b> / 20</div>
 <nav class="nav-dots" id="navDots" aria-label="슬라이드 이동"></nav>
 <div class="khint">← / → · 스크롤로 이동</div>
 
@@ -556,6 +556,63 @@ h2.headline { font-size: var(--h2-size); font-weight: 800; line-height: 1.14; le
       <span class="pill blue">검색 클릭률 · 재발견 소요시간 + 정성 인터뷰 병행</span>
     </div>
     <p class="stat-cap reveal" style="--i:4;margin-top:0.6em;font-size:var(--small-size)">품질은 골든셋 기준 실측 · <b>운영 지표(검색 사용률·리텐션)는 2026-08-04 이후 실측 관측 예정</b>.</p>
+  </div>
+</section>
+
+<!-- 14-1 §06 검증 방법론 -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">06 · 검증 방법론</span></div>
+    <h2 class="headline section-title reveal" style="--i:1">이 숫자를 <span class="accent">우리가 어떻게 검증하는가</span></h2>
+    <p class="sub reveal" style="--i:2">AI 품질은 자기가 매긴 점수를 자기가 발표하기 쉽다. 그래서 <b style="color:var(--primary)">숫자보다 재는 방법</b>을 먼저 고정했다.</p>
+    <div class="grid reveal" style="--i:3">
+      <div class="card bar"><span class="kicker">① 측정</span><h3>정답지를 사람이 만든다</h3><p>골든셋 215건을 직접 라벨링. <b>본문 있음 / 제목만</b> 두 조건으로 각각 채점 — 임포트 메타 조회 실패가 실사용에 흔해, 잘 되는 조건만 재면 실패 모드가 안 보인다.</p></div>
+      <div class="card bar mint"><span class="kicker">② 게이트</span><h3>떨어지면 머지가 막힌다</h3><p>기준 미달이면 CI 실패. 임계값은 <b>LLM 비결정성 밴드 아래</b>에 둔다 — 같은 코드 3회 실행이 0.768·0.755·0.7595로 출렁이므로(±0.013), 밴드 한복판에 두면 동전던지기가 된다.</p></div>
+      <div class="card bar warn"><span class="kicker">③ 절개</span><h3>변경이 둘이면 나눠서 잰다</h3><p>프롬프트와 태그 사전을 같이 바꾸면 총합만 보인다. 사전만 되돌려 재측정한 결과 <b>예상과 반대</b>였다 — 사전은 올렸고 프롬프트가 내렸다. 안 나눴으면 잘못된 쪽을 버렸다.</p></div>
+    </div>
+    <div class="pills reveal" style="--i:4">
+      <span class="pill mint">본문 있음 — F1 0.79 · 대분류 0.87</span>
+      <span class="pill blue">제목만 — F1 0.78 · 대분류 0.85</span>
+      <span class="pill">게이트 0.74 / 0.73 · 골든셋 n=215</span>
+    </div>
+    <p class="stat-cap reveal" style="--i:5;margin-top:0.6em;font-size:var(--small-size)">두 조건의 차이(skew)가 곧 <b>임포트 경로에서 잃는 품질</b>이다 — 이 값이 벌어지면 메타 조회 파이프라인을 먼저 본다.</p>
+  </div>
+</section>
+
+<!-- 14-2 §06 기각 사례 -->
+<section class="slide">
+  <div class="slide-content">
+    <div class="eyebrow reveal"><span class="n">06 · 검증 방법론</span></div>
+    <h2 class="headline section-title reveal" style="--i:1">개선처럼 보였는데 <span class="accent">버린 것</span></h2>
+    <p class="sub reveal" style="--i:2">로그인 페이지가 전부 미분류로 떨어지는 문제. 고쳤다고 생각한 1차안을 <b style="color:var(--warning)">실측이 기각했다</b>.</p>
+    <div class="panel tint reveal" style="--i:3">
+      <div class="plabel">1차안 — 프롬프트에 로그인 예제 추가</div>
+      <div class="flow" style="margin-top:0.4em">
+        <div class="node"><div class="t">증상</div><div class="d">로그인 URL 전량 0태그</div></div>
+        <div class="arrow">→</div>
+        <div class="node km"><div class="t">조치</div><div class="d">예제 1개 추가</div></div>
+        <div class="arrow">→</div>
+        <div class="node k"><div class="t">겉보기</div><div class="d">로그인 4/4 회수</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">실측</div><div class="d">F1 0.789 → 0.773</div></div>
+      </div>
+    </div>
+    <div class="panel tint reveal" style="--i:4;margin-top:var(--content-gap)">
+      <div class="plabel">원인과 재설계 — 예제를 늘리지 않고 기존 예제의 URL만 교체</div>
+      <div class="flow" style="margin-top:0.4em">
+        <div class="node"><div class="t">원인</div><div class="d">'도구' 가중 상승</div></div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="t">부작용</div><div class="d">'큐레이션' 잠식</div></div>
+        <div class="arrow">→</div>
+        <div class="node km"><div class="t">2차안</div><div class="d">예제 수 유지</div></div>
+        <div class="arrow">→</div>
+        <div class="node k"><div class="t">채택</div><div class="d">대분류 0.865 → 0.874</div></div>
+      </div>
+    </div>
+    <div class="pills reveal" style="--i:5">
+      <span class="pill mint">미분류율 3.0% → 1.5% (절반)</span>
+      <span class="pill">기각 근거는 스펙 문서에 기록 — 같은 함정 재발 차단</span>
+    </div>
   </div>
 </section>
 
