@@ -105,7 +105,7 @@ npx shadcn@latest init -d
 |---|---|---|
 | 로그인·회원가입 (A4) | `Card` + `Input` + `Button` + `Label` + `Alert` | 체크박스 2개 동의 |
 | 북마크 목록 (A9) | `Card` + `Badge` + `Skeleton` | — |
-| 자연어 검색 (A10) | `Command` + `Dialog` | debounce 훅 |
+| 자연어 검색 (A10) | 없음 — 네이티브 `<form role="search">` + `<input type="search">` | submit 트리거(Enter·검색 버튼), 최근검색 칩 |
 | 사이드바 필터 (A11) | `Sheet` (모바일) + `Select` + `Badge` | — |
 | 탈퇴 확인 (A16) | `AlertDialog` | — |
 | 저장 완료 토스트 | `Sonner` (`toast`) | — |

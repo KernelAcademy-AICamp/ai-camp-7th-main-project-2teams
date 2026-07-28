@@ -1,3 +1,7 @@
+---
+paths: ["front/app/api/**", "extension/**"]
+---
+
 # API / 메시지 패턴 (단일 출처)
 
 `feature-builder` 에이전트 · `/api-route` 스킬이 참조하는 구현 보일러플레이트. 상세 타입은 `docs/specs/nextjs-supabase.md`.
