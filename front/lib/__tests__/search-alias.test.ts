@@ -162,6 +162,30 @@ describe('expandSearchQuery', () => {
     ])
   })
 
+  // 2026-07-28 재탐색 — 코퍼스에 원어 표기만 있고 한글 음차는 0건인 브랜드
+  it('원어 전용 브랜드도 음차 쿼리에서 정방향 확장', () => {
+    expect(expandSearchQuery('캔바')).toEqual(['캔바', 'Canva'])
+    expect(expandSearchQuery('캡컷')).toEqual(['캡컷', 'CapCut'])
+    expect(expandSearchQuery('수파베이스')).toEqual(['수파베이스', 'Supabase'])
+    expect(expandSearchQuery('퍼플렉시티')).toEqual(['퍼플렉시티', 'Perplexity'])
+    expect(expandSearchQuery('구글시트')).toEqual(['구글시트', 'Google Sheets'])
+    expect(expandSearchQuery('노트북LM')).toEqual(['노트북LM', 'NotebookLM'])
+  })
+
+  it('Vercel은 버셀·베르셀 두 표기 모두 수용', () => {
+    expect(expandSearchQuery('버셀')).toEqual(['버셀', 'Vercel'])
+    expect(expandSearchQuery('베르셀')).toEqual(['베르셀', 'Vercel'])
+    // 역방향은 사전 선언 순서상 첫 키로 해석 — 확장 대상이 같아 검색 결과는 동일
+    expect(expandSearchQuery('vercel')).toEqual(['vercel', '버셀'])
+  })
+
+  it('신규 브랜드도 문장 속 조사 제거 후 확장', () => {
+    expect(expandSearchQuery('캔바로 썸네일 만들기')).toEqual([
+      '캔바로 썸네일 만들기',
+      'Canva 썸네일 만들기',
+    ])
+  })
+
   it('사전에 등록된 모든 한글 키는 유효한 영문 값을 가짐', () => {
     for (const [ko, en] of Object.entries(SEARCH_ALIAS)) {
       expect(ko.length).toBeGreaterThan(0)

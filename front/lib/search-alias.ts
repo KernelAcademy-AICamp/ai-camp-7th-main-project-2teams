@@ -59,6 +59,30 @@ export const SEARCH_ALIAS: Record<string, string> = {
   카카오: 'Kakao',
   토스: 'Toss',
   아마존: 'Amazon',
+  // 2026-07-28 DB 재탐색 — 원어 표기만 존재하고 한글 음차는 코퍼스에 0건인 브랜드.
+  // 위 실측 주석이 규정한 "순수 교차언어" 조건과 동일(병존 문서가 없어 trigram 구제 없음).
+  // 음차로 검색하는 사용자를 원어 문서까지 확장해 잡는다.
+  캔바: 'Canva',
+  캡컷: 'CapCut',
+  버셀: 'Vercel',
+  베르셀: 'Vercel',
+  퍼플렉시티: 'Perplexity',
+  젠스파크: 'Genspark',
+  헤이젠: 'HeyGen',
+  수파베이스: 'Supabase',
+  앤트로픽: 'Anthropic',
+  그록: 'Grok',
+  허깅페이스: 'Hugging Face',
+  파이어베이스: 'Firebase',
+  클라우드플레어: 'Cloudflare',
+  코랩: 'Colab',
+  스케치업: 'SketchUp',
+  주피터: 'Jupyter',
+  플리키: 'Fliki',
+  오퍼스클립: 'OpusClip',
+  구글시트: 'Google Sheets',
+  애프터이펙트: 'After Effects',
+  노트북LM: 'NotebookLM',
 }
 
 // 대화형 쿼리 노이즈 토큰 — 시간참조·지시어·행위어("지난달 저장한 그 pgvector 아티클").
