@@ -41,4 +41,5 @@ Closes #이슈번호
 - 이슈 없으면 "관련 이슈" 섹션 생략
 - UI 변경 없으면 "스크린샷" 섹션 생략
 - gh CLI 설치 필요 (`brew install gh`)
-- Squash and merge 전략 사용 → PR 제목이 스쿼시 커밋 메시지가 됨
+- Create a merge commit 전략 사용 → PR 커밋이 그대로 남으므로 커밋 메시지 하나하나가 이력에 노출됨
+- 머지 후 브랜치는 수동 삭제 (리포 자동 삭제 꺼짐)
