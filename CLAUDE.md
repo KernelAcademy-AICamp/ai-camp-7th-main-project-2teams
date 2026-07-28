@@ -13,16 +13,6 @@ AI Camp 7기 메인 프로젝트 (2팀). GitHub Classroom 과제 저장소.
 - **응답/주석/문서**: 한국어
 - **변수명/함수명**: 영어
 
-## 디렉토리 구조
-
-```
-front/       # Next.js 16 App Router (웹앱 + API Route Handlers)
-extension/   # Chrome Extension Manifest V3
-docs/        # 기술 스펙 문서 (specs/) + 발표자료·평가 계획 등
-scripts/     # PRD 등 기획 문서
-tasks/       # 태스크 인덱스
-```
-
 ## React Hooks 규칙
 
 - `usehooks-ts` 라이브러리 우선 사용 (`useLocalStorage`, `useDebounce`, `useMediaQuery` 등)
