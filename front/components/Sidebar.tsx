@@ -26,7 +26,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const popupRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  const { category, folder, tab, setCategory, setFolder, setTag, setTab, setSearchQuery } = useFilterStore(
+  const { category, folder, tab, setCategory, setFolder, setTag, setTab, clearSearch } = useFilterStore(
     useShallow((s) => ({
       category: s.category,
       folder: s.folder,
@@ -35,7 +35,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
       setFolder: s.setFolder,
       setTag: s.setTag,
       setTab: s.setTab,
-      setSearchQuery: s.setSearchQuery,
+      clearSearch: s.clearSearch,
     })),
   );
 
@@ -103,7 +103,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     setCategory(null);
     setTag(null);
     setFolder(t === "folders" ? (folderTree[0]?.path ?? null) : null);
-    setSearchQuery("");
+    clearSearch();
   };
 
   // 내 폴더 탭 진입 시(탭 클릭 경유 안 한 새로고침·직접 진입 포함) 첫 줄 기본 선택
@@ -124,7 +124,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     setCategory(null);
     setTag(null);
     setFolder(null);
-    setSearchQuery("");
+    clearSearch();
     // 탭 유지 — 홈 전체·즐겨찾기 전체 각각 독립 동작
   };
 
@@ -133,7 +133,7 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     setCategory(name);
     setTag(null);
     setFolder(null);
-    setSearchQuery("");
+    clearSearch();
   };
 
   const handleFolder = (path: string[]) => {
