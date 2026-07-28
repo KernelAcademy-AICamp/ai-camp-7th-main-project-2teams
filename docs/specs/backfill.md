@@ -87,6 +87,38 @@
 - 백업 없음 — 임베딩은 원본(title·description·tags)에서 언제든 재생성 가능. 롤백 = 구 모델로 재실행
 - 다른 스크립트와 달리 폐기 대상 아님 — 모델·입력 규약이 바뀔 때마다 재사용
 
+### retag.ts
+
+- 위치: `front/scripts/retag.ts`
+- 대상: 전체 `bookmarks` (필터 없음)
+- 배경: `SYSTEM_PROMPT`(`lib/ai.ts`)는 경계 규칙이 추가될 때마다 개선되는데 과거 저장분은 그 당시 기준으로 태깅돼 있다. `category-backfill` 스킬은 `category_id IS NULL`만 잡으므로 **이미 카테고리가 붙어 있는 오분류는 건드리지 못한다** — 그 구간을 담당하는 유일한 경로
+- 방식: `generateTags()` 재호출 → `extractTopCategory(normalizeTags(...))` → `category_id`·`tags` 갱신. 새 결과가 빈 슬롯(최대 2개)을 남기면 `mergeTags()`로 기존 태그를 채워 `game-tag-backfill` 등이 넣은 값의 유실 방지
+- 실행: `source .env` 후 `npx tsx scripts/retag.ts`
+  - `DRY=1` — 쓰기 없이 예측만 출력(카나리)
+  - `RETAG_LIMIT=N` — 앞 N개만 처리(0=전체). **선택적 필터가 아니라 단순 절단** — 특정 건만 고를 수 없다
+  - `CONCURRENCY=N` — 동시 OpenAI 호출 수(기본 6). 아래 주의 참조
+  - `KEEP_NONEMPTY=0` — 새 태그가 빈 배열이어도 반영(순손실 허용). 기본 true
+  - `RESTORE=<path>` — 백업 파일에서 tags 복원 후 종료
+- 자동 백업: 비-DRY 실행 시 쓰기 전 `(id, tags)` 스냅샷을 `scripts/backups/`에 저장. 백업 실패 시 쓰기 중단
+
+> **주의 1 — `CONCURRENCY` 기본값 6은 TPM 한도를 넘는다.**
+> `tag-eval.test.ts`(`PACING_MS` 주석) 실측상 **순차 호출만으로도** gpt-4o-mini 200k TPM에 붙는다(항목당 ~2.9k 토큰).
+> 2026-07-28 `category-backfill`이 페이싱 없이 순차 실행하다 429로 즉사했다(`Used 199334 / Limit 200000`, 처리 0건).
+> 동시 6이면 확실히 초과하므로 **`CONCURRENCY`를 낮추거나 페이싱을 넣지 않으면 실패한다.**
+
+> **주의 2 — `category_id`는 롤백되지 않는다.**
+> 자동 백업(`TagSnapshot`)은 **tags만** 커버한다. 대분류를 되돌리려면 실행 전 `(id, category_id)` 스냅샷을 **수동으로** 떠야 한다.
+
+- 다른 스크립트와 달리 폐기 대상 아님 — 프롬프트가 바뀔 때마다 재사용
+
+#### 전량 재태깅 보류 (2026-07-28)
+
+- 계기: 프롬프트 3회 변경 — 쇼핑 경계 규칙(#327) · Claude/Claude Code alias 분리(#330) · 로그인 페이지 정책(#331). 기존 1039건은 전부 구 기준으로 태깅된 상태
+- 실익: eval 실측(n=215)에서 `emptyRate` 0.030→0.0149, title-only 대분류 0.8326→0.8512. 재태깅하면 이 개선이 기존 데이터에 소급된다
+- 보류 사유: 위 주의 1·2 대응(동시성 조정 + `category_id` 스냅샷)이 선행돼야 하고, 비용이 1039 × gpt-4o-mini다
+- 긴급성 해소: 즉시 문제였던 제휴마케팅 3건(쇼핑→비즈니스 오분류)은 **수동 UPDATE로 처리 완료**. 표기 흔들림 1건은 `backfill-tag-aliases.ts`로 반영
+- 재개 조건: 미분류·오분류가 다시 눈에 띄게 쌓이거나, 프롬프트가 한 번 더 크게 바뀔 때
+
 ## 신규 백필 추가 규칙
 
 새 백필 스킬(`.claude/skills/*backfill*/SKILL.md`)이나 스크립트(`front/scripts/backfill-*.ts`)를 추가하면
