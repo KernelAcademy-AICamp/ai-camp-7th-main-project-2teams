@@ -17,6 +17,8 @@
 - 배경: `lib/ai.ts` SYSTEM_PROMPT가 계속 개선되는데 과거 저장분은 구버전 프롬프트로 태깅됨
 - 방식: `generateTags()` 재호출 → `extractTopCategory()`로 대분류 재해석 → `category_id`/`tags` 갱신
 - 억지 분류 금지: 완전 미분류(그룹1)는 재시도해도 정상적으로 안 되는 케이스 존재(로그인 화면 등)
+- 구현 스크립트: `front/scripts/category-backfill.ts`. 실행은 `node --env-file=.env ./node_modules/.bin/vite-node scripts/category-backfill.ts` — `--experimental-strip-types`는 `ERR_MODULE_NOT_FOUND`로 죽는다(`lib/ai.ts`가 `'./openai'`를 확장자 없이 import해 Node ESM이 해석 못 함). 중단돼도 재실행 안전(분류된 행은 `category_id`가 채워져 대상에서 빠짐)
+- 이미 카테고리가 붙은 **오분류는 대상 밖** — `category_id IS NULL`만 잡는다. 그 구간은 `retag.ts` 영역
 
 ### game-tag-backfill
 
@@ -58,6 +60,20 @@
 - 방식: 대상 행의 url을 `fetchMeta()`로 재크롤링(og:image/YouTube 썸네일) → `isSafeHttpUrl`로 SSRF 재검증 → `thumbnail_url` 갱신. 못 찾으면 NULL 유지(재실행 가능)
 - 실행: 기본 dry-run, `--apply` 플래그로 실제 반영. 단순 추가 컬럼이라 백업 스냅샷 없이 `thumbnail_url = NULL` 재설정으로 되돌림 가능
 
+### backfill-bookmark-title.ts
+
+- 위치: `front/scripts/backfill-bookmark-title.ts`
+- 대상: `title`이 URL 형태(플레이스홀더)이거나 junk title("Untitled"·"403 Forbidden" 등)인 행. **실제 title이 있는 행은 건드리지 않음**
+- 배경: 세 갈래
+  - `import/route.ts`가 `fetchMeta(url)`로 실제 title을 조회하고도 버리던 버그(수정됨) — 수정 전 저장분은 `title` 컬럼에 url 문자열이 그대로 들어감
+  - `fetchMeta`의 junk-title 필터(`isJunkTitle`) 도입 전 저장분은 `"Untitled"`류가 그대로 남음
+  - title 플레이스홀더는 **정규화 전** raw href(`si=`·`fbclid=`·`igsh=`·`utm_*` 등 트래킹 파라미터 포함)로 저장되는데 `url` 컬럼은 `normalizeUrl()`을 거쳐 파라미터가 빠진다. 그 결과 `title !== url`이 되어 기존 "정확 일치" 조건으로 못 잡던 케이스가 90건 있었음 → `http(s)://`로 시작하면 플레이스홀더로 간주하도록 조건 완화
+- 방식: 대상 행의 url을 `fetchMeta()`로 재크롤링해 실제 title 확보 후 `title` 컬럼만 교체. **OpenAI 미호출**(재태깅·재임베딩 없음). 못 찾으면 건너뜀(재실행 가능)
+- 실행: `set -a; . ./.env; set +a` 후
+  - `npx tsx scripts/backfill-bookmark-title.ts` — DRY-RUN(기본), 계획만 출력
+  - `npx tsx scripts/backfill-bookmark-title.ts --apply` — 실제 반영
+- 백업 없음 — 되돌림이 필요하면 실행 전 `(id, title)` 스냅샷을 수동으로 뜰 것. 다만 대상이 플레이스홀더·junk title이라 복구 가치가 낮다
+
 ### backfill-bookmark-description.ts
 
 - 위치: `front/scripts/backfill-bookmark-description.ts`
@@ -65,6 +81,20 @@
 - 배경: `POST /api/bookmarks`(route.ts:56)는 `fetchMeta()`로 항상 description을 채우지만, 그 이전 저장분은 NULL로 남음(2026-07-10 기준 942/944행)
 - 방식: 대상 행의 url을 `fetchMeta()`로 재크롤링해 description 확보 후 갱신. OpenAI 미호출(재태깅·재임베딩 없음). 못 찾으면 NULL 유지(재실행 가능)
 - 실행: 기본 dry-run, `--apply` 플래그로 실제 반영
+
+### backfill-tag-aliases.ts
+
+- 위치: `front/scripts/backfill-tag-aliases.ts`
+- 대상: 전체 `bookmarks` 순회 후 **`normalizeTags()` 결과가 현재 값과 달라지는 행만** 갱신
+- 배경: `lib/tag-alias.ts`의 `TAG_ALIAS`/`CATEGORY_ALIAS`에 새 매핑을 추가해도 **신규 저장분에만 적용**된다. 기존 행은 구 표기 그대로 남아 같은 개념 태그가 표기 분열된다(예: `쿠팡파트너스` vs `쿠팡 파트너스`, `클로드코드` vs `Claude Code`)
+- 방식: `extractTopCategory(normalizeTags(tags)).midTags`로 재계산 후 `tags` 컬럼만 교체.
+  - **OpenAI 미호출** — 순수 함수 재적용이라 결정적이고 비용 0
+  - `extractTopCategory`를 한 번 더 태우는 이유: `normalizeTags`만 적용하면 대분류 alias(`UI`→`디자인` 등)로 바뀐 토큰이 `tags`에 남는다. 대분류 라벨을 걷어내 "tags는 중·소분류 전용" 불변식을 유지한다
+  - **`category_id`는 미변경** — 대분류 재판정은 `retag.ts` 영역
+- 실행: `front/`에서 `node --experimental-strip-types --env-file=.env scripts/backfill-tag-aliases.ts`
+  - `DRY=1` — 쓰기 없이 변경 예정 목록만 출력
+- 자동 백업: 비-DRY 실행 시 **변경 대상만** `(id, tags)` 스냅샷을 `scripts/backups/alias-backfill-<ts>.json`에 저장. 롤백은 `RESTORE=<path> npx tsx scripts/retag.ts`
+- 다른 스크립트와 달리 폐기 대상 아님 — alias 사전이 갱신될 때마다 재사용
 
 ### backfill-dead-link.ts
 
