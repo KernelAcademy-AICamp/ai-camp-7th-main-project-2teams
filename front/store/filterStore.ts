@@ -11,7 +11,10 @@ interface FilterState {
   /** 폴더 필터 — 루트부터 선택 노드까지 전체 경로(동명이인 폴더 구분용). 미선택 시 null */
   folder: string[] | null
   tag: string | null
+  /** 확정된 검색어 — submit(검색 버튼·Enter) 시에만 갱신. 결과 목록 전환(isSearching)의 기준 */
   searchQuery: string
+  /** 입력 중인 텍스트 — 매 타이핑 갱신. searchQuery와 분리해야 타이핑만으로 목록이 바뀌지 않는다 */
+  searchInput: string
   sortOrder: SortOrder
   viewMode: ViewMode
   setTab: (tab: SidebarTab) => void
@@ -19,6 +22,9 @@ interface FilterState {
   setFolder: (folder: string[] | null) => void
   setTag: (tag: string | null) => void
   setSearchQuery: (query: string) => void
+  setSearchInput: (value: string) => void
+  /** 입력·확정 검색어를 함께 해제. 사이드바 필터 전환처럼 검색을 끝내는 경로에서 쓴다 */
+  clearSearch: () => void
   setSortOrder: (order: SortOrder) => void
   setViewMode: (mode: ViewMode) => void
   reset: () => void
@@ -30,6 +36,7 @@ const initialState = {
   folder: null,
   tag: null,
   searchQuery: '',
+  searchInput: '',
   sortOrder: 'latest' as SortOrder,
   viewMode: 'grid' as ViewMode, // 기본 그리드 (기존 화면 유지)
 }
@@ -41,6 +48,8 @@ export const useFilterStore = create<FilterState>((set) => ({
   setFolder: (folder) => set({ folder }),
   setTag: (tag) => set({ tag }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
+  setSearchInput: (searchInput) => set({ searchInput }),
+  clearSearch: () => set({ searchQuery: '', searchInput: '' }),
   setSortOrder: (sortOrder) => set({ sortOrder }),
   setViewMode: (viewMode) => set({ viewMode }),
   reset: () => set(initialState),

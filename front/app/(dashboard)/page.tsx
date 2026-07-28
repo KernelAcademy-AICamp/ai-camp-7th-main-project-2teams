@@ -51,11 +51,14 @@ function DashboardContent() {
     sortOrder,
     viewMode,
     searchQuery,
+    searchInput,
     setCategory,
     setFolder,
     setTag,
     setTab,
     setSearchQuery,
+    setSearchInput,
+    clearSearch,
   } = useFilterStore(
     useShallow((s) => ({
       category: s.category,
@@ -65,11 +68,14 @@ function DashboardContent() {
       sortOrder: s.sortOrder,
       viewMode: s.viewMode,
       searchQuery: s.searchQuery,
+      searchInput: s.searchInput,
       setCategory: s.setCategory,
       setFolder: s.setFolder,
       setTag: s.setTag,
       setTab: s.setTab,
       setSearchQuery: s.setSearchQuery,
+      setSearchInput: s.setSearchInput,
+      clearSearch: s.clearSearch,
     })),
   );
 
@@ -176,7 +182,7 @@ function DashboardContent() {
     [search, setSearchQuery, category, tag, tab],
   );
 
-  const handleClear = useCallback(() => setSearchQuery(""), [setSearchQuery]);
+  const handleClear = useCallback(() => clearSearch(), [clearSearch]);
 
   // A62: 검색은 클라이언트 슬라이스(showMore)라 재호출 없음, 목록은 서버 재호출(fetchNextPage).
   const handleLoadMore = useCallback(() => {
@@ -246,8 +252,8 @@ function DashboardContent() {
         <SearchBar
           onSearch={handleSearch}
           onClear={handleClear}
-          value={searchQuery}
-          onChange={setSearchQuery}
+          value={searchInput}
+          onChange={setSearchInput}
           isLoading={isSearching && isSearchPending}
           resultCount={isSearching && !isSearchPending ? searchTotal : undefined}
         />
