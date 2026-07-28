@@ -58,6 +58,20 @@
 - 방식: 대상 행의 url을 `fetchMeta()`로 재크롤링(og:image/YouTube 썸네일) → `isSafeHttpUrl`로 SSRF 재검증 → `thumbnail_url` 갱신. 못 찾으면 NULL 유지(재실행 가능)
 - 실행: 기본 dry-run, `--apply` 플래그로 실제 반영. 단순 추가 컬럼이라 백업 스냅샷 없이 `thumbnail_url = NULL` 재설정으로 되돌림 가능
 
+### backfill-bookmark-title.ts
+
+- 위치: `front/scripts/backfill-bookmark-title.ts`
+- 대상: `title`이 URL 형태(플레이스홀더)이거나 junk title("Untitled"·"403 Forbidden" 등)인 행. **실제 title이 있는 행은 건드리지 않음**
+- 배경: 세 갈래
+  - `import/route.ts`가 `fetchMeta(url)`로 실제 title을 조회하고도 버리던 버그(수정됨) — 수정 전 저장분은 `title` 컬럼에 url 문자열이 그대로 들어감
+  - `fetchMeta`의 junk-title 필터(`isJunkTitle`) 도입 전 저장분은 `"Untitled"`류가 그대로 남음
+  - title 플레이스홀더는 **정규화 전** raw href(`si=`·`fbclid=`·`igsh=`·`utm_*` 등 트래킹 파라미터 포함)로 저장되는데 `url` 컬럼은 `normalizeUrl()`을 거쳐 파라미터가 빠진다. 그 결과 `title !== url`이 되어 기존 "정확 일치" 조건으로 못 잡던 케이스가 90건 있었음 → `http(s)://`로 시작하면 플레이스홀더로 간주하도록 조건 완화
+- 방식: 대상 행의 url을 `fetchMeta()`로 재크롤링해 실제 title 확보 후 `title` 컬럼만 교체. **OpenAI 미호출**(재태깅·재임베딩 없음). 못 찾으면 건너뜀(재실행 가능)
+- 실행: `set -a; . ./.env; set +a` 후
+  - `npx tsx scripts/backfill-bookmark-title.ts` — DRY-RUN(기본), 계획만 출력
+  - `npx tsx scripts/backfill-bookmark-title.ts --apply` — 실제 반영
+- 백업 없음 — 되돌림이 필요하면 실행 전 `(id, title)` 스냅샷을 수동으로 뜰 것. 다만 대상이 플레이스홀더·junk title이라 복구 가치가 낮다
+
 ### backfill-bookmark-description.ts
 
 - 위치: `front/scripts/backfill-bookmark-description.ts`
