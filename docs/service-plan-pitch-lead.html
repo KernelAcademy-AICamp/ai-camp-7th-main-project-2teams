@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>모와바 — 서비스 기획 발표 (피치)</title>
+    <title>모와바 — 서비스 기획 발표 (두괄식)</title>
     <style>
       *,
       *::before,
@@ -143,8 +143,7 @@
         color: var(--muted);
       }
       /* 서브 문장 — lead보다 작고 넓게.
-         보조 설명을 lead(30ch)에 욱여넣으면 어절 단위로 끊겨 읽기 어려워진다.
-         핵심 한 문장은 lead, 나머지는 여기로 분리해 2줄 안에 담는다. */
+         보조 설명을 lead(32ch)에 욱여넣으면 어절 단위로 끊겨 읽기 어려워진다. */
       .subline {
         font-size: clamp(0.92rem, 1.7vw, 1.15rem);
         line-height: 1.6;
@@ -166,8 +165,17 @@
         gap: clamp(1rem, 3vw, 2.6rem);
         margin-top: clamp(1.6rem, 4vw, 3rem);
       }
+      .row.four {
+        grid-template-columns: repeat(4, 1fr);
+      }
+      @media (max-width: 900px) {
+        .row.four {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
       @media (max-width: 640px) {
-        .row {
+        .row,
+        .row.four {
           grid-template-columns: 1fr;
         }
       }
@@ -175,12 +183,19 @@
         border-top: 1px solid var(--hair);
         padding-top: 0.9rem;
       }
+      /* 결론 슬라이드의 근거 셀 — 위계상 본론이라 상단선을 강조색으로 */
+      .cell.key {
+        border-top-color: var(--accent);
+      }
       .cell .n {
         font-size: var(--label);
         font-weight: 600;
         color: var(--muted);
         font-variant-numeric: tabular-nums;
         letter-spacing: 0.05em;
+      }
+      .cell.key .n {
+        color: var(--accent);
       }
       .cell .t {
         font-size: clamp(1.25rem, 2.8vw, 1.85rem);
@@ -316,8 +331,8 @@
           <p class="lead">저장이 아니라, <span class="accent">되찾기</span>를 푼다.</p>
           <div class="tag">Save it · Find it</div>
           <p class="note">
-            안녕하세요, AI 캠프 7기 2팀입니다. 저희가 만든 서비스는 북마크 AI 관리 서비스, 모와바입니다. 흔한 '저장
-            도구'가 아닙니다 — 저희는 저장이 아니라 '되찾기'라는 문제를 풉니다.
+            안녕하세요, AI 캠프 7기 2팀입니다. 북마크 AI 관리 서비스, 모와바입니다. 결론부터 말씀드리고 근거를 뒤에
+            붙이겠습니다.
             <span class="terms">
               <span><b>북마크</b> — 나중에 다시 보려고 웹페이지 주소를 저장해두는 기능</span>
               <span><b>되찾기(재발견)</b> — 예전에 저장해둔 자료를 필요할 때 다시 찾아내는 일</span>
@@ -326,10 +341,110 @@
         </div>
       </section>
 
-      <!-- 문제 1 -->
+      <!-- 결론 — 이 한 장이 발표 전체의 요약 -->
       <section class="slide">
         <div class="wrap">
-          <div class="eyebrow"><span class="step">문제 · 01</span></div>
+          <div class="eyebrow"><span class="step">결론</span></div>
+          <h2 class="head">
+            저장한 북마크의 84%가 안 쓰이는 문제, <span class="accent">푼 걸 실측으로 보여드립니다.</span>
+          </h2>
+          <div class="row">
+            <div class="cell key">
+              <div class="n">문제</div>
+              <div class="t">84% 미사용</div>
+              <div class="d">다시 찾을 때 북마크를 안 쓰는 비율 · 폴더 탐색은 4%</div>
+            </div>
+            <div class="cell key">
+              <div class="n">해법</div>
+              <div class="t">자동 태깅 + 자연어 검색</div>
+              <div class="d">저장하는 순간 되찾기가 준비된다</div>
+            </div>
+            <div class="cell key">
+              <div class="n">증거</div>
+              <div class="t">F1 0.79 · recall 0.957</div>
+              <div class="d">골든셋 n=215 실측 · 회귀 게이트로 유지</div>
+            </div>
+          </div>
+          <p class="note">
+            먼저 결론입니다. 다시 보려고 저장한 북마크의 84%는 정작 되찾을 때 쓰이지 않습니다. 폴더에 정리해둬도 그걸로
+            찾아낸 건 4%뿐입니다. 저희는 저장하는 순간 자동으로 분류하고
+            말하듯 검색하게 만들어 이 문제를 풀었고, 느낌이 아니라 실측으로 증명했습니다. 태깅 F1 0.79, 핵심 구간 검색
+            재현율 95.7%. 이 세 칸이 오늘 발표의 전부이고, 나머지는 이 셋의 근거입니다.
+            <span class="terms">
+              <span><b>실측</b> — 느낌이나 추정이 아니라 실제로 돌려서 잰 숫자</span>
+              <span><b>F1</b> — 검색·분류 품질을 한 숫자로 합친 종합 점수. 1이 만점</span>
+              <span><b>재현율(recall)</b> — 찾아냈어야 할 것 중 실제로 찾아낸 비율. 놓침이 적을수록 높다</span>
+              <span><b>골든셋</b> — 정답을 사람이 직접 붙여둔 시험지. 채점 기준이 된다</span>
+              <span><b>회귀 게이트</b> — 점수가 예전보다 떨어지면 코드 합치기를 자동으로 막는 관문</span>
+            </span>
+          </p>
+        </div>
+      </section>
+
+      <!-- 요청 — 결론 바로 다음. 의사결정에 필요한 건 여기까지 -->
+      <section class="slide">
+        <div class="wrap">
+          <div class="eyebrow"><span class="step">요청</span></div>
+          <h2 class="head">MVP로 이 가설 하나를 <span class="accent">검증</span>하게 해주세요.</h2>
+          <p class="lead">"자동 태깅 + 자연어 검색이 재발견 행동을 늘린다."</p>
+          <p class="subline">검색 사용률이 MAU의 40%를 넘으면 Go, 못 넘으면 접습니다.</p>
+          <p class="meta">판단에 필요한 건 여기까지 · 이후 슬라이드는 앞 세 칸의 근거</p>
+          <p class="note">
+            그래서 요청도 먼저 드리겠습니다. 저희가 검증하려는 가설은 하나입니다. '자동 태깅과 자연어 검색이 재발견
+            행동을 늘린다.' 검색 사용률이 MAU의 40%를 넘으면 Go, 못 넘으면 접습니다. 판단에 필요한 정보는 여기까지고,
+            이후는 의심되는 부분만 보시면 되는 근거입니다.
+            <span class="terms">
+              <span><b>MVP</b> — 가설 하나를 확인할 수 있는 최소한의 제품 (Minimum Viable Product)</span>
+              <span><b>가설</b> — 맞는지 아직 모르지만 확인해보려는 주장</span>
+              <span><b>MAU</b> — 한 달에 한 번이라도 쓴 사용자 수 (Monthly Active Users)</span>
+              <span><b>Go / No-Go</b> — 계속 갈지 접을지, 미리 정해둔 판정 기준</span>
+            </span>
+          </p>
+        </div>
+      </section>
+
+      <!-- 근거 지도 -->
+      <section class="slide">
+        <div class="wrap">
+          <div class="eyebrow"><span class="step">근거 지도</span></div>
+          <h2 class="head">이 결론을 지탱하는 <span class="accent">근거는 넷</span>입니다.</h2>
+          <div class="row four">
+            <div class="cell">
+              <div class="n">01 문제</div>
+              <div class="t">크고 아프다</div>
+              <div class="d">84% · 병목은 재발견</div>
+            </div>
+            <div class="cell">
+              <div class="n">02 제품</div>
+              <div class="t">작동한다</div>
+              <div class="d">태깅 · 검색 두 기능</div>
+            </div>
+            <div class="cell">
+              <div class="n">03 증명</div>
+              <div class="t">실측으로 잰다</div>
+              <div class="d">골든셋 · 게이트 · 대시보드</div>
+            </div>
+            <div class="cell">
+              <div class="n">04 타이밍</div>
+              <div class="t">지금이다</div>
+              <div class="d">Pocket 공백 · 원가 $0.02</div>
+            </div>
+          </div>
+          <p class="note">
+            근거는 넷입니다. 문제가 크고, 제품이 작동하고, 그게 실측으로 증명됐고, 지금이 타이밍입니다. 차례로
+            보여드리겠습니다.
+            <span class="terms">
+              <span><b>근거</b> — 앞의 결론을 믿어도 되는 이유. 뒤 슬라이드가 하나씩 맡는다</span>
+              <span><b>타이밍</b> — 이 제품을 지금 내야 하는 시장 상황</span>
+            </span>
+          </p>
+        </div>
+      </section>
+
+      <!-- 근거 01 — 문제 -->
+      <section class="slide">
+        <div class="wrap">
+          <div class="eyebrow"><span class="step">근거 01 · 문제</span></div>
           <h2 class="head stack">
             저장해둔 북마크의
             <span class="hero">84<span class="unit">%</span></span>
@@ -341,11 +456,10 @@
             250건(참여자 50명 × 5건)
           </p>
           <p class="note">
-            숫자 하나로 시작하겠습니다. 84%. 다시 보려고 저장해둔 북마크인데, 정작 다시 찾을 때는 쓰이지 않은
-            비율입니다. 참여자 50명에게 각자 자기 북마크에서 뽑은 타깃 5개씩, 총 250건을 다시 찾아보게 했더니 북마크
-            기능을 써서 찾아낸 건 41건, 16%뿐이었습니다. 그나마 32건은 브라우저 상단바에 늘 보이던 것이었고, 폴더 메뉴를
-            열어 의도적으로 찾아낸 건 9건, 4%에 불과했습니다. 저자들 결론은 더 셉니다 — 북마크해둔 사이트가 북마크 안 한
-            사이트보다 더 잘 찾아지지도 않았습니다. 폴더에 정리하는 행위 자체가 되찾기에 기여를 못 한다는 뜻입니다.
+            첫째, 문제. 참여자 50명에게 각자 자기 북마크에서 뽑은 타깃 5개씩, 총 250건을 다시 찾아보게 했더니 북마크
+            기능을 써서 찾아낸 건 41건, 16%뿐이었습니다. 그나마 32건은 상단바에 늘 보이던 것이었고, 폴더 메뉴를 열어
+            의도적으로 찾아낸 건 9건, 4%뿐입니다. 저자들 결론은 더 셉니다 — 북마크해둔 사이트가 북마크 안 한 사이트보다
+            더 잘 찾아지지도 않았습니다. 폴더에 정리하는 행위 자체가 되찾기에 기여를 못 합니다.
             <span class="terms">
               <span
                 ><b>84%</b> — 저장해둔 북마크를 다시 찾을 때 정작 북마크 기능을 쓰지 않은 비율. '끝내 못 찾았다'는 뜻이
@@ -358,10 +472,9 @@
         </div>
       </section>
 
-      <!-- 문제 2 -->
       <section class="slide">
         <div class="wrap">
-          <div class="eyebrow"><span class="step">문제 · 02</span></div>
+          <div class="eyebrow"><span class="step">근거 01 · 문제</span> — 병목</div>
           <h2 class="head">진짜 병목은 저장이 아니라 <span class="accent">‘다시 찾기’</span>다.</h2>
           <div class="row">
             <div class="cell">
@@ -381,8 +494,8 @@
             </div>
           </div>
           <p class="note">
-            왜 못 찾을까요? 저장 시점엔 제목만 남고 내용은 사라집니다. 분류는 폴더를 매번 수동으로 골라야 해서 결국
-            방치되고요. 그 결과 재발견 단계에선 키워드 검색조차 안 됩니다. 병목은 저장이 아니라 이 세 번째 단계입니다.
+            왜 못 찾을까요. 저장 시점엔 제목만 남고 내용은 사라집니다. 분류는 매번 폴더를 골라야 해서 방치되고요. 결국
+            재발견 단계에선 키워드 검색조차 안 됩니다. 병목은 세 번째 단계입니다.
             <span class="terms">
               <span><b>병목</b> — 전체 흐름의 속도를 결정해버리는, 가장 막히는 구간</span>
               <span><b>인지 부하</b> — 뭘 고를지 판단하느라 머리를 쓰는 정도. 높으면 귀찮아서 결국 안 하게 된다</span>
@@ -391,10 +504,9 @@
         </div>
       </section>
 
-      <!-- 고객 -->
       <section class="slide">
         <div class="wrap">
-          <div class="eyebrow"><span class="step">고객 · 03</span></div>
+          <div class="eyebrow"><span class="step">근거 01 · 문제</span> — 고객</div>
           <h2 class="head">하루 10개씩 저장하고 못 찾는 <span class="accent">지식노동자</span>가 우리 고객이다.</h2>
           <p class="lead">"분명 저장했는데, 어디 뒀는지 기억이 안 나."</p>
           <p class="subline">개발자 · PM · 리서처 — 하루 10개씩 저장하는 지식노동자.</p>
@@ -411,33 +523,10 @@
         </div>
       </section>
 
-      <!-- 시장 — 고객 정의 직후. '그 사람들이 지금 갈 데가 없다'로 솔루션에 넘긴다. -->
+      <!-- 근거 02 — 제품 -->
       <section class="slide">
         <div class="wrap">
-          <div class="eyebrow"><span class="step">시장 · 04</span></div>
-          <h2 class="head">그런데 지금, 이들이 <span class="accent">갈 곳이 없다.</span></h2>
-          <p class="lead">2025-07 Pocket 서비스 종료</p>
-          <p class="subline">무료 · AI · 자연어 검색을 모두 갖춘 국내 서비스는 지금 없다.</p>
-          <p class="meta">난민 시장을 임포트 원클릭으로 선점 · 최근접 경쟁 mymind는 자연어 검색이 아직 베타</p>
-          <p class="note">
-            그런데 이 사람들이 지금 갈 데가 없습니다. 작년 7월 Pocket이 종료되면서 쓰던 도구를 잃은 사용자들이 생겼는데,
-            무료에 AI 자동 분류, 자연어 검색까지 갖춘 국내 서비스는 아직 없습니다. 원클릭 임포트로 이 공백을 선점합니다.
-            문제도 크고, 겪는 사람도 분명하고, 자리도 비어 있습니다 — 이제 저희가 무엇을 만들었는지 보여드리겠습니다.
-            <span class="terms">
-              <span><b>Pocket</b> — '나중에 읽기'로 유명했던 북마크 서비스. 2025년 7월 종료됐다</span>
-              <span><b>mymind</b> — AI로 자동 정리해주는 해외 북마크 서비스. 우리와 가장 가까운 경쟁 제품</span>
-              <span><b>임포트</b> — 다른 서비스에 쌓아둔 데이터를 통째로 옮겨오는 것</span>
-              <span><b>베타</b> — 정식 출시 전, 일부에게만 열어둔 시험 단계</span>
-              <span><b>선점</b> — 경쟁자보다 먼저 그 자리를 차지하는 것</span>
-            </span>
-          </p>
-        </div>
-      </section>
-
-      <!-- 솔루션 -->
-      <section class="slide">
-        <div class="wrap">
-          <div class="eyebrow"><span class="step">솔루션 · 05</span></div>
+          <div class="eyebrow"><span class="step">근거 02 · 제품</span></div>
           <h2 class="head">저장하는 순간, <span class="accent">되찾기가 준비</span>된다.</h2>
           <div class="row">
             <div class="cell">
@@ -457,8 +546,8 @@
             </div>
           </div>
           <p class="note">
-            모와바의 답은 단순합니다. 저장하는 순간, 되찾기가 준비됩니다. 사용자는 1클릭으로 저장만 하면 되고, 분류는
-            AI가, 검색은 말하듯 하면 됩니다. 이 세 단계를 차례로 보여드리겠습니다.
+            둘째, 제품. 사용자는 1클릭으로 저장만 하면 되고, 분류는 AI가, 검색은 말하듯 하면 됩니다. 뒤의 두 기능이
+            핵심입니다.
             <span class="terms">
               <span><b>태깅</b> — 자료에 꼬리표(키워드)를 붙여두는 것. 나중에 그 꼬리표로 묶어 찾는다</span>
               <span><b>자동 태깅</b> — 사람이 고르지 않고 AI가 내용을 읽어 꼬리표를 대신 붙여주는 것</span>
@@ -467,10 +556,9 @@
         </div>
       </section>
 
-      <!-- 솔루션 기능 1 -->
       <section class="slide">
         <div class="wrap">
-          <div class="eyebrow"><span class="step">솔루션 · 06</span> — 자동 태깅</div>
+          <div class="eyebrow"><span class="step">근거 02 · 제품</span> — 자동 태깅</div>
           <h2 class="head">저장하면 AI가 <span class="accent">알아서</span> 분류한다.</h2>
           <p class="lead">본문을 읽어 대·중·소 최대 3개를 뽑는다</p>
           <p class="subline">대분류는 카테고리로, 나머지가 태그로. 폴더 수동 정리를 아예 없앤다.</p>
@@ -478,10 +566,9 @@
             13개 대분류 · 중분류는 닫힌 enum으로 환각 차단 · confidence 0.6 미만 자동 제외 · 본문은 처리 후 즉시 파기
           </p>
           <p class="note">
-            첫째, 자동 태깅. 저장하면 AI가 본문 앞 2,000자를 읽고 대·중·소 최대 세 개를 뽑습니다. 이 중 대분류가
-            카테고리로 빠지고 나머지가 태그로 남습니다. 13개 대분류 체계에, 중분류는 닫힌 목록으로 강제해서 AI가 멋대로
-            만들어내는 환각 태그를 차단했습니다. 확신도가 0.6 미만이면 아예 붙이지 않습니다 — 틀린 태그보다 빈 태그가
-            낫다고 봤습니다. 본문은 처리 즉시 파기 — 개인정보도 안전합니다.
+            저장하면 AI가 본문 앞 2,000자를 읽고 대·중·소 최대 세 개를 뽑습니다. 대분류가 카테고리로 빠지고 나머지가
+            태그로 남습니다. 13개 대분류 체계에, 중분류는 닫힌 목록으로 강제해서 환각 태그를 차단했습니다. 확신도 0.6
+            미만이면 아예 붙이지 않습니다 — 틀린 태그보다 빈 태그가 낫다고 봤습니다. 본문은 처리 즉시 파기합니다.
             <span class="terms">
               <span><b>대·중·소 분류</b> — 넓은 갈래(대) → 중간 갈래(중) → 구체적 주제(소)로 좁혀가는 3단계 분류</span>
               <span><b>카테고리 / 태그</b> — 카테고리는 폴더처럼 하나만 붙는 큰 갈래, 태그는 여러 개 붙일 수 있는 꼬리표</span>
@@ -494,10 +581,9 @@
         </div>
       </section>
 
-      <!-- 솔루션 기능 2 -->
       <section class="slide">
         <div class="wrap">
-          <div class="eyebrow"><span class="step">솔루션 · 07</span> — 자연어 검색</div>
+          <div class="eyebrow"><span class="step">근거 02 · 제품</span> — 자연어 검색</div>
           <h2 class="head">제목이 안 맞아도, <span class="accent">의미로 되찾는다.</span></h2>
           <p class="lead">"그 리액트 훅 글"로 찾아낸다</p>
           <p class="subline">군더더기('그')는 걷어내고, '리액트'를 'React'까지 넓혀 영문 제목 문서도 잡는다.</p>
@@ -506,14 +592,13 @@
             토큰도 인식
           </p>
           <p class="note">
-            둘째, 자연어 검색. '그 리액트 훅 글'이라고 넣으면 '그' 같은 군더더기는 걷어내고, '리액트'를 'React'까지
-            넓혀서 찾습니다. 제목이 영문이어도 잡힌다는 뜻입니다. 이게 생각보다 큰데, 임베딩 모델이 음차 표기와 원어를
-            잘 연결하지 못합니다. 실측해보니 검증 가능한 31개 브랜드 중 16개가 한글로만 검색하면 상위 10위 안에 못
-            들어왔습니다. 그래서 사전으로 원어까지 확장합니다. '피그마로 배우는' 처럼 조사가 붙어도 인식합니다. 벡터
-            검색과 키워드 검색을 함께 돌려 합치는 하이브리드 방식이고요. 한 가지 미리 말씀드리면, '지난달' 같은 시간
-            표현은 날짜 필터로 동작하지 않습니다. 넣어도 되지만 그냥 걷어내고 나머지로 검색합니다. 일부러 그렇게
-            뒀습니다 — 사람이 기억하는 '지난달'은 실제 달력 월과 자주 어긋나는데, 하드 필터로 걸면 맞는 답을 오히려
-            배제합니다. 못 찾는 실패는 되돌릴 수 없으니 정밀도보다 재현율을 지키는 쪽을 택했습니다.
+            '그 리액트 훅 글'이라고 넣으면 '그' 같은 군더더기는 걷어내고, '리액트'를 'React'까지 넓혀서 찾습니다. 제목이
+            영문이어도 잡힌다는 뜻입니다. 임베딩 모델이 음차 표기와 원어를 잘 연결하지 못하는데, 실측해보니 검증 가능한
+            31개 브랜드 중 16개가 한글로만 검색하면 상위 10위 안에 못 들어왔습니다. 그래서 사전으로 원어까지 확장합니다.
+            '피그마로 배우는'처럼 조사가 붙어도 인식합니다. 벡터와 키워드 검색을 함께 돌려 합치는 하이브리드고요. 한 가지
+            미리 말씀드리면 '지난달' 같은 시간 표현은 날짜 필터로 동작하지 않습니다. 사람이 기억하는 '지난달'은 실제
+            달력 월과 자주 어긋나는데, 하드 필터로 걸면 맞는 답을 오히려 배제합니다. 못 찾는 실패는 되돌릴 수 없으니
+            정밀도보다 재현율을 지키는 쪽을 택했습니다.
             <span class="terms">
               <span><b>자연어 검색</b> — 검색어를 정해진 형식이 아니라 평소 말하듯 넣어도 되는 검색</span>
               <span><b>임베딩</b> — 문장의 '뜻'을 숫자 목록으로 바꾼 것. 뜻이 가까우면 숫자도 가까워진다</span>
@@ -523,6 +608,7 @@
               <span><b>RRF</b> — 서로 다른 두 검색 순위표를 한 줄로 공정하게 합치는 계산법</span>
               <span><b>음차</b> — 외국어 발음을 한글로 옮겨 적은 표기. '리액트' ↔ React</span>
               <span><b>조사</b> — '~로', '~의' 같은 한국어 토씨. 붙으면 단어가 달라 보여 검색이 어긋난다</span>
+              <span><b>하드 필터</b> — 조건에 안 맞으면 무조건 잘라내는 방식. 잘못 걸면 맞는 답까지 사라진다</span>
               <span><b>재현율(recall)</b> — 찾아냈어야 할 것 중 실제로 찾아낸 비율. 놓침이 적을수록 높다</span>
               <span><b>정밀도(precision)</b> — 찾아온 것 중 진짜 맞는 것의 비율. 헛것이 적을수록 높다</span>
             </span>
@@ -530,10 +616,10 @@
         </div>
       </section>
 
-      <!-- 검증 -->
+      <!-- 근거 03 — 증명 -->
       <section class="slide">
         <div class="wrap">
-          <div class="eyebrow"><span class="step">검증 · 08</span></div>
+          <div class="eyebrow"><span class="step">근거 03 · 증명</span></div>
           <h2 class="head">품질은 이미 <span class="accent">실측</span>으로 검증됐다.</h2>
           <div class="hero">0.79</div>
           <p class="meta">
@@ -541,27 +627,25 @@
             퇴행 방지 게이트로 회귀 차단
           </p>
           <p class="note">
-            그래서 품질이 얼마나 되냐 — 느낌이 아니라 실측으로 답하겠습니다. 정답을 직접 라벨링한 골든셋 215건으로
-            채점한 태깅 F1이 0.79, 대분류 정확도 87%입니다. 검색은 32개 질의 중 핵심 구간 재현율 95.7%, 전체
-            81.3%입니다. 전체가 낮은 건 아직 못 푸는 교차언어 개념어를 일부러 골든셋에 넣어 계측 중이기 때문입니다.
-            그리고 이 수치가 떨어지면 머지가 차단되는 회귀 게이트를 걸어놨습니다.
+            셋째, 증명. 정답을 직접 라벨링한 골든셋 215건으로 채점한 태깅 F1이 0.79, 대분류 정확도 87%입니다. 검색은
+            32개 질의 중 핵심 구간 재현율 95.7%, 전체 81.3%입니다. 전체가 낮은 건 아직 못 푸는 교차언어 개념어를 일부러
+            골든셋에 넣어 계측 중이기 때문입니다. 이 수치가 떨어지면 머지가 차단되는 회귀 게이트를 걸어놨습니다.
             <span class="terms">
               <span><b>골든셋</b> — 정답을 사람이 직접 붙여둔 시험지. 채점의 기준이 된다</span>
               <span><b>라벨링</b> — 그 정답을 하나하나 손으로 달아주는 작업</span>
               <span><b>F1</b> — 정밀도와 재현율을 한 숫자로 합친 종합 점수. 1이 만점</span>
               <span><b>macro</b> — 태그별 점수를 개수와 무관하게 똑같은 비중으로 평균낸 것. 드문 태그도 봐준다</span>
+              <span><b>교차언어</b> — 한국어로 물었는데 답이 영어 문서에 있는 경우처럼 언어가 엇갈리는 상황</span>
               <span><b>회귀(regression)</b> — 잘 되던 게 코드 변경 뒤 도로 나빠지는 것</span>
-              <span><b>게이트</b> — 점수가 기준 밑으로 떨어지면 코드 합치기를 자동으로 막는 관문</span>
               <span><b>머지</b> — 작업한 코드를 본 줄기에 합치는 것</span>
             </span>
           </p>
         </div>
       </section>
 
-      <!-- 검증 1-2 — 검증 방법론 -->
       <section class="slide">
         <div class="wrap">
-          <div class="eyebrow"><span class="step">검증 · 09</span> — 어떻게 재는가</div>
+          <div class="eyebrow"><span class="step">근거 03 · 증명</span> — 어떻게 재는가</div>
           <h2 class="head">개선인 줄 알았는데, <span class="accent">실측이 아니라고 했습니다.</span></h2>
           <div class="hero dual">0.789<span class="arrow">→</span>0.773</div>
           <p class="subline">
@@ -587,26 +671,27 @@
           <p class="note">
             화면의 두 숫자가 오늘 있었던 일입니다. 개선이라고 생각한 걸 넣었더니 0.789가 0.773으로 내려갔고, 그래서
             버렸습니다. 이런 기각이 오늘만 두 건입니다. 어떻게 알아챘는지 말씀드리겠습니다 — 세 가지를 고정했습니다.
-            첫째 측정 — 정답지를 저희가 직접 라벨링한
-            215건으로 만들고, 본문이 있을 때와 제목만 있을 때를 따로 채점합니다. 임포트에서 메타 조회가 실패하는 경우가
-            실사용에 흔한데, 잘 되는 조건만 재면 그 실패가 안 보이기 때문입니다. 둘째 게이트 — 수치가 떨어지면 머지가
-            막힙니다. 여기서 중요한 건 임계값 위치인데, 같은 코드로 세 번 돌려도 F1이 0.768, 0.755, 0.7595로 출렁입니다.
-            LLM이라 그렇습니다. 그래서 임계값을 이 출렁임 밴드 아래에 뒀습니다. 밴드 한복판에 두면 품질이 그대로여도
-            절반 확률로 실패하는 동전던지기가 됩니다. 셋째 분리 측정 — 변경이 두 개면 하나씩 되돌려가며 따로 잽니다.
-            실제로
-            프롬프트와 태그 사전을 같이 바꿨는데, 사전만 되돌려 재보니 예상과 반대였습니다. 사전은 올렸고 프롬프트가
-            내렸습니다. 안 나눴으면 잘못된 쪽을 버렸을 겁니다. 그래서 오늘 개선안 두 건을 실측으로 기각했습니다. 로그인
-            페이지가 미분류로 떨어지는 문제를 고치려고 예제를 하나 추가했더니 4건 다 회수됐습니다. 성공처럼 보였는데
-            전체 F1은 0.789에서 0.773으로 떨어졌습니다. 뜯어보니 새 예제가 특정 태그 가중을 키워 다른 태그를 잠식하고
-            있었습니다. 그래서 버리고, 예제를 늘리는 대신 기존 예제의 URL만 바꾸는 방식으로 다시 만들어 대분류 정확도를
-            0.874까지 올리고 미분류율을 절반으로 줄였습니다. 개선했다는 말은 누구나 할 수 있습니다. 저희는 개선한 줄
-            알았다가 실측이 아니라고 해서 버린 기록을 문서로 남깁니다.
+            첫째 측정 — 215건 정답지를 본문이 있을 때와
+            제목만 있을 때로 따로 채점합니다. 임포트에서 메타 조회가 실패하는 경우가 실사용에 흔한데, 잘 되는 조건만
+            재면 그 실패가 안 보이기 때문입니다. 둘째 게이트 — 같은 코드로 세 번 돌려도 F1이 0.768, 0.755, 0.7595로
+            출렁입니다. LLM이라 그렇습니다. 그래서 임계값을 이 출렁임 밴드 아래에 뒀습니다. 밴드 한복판에 두면 품질이
+            그대로여도 절반 확률로 실패하는 동전던지기가 됩니다. 셋째 분리 측정 — 변경이 두 개면 하나씩 되돌려가며 따로
+            잽니다. 실제로 프롬프트와 태그 사전을 같이 바꿨는데, 사전만 되돌려 재보니 예상과 반대였습니다. 사전은 올렸고
+            프롬프트가 내렸습니다. 안 나눴으면 잘못된 쪽을 버렸을 겁니다. 그래서 오늘 개선안 두 건을 실측으로
+            기각했습니다. 로그인 페이지가 미분류로 떨어지는 문제를 고치려 예제를 추가했더니 4건 다 회수됐는데, 전체 F1은
+            0.789에서 0.773으로 떨어졌습니다. 새 예제가 특정 태그 가중을 키워 다른 태그를 잠식하고 있었습니다. 버리고,
+            예제를 늘리는 대신 기존 예제의 URL만 바꾸는 방식으로 다시 만들어 대분류 정확도를 0.874까지 올리고 미분류율을
+            절반으로 줄였습니다. 개선했다는 말은 누구나 할 수 있습니다. 저희는 개선한 줄 알았다가 실측이 아니라고 해서
+            버린 기록을 문서로 남깁니다.
             <span class="terms">
               <span><b>실측</b> — 느낌이나 추정이 아니라 실제로 돌려서 잰 숫자</span>
               <span><b>비결정성</b> — 같은 걸 넣어도 AI 답이 매번 조금씩 달라지는 성질</span>
               <span><b>밴드(±0.013)</b> — 그 흔들림이 오르내리는 폭. 이 폭 안의 차이는 개선인지 우연인지 구분이 안 된다</span>
               <span><b>임계값</b> — 통과와 탈락을 가르는 기준선</span>
-              <span><b>분리 측정(ablation)</b> — 한꺼번에 바꾼 것을 하나씩 되돌려가며 어느 쪽이 효과였는지 가려내는 방법</span>
+              <span
+                ><b>분리 측정(ablation)</b> — 한꺼번에 바꾼 것을 하나씩 되돌려가며 어느 쪽이 효과였는지 가려내는
+                방법</span
+              >
               <span><b>미분류</b> — 카테고리를 못 붙이고 빈칸으로 넘어간 상태</span>
               <span><b>프롬프트</b> — AI에게 어떻게 일하라고 적어주는 지시문</span>
             </span>
@@ -614,10 +699,9 @@
         </div>
       </section>
 
-      <!-- 검증 2 — 운영 모니터링 -->
       <section class="slide">
         <div class="wrap">
-          <div class="eyebrow"><span class="step">검증 · 10</span> — 운영 모니터링</div>
+          <div class="eyebrow"><span class="step">근거 03 · 증명</span> — 운영 모니터링</div>
           <h2 class="head">지표는 배포 후에도 <span class="accent">계속 감시</span>된다.</h2>
           <div class="shots">
             <figure class="shot">
@@ -640,18 +724,18 @@
             단계는 골든셋 회귀 게이트(F1 ≥ 0.74)가 자동 차단 — 실화면
           </p>
           <p class="note">
-            검증은 일회성이 아닙니다. 지금 보시는 게 실제 운영 중인 어드민 대시보드인데, 각 지표를 왜 보는지가
-            핵심입니다. 첫째, 되찾기 퍼널과 유저별 분해 — 저희 가설 자체가 "자동 태깅과 자연어 검색이 재발견을
-            늘린다"입니다. 저장은 이미 잘 됩니다. 되찾기가 안 늘면 이 제품은 실패이고, Go/No-Go 기준인 검색 사용률 40%가
-            바로 이 지표에서 나옵니다. 둘째, 성장 추이 — 되찾기의 분모입니다. 쌓이는 게 없으면 되찾을 것도 없으니
-            저장·가입이 유지되는지 함께 봅니다. 셋째, 비용 분리 — 유저당 원가 2센트는 저희 사업성 주장의 전제인데,
-            청구액엔 개발·평가 비용이 섞여 있어 그대로 보면 140배 왜곡됩니다. 실사용분만 분리해 이 주장을 계속
-            검증합니다. 개발 단계엔 골든셋 게이트가, 배포 후엔 이 대시보드가 품질을 지킵니다.
+            검증은 일회성이 아닙니다. 실제 운영 중인 어드민 대시보드인데, 각 지표를 왜 보는지가 핵심입니다. 첫째, 되찾기
+            퍼널과 유저별 분해 — 가설 자체가 "자동 태깅과 자연어 검색이 재발견을 늘린다"입니다. 저장은 이미 잘 됩니다.
+            되찾기가 안 늘면 이 제품은 실패이고, Go/No-Go 기준인 검색 사용률 40%가 이 지표에서 나옵니다. 둘째, 성장 추이
+            — 되찾기의 분모입니다. 쌓이는 게 없으면 되찾을 것도 없으니 저장·가입이 유지되는지 함께 봅니다. 셋째, 비용
+            분리 — 유저당 원가 2센트는 사업성 주장의 전제인데, 청구액엔 개발·평가 비용이 섞여 있어 그대로 보면 140배
+            왜곡됩니다. 실사용분만 분리해 계속 검증합니다.
             <span class="terms">
               <span><b>어드민</b> — 사용자에겐 안 보이고 운영자만 들어가는 관리 화면</span>
               <span><b>North Star 지표</b> — 이 제품이 잘 되고 있는지 한 줄로 답하는 대표 지표</span>
               <span><b>퍼널</b> — 저장 → 분류 → 검색 → 클릭처럼 단계마다 몇 명이 남는지 보는 깔때기</span>
               <span><b>덤벨 차트</b> — 두 시점을 점 두 개와 선으로 이어 변화 폭을 보여주는 그래프</span>
+              <span><b>분모</b> — 비율을 잴 때 아래에 놓이는 전체 수. 쌓인 게 없으면 되찾기 비율도 못 잰다</span>
               <span><b>Go/No-Go</b> — 계속 갈지 접을지, 미리 정해둔 판정 기준</span>
               <span><b>MAU</b> — 한 달에 한 번이라도 쓴 사용자 수 (Monthly Active Users)</span>
             </span>
@@ -659,10 +743,31 @@
         </div>
       </section>
 
-      <!-- 비즈니스 — 모델 -->
+      <!-- 근거 04 — 타이밍 -->
       <section class="slide">
         <div class="wrap">
-          <div class="eyebrow"><span class="step">비즈니스 · 11</span> — 모델</div>
+          <div class="eyebrow"><span class="step">근거 04 · 타이밍</span> — 시장</div>
+          <h2 class="head">Pocket 종료로 국내 대안 <span class="accent">공백</span>이 열렸다.</h2>
+          <p class="lead">2025-07 Pocket 서비스 종료</p>
+          <p class="subline">무료 · AI · 자연어 검색을 모두 갖춘 국내 서비스는 지금 없다.</p>
+          <p class="meta">난민 시장을 임포트 원클릭으로 선점 · 최근접 경쟁 mymind는 자연어 검색이 아직 베타</p>
+          <p class="note">
+            넷째, 타이밍. 작년 7월 Pocket이 종료되면서 갈 곳 잃은 사용자들이 생겼는데, 무료에 AI 자동 분류, 자연어
+            검색까지 갖춘 국내 서비스는 아직 없습니다. 원클릭 임포트로 이 공백을 선점합니다.
+            <span class="terms">
+              <span><b>Pocket</b> — '나중에 읽기'로 유명했던 북마크 서비스. 2025년 7월 종료됐다</span>
+              <span><b>mymind</b> — AI로 자동 정리해주는 해외 북마크 서비스. 우리와 가장 가까운 경쟁 제품</span>
+              <span><b>임포트</b> — 다른 서비스에 쌓아둔 데이터를 통째로 옮겨오는 것</span>
+              <span><b>베타</b> — 정식 출시 전, 일부에게만 열어둔 시험 단계</span>
+              <span><b>선점</b> — 경쟁자보다 먼저 그 자리를 차지하는 것</span>
+            </span>
+          </p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="wrap">
+          <div class="eyebrow"><span class="step">근거 04 · 타이밍</span> — 모델</div>
           <h2 class="head">원가는 유저당 월 <span class="accent">$0.02</span>, 가격은 가치로 매긴다.</h2>
           <p class="lead">AI 변동비가 사실상 0 → 가격 하한 제약 없음</p>
           <p class="subline">Freemium으로 시작해 프리미엄 전환.</p>
@@ -680,30 +785,29 @@
         </div>
       </section>
 
-      <!-- 요청 -->
+      <!-- 클로징 — 결론 재진술 -->
       <section class="slide">
         <div class="wrap">
-          <div class="eyebrow"><span class="step">요청 · 12</span></div>
-          <h2 class="head">MVP로 이 가설 하나를 <span class="accent">검증</span>하게 해주세요.</h2>
-          <p class="lead">"자동 태깅 + 자연어 검색이 재발견 행동을 늘린다."</p>
-          <p class="subline">검색 사용률이 MAU의 40%를 넘으면 Go.</p>
-          <p class="meta">모와바 · 저장하는 도구가 아니라, 다시 찾는 도구로.</p>
+          <div class="eyebrow"><span class="step">다시, 결론</span></div>
+          <h2 class="head">저장하는 도구가 아니라, <span class="accent">다시 찾는 도구</span>로.</h2>
+          <p class="lead">84% 미사용 → 자동 태깅 + 자연어 검색 → F1 0.79 · recall 0.957</p>
+          <p class="subline">검색 사용률 MAU 40% 돌파 여부로 판정하겠습니다.</p>
+          <p class="meta">모와바 · Save it · Find it</p>
           <p class="note">
-            마지막으로, 저희가 검증하려는 가설은 하나입니다. '자동 태깅과 자연어 검색이 재발견 행동을 늘린다.' 검색
-            사용률이 MAU의 40%를 넘으면 Go입니다. 모와바 — 저장하는 도구가 아니라, 다시 찾는 도구로. 감사합니다.
+            정리하겠습니다. 저장해두고도 84%는 안 쓰이는 문제를, 자동 태깅과 자연어 검색으로 풀었고, F1 0.79와 재현율 95.7%로
+            증명했습니다. 검색 사용률 40% 돌파 여부로 판정하겠습니다. 모와바 — 저장하는 도구가 아니라, 다시 찾는 도구로.
+            감사합니다.
             <span class="terms">
-              <span><b>MVP</b> — 가설 하나를 확인할 수 있는 최소한의 제품 (Minimum Viable Product)</span>
-              <span><b>가설</b> — 맞는지 아직 모르지만 확인해보려는 주장</span>
-              <span><b>MAU</b> — 한 달에 한 번이라도 쓴 사용자 수</span>
-              <span><b>Go</b> — 기준을 넘겼으니 계속 간다는 판정. 못 넘기면 No-Go</span>
+              <span><b>F1 0.79</b> — 자동 분류 품질 종합 점수. 1이 만점</span>
+              <span><b>재현율 95.7%</b> — 찾아냈어야 할 것 중 실제로 찾아낸 비율</span>
+              <span><b>MAU 40%</b> — 한 달에 한 번이라도 쓴 사용자 중 검색까지 쓴 비율이 40%</span>
             </span>
           </p>
         </div>
       </section>
     </main>
 
-    <!-- 총 슬라이드 수는 아래 스크립트가 채운다 — 하드코딩하면 슬라이드 추가 때마다 어긋난다.
-         'N 대본' 안내는 제거: 발표자 대본 토글은 발표자만 알면 되는 기능이라 화면에 노출하지 않는다. -->
+    <!-- 총 슬라이드 수는 아래 스크립트가 채운다 — 하드코딩하면 슬라이드 추가 때마다 어긋난다. -->
     <div class="counter"><b id="cur">01</b> / <span id="total">–</span></div>
 
     <script>

@@ -103,8 +103,12 @@ export function useImportBookmarks() {
     mutationFn: ({ formData, onProgress }: ImportMutationInput) =>
       fetchImportBookmarks(formData, onProgress),
     onSuccess: () => {
-      // 임포트 완료 후 북마크 목록 캐시 무효화 → 홈 목록에 즉시 반영
-      queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+      // 임포트 완료 후 북마크 목록 캐시 무효화 → 홈 목록에 즉시 반영.
+      // refetchType: 'all' — 임포트 중 사용자는 /import에 있어 홈 목록 쿼리가 inactive다.
+      // 기본값('active')은 stale 표시만 하고 실제 반영을 재마운트 시점 refetch에 맡기는데,
+      // 그 refetch가 돌지 않으면 홈으로 돌아와도 예전 목록이 그대로 남는다.
+      // 여기서 바로 다시 받아두면 복귀 시 캐시가 이미 최신이라 재마운트 동작과 무관해진다.
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'], refetchType: 'all' })
       // 임포트로 folder_hint가 생길 수 있으므로 폴더 목록도 무효화 → 사이드바 즉시 반영
       queryClient.invalidateQueries({ queryKey: ['folders'] })
       // AI 자동 분류로 새 카테고리가 생기므로 카테고리 목록도 무효화 → 사이드바 즉시 반영
