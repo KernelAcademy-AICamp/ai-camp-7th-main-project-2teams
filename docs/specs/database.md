@@ -309,10 +309,31 @@ N-3~N-5(2026-07-22): 검색 품질 일괄 개선 — 상세는 `lib/__tests__/se
 - weak 경로 임베딩 보강: 태그 + LLM 한줄요약(`generateWeakSummary`) 포함
 - **임베딩 모델 전환**: text-embedding-3-large `dimensions:1536`(스키마·인덱스 불변) + `scripts/reembed.ts`
   전량 재임베딩. A/B 실측(AI/ML 233건) recall@10 0.70→0.85 근거. 사후 weak-vector 0/3→2/3, noise 오탐 0.
-- n=26, overall 실측 0.923. 게이트: `OVERALL_RECALL_BASELINE=0.85`, `NON_WEAK_VECTOR_RECALL_BASELINE=0.9`.
+- n=26, overall 실측 0.923.
 
 라이브 재검증(2026-07-23): 골든셋 재실행 → overall 0.923(24/26) 재현, miss 패턴 동일(weak-vector 1 + particle 1),
 게이트 통과. DB 카운트(read-only): 전체 1,020건·embedding 보유 100%·weak 경로(description 없음) 260건.
+
+N-6(2026-07-27): `cross-lingual-concept` 6건 추가 → **n=26→32**. 기존 cross-lingual 5건은 전부 `SEARCH_ALIAS`
+등재 브랜드 단독 쿼리라 사전이 커버하는 영역만 재고 있었다. 사전으로 못 잡는 **개념어** 교차언어(한→영 색인↔indexing,
+영→한 retrospective↔회고)를 양방향으로 재는 카테고리.
+
+교차언어 개선 롤백(2026-07-27): 브랜드 앵커 + 이중언어 요약을 임베딩 입력에 넣어 concept 0.5→0.833까지 올렸으나
+**되돌렸다** — 임베딩 입력에 LLM 생성 텍스트가 들어가면서 골든셋이 결정적이지 않게 됐다(같은 코드 2회 실행에
+concept 0.833/0.667, b23 요약이 5회 중 2종으로 갈림). 게이트를 관측 하한까지 낮춰야 해서 회귀 감지력이 오히려
+떨어졌다. 재착수 조건은 `docs/superpowers/plans/2026-07-27-cross-lingual-search.md` 참조.
+
+**현행 실측·게이트**(롤백 후 재실측 2026-07-27, `front/lib/__tests__/search-eval.test.ts` 상수가 단일 출처):
+
+| 지표                             | 실측           | 게이트 상수                       | 값   |
+| -------------------------------- | -------------- | --------------------------------- | ---- |
+| overall recall                   | 0.8125 (26/32) | `OVERALL_RECALL_BASELINE`         | 0.78 |
+| core recall (약점 카테고리 제외) | 0.957 (22/23)  | `CORE_RECALL_BASELINE`            | 0.90 |
+| cross-lingual-concept            | 0.333 (2/6)    | `CROSS_LINGUAL_CONCEPT_BASELINE`  | 0.30 |
+
+약점 카테고리 `KNOWN_WEAK_CATEGORIES = ['weak-vector', 'cross-lingual-concept']` — 코어 게이트에서 제외하고
+각자 자체 개선 트랙을 가진다. 상수명 변경: `NON_WEAK_VECTOR_RECALL_BASELINE` → `CORE_RECALL_BASELINE`.
+concept 개선 폭 기록: 0.333(현재) → 0.5(앵커) → 0.833(앵커+요약) — 재착수 시 이 수치가 목표.
 
 ---
 
