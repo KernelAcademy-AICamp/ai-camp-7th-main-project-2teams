@@ -116,7 +116,7 @@
         font-size: var(--lead);
         line-height: 1.5;
         color: var(--ink);
-        max-width: 30ch;
+        max-width: 32ch;
         margin-top: clamp(1.2rem, 3.2vw, 2.4rem);
         text-wrap: balance;
       }
@@ -395,9 +395,7 @@
           <div class="eyebrow"><span class="step">솔루션 · 06</span> — 자연어 검색</div>
           <h2 class="head">제목이 안 맞아도, <span class="accent">의미로 되찾는다.</span></h2>
           <p class="lead">"그 리액트 훅 글"로 찾아낸다</p>
-          <p class="subline">
-            군더더기('그')는 걷어내고, '리액트'를 'React'까지 넓혀 영문 제목 문서도 잡는다.
-          </p>
+          <p class="subline">군더더기('그')는 걷어내고, '리액트'를 'React'까지 넓혀 영문 제목 문서도 잡는다.</p>
           <p class="meta">
             하이브리드 검색(pgvector + 트라이그램 · RRF 병합) · 임베딩 3-large · 브랜드 음차↔원어 사전 확장 · 조사 붙은
             토큰도 인식
@@ -545,13 +543,16 @@
       </section>
     </main>
 
-    <div class="counter"><b id="cur">01</b> / 12 · N 대본</div>
+    <!-- 총 슬라이드 수는 아래 스크립트가 채운다 — 하드코딩하면 슬라이드 추가 때마다 어긋난다.
+         'N 대본' 안내는 제거: 발표자 대본 토글은 발표자만 알면 되는 기능이라 화면에 노출하지 않는다. -->
+    <div class="counter"><b id="cur">01</b> / <span id="total">–</span></div>
 
     <script>
       (function () {
         var slides = Array.from(document.querySelectorAll(".slide"));
         var cur = document.getElementById("cur");
         var pg = document.getElementById("pg");
+        document.getElementById("total").textContent = String(slides.length).padStart(2, "0");
         var io = new IntersectionObserver(
           function (es) {
             es.forEach(function (e) {
