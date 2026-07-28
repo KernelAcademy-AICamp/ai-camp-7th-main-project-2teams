@@ -19,10 +19,20 @@
         margin: 0;
         padding: 0;
       }
-      html,
-      body {
+      /* overflow-x를 body에도 주면 body가 스크롤 컨테이너가 되어 실제 스크롤을 가져간다.
+         그러면 html에 건 scroll-snap-type이 스크롤 범위 0인 요소에 걸려 무력화되고,
+         리플로 때마다 브라우저가 첫 스냅 지점으로 되돌린다. 클리핑은 html에만 건다. */
+      html {
         height: 100%;
         overflow-x: hidden;
+      }
+      /* 한국어 줄바꿈 — 어절 중간에서 끊지 않는다.
+         keep-all만 쓰면 긴 영문 토큰(cross-lingual-concept, URL)이 컨테이너를 밀어내므로
+         overflow-wrap으로 그 경우에만 강제 개행을 허용한다. */
+      body {
+        height: 100%;
+        word-break: keep-all;
+        overflow-wrap: break-word;
       }
       html {
         scroll-snap-type: y mandatory;
@@ -154,6 +164,14 @@
         line-height: 1.55;
         margin-top: 0.9em;
         max-width: 64ch;
+        text-wrap: pretty;
+      }
+      /* 제목은 줄 길이를 고르게 — 마지막 줄에 단어 하나만 떨어지는 것 방지 */
+      h1.headline,
+      h2.headline,
+      .card h3,
+      .bigquote {
+        text-wrap: balance;
       }
       .section-title {
         margin-bottom: 0.2em;
@@ -582,6 +600,118 @@
         margin-top: 0.15em;
       }
 
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* 측정 결과표 — 결과(실측)와 기준(게이트)을 한 행에서 대조 */
+      .mtbl {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: var(--content-gap);
+        font-size: var(--body-size);
+      }
+      .mtbl th,
+      .mtbl td {
+        text-align: right;
+        padding: 0.45em 0.7em;
+        border-bottom: 1px solid var(--line);
+      }
+      .mtbl th:first-child,
+      .mtbl td:first-child {
+        text-align: left;
+      }
+      .mtbl thead th {
+        font-size: var(--small-size);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+      .mtbl tbody td {
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 600;
+      }
+      .mtbl tbody td:first-child {
+        font-family: inherit;
+        font-weight: 700;
+      }
+      .mtbl tbody tr:last-child td {
+        border-bottom: 0;
+      }
+      .mtbl .res {
+        color: var(--primary);
+      }
+      .mtbl .res.m {
+        color: var(--mint);
+      }
+      .mtbl .gate {
+        color: var(--text-3);
+        font-weight: 500;
+      }
+      /* 셀 단위 변형 — 숫자 열과 텍스트 열이 섞인 표에서 사용 */
+      .mtbl td.txt {
+        font-family: inherit;
+        font-weight: 500;
+        color: var(--text-3);
+        text-align: left;
+      }
+      .mtbl th.txt {
+        text-align: left;
+      }
+      .mtbl td.live {
+        font-family: inherit;
+        font-weight: 700;
+        color: var(--mint);
+        text-align: left;
+      }
+      .mtbl td.plan {
+        font-family: inherit;
+        font-weight: 500;
+        color: var(--warning);
+        text-align: left;
+      }
+      /* 경쟁사 비교 변형 — 숫자가 아니라 텍스트라 좌측 정렬·본문 서체 */
+      .mtbl.cmp th,
+      .mtbl.cmp td {
+        text-align: left;
+      }
+      .mtbl.cmp tbody td {
+        font-family: inherit;
+        font-weight: 500;
+        color: var(--text-3);
+      }
+      .mtbl.cmp tbody td:first-child {
+        color: var(--text);
+        font-weight: 700;
+      }
+      .mtbl.cmp tbody tr.us td,
+      .mtbl.cmp tbody tr.us td:first-child {
+        color: var(--primary);
+        font-weight: 700;
+      }
+      .mtbl.cmp .no {
+        color: var(--text-3);
+        opacity: 0.7;
+      }
+      /* .cmp가 뒤에 오므로 상태 색을 여기서 다시 지정 — 동일 특이도 충돌 해소 */
+      .mtbl.cmp tbody td.live {
+        color: var(--mint);
+        font-weight: 700;
+      }
+      .mtbl.cmp tbody td.plan {
+        color: var(--warning);
+        font-weight: 500;
+      }
+
       /* A/B compare */
       .ab {
         display: grid;
@@ -931,7 +1061,7 @@
               <span class="num c-blue">01</span>
               <div>
                 <div class="t">배경 및 문제인식</div>
-                <div class="d">정보 과부하 · 북마크의 역설</div>
+                <div class="d">북마크의 역설 · 경쟁 지형</div>
               </div>
             </div>
             <div class="toc-item">
@@ -999,28 +1129,34 @@
               <div class="card bar">
                 <span class="idx">TREND</span>
                 <h3>정보 과부하 시대</h3>
-                <p>매일 수십 개의 링크를 저장한다. Notion·Obsidian 등 개인 지식관리(PKM) 도구 사용자도 급증 중.</p>
+                <p>
+                  매일 수십 개의 링크를 저장한다. Notion·Obsidian 같은 개인 지식관리(PKM) 생태계와의 통합 니즈도
+                  존재한다.
+                </p>
               </div>
               <div class="card bar mint">
                 <span class="idx">WHY NOW</span>
                 <h3>지금이 기회</h3>
-                <p>2025-07 Pocket 종료로 국내 대안 공백. AI 태깅 원가는 유저당 월 $0.02로 급락.</p>
+                <p>대안이 사라진 시점과 AI 원가가 실용 수준까지 내려온 시점이 겹쳤다.</p>
               </div>
             </div>
             <div class="panel tint">
-              <div class="plabel">재발견 수요는 실재한다</div>
+              <div class="plabel">공백은 지금 열려 있다</div>
               <div class="kpis" style="margin-top: 0.3em">
                 <div class="k">
-                  <div class="n">44%</div>
-                  <div class="l">웹 방문이 이전 페이지 재방문</div>
+                  <div class="n">2025-07</div>
+                  <div class="l">Pocket 서비스 종료 — 국내 대체재 공백</div>
                 </div>
                 <div class="k">
-                  <div class="n">33%</div>
-                  <div class="l">웹 검색이 재발견 목적</div>
+                  <div class="n">$0.02</div>
+                  <div class="l">유저당 월 AI 태깅 원가</div>
                 </div>
               </div>
               <p class="stat-cap" style="margin-top: 0.9em">
-                사람들은 저장한 것을 <b>다시 찾고 싶어 한다.</b> 하지만 지금 도구는 그걸 못 받쳐준다.
+                원가는 <b>월 30건 저장 가정</b>의 추정치다 — GPT-4o-mini 태깅 + 임베딩 기준, 실사용량 확정 전.<br /><span
+                  style="color: var(--text-3)"
+                  >Pocket 종료는 공개 발표로 확인 · 원가는 벤더 단가 기반 자체 산정</span
+                >
               </p>
             </div>
           </div>
@@ -1035,7 +1171,7 @@
             <div>
               <div class="stat-big">84%</div>
               <p class="stat-cap">
-                저장해둔 북마크의 <b>84%</b>는 정작 다시 찾을 때 쓰이지 않았다. 북마크로 되찾은 건 16%.<br /><span
+                저장해둔 북마크의 <b>84%</b>는 정작 다시 찾을 때 쓰이지 않았다.<br />북마크로 되찾은 건 16%.<br /><span
                   style="color: var(--text-3)"
                   >Bergman, Whittaker &amp; Schooler (2021), J. Librarianship &amp; Information Science 53(2) · 북마크
                   타깃 250건(참여자 50명 × 5건)</span
@@ -1101,6 +1237,84 @@
               <p>수백 개가 쌓인 채 방치되고, 같은 링크를 또 저장한다.</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- 4-1 §01 경쟁 지형 -->
+      <section class="slide">
+        <div class="slide-content">
+          <div class="eyebrow reveal"><span class="n">01</span> — 경쟁 지형</div>
+          <h2 class="headline section-title reveal" style="--i: 1">
+            아무도 <span class="accent">'되찾기'를</span> 풀지 않았다
+          </h2>
+          <p class="sub reveal" style="--i: 2">
+            저장을 돕는 도구는 많다. 하지만 저장한 걸 <b style="color: var(--primary)">의미로 되찾는</b> 경로는 어느
+            쪽도 제공하지 않는다.
+          </p>
+          <table class="mtbl cmp reveal" style="--i: 3">
+            <caption class="sr-only">
+              북마크 도구 경쟁사 비교
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">서비스</th>
+                <th scope="col">AI 자동분류</th>
+                <th scope="col">자연어 검색</th>
+                <th scope="col">한국어 최적화</th>
+                <th scope="col">비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>브라우저 기본 북마크</td>
+                <td class="no">없음</td>
+                <td class="no">없음</td>
+                <td class="no">—</td>
+                <td>폴더 수동분류만</td>
+              </tr>
+              <tr>
+                <td>Pocket</td>
+                <td class="no">없음</td>
+                <td class="no">없음</td>
+                <td class="no">—</td>
+                <td>2025-07 서비스 종료</td>
+              </tr>
+              <tr>
+                <td>Raindrop.io</td>
+                <td>부분 — 태그 수동</td>
+                <td class="no">없음</td>
+                <td class="no">없음</td>
+                <td>해외 결제 필요</td>
+              </tr>
+              <tr>
+                <td>Notion Web Clipper</td>
+                <td class="no">없음</td>
+                <td>Notion 내부 검색만</td>
+                <td class="no">없음</td>
+                <td>북마크 전용 앱 아님</td>
+              </tr>
+              <tr>
+                <td>mymind</td>
+                <td>AI 자동 — 이미지 태깅</td>
+                <td>연관 검색 · 이미지 OCR</td>
+                <td class="no">없음</td>
+                <td>유료 전용 $4.99~12.99/월</td>
+              </tr>
+              <tr class="us">
+                <td>모와바</td>
+                <td>AI 자동 — GPT-4o-mini</td>
+                <td>pgvector 하이브리드</td>
+                <td>있음</td>
+                <td>임포트 원클릭 이관</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="stat-cap reveal" style="--i: 4; margin-top: 0.6em; font-size: var(--small-size)">
+            공개 정보 기준 정리(2026-07). <b>Pocket 종료 일정은 확인된 사실</b>이지만, "종료가 곧 우리 기회"라는 인과는
+            아직 근거가 아니라 가설이다 — 이탈 사용자의 실제 이동처는 관측 대상. mymind는 최근접 경쟁이나
+            <b>무료 진입점이 없고 한국어 대응이 없다</b>. 자연어 의미 검색 지원 여부는 공개 자료로 확인되지 않아
+            단정하지 않는다.
+          </p>
         </div>
       </section>
 
@@ -1216,38 +1430,53 @@
         <div class="slide-content">
           <div class="eyebrow reveal"><span class="n">04</span> — KPI 설정</div>
           <h2 class="headline section-title reveal" style="--i: 1">'저장'이 아니라 '되찾는 행동'을 측정한다</h2>
-          <div class="two reveal" style="--i: 2">
-            <div class="panel">
-              <div class="plabel">핵심 KPI — 행동 지표</div>
-              <div class="kpis">
-                <div class="k">
-                  <div class="n">40%</div>
-                  <div class="l">MAU 중 자연어 검색 사용률</div>
-                </div>
-              </div>
-              <p class="stat-cap" style="margin-top: 0.7em">검색 사용률 증가 = 재발견 구조가 실제로 작동한다는 신호.</p>
-            </div>
-            <div class="panel tint">
-              <div class="plabel">보조 KPI</div>
-              <div class="kpis" style="gap: clamp(0.8rem, 2vw, 1.6rem)">
-                <div class="k">
-                  <div class="n">70%</div>
-                  <div class="l">첫 저장 완료율</div>
-                </div>
-                <div class="k">
-                  <div class="n">30%</div>
-                  <div class="l">7일 리텐션</div>
-                </div>
-                <div class="k">
-                  <div class="n">30+</div>
-                  <div class="l">NPS</div>
-                </div>
-              </div>
-              <p class="stat-cap" style="margin-top: 0.7em">
-                노출 → 저장 → <b>재발견</b>으로 이어지는 전환 퍼널을 함께 관측.
-              </p>
-            </div>
-          </div>
+          <p class="sub reveal" style="--i: 2">
+            핵심은 하나다 — <b style="color: var(--primary)">검색 사용률</b>. 나머지 셋은 그 앞뒤 퍼널이 막히지 않았는지
+            보는 보조 지표다.
+          </p>
+          <table class="mtbl reveal" style="--i: 3">
+            <caption class="sr-only">
+              MVP 판정 KPI와 목표치
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">지표</th>
+                <th scope="col">목표</th>
+                <th scope="col" class="txt">성격</th>
+                <th scope="col" class="txt">관측</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MAU 중 자연어 검색 사용률</td>
+                <td class="res">40%</td>
+                <td class="live">핵심 · Go/No-Go</td>
+                <td class="txt">2026-08-04~</td>
+              </tr>
+              <tr>
+                <td>첫 저장 완료율</td>
+                <td class="res m">70%</td>
+                <td class="txt">보조 — 진입 퍼널</td>
+                <td class="txt">2026-08-04~</td>
+              </tr>
+              <tr>
+                <td>7일 리텐션</td>
+                <td class="res m">30%</td>
+                <td class="txt">보조 — 재방문</td>
+                <td class="txt">2026-08-04~</td>
+              </tr>
+              <tr>
+                <td>NPS</td>
+                <td class="res m">30+</td>
+                <td class="txt">보조 — 정성</td>
+                <td class="plan">별도 설문</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="stat-cap reveal" style="--i: 3; margin-top: 0.6em; font-size: var(--small-size)">
+            네 수치는 업계 벤치마크가 아니라 <b>MVP Go/No-Go 판정용 자체 목표치</b>다 — 북마크 도구 카테고리의 공개
+            리텐션·검색 사용률 지표를 찾지 못했다. 2026-08-04 첫 관측 후 실측 baseline으로 교체한다.
+          </p>
         </div>
       </section>
 
@@ -1301,6 +1530,15 @@
               </p>
             </div>
           </div>
+          <div class="pills reveal" style="--i: 3">
+            <span class="pill mint">무료로 시작 — mymind는 $4.99/월부터, 무료 플랜 없음</span>
+            <span class="pill blue">한국어를 안다 — 조사 변형·한↔영 교차 처리</span>
+            <span class="pill">문장으로 묻는다 — 색·키워드·날짜 필터가 아니라 의미로</span>
+          </div>
+          <p class="stat-cap reveal" style="--i: 4; margin-top: 0.6em; font-size: var(--small-size)">
+            AI 자동 분류는 더 이상 우리만의 것이 아니다 — 최근접 경쟁 mymind도 한다. 갈리는 지점은
+            <b>공짜로 시작할 수 있는가 · 한국어를 아는가 · 문장으로 물어볼 수 있는가</b> 셋이다.
+          </p>
         </div>
       </section>
 
@@ -1349,7 +1587,7 @@
               <div class="arrow">→</div>
               <div class="node">
                 <div class="t">오답·환각 노출</div>
-                <div class="d">중분류 충돌 발견</div>
+                <div class="d">F1 0.746 회귀 포착</div>
               </div>
               <div class="arrow">→</div>
               <div class="node">
@@ -1370,9 +1608,8 @@
           </h2>
           <p class="sub reveal" style="--i: 2">
             "그 리액트 훅 글" — 제목이 안 맞아도
-            <b style="color: var(--mint)">의미(벡터)와 키워드(트라이그램)를 함께</b> 따져 되찾는다.
-            군더더기('그')는 걷어내고, <b style="color: var(--primary)">'리액트' → 'React'</b>까지 넓혀
-            영문 제목 문서도 잡는다.
+            <b style="color: var(--mint)">의미(벡터)와 키워드(트라이그램)를 함께</b> 따져 되찾는다. 군더더기('그')는
+            걷어내고, <b style="color: var(--primary)">'리액트' → 'React'</b>까지 넓혀 영문 제목 문서도 잡는다.
           </p>
           <div class="flow reveal" style="--i: 3">
             <div class="node">
@@ -1395,21 +1632,48 @@
               <div class="d">순위 융합 · 상위 60</div>
             </div>
           </div>
-          <div class="pills reveal" style="--i: 4">
+          <table class="mtbl reveal" style="--i: 4">
+            <caption class="sr-only">
+              검색 recall 실측과 회귀 게이트
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">지표</th>
+                <th scope="col">실측</th>
+                <th scope="col">게이트</th>
+                <th scope="col" class="txt">비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>core recall</td>
+                <td class="res m">0.957</td>
+                <td class="gate">≥ 0.90</td>
+                <td class="txt">약점 카테고리 제외 · 22/23</td>
+              </tr>
+              <tr>
+                <td>overall recall</td>
+                <td class="res">0.8125</td>
+                <td class="gate">≥ 0.78</td>
+                <td class="txt">26/32 — 약점 포함 전체</td>
+              </tr>
+              <tr>
+                <td>cross-lingual-concept</td>
+                <td class="res">0.333</td>
+                <td class="gate">≥ 0.30</td>
+                <td class="txt">사전 밖 개념어 · 개선 트랙 별도</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pills reveal" style="--i: 5">
             <span class="pill mint">HNSW 인덱스 → 수천 건도 밀리초 응답</span>
             <span class="pill warn">시간 표현은 의도적 미지원</span>
-            <span class="pill blue"
-              >검색 recall — 코어 0.957 · 전체 0.8125 (골든셋 n=32 실측 · 게이트 core 0.90 / overall 0.78 통과)</span
-            >
             <span class="pill">embedding 컬럼은 API 응답 미포함</span>
           </div>
-          <p
-            class="stat-cap reveal"
-            style="--i: 5; margin-top: 0.6em; font-size: var(--small-size)"
-          >
-            시간 표현은 <b>날짜 필터로 쓰지 않고 제거</b>한다 — "지난달"이 실제 달력 월과 어긋나는
-            경우가 흔해, 하드 필터로 걸면 정답을 배제할 위험이 이득보다 크다. 재발견 실패는 되돌릴
-            수 없으므로 <b>정밀도보다 재현율을 지키는 쪽</b>을 택했다.
+          <p class="stat-cap reveal" style="--i: 6; margin-top: 0.6em; font-size: var(--small-size)">
+            시간 표현은 <b>날짜 필터로 쓰지 않고 제거</b>한다 — "지난달"이 실제 달력 월과 어긋나는 경우가 흔해, 하드
+            필터로 걸면 정답을 배제할 위험이 이득보다 크다. 재발견 실패는 되돌릴 수 없으므로
+            <b>정밀도보다 재현율을 지키는 쪽</b>을 택했다.
           </p>
         </div>
       </section>
@@ -1424,6 +1688,8 @@
               <img
                 src="../outputs/gifs/SearchDemo.gif"
                 alt="모와바 자연어 검색 데모"
+                width="760"
+                height="484"
                 style="
                   display: block;
                   width: 100%;
@@ -1471,9 +1737,8 @@
             정보는 같고, <span class="accent">'재발견 구조'만</span> 다르게
           </h2>
           <p class="sub reveal" style="--i: 1; margin-top: 0.5em">
-            주제형 중분류가 형식축과 충돌해 F1 0.746까지
-            <b style="color: var(--warning)">회귀한 것을 골든셋 계측으로 포착</b> → 중분류를
-            <b style="color: var(--primary)">2축 닫힌 enum으로 재설계</b>해 환각을 차단, 회귀 게이트를 재통과시켰다.
+            같은 북마크 세트를 주고 <b style="color: var(--primary)">되찾는 경로만</b> 바꾼다. 저장량이 아니라
+            <b style="color: var(--mint)">재발견 행동이 늘어나는지</b> 하나만 본다.
           </p>
           <div class="ab reveal" style="--i: 2">
             <div class="side a">
@@ -1497,12 +1762,13 @@
             </div>
           </div>
           <div class="pills reveal" style="--i: 3">
-            <span class="pill mint">확보한 검증치 — 태깅 macro-F1 0.79 · 대분류 0.87 (n=215)</span>
-            <span class="pill">회귀 게이트 통과 · baseline F1 0.74</span>
-            <span class="pill blue">검색 클릭률 · 재발견 소요시간 + 정성 인터뷰 병행</span>
+            <span class="pill mint">판정 — MAU 중 자연어 검색 사용률 40% 넘으면 Go</span>
+            <span class="pill blue">보조 관측 — 검색 클릭률 · 재발견 소요시간 + 정성 인터뷰</span>
+            <span class="pill warn">관측 시작 2026-08-04 · 표본 수와 기간은 초기 사용자 확보 후 확정</span>
           </div>
           <p class="stat-cap reveal" style="--i: 4; margin-top: 0.6em; font-size: var(--small-size)">
-            품질은 골든셋 기준 실측 · <b>운영 지표(검색 사용률·리텐션)는 2026-08-04 이후 실측 관측 예정</b>.
+            사용자 A/B는 배포 후 구간이지만, <b>내부 A/B는 이미 돌렸다</b> — 임베딩 모델을 3-small에서 3-large로 바꿔
+            recall@10 0.70 → 0.85 (AI/ML 북마크 233건 실측). 가르는 방식은 검증된 상태다.
           </p>
         </div>
       </section>
@@ -1512,45 +1778,61 @@
         <div class="slide-content">
           <div class="eyebrow reveal"><span class="n">06 · 검증 방법론</span></div>
           <h2 class="headline section-title reveal" style="--i: 1">
-            이 숫자를 <span class="accent">우리가 어떻게 검증하는가</span>
+            숫자보다 <span class="accent">재는 법</span>을 먼저 고정했다
           </h2>
           <p class="sub reveal" style="--i: 2">
             AI 품질은 자기가 매긴 점수를 자기가 발표하기 쉽다. 그래서
-            <b style="color: var(--primary)">숫자보다 재는 방법</b>을 먼저 고정했다.
+            <b style="color: var(--primary)">측정 · 게이트 · 분리 측정</b> 세 가지를 코드보다 먼저 박았다.
           </p>
           <div class="grid reveal" style="--i: 3">
             <div class="card bar">
               <span class="kicker">① 측정</span>
               <h3>정답지를 사람이 만든다</h3>
-              <p>
-                골든셋 215건을 직접 라벨링. <b>본문 있음 / 제목만</b> 두 조건으로 각각 채점 — 임포트 메타 조회 실패가
-                실사용에 흔해, 잘 되는 조건만 재면 실패 모드가 안 보인다.
-              </p>
+              <p>골든셋 215건을 직접 라벨링. <b>본문 있음 / 제목만</b> 두 조건으로 나눠 채점한다.</p>
+              <span class="idx">잘 되는 조건만 재면 임포트 실패가 안 보인다</span>
             </div>
             <div class="card bar mint">
               <span class="kicker">② 게이트</span>
-              <h3>떨어지면 머지가 막힌다</h3>
-              <p>
-                기준 미달이면 CI 실패. 임계값은 <b>LLM 비결정성 밴드 아래</b>에 둔다 — 같은 코드 3회 실행이
-                0.768·0.755·0.7595로 출렁이므로(±0.013), 밴드 한복판에 두면 동전던지기가 된다.
-              </p>
+              <h3>못 넘으면 머지가 막힌다</h3>
+              <p>임계값은 <b>재실행 편차(±0.013) 아래</b>에 둔다.</p>
+              <span class="idx">편차 한복판에 두면 동전던지기가 된다</span>
             </div>
             <div class="card bar warn">
-              <span class="kicker">③ 절개</span>
-              <h3>변경이 둘이면 나눠서 잰다</h3>
-              <p>
-                프롬프트와 태그 사전을 같이 바꾸면 총합만 보인다. 사전만 되돌려 재측정한 결과 <b>예상과 반대</b>였다 —
-                사전은 올렸고 프롬프트가 내렸다. 안 나눴으면 잘못된 쪽을 버렸다.
-              </p>
+              <span class="kicker">③ 분리 측정</span>
+              <h3>변경이 둘이면 나눠 잰다</h3>
+              <p>프롬프트와 사전을 같이 바꿨을 때 사전만 되돌려 재측정 — <b>예상과 반대</b>였다.</p>
+              <span class="idx">안 나눴으면 잘못된 쪽을 버렸다</span>
             </div>
           </div>
-          <div class="pills reveal" style="--i: 4">
-            <span class="pill mint">본문 있음 — F1 0.79 · 대분류 0.87</span>
-            <span class="pill blue">제목만 — F1 0.78 · 대분류 0.85</span>
-            <span class="pill">게이트 0.74 / 0.73 · 골든셋 n=215</span>
-          </div>
+          <table class="mtbl reveal" style="--i: 4">
+            <caption class="sr-only">
+              골든셋 n=215 채점 결과와 회귀 게이트 기준
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">채점 조건</th>
+                <th scope="col">태깅 F1</th>
+                <th scope="col">대분류</th>
+                <th scope="col">게이트</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>본문 있음</td>
+                <td class="res">0.79</td>
+                <td class="res m">0.87</td>
+                <td class="gate">≥ 0.74</td>
+              </tr>
+              <tr>
+                <td>제목만</td>
+                <td class="res">0.78</td>
+                <td class="res m">0.85</td>
+                <td class="gate">≥ 0.73</td>
+              </tr>
+            </tbody>
+          </table>
           <p class="stat-cap reveal" style="--i: 5; margin-top: 0.6em; font-size: var(--small-size)">
-            두 조건의 차이(skew)가 곧 <b>임포트 경로에서 잃는 품질</b>이다 — 이 값이 벌어지면 메타 조회 파이프라인을
+            골든셋 n=215 실측. 두 행의 차이가 곧 <b>임포트 경로에서 잃는 품질</b>이다 — 벌어지면 메타 조회 파이프라인을
             먼저 본다.
           </p>
         </div>
@@ -1627,42 +1909,61 @@
         <div class="slide-content">
           <div class="eyebrow reveal"><span class="n">07</span> — 리스크 및 고려사항</div>
           <h2 class="headline section-title reveal" style="--i: 1">리스크는 이미 대응 설계에 반영</h2>
-          <div class="two reveal" style="--i: 2">
-            <div style="display: flex; flex-direction: column; gap: clamp(0.5rem, 1.2vw, 0.9rem)">
-              <div class="card bar">
-                <span class="kicker">기능</span>
-                <h3>태그 품질 저하</h3>
-                <p>골든셋 회귀 게이트로 F1 기준선(0.74) 방어.</p>
-              </div>
-              <div class="card bar mint">
-                <span class="kicker">채택</span>
-                <h3>콜드스타트</h3>
-                <p>빈 북마크 문제 → 파일 임포트로 기존 북마크 일괄 이관.</p>
-              </div>
-              <div class="card bar deep">
-                <span class="kicker">비용</span>
-                <h3>AI 원가</h3>
-                <p>유저당 월 $0.02 저마진 구조 → 수익화 전에도 지속 가능.</p>
-              </div>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: clamp(0.5rem, 1.2vw, 0.9rem)">
-              <div class="card bar warn">
-                <span class="kicker">정책</span>
-                <h3>원문 미저장</h3>
-                <p>앞 2,000자만 임베딩 후 즉시 파기 — 저작권·개인정보 대응.</p>
-              </div>
-              <div class="card bar danger">
-                <span class="kicker">UX</span>
-                <h3>정보 과부하</h3>
-                <p>카드엔 핵심 정보만, 상세는 분리해 복잡도 관리.</p>
-              </div>
-              <div class="card bar">
-                <span class="kicker">보안</span>
-                <h3>키·본문 노출</h3>
-                <p>서버 전용 키 격리 · secret-scan hook으로 커밋 차단.</p>
-              </div>
-            </div>
-          </div>
+          <p class="sub reveal" style="--i: 2">
+            여섯 건 중 <b style="color: var(--mint)">넷은 이미 코드에서 돌아가고</b>, 하나는 구현됐고, 하나는 아직
+            추정치다.
+          </p>
+          <table class="mtbl cmp reveal" style="--i: 3">
+            <caption class="sr-only">
+              리스크 항목별 대응과 현재 상태
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">구분</th>
+                <th scope="col">리스크</th>
+                <th scope="col">대응</th>
+                <th scope="col">상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>기능</td>
+                <td>태그 품질 저하</td>
+                <td>골든셋 회귀 게이트 — F1 ≥ 0.74 미달 시 머지 차단</td>
+                <td class="live">가동 중</td>
+              </tr>
+              <tr>
+                <td>정책</td>
+                <td>원문 저장·저작권</td>
+                <td>앞 2,000자만 임베딩 후 즉시 파기 — DB 컬럼 자체 없음</td>
+                <td class="live">가동 중</td>
+              </tr>
+              <tr>
+                <td>보안</td>
+                <td>키·본문 노출</td>
+                <td>서버 전용 키 격리 · secret-scan hook으로 커밋 차단</td>
+                <td class="live">가동 중</td>
+              </tr>
+              <tr>
+                <td>UX</td>
+                <td>정보 과부하</td>
+                <td>카드엔 핵심 정보만, 상세는 분리해 복잡도 관리</td>
+                <td class="live">가동 중</td>
+              </tr>
+              <tr>
+                <td>채택</td>
+                <td>콜드스타트</td>
+                <td>파일 임포트로 기존 북마크 일괄 이관</td>
+                <td class="live">구현됨</td>
+              </tr>
+              <tr>
+                <td>비용</td>
+                <td>AI 원가</td>
+                <td>유저당 월 $0.02 저마진 — 수익화 전에도 지속 가능</td>
+                <td class="plan">추정 · 실사용 확정 전</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -1796,8 +2097,25 @@
           { passive: true },
         );
 
-        slides[0].classList.add("active");
+        current = -1;
         setActive(0);
+
+        // 폰트·이미지 로드나 뷰포트 변화로 스냅 컨테이너가 재계산되면 브라우저가
+        // 첫 스냅 지점으로 되돌아간다. 보고 있던 슬라이드로 즉시 복귀시킨다.
+        var restoring = false;
+        function restoreScroll() {
+          if (restoring || current < 0) return;
+          restoring = true;
+          requestAnimationFrame(function () {
+            slides[current].scrollIntoView({ block: "start" });
+            restoring = false;
+          });
+        }
+        window.addEventListener("load", restoreScroll);
+        window.addEventListener("resize", restoreScroll);
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(restoreScroll);
+        }
       })();
     </script>
   </body>
