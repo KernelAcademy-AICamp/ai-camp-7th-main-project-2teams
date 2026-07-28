@@ -70,44 +70,47 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
   return (
     <form role="search" aria-label="북마크 검색 영역" className="w-full" onSubmit={handleSubmit}>
       <div className="relative">
-        <button
-          type="submit"
-          aria-label="검색"
-          className="absolute left-2.5 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1.5 text-brand transition-colors hover:bg-brand/10"
-        >
-          <Search size={18} aria-hidden />
-        </button>
         <label htmlFor="bookmark-search" className="sr-only">
           북마크 검색
         </label>
         {/* [&::-webkit-search-cancel-button]:appearance-none — type=search의 브라우저 기본 지우기
-            버튼 제거. 아래 커스텀 X 버튼과 겹쳐 X가 두 개로 보이던 문제. */}
+            버튼 제거. 우측 커스텀 X 버튼과 겹쳐 X가 두 개로 보이던 문제. */}
         <input
           id="bookmark-search"
           type="search"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="북마크 검색... (예: 리액트 훅 정리한 글)"
-          className="h-12 w-full rounded-lg border border-line bg-white pl-11 pr-10 text-sm text-text-primary outline-none transition-all placeholder:text-text-secondary focus:border-brand focus:ring-2 focus:ring-brand/20 [&::-webkit-search-cancel-button]:appearance-none"
+          className="h-12 w-full rounded-lg border border-line bg-white pl-4 pr-24 text-sm text-text-primary outline-none transition-all placeholder:text-text-secondary focus:border-brand focus:ring-2 focus:ring-brand/20 [&::-webkit-search-cancel-button]:appearance-none"
         />
-        {isLoading ? (
-          <span
-            aria-hidden
-            className="absolute right-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 animate-spin rounded-full border-2 border-brand/25 border-t-brand"
-          />
-        ) : (
-          value && (
-            // type="button" 필수 — 기본값 submit이라 지우기가 검색을 트리거한다.
-            <button
-              type="button"
-              onClick={handleClear}
-              aria-label="검색어 지우기"
-              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-text-secondary hover:text-text-primary"
-            >
-              <X size={14} />
-            </button>
-          )
-        )}
+        {/* 지우기·검색을 입력창 오른쪽에 모은다 — 국내 검색 UI(네이버·카카오·쿠팡)의 통용 배치 */}
+        <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-1">
+          {isLoading ? (
+            <span
+              aria-hidden
+              className="mr-1 h-3.5 w-3.5 animate-spin rounded-full border-2 border-brand/25 border-t-brand"
+            />
+          ) : (
+            value && (
+              // type="button" 필수 — 기본값 submit이라 지우기가 검색을 트리거한다.
+              <button
+                type="button"
+                onClick={handleClear}
+                aria-label="검색어 지우기"
+                className="cursor-pointer rounded-md p-1.5 text-text-secondary transition-colors hover:text-text-primary"
+              >
+                <X size={14} />
+              </button>
+            )
+          )}
+          <button
+            type="submit"
+            aria-label="검색"
+            className="gradient-brand flex h-9 w-9 cursor-pointer items-center justify-center rounded-md text-white transition-transform hover:-translate-y-0.5"
+          >
+            <Search size={18} aria-hidden />
+          </button>
+        </div>
       </div>
 
       {showStatus && (
