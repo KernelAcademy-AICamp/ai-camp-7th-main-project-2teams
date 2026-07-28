@@ -178,7 +178,7 @@ docs/specs/e2e/                   # 탐색적 시나리오 MD (Playwright MCP, �
 1. browser_navigate → {preview_url}
 2. 헤더 "북마크 추가" 클릭 → 모달 확인 (browser_snapshot)
 3. URL 입력 → "추가" → 토스트 "저장됨" 확인
-4. 검색창에 "리액트 훅" 입력 → 결과 1건 이상
+4. 검색창에 "리액트 훅" 입력 → Enter(또는 검색 버튼) submit → 결과 1건 이상
 5. 카드 클릭 → 원본 URL 이동 확인
 
 ## 통과 기준
