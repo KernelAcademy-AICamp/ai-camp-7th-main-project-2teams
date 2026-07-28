@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { useDebounceValue, useLocalStorage } from 'usehooks-ts'
+import { useLocalStorage } from 'usehooks-ts'
 import { Search, X } from 'lucide-react'
 
 const RECENT_SEARCHES_KEY = 'mowaba:recent-searches'
@@ -19,8 +18,6 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resultCount }: SearchBarProps) {
-  const [debounced] = useDebounceValue(value, 300)
-  const isMounted = useRef(false)
   // initializeWithValue: false — 서버는 localStorage에 접근 불가해 항상 빈 배열을 렌더.
   // 기본값(true)이면 클라이언트 첫 렌더(hydration)에서 곧장 실제 저장값을 읽어 서버 출력과 달라져
   // hydration mismatch가 난다. false로 두면 최초 렌더는 서버와 동일하게 빈 배열, 마운트 후 훅 내부
@@ -29,30 +26,28 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
     initializeWithValue: false,
   })
 
-  useEffect(() => {
-    // 마운트 시 최초 실행 건너뜀 — 빈 문자열로 onClear 의도치 않게 호출 방지
-    if (!isMounted.current) {
-      isMounted.current = true
+  const commitRecentSearch = (query: string) => {
+    setRecentSearches((prev) => [query, ...prev.filter((q) => q !== query)].slice(0, MAX_RECENT_SEARCHES))
+  }
+
+  // 검색 실행 지점 단일화 — 폼 submit(검색 버튼 클릭 · 입력창 Enter)과 최근검색 칩 클릭만 여기로 들어온다.
+  // 타이핑 중 자동검색(debounce)을 걷어낸 이유: 완성 전 부분 문자열마다 임베딩 API를 때려
+  // 비용·지연이 늘고, 결과가 타이핑 도중 계속 바뀌어 읽을 수 없었다.
+  const runSearch = (rawQuery: string) => {
+    const query = rawQuery.trim()
+    if (!query) {
+      onClear()
       return
     }
-    // debounce 미정착 구간에서는 실행하지 않는다. onSearch/onClear는 부모에서 탭·필터가 바뀌면
-    // 아이덴티티가 변해 이펙트를 재실행시키는데, 이때 debounced에 남은 옛 검색어로 onSearch가
-    // 불리면 탭 전환으로 비운 입력창이 되살아난다.
-    if (debounced !== value) return
-    const query = debounced.trim()
-    if (query) {
-      onSearch(query)
-    } else {
-      onClear()
-    }
-  }, [debounced, value, onSearch, onClear])
+    onSearch(query)
+    // 최근 검색은 "실제로 검색한 것"만 기록 — 입력하다 만 문자열은 남지 않는다.
+    commitRecentSearch(query)
+  }
 
-  // 최근 검색 저장은 자동검색(debounce) 트리거와 분리 — 타이핑 중 짧은 pause마다 여러 항목이
-  // 쌓이는 문제를 막기 위해 사용자가 검색을 "완료"했다고 볼 수 있는 시점(Enter/blur)에만 기록.
-  const commitRecentSearch = (rawQuery: string) => {
-    const query = rawQuery.trim()
-    if (!query) return
-    setRecentSearches((prev) => [query, ...prev.filter((q) => q !== query)].slice(0, MAX_RECENT_SEARCHES))
+  // form onSubmit이므로 입력창 Enter는 브라우저가 자동으로 여기까지 태운다(별도 keydown 불필요).
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    runSearch(value)
   }
 
   const handleClear = () => {
@@ -60,14 +55,9 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
     onClear()
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      commitRecentSearch(value)
-    }
-  }
-
-  const handleBlur = () => {
-    commitRecentSearch(value)
+  const handleRecentClick = (query: string) => {
+    onChange(query)
+    runSearch(query)
   }
 
   const removeRecentSearch = (query: string) => {
@@ -78,25 +68,27 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
   const showStatus = isLoading || (value.trim() !== '' && typeof resultCount === 'number')
 
   return (
-    <div role="search" aria-label="북마크 검색 영역" className="w-full">
+    <form role="search" aria-label="북마크 검색 영역" className="w-full" onSubmit={handleSubmit}>
       <div className="relative">
-        <Search
-          size={18}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-brand"
-          aria-hidden
-        />
+        <button
+          type="submit"
+          aria-label="검색"
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 cursor-pointer rounded-md p-1.5 text-brand transition-colors hover:bg-brand/10"
+        >
+          <Search size={18} aria-hidden />
+        </button>
         <label htmlFor="bookmark-search" className="sr-only">
           북마크 검색
         </label>
+        {/* [&::-webkit-search-cancel-button]:appearance-none — type=search의 브라우저 기본 지우기
+            버튼 제거. 아래 커스텀 X 버튼과 겹쳐 X가 두 개로 보이던 문제. */}
         <input
           id="bookmark-search"
           type="search"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
           placeholder="북마크 검색... (예: 리액트 훅 정리한 글)"
-          className="h-12 w-full rounded-lg border border-line bg-white pl-11 pr-10 text-sm text-text-primary outline-none transition-all placeholder:text-text-secondary focus:border-brand focus:ring-2 focus:ring-brand/20"
+          className="h-12 w-full rounded-lg border border-line bg-white pl-11 pr-10 text-sm text-text-primary outline-none transition-all placeholder:text-text-secondary focus:border-brand focus:ring-2 focus:ring-brand/20 [&::-webkit-search-cancel-button]:appearance-none"
         />
         {isLoading ? (
           <span
@@ -105,7 +97,9 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
           />
         ) : (
           value && (
+            // type="button" 필수 — 기본값 submit이라 지우기가 검색을 트리거한다.
             <button
+              type="button"
               onClick={handleClear}
               aria-label="검색어 지우기"
               className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-text-secondary hover:text-text-primary"
@@ -135,7 +129,7 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
             >
               <button
                 type="button"
-                onClick={() => onChange(query)}
+                onClick={() => handleRecentClick(query)}
                 className="cursor-pointer"
               >
                 {query}
@@ -152,6 +146,6 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
           ))}
         </div>
       )}
-    </div>
+    </form>
   )
 }
