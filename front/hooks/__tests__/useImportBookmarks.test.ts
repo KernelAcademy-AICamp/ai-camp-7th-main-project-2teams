@@ -1,6 +1,10 @@
+// @vitest-environment jsdom
+// renderHook은 DOM이 필요하다 — 이 파일의 나머지 순수 함수 테스트도 jsdom에서 그대로 돈다.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { QueryClient } from '@tanstack/react-query'
-import { fetchImportBookmarks, formatFileSize } from '../useImportBookmarks'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { renderHook, waitFor } from '@testing-library/react'
+import { createElement, type ReactNode } from 'react'
+import { fetchImportBookmarks, formatFileSize, useImportBookmarks } from '../useImportBookmarks'
 
 // SSE 이벤트 배열을 fetch 응답의 body(ReadableStream 유사 객체)로 변환 — 테스트용
 function makeSSEBody(events: Array<Record<string, unknown>>) {
@@ -213,40 +217,82 @@ describe('fetchImportBookmarks', () => {
 })
 
 // ----------------------------------------------------------------
-// (3) onSuccess invalidate 검증
-//     @testing-library/react 미설치 → QueryClient + spyOn 방식
-//     (useToggleFavorite 테스트의 QueryClient 직접 조작 패턴 동일)
+// (3) onSuccess invalidate 검증 — 실제 훅을 렌더해서 확인한다.
+//     이전 버전은 훅을 렌더하지 않고 queryClient.invalidateQueries를 직접 호출한 뒤
+//     그 스파이를 확인해, onSuccess가 실제로 도는지는 전혀 검증하지 못했다.
 // ----------------------------------------------------------------
+function makeWrapper(queryClient: QueryClient) {
+  const Wrapper = ({ children }: { children: ReactNode }) =>
+    createElement(QueryClientProvider, { client: queryClient }, children)
+  Wrapper.displayName = 'TestQueryClientProvider'
+  return Wrapper
+}
+
+function mockDoneResponse() {
+  global.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    body: makeSSEBody([
+      { type: 'done', imported: 1, failed: 0, skipped: 0, duplicate: 0, failedItems: [] },
+    ]),
+  }) as unknown as typeof fetch
+}
+
 describe('useImportBookmarks onSuccess — invalidateQueries 검증', () => {
-  it('성공 시 ["bookmarks"] queryKey로 invalidateQueries 호출', () => {
-    const queryClient = new QueryClient()
+  it('성공 시 bookmarks·folders·categories 세 키를 모두 invalidate', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     const spy = vi.spyOn(queryClient, 'invalidateQueries')
+    mockDoneResponse()
 
-    // onSuccess 콜백이 실행하는 로직 직접 시뮬레이션
-    queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
+    const { result } = renderHook(() => useImportBookmarks(), {
+      wrapper: makeWrapper(queryClient),
+    })
+    result.current.mutate({ formData: new FormData() })
 
-    expect(spy).toHaveBeenCalledWith({ queryKey: ['bookmarks'] })
-  })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
-  it('invalidateQueries에 전달되는 queryKey 형태 검증 — 배열 ["bookmarks"]', () => {
-    const queryClient = new QueryClient()
-    const spy = vi.spyOn(queryClient, 'invalidateQueries')
-
-    queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
-
-    const [firstCall] = spy.mock.calls
-    expect(firstCall[0]).toEqual({ queryKey: ['bookmarks'] })
-  })
-
-  it('성공 시 ["folders"] queryKey도 invalidateQueries 호출 — 폴더 섹션 즉시 반영', () => {
-    const queryClient = new QueryClient()
-    const spy = vi.spyOn(queryClient, 'invalidateQueries')
-
-    // onSuccess: bookmarks + folders 두 쿼리 모두 무효화
-    queryClient.invalidateQueries({ queryKey: ['bookmarks'] })
-    queryClient.invalidateQueries({ queryKey: ['folders'] })
-
+    // bookmarks만 refetchType: 'all' — inactive(홈 목록)까지 즉시 다시 받아야
+    // 홈 복귀 시 재마운트 refetch 여부와 무관하게 최신 목록이 보인다.
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['bookmarks'], refetchType: 'all' })
     expect(spy).toHaveBeenCalledWith({ queryKey: ['folders'] })
-    expect(spy).toHaveBeenCalledTimes(2)
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['categories'] })
+  })
+
+  it('inactive 상태의 홈 목록 쿼리를 즉시 refetch한다 (stale 표시만 하지 않음)', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const listKey = ['bookmarks', {}]
+    queryClient.setQueryData(listKey, { pages: [{ bookmarks: [], total: 0 }], pageParams: [1] })
+
+    const refetchSpy = vi.spyOn(queryClient, 'refetchQueries')
+    mockDoneResponse()
+
+    const { result } = renderHook(() => useImportBookmarks(), {
+      wrapper: makeWrapper(queryClient),
+    })
+    result.current.mutate({ formData: new FormData() })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(refetchSpy).toHaveBeenCalled()
+  })
+
+  // 사용자 재현 시나리오: /import에 있는 동안 홈 목록 쿼리는 inactive다.
+  // invalidate가 inactive 쿼리까지 stale로 만들어야 홈 복귀(재마운트) 때 refetch가 돈다.
+  it('언마운트되어 inactive인 bookmarks 쿼리도 invalidate 후 stale로 표시된다', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    const listKey = [
+      'bookmarks',
+      { category: undefined, folder: undefined, tag: undefined, tab: undefined },
+    ]
+    queryClient.setQueryData(listKey, { pages: [{ bookmarks: [], total: 0 }], pageParams: [1] })
+    expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(false)
+
+    mockDoneResponse()
+    const { result } = renderHook(() => useImportBookmarks(), {
+      wrapper: makeWrapper(queryClient),
+    })
+    result.current.mutate({ formData: new FormData() })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(queryClient.getQueryState(listKey)?.isInvalidated).toBe(true)
   })
 })
