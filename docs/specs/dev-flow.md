@@ -46,9 +46,9 @@ develop       ← 통합 브랜치 (PR 머지 대상)
 
 5. 코드 리뷰 (최소 1명 승인 필수)
 
-6. Squash and merge → develop
+6. Create a merge commit → develop
 
-7. 브랜치 삭제
+7. 브랜치 삭제 (수동 — 리포 자동 삭제 꺼짐)
 ```
 
 ---
@@ -155,7 +155,7 @@ A4 → A26 → A9             ← 웹앱 진입 플로우
 1. develop QA 통과 확인
 2. PR: develop → main
    제목: chore: MVP v1.0 배포
-3. Squash and merge
+3. Create a merge commit
 4. GitHub Release 태그: v1.0.0
 5. Vercel 자동 배포 (main 연동)
 6. 익스텐션 웹스토어 수동 제출

@@ -51,7 +51,8 @@ docs: README 실행 방법 작성
 - 제목: Conventional Commits 형식 (`feat: 설명`)
 - 최소 1명 리뷰 승인 필수
 - 머지 전 브랜치 최신화 (`git rebase develop`)
-- 머지 전략: **Squash and merge** (히스토리 정리)
+- 머지 전략: **Create a merge commit** — `feature/*` → `develop`, `develop` → `main` 모두 동일. PR 단위 커밋 이력을 남긴다
+- 머지 후 원격 브랜치 **수동 삭제** — 리포 자동 삭제 설정 꺼져 있음
 - 이슈 연결 필수: PR 본문에 `Closes #이슈번호`
 
 ## PR 본문 형식
