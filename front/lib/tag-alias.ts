@@ -115,9 +115,12 @@ export const TAG_ALIAS: Record<string, string> = {
   // 소분류 표기 통일
   파이썬: 'Python', 도커: 'Docker', 쿠버네티스: 'Kubernetes',
   옵시디언: 'Obsidian', 옵시디안: 'Obsidian', pandas: 'Pandas',
-  // Claude Code (Anthropic) — 실제 데이터 다수 표기가 'Claude Code'라 이쪽으로 통일
+  // Claude Code(Anthropic CLI) — 한글 표기만 통일. 브랜드 토큰 'Claude'는 매핑하지 않는다:
+  // claude.ai(챗 제품)와 Claude Code(CLI)는 별개 제품이고 골든셋도 gold를 분리해 둔다
+  // (Claude 3건 / Claude Code 10건). 흡수하면 채점 시 pred·gold가 같이 붕괴해 eval이 구분을 못 본다.
+  // 실측(2026-07-28, 프롬프트 고정 절개): rich F1 +0.0028 · 대분류 +0.0093 / title F1 +0.0045 · 대분류 +0.0093.
   클로드코드: 'Claude Code', '클로드 코드': 'Claude Code',
-  클로드: 'Claude Code', Claude: 'Claude Code',
+  클로드: 'Claude',
   // Codex (OpenAI) — Claude Code와 별개 제품, 혼동 방지 위해 분리 유지
   코덱스: 'Codex', openaicodex: 'Codex', 'OpenAI Codex': 'Codex',
   // 기타 툴명 한/영·오타 통일

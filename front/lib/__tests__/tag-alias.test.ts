@@ -23,6 +23,16 @@ describe('normalizeTags', () => {
     expect(normalizeTags(['쿠팡파트너스', '쿠팡 파트너스'])).toEqual(['쿠팡 파트너스'])
   })
 
+  // claude.ai(챗)와 Claude Code(CLI)는 별개 제품 — 골든셋 gold도 분리돼 있다.
+  // 과거 Claude→Claude Code 흡수가 채점 시 pred·gold를 같이 붕괴시켜 구분을 가렸다.
+  it('Claude와 Claude Code는 별개 토큰으로 유지', () => {
+    expect(normalizeTags(['Claude'])).toEqual(['Claude'])
+    expect(normalizeTags(['클로드'])).toEqual(['Claude'])
+    expect(normalizeTags(['클로드코드'])).toEqual(['Claude Code'])
+    expect(normalizeTags(['클로드 코드'])).toEqual(['Claude Code'])
+    expect(normalizeTags(['Claude', 'Claude Code'])).toEqual(['Claude', 'Claude Code'])
+  })
+
   it('영문/약어 → 한국어 정규화', () => {
     expect(normalizeTags(['dev', 'frontend', 'Next.js'])).toEqual([
       '개발',
