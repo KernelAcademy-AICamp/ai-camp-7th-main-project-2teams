@@ -1,20 +1,20 @@
-'use client'
+"use client";
 
-import { useLocalStorage } from 'usehooks-ts'
-import { Search, X } from 'lucide-react'
+import { useLocalStorage } from "usehooks-ts";
+import { Search, X } from "lucide-react";
 
-const RECENT_SEARCHES_KEY = 'mowaba:recent-searches'
-const MAX_RECENT_SEARCHES = 5
+const RECENT_SEARCHES_KEY = "mowaba:recent-searches";
+const MAX_RECENT_SEARCHES = 5;
 
 interface SearchBarProps {
-  onSearch: (query: string) => void
-  onClear: () => void
-  value: string
-  onChange: (value: string) => void
+  onSearch: (query: string) => void;
+  onClear: () => void;
+  value: string;
+  onChange: (value: string) => void;
   /** 자연어 검색 진행 중 — 입력창 안에 스피너로 노출 (부모 useSearch의 isPending 전달) */
-  isLoading?: boolean
+  isLoading?: boolean;
   /** 검색 완료 후 결과수 — "N개 결과" 캡션. undefined면 캡션 미노출 */
-  resultCount?: number
+  resultCount?: number;
 }
 
 export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resultCount }: SearchBarProps) {
@@ -24,48 +24,48 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
   // useEffect가 실값으로 재동기화한다.
   const [recentSearches, setRecentSearches] = useLocalStorage<string[]>(RECENT_SEARCHES_KEY, [], {
     initializeWithValue: false,
-  })
+  });
 
   const commitRecentSearch = (query: string) => {
-    setRecentSearches((prev) => [query, ...prev.filter((q) => q !== query)].slice(0, MAX_RECENT_SEARCHES))
-  }
+    setRecentSearches((prev) => [query, ...prev.filter((q) => q !== query)].slice(0, MAX_RECENT_SEARCHES));
+  };
 
   // 검색 실행 지점 단일화 — 폼 submit(검색 버튼 클릭 · 입력창 Enter)과 최근검색 칩 클릭만 여기로 들어온다.
   // 타이핑 중 자동검색(debounce)을 걷어낸 이유: 완성 전 부분 문자열마다 임베딩 API를 때려
   // 비용·지연이 늘고, 결과가 타이핑 도중 계속 바뀌어 읽을 수 없었다.
   const runSearch = (rawQuery: string) => {
-    const query = rawQuery.trim()
+    const query = rawQuery.trim();
     if (!query) {
-      onClear()
-      return
+      onClear();
+      return;
     }
-    onSearch(query)
+    onSearch(query);
     // 최근 검색은 "실제로 검색한 것"만 기록 — 입력하다 만 문자열은 남지 않는다.
-    commitRecentSearch(query)
-  }
+    commitRecentSearch(query);
+  };
 
   // form onSubmit이므로 입력창 Enter는 브라우저가 자동으로 여기까지 태운다(별도 keydown 불필요).
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    runSearch(value)
-  }
+    e.preventDefault();
+    runSearch(value);
+  };
 
   const handleClear = () => {
-    onChange('')
-    onClear()
-  }
+    onChange("");
+    onClear();
+  };
 
   const handleRecentClick = (query: string) => {
-    onChange(query)
-    runSearch(query)
-  }
+    onChange(query);
+    runSearch(query);
+  };
 
   const removeRecentSearch = (query: string) => {
-    setRecentSearches((prev) => prev.filter((q) => q !== query))
-  }
+    setRecentSearches((prev) => prev.filter((q) => q !== query));
+  };
 
-  const showRecent = !value && recentSearches.length > 0
-  const showStatus = isLoading || (value.trim() !== '' && typeof resultCount === 'number')
+  const showRecent = !value && recentSearches.length > 0;
+  const showStatus = isLoading || (value.trim() !== "" && typeof resultCount === "number");
 
   return (
     <form role="search" aria-label="북마크 검색 영역" className="w-full" onSubmit={handleSubmit}>
@@ -80,7 +80,7 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
           type="search"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="북마크 검색... (예: 리액트 훅 정리한 글)"
+          placeholder="북마크를 검색해보세요."
           className="h-12 w-full rounded-lg border border-line bg-white pl-4 pr-24 text-sm text-text-primary outline-none transition-all placeholder:text-text-secondary focus:border-brand focus:ring-2 focus:ring-brand/20 [&::-webkit-search-cancel-button]:appearance-none"
         />
         {/* 지우기·검색을 입력창 오른쪽에 모은다 — 국내 검색 UI(네이버·카카오·쿠팡)의 통용 배치 */}
@@ -115,14 +115,14 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
 
       {showStatus && (
         <p className="mt-1.5 text-xs text-text-secondary" aria-live="polite">
-          {isLoading ? 'AI가 문장을 이해하는 중...' : `${resultCount}개 결과`}
+          {isLoading ? "AI가 문장을 이해하는 중..." : `${resultCount}개 결과`}
         </p>
       )}
 
       {showRecent && (
         <div
           className="mt-2 flex items-center gap-1.5 overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden"
-          style={{ scrollbarWidth: 'none' }}
+          style={{ scrollbarWidth: "none" }}
         >
           <span className="shrink-0 text-xs text-text-secondary">최근 검색</span>
           {recentSearches.map((query) => (
@@ -130,11 +130,7 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
               key={query}
               className="inline-flex shrink-0 items-center gap-1 rounded-md bg-mint-soft py-1 pl-2.5 pr-1.5 text-xs font-medium text-ink transition-colors hover:bg-mint/20"
             >
-              <button
-                type="button"
-                onClick={() => handleRecentClick(query)}
-                className="cursor-pointer"
-              >
+              <button type="button" onClick={() => handleRecentClick(query)} className="cursor-pointer">
                 {query}
               </button>
               <button
@@ -150,5 +146,5 @@ export function SearchBar({ onSearch, onClear, value, onChange, isLoading, resul
         </div>
       )}
     </form>
-  )
+  );
 }
