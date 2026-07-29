@@ -41,7 +41,43 @@ describe('extractCategories', () => {
   })
 
   it('빈 북마크 → 빈 목록, 미분류 없음', () => {
-    expect(extractCategories([], cats)).toEqual({ categories: [], hasUncategorized: false })
+    expect(extractCategories([], cats)).toEqual({
+      categories: [],
+      hasUncategorized: false,
+      counts: {},
+      uncategorizedCount: 0,
+    })
+  })
+
+  it('카테고리별 북마크 개수를 counts로 반환 (사이드바 개수 표시용)', () => {
+    // Arrange
+    const rows = [
+      { category_id: 'c1' },
+      { category_id: 'c2' },
+      { category_id: 'c1' },
+      { category_id: null },
+      { category_id: null },
+    ]
+
+    // Act
+    const res = extractCategories(rows, cats)
+
+    // Assert
+    expect(res.counts).toEqual({ 개발: 2, 디자인: 1 })
+    expect(res.uncategorizedCount).toBe(2)
+  })
+
+  it('삭제된 카테고리 참조 북마크는 미분류 개수에 합산', () => {
+    const res = extractCategories([{ category_id: 'ghost' }, { category_id: null }], cats)
+
+    expect(res.counts).toEqual({})
+    expect(res.uncategorizedCount).toBe(2)
+  })
+
+  it('미분류가 없으면 uncategorizedCount는 0', () => {
+    const res = extractCategories([{ category_id: 'c1' }], cats)
+
+    expect(res.uncategorizedCount).toBe(0)
   })
 })
 
@@ -93,7 +129,12 @@ describe('GET /api/bookmarks/categories', () => {
   it('{ categories, hasUncategorized } 반환', async () => {
     const res = await GET(req())
     const json = await res.json()
-    expect(json).toEqual({ categories: ['개발', '콘텐츠'], hasUncategorized: true })
+    expect(json).toEqual({
+      categories: ['개발', '콘텐츠'],
+      hasUncategorized: true,
+      counts: { 개발: 1, 콘텐츠: 1 },
+      uncategorizedCount: 1,
+    })
   })
 
   it('북마크 조회 오류 → 500', async () => {

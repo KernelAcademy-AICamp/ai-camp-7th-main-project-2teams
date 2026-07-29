@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 export interface CategoriesData {
   categories: string[] // 본인 북마크에 붙은 카테고리명 distinct
   hasUncategorized: boolean // category_id null 북마크 존재 여부 → '미분류' 노출
+  counts: Record<string, number> // 카테고리명 → 북마크 수 (사이드바 개수 배지)
+  uncategorizedCount: number // 미분류 북마크 수
 }
 
 /** GET /api/bookmarks/categories — 필터 목록용 카테고리 (페이지네이션 무관 전체 집계) */
@@ -15,6 +17,9 @@ export async function fetchCategories(favoritesOnly = false): Promise<Categories
   return {
     categories: Array.isArray(json.categories) ? (json.categories as string[]) : [],
     hasUncategorized: json.hasUncategorized === true,
+    // 구버전 서버 응답에는 counts가 없다 — 없으면 배지를 감추도록 빈 값으로 떨어뜨린다
+    counts: json.counts && typeof json.counts === 'object' ? (json.counts as Record<string, number>) : {},
+    uncategorizedCount: typeof json.uncategorizedCount === 'number' ? json.uncategorizedCount : 0,
   }
 }
 
