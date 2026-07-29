@@ -13,6 +13,8 @@ import re
 from pathlib import Path
 
 from pptx import Presentation
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from pptx.oxml.ns import qn
 from pptx.util import Inches
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -40,6 +42,25 @@ def extract_notes(deck: Path) -> list[str]:
     return notes
 
 
+
+def declare_notes_master(prs) -> None:
+    """presentation.xml에 notesMasterIdLst를 넣는다.
+
+    노트를 추가하면 notesMaster 파트는 생기는데 python-pptx는 presentation.xml의
+    선언을 채우지 않는다. 파트는 있는데 선언이 없는 상태라 엄격한 파서(Keynote)가
+    "파일 포맷이 유효하지 않다"로 거부한다.
+    """
+    pres_elm = prs._element
+    if pres_elm.find(qn("p:notesMasterIdLst")) is not None:
+        return
+    notes_master_part = prs.notes_master.part
+    r_id = prs.part.relate_to(notes_master_part, RT.NOTES_MASTER)
+    id_lst = pres_elm.makeelement(qn("p:notesMasterIdLst"), {})
+    id_lst.append(id_lst.makeelement(qn("p:notesMasterId"), {qn("r:id"): r_id}))
+    # 스키마 순서: sldMasterIdLst → notesMasterIdLst → ... 순서를 어기면 그것도 거부 사유다.
+    pres_elm.find(qn("p:sldMasterIdLst")).addnext(id_lst)
+
+
 def build(shots_dir: Path, out: Path, notes: list[str]) -> None:
     images = sorted(shots_dir.glob("slide-*.jpg"))
     if not images:
@@ -47,6 +68,13 @@ def build(shots_dir: Path, out: Path, notes: list[str]) -> None:
 
     prs = Presentation()
     prs.slide_width, prs.slide_height = SLIDE_W, SLIDE_H
+    # 기본 템플릿이 남긴 type="screen4x3"를 지운다. 크기는 16:9인데 선언만 4:3이라
+    # 엄격한 파서(Keynote 등)가 "파일 포맷이 유효하지 않다"로 거부한다.
+    sld_sz = prs._element.find(qn("p:sldSz"))
+    if sld_sz is not None and sld_sz.get("type"):
+        del sld_sz.attrib["type"]
+    if any(notes):
+        declare_notes_master(prs)
     blank = prs.slide_layouts[6]
 
     for i, image in enumerate(images):
