@@ -44,3 +44,7 @@ skills-lock.json
 # 기타
 .DS_Store
 .vercel
+
+# 발표 덱 PPTX 산출물 + 촬영 캐시 (scripts/deck/build.sh로 언제든 재생성 — HTML이 원본)
+docs/*.pptx
+docs/.deck-shots/
