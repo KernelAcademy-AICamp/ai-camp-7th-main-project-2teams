@@ -9,18 +9,24 @@ interface CategoryRow {
 }
 
 /**
- * 본인 북마크에 실제 붙은 카테고리명 distinct + 미분류(category_id null) 존재 여부.
+ * 본인 북마크에 실제 붙은 카테고리명 distinct + 카테고리별 개수 + 미분류(category_id null) 집계.
  * 사이드바 필터 목록용 — 페이지네이션과 무관한 전체 집계라 목록 API의 limit(20)에 잘리면 안 된다.
  */
 // ponytail: JS 집계, 북마크 많아지면 distinct RPC로 (folders 라우트와 동일 전략)
 export function extractCategories(
   bookmarks: BookmarkRow[],
   categories: CategoryRow[],
-): { categories: string[]; hasUncategorized: boolean } {
+): {
+  categories: string[]
+  hasUncategorized: boolean
+  counts: Record<string, number>
+  uncategorizedCount: number
+} {
   const nameById = new Map(categories.map((c) => [c.id, c.name]))
   const names: string[] = []
   const seen = new Set<string>()
-  let hasUncategorized = false
+  const counts: Record<string, number> = {}
+  let uncategorizedCount = 0
   for (const b of bookmarks) {
     const name = b.category_id ? nameById.get(b.category_id) : undefined
     if (name) {
@@ -28,12 +34,14 @@ export function extractCategories(
         seen.add(name)
         names.push(name)
       }
+      counts[name] = (counts[name] ?? 0) + 1
     } else {
       // category_id null 또는 삭제된 카테고리 참조 → 미분류로 묶음
-      hasUncategorized = true
+      uncategorizedCount += 1
     }
   }
-  return { categories: names, hasUncategorized }
+  // hasUncategorized는 기존 소비자(사이드바 '미분류' 노출 여부) 호환을 위해 유지한다.
+  return { categories: names, hasUncategorized: uncategorizedCount > 0, counts, uncategorizedCount }
 }
 
 // 본인 북마크의 카테고리 목록. RLS 외 user_id 명시적 격리, embedding 컬럼 제외.

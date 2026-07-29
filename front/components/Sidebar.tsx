@@ -80,6 +80,10 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
     router.push("/welcome");
   };
 
+  // 카테고리별 북마크 수 — 미분류만 별도 필드(uncategorizedCount)에서 온다.
+  const countOf = (name: string) =>
+    name === UNCATEGORIZED_LABEL ? categoriesData?.uncategorizedCount : categoriesData?.counts?.[name];
+
   // 카테고리는 전용 API(전체 집계) 기준 — 목록 API 페이지네이션과 무관.
   // 미분류(category_id null) 있으면 맨 뒤에 한 항목으로 노출.
   const categories = useMemo(() => {
@@ -258,6 +262,12 @@ export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
                     {/* 카테고리 불릿 도트 — 색상은 카테고리별 구분 아닌 통일 회색 고정 (Design.md 7×7 라운드 스퀘어) */}
                     <span className="h-[7px] w-[7px] shrink-0 rounded-[2px] bg-text-secondary" />
                     <span className="truncate">{name}</span>
+                    {/* 개수는 보조 정보 — tabular-nums로 자릿수가 달라도 세로 정렬이 흔들리지 않는다 */}
+                    {countOf(name) !== undefined && (
+                      <span className="ml-auto shrink-0 text-xs tabular-nums text-text-secondary">
+                        {countOf(name)}
+                      </span>
+                    )}
                   </button>
                 </li>
               ))}
