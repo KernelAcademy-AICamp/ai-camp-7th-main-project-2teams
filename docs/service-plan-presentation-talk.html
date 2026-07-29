@@ -1,9 +1,12 @@
 <!doctype html>
+<!-- 발표용 사본. 제출용 원본은 service-plan-presentation.html.
+     차이: 목차 슬라이드 제거 — 표지 직후 목록이 도입부 훅을 끊고, 12분 발표에서 20초는 비싸다.
+     문서로 읽히는 제출본은 지도가 필요해 목차를 그대로 둔다. 내용 수정은 원본에 먼저 하고 이 파일에 반영. -->
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>모와바 — 서비스 기획 발표</title>
+    <title>모와바 — 서비스 기획 발표 (발표용)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -1022,6 +1025,24 @@
           transform: none;
         }
       }
+
+      /* 발표자 대본 — N 키로 토글. 발표용 사본에만 존재한다(제출용 원본에는 없음).
+         평소 숨김이라 화면에는 영향이 없고, 발표자만 켜서 읽는다. */
+      .note {
+        display: none;
+        font-size: clamp(0.78rem, 1.15vw, 0.92rem);
+        line-height: 1.7;
+        color: var(--ink, #1a1a1a);
+        background: rgba(37, 99, 235, 0.06);
+        border-left: 3px solid var(--primary);
+        border-radius: 0 0.4rem 0.4rem 0;
+        padding: 0.75rem 1rem;
+        margin-top: 1.2rem;
+        max-width: 52rem;
+      }
+      body.notes .note {
+        display: block;
+      }
     </style>
   </head>
   <body>
@@ -1052,72 +1073,10 @@
             검색으로 '저장 → 재발견' 루프를 완성한다.
           </p>
           <div class="brandline reveal" style="--i: 5">Team 2 · 김재균 · 양순민</div>
-        </div>
-      </section>
-
-      <!-- 1 TOC -->
-      <section class="slide">
-        <div class="slide-content">
-          <div class="eyebrow reveal">TABLE OF CONTENTS</div>
-          <h2 class="headline section-title reveal" style="--i: 1">목차</h2>
-          <div class="toc reveal" style="--i: 2">
-            <div class="toc-item">
-              <span class="num c-blue">01</span>
-              <div>
-                <div class="t">배경 및 문제인식</div>
-                <div class="d">북마크의 역설 · 경쟁 지형</div>
-              </div>
-            </div>
-            <div class="toc-item">
-              <span class="num c-mint">05</span>
-              <div>
-                <div class="t">해결방안 — 모와바</div>
-                <div class="d">자동 태깅 · 자연어 검색</div>
-              </div>
-            </div>
-            <div class="toc-item">
-              <span class="num c-blue">02</span>
-              <div>
-                <div class="t">문제 정의</div>
-                <div class="d">5 Whys · 최종 문제정의</div>
-              </div>
-            </div>
-            <div class="toc-item">
-              <span class="num c-mint">06</span>
-              <div>
-                <div class="t">실험 및 검증</div>
-                <div class="d">A/B 설계 · 품질 실측 · 운영 모니터링</div>
-              </div>
-            </div>
-            <div class="toc-item">
-              <span class="num c-blue">03</span>
-              <div>
-                <div class="t">페르소나</div>
-                <div class="d">지식노동자 · 큐레이터</div>
-              </div>
-            </div>
-            <div class="toc-item">
-              <span class="num c-warn">07</span>
-              <div>
-                <div class="t">리스크 및 고려사항</div>
-                <div class="d">품질 · 프라이버시 · 콜드스타트</div>
-              </div>
-            </div>
-            <div class="toc-item">
-              <span class="num c-blue">04</span>
-              <div>
-                <div class="t">가설 및 KPI</div>
-                <div class="d">재발견 구조 → 검색 사용률</div>
-              </div>
-            </div>
-            <div class="toc-item">
-              <span class="num c-warn">08</span>
-              <div>
-                <div class="t">확장 로드맵</div>
-                <div class="d">MVP → 수익화 → B2B</div>
-              </div>
-            </div>
-          </div>
+          <p class="note">
+            모와바입니다. 저희가 푸는 문제는 한 문장입니다 — 북마크는 저장이 아니라 되찾기가 문제다. 오늘 문제 → 대상 →
+            가설 → 해결 → 검증 순으로 말씀드리고, 가장 힘줘서 말씀드릴 부분은 검증입니다.
+          </p>
         </div>
       </section>
 
@@ -1164,6 +1123,10 @@
               </p>
             </div>
           </div>
+          <p class="note">
+            저장할 건 20년째 늘었는데 도구는 폴더와 별표 그대로입니다. 저장은 1초, 정리는 무한, 되찾기는 실패 — 여기서
+            시작합니다.
+          </p>
         </div>
       </section>
 
@@ -1200,6 +1163,10 @@
           <p class="stat-cap" style="margin-top: 1.6em; font-size: 0.78rem; line-height: 1.5; color: var(--text-3)">
             Bergman, Whittaker &amp; Schooler (2021), J. Librarianship &amp; Information Science 53(2) · 북마크 타깃
             250건(참여자 50명 × 5건)
+          </p>
+          <p class="note">
+            핵심 숫자입니다. 저장해둔 북마크의 84%는 다시 찾을 때 쓰이지 않습니다. 북마크로 되찾은 건 16%, 폴더를 뒤져
+            찾은 건 4%뿐입니다. 저장은 열심히 하는데 되찾기에서 무너집니다.
           </p>
         </div>
       </section>
@@ -1241,6 +1208,10 @@
               <p>수백 개가 쌓인 채 방치되고, 같은 링크를 또 저장한다.</p>
             </div>
           </div>
+          <p class="note">
+            저장·분류·재발견 세 단계 전부 마찰이 있는데, 앞의 둘은 참을 만합니다. 세 번째가 치명적입니다 — 제목만 남고
+            내용은 검색이 안 되니까요.
+          </p>
         </div>
       </section>
 
@@ -1319,6 +1290,10 @@
             <b>무료 진입점이 없고 한국어 대응이 없다</b>. 자연어 의미 검색 지원 여부는 공개 자료로 확인되지 않아
             단정하지 않는다.
           </p>
+          <p class="note">
+            저장을 돕는 도구는 많습니다. 다만 저장한 걸 의미로 되찾는 경로는 어느 쪽도 안 줍니다. 2025년 7월 Pocket이
+            문을 닫으며 국내 대체재는 비었습니다. 다만 "종료가 곧 기회"는 아직 저희 가설이지 확인된 사실은 아닙니다.
+          </p>
         </div>
       </section>
 
@@ -1349,6 +1324,11 @@
               ><span class="a">재발견이 막히면 저장한 지식이 전부 사장된다</span>
             </div>
           </div>
+          <p class="note">
+            왜 못 찾는가를 다섯 번 물었습니다. 못 찾는다 → 제목만 남아서 → 내용이 색인이 안 돼서 → 저장 시점에 분류를 안
+            해서 → 분류가 귀찮아서<br />
+            이에 재발견이 막히면 저장한 지식이 사장된다. 이게 오늘 발표의 핵심 문제 정의입니다.
+          </p>
         </div>
       </section>
 
@@ -1362,8 +1342,11 @@
               <span class="hl">의미 기반으로 다시 찾을 수 있는 구조</span>를 제공하지 못해
               <span class="hlm">재발견과 재사용이 일어나지 않는</span> 문제가 발생한다.
             </p>
-            <div class="qattr">— 문제 정의 · Bergman(2021) + 재발견 연구 종합</div>
           </div>
+          <p class="note">
+            그래서 문제를 이렇게 고정했습니다. 저장 시점에 분류가 자동으로 끝나지 않으면, 되찾기는 실패한다. 여기가 오늘
+            발표의 전환점입니다.
+          </p>
         </div>
       </section>
 
@@ -1412,6 +1395,10 @@
               </div>
             </div>
           </div>
+          <p class="note">
+            이 문제로 가장 아픈 사람은 하루 10개씩 저장하는 지식노동자 — 개발자·PM·리서처입니다. "분명 저장했는데 어디
+            뒀는지 기억이 안 나"가 이분들 문장입니다.
+          </p>
         </div>
       </section>
 
@@ -1426,6 +1413,10 @@
             </p>
             <div class="qattr">— 이 가설 하나를 검증하는 것이 MVP의 목표</div>
           </div>
+          <p class="note">
+            가설은 하나입니다. "자동 태깅과 자연어 검색이 제공되면 재발견 행동이 늘어난다." 이 가설 하나를 검증하는 것이
+            저희 MVP의 목표입니다.
+          </p>
         </div>
       </section>
 
@@ -1480,6 +1471,10 @@
           <p class="stat-cap reveal" style="--i: 3; margin-top: 0.6em; font-size: var(--small-size)">
             네 수치는 업계 벤치마크가 아니라 <b>MVP Go/No-Go 판정용 자체 목표치</b>다 — 북마크 도구 카테고리의 공개
             리텐션·검색 사용률 지표를 찾지 못했다. 2026-08-04 첫 관측 후 실측 baseline으로 교체한다.
+          </p>
+          <p class="note">
+            그래서 저장량이 아니라 되찾는 행동을 잽니다. 핵심 지표는 검색 사용률 하나이고, 나머지 셋은 앞뒤 퍼널이
+            막혔는지 보는 보조입니다.
           </p>
         </div>
       </section>
@@ -1543,6 +1538,10 @@
             AI 자동 분류는 더 이상 우리만의 것이 아니다 — 최근접 경쟁 mymind도 한다. 갈리는 지점은
             <b>공짜로 시작할 수 있는가 · 한국어를 아는가 · 문장으로 물어볼 수 있는가</b> 셋이다.
           </p>
+          <p class="note">
+            폴더 중심에서 의미 중심으로 옮깁니다. 크롬 익스텐션으로 단축키 한 번에 저장하고, 웹앱에서 말하듯 되찾습니다.
+            사용자가 하는 일은 저장뿐입니다.
+          </p>
         </div>
       </section>
 
@@ -1600,6 +1599,11 @@
               </div>
             </div>
           </div>
+          <p class="note">
+            저장하면 1.5초 안에 본문 앞 2,000자를 읽어 대·중·소 최대 3개를 뽑습니다. 대분류는 카테고리로, 나머지가
+            태그로 남습니다. 확신도 0.6 미만이면 아예 안 붙입니다 — 틀린 태그보다 빈 태그가 낫습니다. 본문은 처리 후
+            즉시 파기합니다.
+          </p>
         </div>
       </section>
 
@@ -1671,13 +1675,18 @@
           </table>
           <div class="pills reveal" style="--i: 5">
             <span class="pill mint">HNSW 인덱스 → 수천 건도 밀리초 응답</span>
-            <span class="pill warn">시간 표현은 의도적 미지원</span>
+            <span class="pill blue">RRF 순위 융합 → 벡터·키워드 검색 장점 합치기</span>
             <span class="pill">embedding 컬럼은 API 응답 미포함</span>
           </div>
           <p class="stat-cap reveal" style="--i: 6; margin-top: 0.6em; font-size: var(--small-size)">
-            시간 표현은 <b>날짜 필터로 쓰지 않고 제거</b>한다 — "지난달"이 실제 달력 월과 어긋나는 경우가 흔해, 하드
-            필터로 걸면 정답을 배제할 위험이 이득보다 크다. 재발견 실패는 되돌릴 수 없으므로
-            <b>정밀도보다 재현율을 지키는 쪽</b>을 택했다.
+            recall@10은 벡터 검색과 키워드 검색을 따로 돌려 합친 값이다. 벡터 검색만 쓰면 0.70, 키워드 검색만 쓰면 0.65,
+            합치면 0.81이다 — 벡터 검색은 의미를 잘 잡지만, 제목이 안 맞으면 놓친다. 키워드 검색은 제목이 맞으면 잡지만,
+            의미가 달라 놓친다.
+          </p>
+          <p class="note">
+            "그 리액트 훅 글"이라고 넣으면 군더더기 '그'는 걷어내고, '리액트'를 'React'까지 넓혀 영문 제목도 잡습니다.
+            의미 검색과 키워드 검색을 함께 돌려 합칩니다. '지난달' 같은 시간 표현은 일부러 필터로 쓰지 않습니다 — 하드
+            필터가 맞는 답을 배제하는 쪽이 더 위험해서입니다.
           </p>
         </div>
       </section>
@@ -1722,6 +1731,10 @@
           <p class="stat-cap reveal" style="--i: 4; margin-top: 0.6em; font-size: var(--small-size)">
             사용자 A/B는 배포 후 구간이지만, <b>내부 A/B는 이미 돌렸다</b> — 임베딩 모델을 3-small에서 3-large로 바꿔
             recall@10 0.70 → 0.85 (AI/ML 북마크 233건 실측). 가르는 방식은 검증된 상태다.
+          </p>
+          <p class="note">
+            검증 설계는 단순합니다. 같은 북마크 세트를 주고 되찾는 경로만 바꿉니다. 저장량이 아니라 재발견 행동이
+            늘어나는지 하나만 봅니다.
           </p>
         </div>
       </section>
@@ -1787,6 +1800,10 @@
           <p class="stat-cap reveal" style="--i: 5; margin-top: 0.6em; font-size: var(--small-size)">
             골든셋 n=215 실측. 두 행의 차이가 곧 <b>임포트 경로에서 잃는 품질</b>이다 — 벌어지면 메타 조회 파이프라인을
             먼저 본다.
+          </p>
+          <p class="note">
+            AI 품질은 자기가 매긴 점수를 자기가 발표하기 쉽습니다. 그래서 숫자보다 재는 법을 먼저 고정했습니다 —
+            측정·게이트·분리 측정 세 가지를 코드보다 먼저 박았습니다. 정답지 215건, 게이트 미달이면 머지가 차단됩니다.
           </p>
         </div>
       </section>
@@ -1854,6 +1871,11 @@
             <span class="pill mint">미분류율 3.0% → 1.5% (절반)</span>
             <span class="pill">되돌린 근거는 스펙 문서에 기록 — 같은 함정 재발 차단</span>
           </div>
+          <p class="note">
+            이 게이트가 저희 발목도 잡았습니다. 로그인 페이지 미분류를 고치려 예제를 하나 넣었더니 4건 다 회수됐는데,
+            전체 F1은 0.789에서 0.773으로 내려갔습니다. 성공처럼 보였지만 되돌렸습니다. 다시 만들어 대분류 0.874,
+            미분류율은 절반으로 줄였습니다. 개선했다는 말은 누구나 할 수 있습니다.
+          </p>
         </div>
       </section>
 
@@ -1890,7 +1912,7 @@
               />
               <figcaption class="stat-cap" style="margin-top: 0.5em">
                 <b>"얼마나 되찾는가"</b> — North Star 주간 퍼널(저장 → 자동분류 → 검색 → 클릭). 유저별 덤벨로
-                <b>"누가"</b>까지 분해. Go/No-Go 기준인 검색 사용률 40%가 이 지표에서 나온다
+                <b>"누가"</b>까지 분해. Go/No-Go 기준인 검색 사용률 40%가 이 지표에서 나온다.
               </figcaption>
             </figure>
             <figure style="margin: 0">
@@ -1922,6 +1944,11 @@
             <span class="pill">비용은 실사용/개발 분리 추정 — 섞어 보면 140배 왜곡, $0.02 주장을 계속 검증</span>
             <span class="pill">개발 단계는 골든셋 회귀 게이트(F1 ≥ 0.74)가 자동 차단</span>
           </div>
+          <p class="note">
+            검증은 배포에서 끝나지 않습니다. 개발 단계는 회귀 게이트가, 배포 후는 이 대시보드가 지킵니다. 지금 실제로
+            돌아가는 화면이고, Go/No-Go 기준인 검색 사용률 40%가 왼쪽 지표에서 나옵니다.<br />
+            도트 플롯(점도표) - 수직선이나 수평선 위에 점을 찍어 데이터의 분포와 빈도를 보여주는 간단한 통계 그래프
+          </p>
         </div>
       </section>
 
@@ -1985,6 +2012,10 @@
               </tr>
             </tbody>
           </table>
+          <p class="note">
+            여섯 건 중 넷은 이미 코드에서 돌아가고, 하나는 구현됐고, 하나는 아직 추정치입니다. 추정치는 유저당 $0.02
+            원가 — 실사용 데이터로 계속 검증합니다.
+          </p>
         </div>
       </section>
 
@@ -2015,6 +2046,9 @@
             <span class="pill blue">1~2단계 = MVP 검증 구간</span>
             <span class="pill mint">Pocket 종료로 열린 국내 공백을 지금 선점</span>
           </div>
+          <p class="note">
+            검증 → 수익화 → 구조 → 확장. 지금은 첫 단계이고, 8월 4일 첫 관측으로 Go/No-Go를 판정합니다.
+          </p>
         </div>
       </section>
 
@@ -2027,6 +2061,7 @@
           </h1>
           <div class="slogan reveal" style="--i: 2">Save it. Find it. — 모와바</div>
           <div class="brandline reveal" style="--i: 3">AI CAMP 7기 2팀 · 경청해 주셔서 감사합니다</div>
+          <p class="note">저장하는 도구가 아니라, 다시 찾는 도구로. 감사합니다.</p>
         </div>
       </section>
     </main>
@@ -2096,6 +2131,9 @@
           } else if (e.key === "End") {
             e.preventDefault();
             goTo(total - 1);
+          } else if (e.key === "n" || e.key === "N") {
+            // 발표자 대본 토글 — 화면에 안내를 띄우지 않는다(발표자만 아는 기능).
+            document.body.classList.toggle("notes");
           }
         });
 
